@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# RC files
+cd $(dirname $BASH_SOURCE)
+BASE=$(pwd)
+
+for rc in *rc tmux.conf; do
+  mkdir -pv bak
+  [ -e ~/.$rc ] && mv -v ~/.$rc bak/.$rc
+  ln -sfv $BASE/$rc ~/.$rc
+done
+
+# scripts
+mkdir -p ~/bin
+for bin in $BASE/bin/*; do
+  ln -svf $bin ~/bin
+done
+
+./install-vim

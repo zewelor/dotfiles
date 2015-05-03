@@ -1,0 +1,128 @@
+let mapleader      = ' '
+let maplocalleader = ' '
+
+" Use Vim settings, rather then Vi settings (much better!).
+" " This must be first, because it changes other options as a side effect.
+set nocompatible
+
+" ================ Indentation ======================
+set autoindent
+set smartindent
+set smarttab
+set shiftwidth=2
+set softtabstop=2
+set tabstop=2
+set expandtab
+
+" ================ Search ===========================
+set incsearch       " Find the next match as we type the search
+set hlsearch        " Highlight searches by default
+set ignorecase      " Ignore case when searching...
+set smartcase       " ...unless we type a capital
+
+set number
+
+syntax on             " Enable syntax highlighting
+filetype on           " Enable filetype detection
+filetype indent on    " Enable filetype-specific indenting
+filetype plugin on    " Enable filetype-specific plugins
+
+" ================ Turn Off Swap Files ==============
+"
+set noswapfile
+set nobackup
+set nowb
+
+map <C-s> <esc>:w<CR>
+imap <C-s> <esc>:w<CR>
+
+" Tab completion
+" will insert tab at beginning of line,
+" will use completion if not at beginning
+set wildmode=list:longest,list:full
+function! InsertTabWrapper()
+    let col = col('.') - 1
+    if !col || getline('.')[col - 1] !~ '\k'
+        return "\<tab>"
+    else
+        return "\<c-p>"
+      endif
+endfunction
+inoremap <Tab> <c-r>=InsertTabWrapper()<cr>
+inoremap <S-Tab> <c-n>
+
+" Quit
+inoremap <C-Q>     <esc>:q<cr>
+nnoremap <C-Q>     :q<cr>
+vnoremap <C-Q>     <esc>
+nnoremap <Leader>q :q<cr>
+nnoremap <Leader>Q :qa!<cr>
+
+" <F10> | NERD Tree
+inoremap <F10> <esc>:NERDTreeToggle<cr>
+nnoremap <F10> :NERDTreeToggle<cr>
+
+" ----------------------------------------------------------------------------
+" <tab> / <s-tab> | Circular windows navigation
+" ----------------------------------------------------------------------------
+nnoremap <tab>   <c-w>w
+nnoremap <S-tab> <c-w>W
+
+" ----------------------------------------------------------------------------
+" vim-fugitive
+" ----------------------------------------------------------------------------
+nmap     <Leader>g :Gstatus<CR>gg<c-n>
+nnoremap <Leader>d :Gdiff<CR>
+
+" RSpec.vim mappings
+map <Leader>t :call RunCurrentSpecFile()<CR>
+map <Leader>s :call RunNearestSpec()<CR>
+map <Leader>l :call RunLastSpec()<CR>
+map <Leader>a :call RunAllSpecs()<CR>
+
+" ============================================================================
+" VIM-PLUG BLOCK {{{
+" ============================================================================
+
+silent! if plug#begin('~/.vim/plugged')
+
+Plug 'pbrisbin/vim-mkdir'
+
+" Colors
+Plug 'chriskempson/vim-tomorrow-theme'
+
+" Edit
+Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-endwise'
+Plug 'vim-scripts/tComment'
+Plug 'ConradIrwin/vim-bracketed-paste'
+
+" Browsing
+Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle'    }
+Plug 'kien/ctrlp.vim'
+
+Plug 'pangloss/vim-javascript'
+Plug 'kchmck/vim-coffee-script'
+Plug 'slim-template/vim-slim'
+Plug 'plasticboy/vim-markdown'
+Plug 'vim-ruby/vim-ruby'
+Plug 'tpope/vim-haml'
+Plug 'tpope/vim-bundler'
+Plug 'tpope/vim-rails'
+Plug 'thoughtbot/vim-rspec'
+
+" Git
+Plug 'tpope/vim-fugitive'
+Plug 'gregsexton/gitv', { 'on': 'Gitv' }
+
+call plug#end()
+endif
+
+set background=dark
+colorscheme Tomorrow-Night
+
+" Local config
+if filereadable($HOME . "/.vimrc.local")
+  source ~/.vimrc.local
+endif
