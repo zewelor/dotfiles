@@ -16,4 +16,7 @@ for bin in $BASE/bin/*; do
   ln -svf $bin ~/bin
 done
 
+mkdir ~/.antigen
+curl -L https://raw.githubusercontent.com/zsh-users/antigen/master/antigen.zsh > ~/.antigen/antigen.zsh
+
 ./install-vim
