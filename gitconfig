@@ -1,0 +1,15 @@
+[color]
+	ui = auto
+[user]
+	name = zewelor
+	email = zewelor@gmail.com
+[core]
+	excludesfile = ~/.gitignore_global
+	pager = less -F -X
+	editor = vim
+[push]
+	default = current
+[fetch]
+  prune = true
+[include]
+  path = ~/.gitconfig.local

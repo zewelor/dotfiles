@@ -4,7 +4,7 @@
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
-for rc in *rc tmux.conf zlogin; do
+for rc in *rc *config tmux.conf zlogin gitignore_global; do
   mkdir -pv bak
   [ -e ~/.$rc ] && mv -v ~/.$rc bak/.$rc
   ln -sfv $BASE/$rc ~/.$rc
