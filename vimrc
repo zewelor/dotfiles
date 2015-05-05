@@ -85,6 +85,9 @@ Plug 'ervandew/supertab'
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle'    }
 Plug 'kien/ctrlp.vim'
 
+" Tmux Integration
+" Plug 'edkolev/tmuxline.vim'
+
 Plug 'pangloss/vim-javascript'
 Plug 'kchmck/vim-coffee-script'
 Plug 'slim-template/vim-slim'
@@ -94,6 +97,9 @@ Plug 'tpope/vim-haml'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-rails'
 Plug 'thoughtbot/vim-rspec'
+
+" Plug 'bling/vim-airline'
+Plug 'junegunn/vim-easy-align'
 
 " Git
 Plug 'tpope/vim-fugitive'
