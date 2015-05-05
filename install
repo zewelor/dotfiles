@@ -4,7 +4,7 @@
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
-for rc in *rc *config tmux.conf zlogin gitignore_global; do
+for rc in *rc *config tmux.conf zlogin gitignore_global rspec; do
   mkdir -pv bak
   [ -e ~/.$rc ] && mv -v ~/.$rc bak/.$rc
   ln -sfv $BASE/$rc ~/.$rc
@@ -16,7 +16,7 @@ for bin in $BASE/bin/*; do
   ln -svf $bin ~/bin
 done
 
-mkdir ~/.antigen
+mkdir -p ~/.antigen
 curl -L https://raw.githubusercontent.com/zsh-users/antigen/master/antigen.zsh > ~/.antigen/antigen.zsh
 
 ./install-vim
