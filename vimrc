@@ -27,6 +27,7 @@ filetype on           " Enable filetype detection
 filetype indent on    " Enable filetype-specific indenting
 filetype plugin on    " Enable filetype-specific plugins
 
+set background=dark
 " ================ Turn Off Swap Files ==============
 "
 set noswapfile
@@ -62,6 +63,16 @@ map <Leader>s :call RunNearestSpec()<CR>
 map <Leader>l :call RunLastSpec()<CR>
 map <Leader>a :call RunAllSpecs()<CR>
 
+" ----------------------------------------------------------------------------
+" vim-easy-align
+" ----------------------------------------------------------------------------
+" Start interactive EasyAlign in visual mode (e.g. vip<Enter>)
+vmap <Enter> <Plug>(EasyAlign)
+
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
+
+
 " ============================================================================
 " VIM-PLUG BLOCK {{{
 " ============================================================================
@@ -72,6 +83,8 @@ Plug 'pbrisbin/vim-mkdir'
 
 " Colors
 Plug 'chriskempson/vim-tomorrow-theme'
+Plug 'altercation/vim-colors-solarized'
+" Plug 'bling/vim-airline'
 
 " Edit
 Plug 'tpope/vim-repeat'
@@ -97,8 +110,8 @@ Plug 'tpope/vim-haml'
 Plug 'tpope/vim-bundler'
 Plug 'tpope/vim-rails'
 Plug 'thoughtbot/vim-rspec'
+Plug 'sudar/vim-arduino-syntax'
 
-" Plug 'bling/vim-airline'
 Plug 'junegunn/vim-easy-align'
 
 " Git
@@ -108,8 +121,9 @@ Plug 'gregsexton/gitv', { 'on': 'Gitv' }
 call plug#end()
 endif
 
-set background=dark
+" colorscheme solarized
 colorscheme Tomorrow-Night
+set background=dark
 
 " Local config
 if filereadable($HOME . "/.vimrc.local")
