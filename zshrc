@@ -25,8 +25,8 @@ antigen apply
 
 alias instaluj="sudo apt-get install"
 alias szukaj="sudo apt-cache search"
-alias czysc_dpkg="dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs sudo dpkg --purge"
-alias update="sudo apt-get update && sudo apt-get dist-upgrade -y"
+alias czysc_dpkg="sudo apt-get autoremove -y ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs sudo dpkg --purge"
+alias update="sudo apt-get autoremove -y --purge && sudo apt-get update && sudo apt-get dist-upgrade -y"
 
 alias gpo="git push origin"
 alias gcmm="git commit -m"
