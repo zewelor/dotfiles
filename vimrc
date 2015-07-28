@@ -72,7 +72,6 @@ vmap <Enter> <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
 
-
 " ============================================================================
 " VIM-PLUG BLOCK {{{
 " ============================================================================
@@ -110,6 +109,7 @@ Plug 'tpope/vim-haml'
 Plug 'tpope/vim-rails'
 Plug 'thoughtbot/vim-rspec'
 Plug 'sudar/vim-arduino-syntax'
+Plug 'rust-lang/rust.vim'
 
 Plug 'junegunn/vim-easy-align'
 
