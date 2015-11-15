@@ -5,6 +5,12 @@ let maplocalleader = ' '
 " " This must be first, because it changes other options as a side effect.
 set nocompatible
 
+" ================ Undofile ======================
+set undodir=~/.vim/undo
+set undofile
+set undolevels=1000 "maximum number of changes that can be undone
+set undoreload=10000 "maximum number lines to save for undo on a buffer reload
+
 " ================ Indentation ======================
 set autoindent
 set smartindent
@@ -110,6 +116,8 @@ Plug 'tpope/vim-rails'
 Plug 'thoughtbot/vim-rspec'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'rust-lang/rust.vim'
+Plug 'xolox/vim-lua-ftplugin'
+Plug 'xolox/vim-misc'
 
 Plug 'junegunn/vim-easy-align'
 
