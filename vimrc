@@ -118,6 +118,7 @@ Plug 'sudar/vim-arduino-syntax'
 Plug 'rust-lang/rust.vim'
 Plug 'xolox/vim-lua-ftplugin'
 Plug 'xolox/vim-misc'
+Plug 'fatih/vim-go'
 
 Plug 'junegunn/vim-easy-align'
 
