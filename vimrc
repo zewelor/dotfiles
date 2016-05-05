@@ -33,7 +33,6 @@ filetype on           " Enable filetype detection
 filetype indent on    " Enable filetype-specific indenting
 filetype plugin on    " Enable filetype-specific plugins
 
-set background=dark
 " ================ Turn Off Swap Files ==============
 "
 set noswapfile
@@ -50,6 +49,9 @@ nnoremap <Leader>Q :qa!<cr>
 " <F10> | NERD Tree
 inoremap <F10> <esc>:NERDTreeToggle<cr>
 nnoremap <F10> :NERDTreeToggle<cr>
+
+" Toggle line numbers with Ctrl + N
+:nmap <C-N><C-N> :set invnumber<CR>
 
 " ----------------------------------------------------------------------------
 " <tab> / <s-tab> | Circular windows navigation
@@ -129,9 +131,9 @@ Plug 'gregsexton/gitv', { 'on': 'Gitv' }
 call plug#end()
 endif
 
-" colorscheme solarized
-colorscheme Tomorrow-Night
-set background=dark
+colorscheme solarized
+" colorscheme Tomorrow-Night
+set background=light
 
 " Local config
 if filereadable($HOME . "/.vimrc.local")

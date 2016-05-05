@@ -18,8 +18,17 @@ antigen bundle rails
 antigen bundle rake
 antigen bundle rvm
 antigen bundle adb
+antigen bundle vagrant
 
-antigen theme flazz
+export DEFAULT_USER="omen"
+# POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
+POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
+POWERLEVEL9K_SHORTEN_DIR_LENGTH=3
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status vi_mode)
+POWERLEVEL9K_STATUS_VERBOSE=false
+POWERLEVEL9K_COLOR_SCHEME="light"
+
+antigen theme bhilburn/powerlevel9k powerlevel9k
 
 antigen apply
 
@@ -34,6 +43,7 @@ alias gds='git diff --staged'
 alias gpl='git pull'
 alias git_undo_commit='git reset "HEAD^"'
 alias git_delete_merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
+alias gpf='git push --force-with-lease'
 
 unalias rm
 unalias cp
@@ -54,6 +64,23 @@ vim()
 
 export VISUAL=vim
 export EDITOR=$VISUAL
+
+# VI-Mode
+# general activation
+bindkey -v
+
+# set some nice hotkeys
+bindkey '^P' up-history
+bindkey '^N' down-history
+bindkey '^?' backward-delete-char
+bindkey '^h' backward-delete-char
+bindkey '^w' backward-kill-word
+bindkey '^r' history-incremental-search-backward
+
+# make it more responsive
+export KEYTIMEOUT=1
+
+export MC_SKIN=$HOME/.mc/solarized.ini
 
 # Local config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
