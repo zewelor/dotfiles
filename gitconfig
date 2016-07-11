@@ -16,4 +16,6 @@
 [diff]
 	tool = vimdiff
 [merge]
-	tool = vimdiff
+  tool = vimdiff
+[alias]
+  rbi = !sh -c \"git rebase -i `git merge-base $1 HEAD`\" -
