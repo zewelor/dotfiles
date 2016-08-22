@@ -82,5 +82,11 @@ export KEYTIMEOUT=1
 
 export MC_SKIN=$HOME/.mc/solarized.ini
 
+if [ -d $HOME/.zshrc.d ]; then
+  for file in $HOME/.zshrc.d/*.zsh; do
+    source $file
+  done
+fi
+
 # Local config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
