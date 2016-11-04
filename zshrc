@@ -44,6 +44,7 @@ alias gpl='git pull'
 alias git_undo_commit='git reset "HEAD^"'
 alias git_delete_merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
 alias gpf='git push --force-with-lease'
+alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 
 unalias rm
 unalias cp
