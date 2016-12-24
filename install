@@ -17,19 +17,21 @@ for bin in $BASE/bin/*; do
 done
 
 mkdir -p ~/.antigen
-curl -L https://raw.githubusercontent.com/zsh-users/antigen/master/antigen.zsh > ~/.antigen/antigen.zsh
+curl -L https://cdn.rawgit.com/zsh-users/antigen/v1.2.1/bin/antigen.zsh > ~/.antigen/antigen.zsh
 
 mkdir -p ~/.zshrc.d
 cp zshrc.d/* ~/.zshrc.d/
 
-wget https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf
-wget https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf
+curl -L https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf > PowerlineSymbols.otf
+curl -L https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf > 10-powerline-symbols.conf
 
 mkdir -p ~/.fonts/
 mv PowerlineSymbols.otf ~/.fonts/
 fc-cache -vf ~/.fonts/
 
-mkdir -p ~/.config/fontconfig
+mkdir -p ~/.config/fontconfig/conf.d/
 mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
+mkdir -p ~/.mc/
+curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
 ./install-vim
