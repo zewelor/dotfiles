@@ -123,6 +123,7 @@ Plug 'xolox/vim-misc'
 Plug 'fatih/vim-go'
 
 Plug 'junegunn/vim-easy-align'
+Plug 'michaeljsmith/vim-indent-object'
 
 " Git
 Plug 'tpope/vim-fugitive'
