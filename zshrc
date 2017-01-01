@@ -1,6 +1,3 @@
-export TERM="xterm-256color"
-
-PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
 PATH=$PATH:$HOME/bin
 
 source ~/.antigen/antigen.zsh
@@ -9,20 +6,13 @@ antigen use oh-my-zsh
 
 DISABLE_AUTO_TITLE="true"
 
-antigen bundle capistrano
 antigen bundle common-aliases
 antigen bundle cp
-antigen bundle bundler
 antigen bundle extract
 antigen bundle git
 antigen bundle history
-antigen bundle rails
-antigen bundle rake
-antigen bundle rvm
-antigen bundle adb
-antigen bundle vagrant
 
-export DEFAULT_USER="omen"
+export DEFAULT_USER=`whoami`
 # POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
 POWERLEVEL9K_SHORTEN_STRATEGY="truncate_middle"
 POWERLEVEL9K_SHORTEN_DIR_LENGTH=3
@@ -31,30 +21,6 @@ POWERLEVEL9K_STATUS_VERBOSE=false
 POWERLEVEL9K_COLOR_SCHEME="light"
 
 antigen theme bhilburn/powerlevel9k powerlevel9k
-
-antigen apply
-
-alias instaluj="sudo apt-get install -y"
-alias szukaj="sudo apt-cache search"
-alias czysc_dpkg="sudo apt-get autoremove -y ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs sudo dpkg --purge"
-alias update="sudo apt-get autoremove -y --purge && sudo apt-get update && sudo apt-get dist-upgrade -y"
-
-alias gpo="git push origin"
-alias gcmm="git commit -m"
-alias gds='git diff --staged'
-alias gpl='git pull'
-alias git_undo_commit='git reset "HEAD^"'
-alias git_delete_merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
-alias gpf='git push --force-with-lease'
-alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
-
-unalias rm
-unalias cp
-unalias mv
-
-unsetopt share_history
-setopt hist_ignore_all_dups
-unset PAGER
 
 # Make ctrl + s work
 vim()
@@ -93,3 +59,28 @@ fi
 
 # Local config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+antigen apply
+
+alias instaluj="sudo apt-get install -y"
+alias szukaj="sudo apt-cache search"
+alias czysc_dpkg="sudo apt-get autoremove -y ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs sudo dpkg --purge"
+alias update="sudo apt-get autoremove -y --purge && sudo apt-get update && sudo apt-get dist-upgrade -y"
+
+alias gpo="git push origin"
+alias gcmm="git commit -m"
+alias gds='git diff --staged'
+alias gpl='git pull'
+alias git_undo_commit='git reset "HEAD^"'
+alias git_delete_merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
+alias gpf='git push --force-with-lease'
+alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
+
+unalias rm
+unalias cp
+unalias mv
+
+unsetopt share_history
+setopt hist_ignore_all_dups
+unset PAGER
+
