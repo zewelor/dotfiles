@@ -68,7 +68,7 @@ alias szukaj="sudo apt-cache search"
 alias czysc_dpkg="sudo apt-get autoremove -y ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs sudo dpkg --purge"
 alias update="sudo apt-get autoremove -y --purge && sudo apt-get update && sudo apt-get dist-upgrade -y"
 
-alias gpo="git push origin"
+alias gpo="git push -u origin"
 alias gcmm="git commit -m"
 alias gds='git diff --staged'
 alias gpl='git pull'
