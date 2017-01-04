@@ -81,6 +81,7 @@ unalias cp
 unalias mv
 
 unsetopt share_history
+setopt  NO_NOMATCH
 setopt hist_ignore_all_dups
 unset PAGER
 
