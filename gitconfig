@@ -7,8 +7,12 @@
 	excludesfile = ~/.gitignore_global
 	pager = less -F -X
 	editor = vim
+[branch]
+  autosetuprebase = always
 [push]
 	default = current
+[pull]
+  rebase = true
 [fetch]
   prune = true
 [include]
