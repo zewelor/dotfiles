@@ -18,7 +18,8 @@
 [include]
   path = ~/.gitconfig.local
 [diff]
-	tool = vimdiff
+  tool = vimdiff
+  noprefix = true
 [merge]
   tool = vimdiff
 [alias]
