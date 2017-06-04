@@ -1,4 +1,3 @@
-export TERM="xterm-256color"
 PATH=$PATH:$HOME/bin
 
 source ~/.antigen/antigen.zsh
