@@ -17,7 +17,7 @@ for bin in $BASE/bin/*; do
 done
 
 mkdir -p ~/.antigen
-curl -L https://cdn.rawgit.com/zsh-users/antigen/v1.4.1/bin/antigen.zsh > ~/.antigen/antigen.zsh
+curl -L https://cdn.rawgit.com/zsh-users/antigen/v2.1.1/bin/antigen.zsh > ~/.antigen/antigen.zsh
 
 mkdir -p ~/.zshrc.d
 cp zshrc.d/* ~/.zshrc.d/
