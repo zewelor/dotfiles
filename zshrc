@@ -1,4 +1,5 @@
 PATH=$PATH:$HOME/bin
+PATH=$PATH:/snap/bin
 
 source ~/.antigen/antigen.zsh
 

@@ -1,6 +1,8 @@
 let mapleader      = ' '
 let maplocalleader = ' '
 
+set pastetoggle=<F3>
+
 " Use Vim settings, rather then Vi settings (much better!).
 " " This must be first, because it changes other options as a side effect.
 set nocompatible
@@ -140,3 +142,6 @@ set background=light
 if filereadable($HOME . "/.vimrc.local")
   source ~/.vimrc.local
 endif
+
+autocmd FileType python set softtabstop=2
+autocmd FileType python set shiftwidth=2

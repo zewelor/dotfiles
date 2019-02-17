@@ -27,3 +27,8 @@
   rbi = !sh -c \"git rebase -i `git merge-base $1 HEAD`\" -
 	squash = "!f(){ git reset --soft HEAD~${1} && git commit --edit -m\"$(git log --format=%B --reverse HEAD..HEAD@{1})\"; };f"
   set-upstream = !git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
