@@ -27,7 +27,9 @@ curl -L https://github.com/powerline/powerline/raw/develop/font/10-powerline-sym
 
 mkdir -p ~/.fonts/
 mv PowerlineSymbols.otf ~/.fonts/
+curl -L https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/UbuntuMono/Regular/complete/Ubuntu%20Mono%20Nerd%20Font%20Complete%20Mono.ttf > ~/.fonts/UbuntuMonoNerdFontComplete.tff
 fc-cache -vf ~/.fonts/
+
 
 mkdir -p ~/.config/fontconfig/conf.d/
 mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
