@@ -76,6 +76,8 @@ alias git_delete_merged='git branch --merged | grep -v "\*" | xargs -n 1 git bra
 alias gpf='git push --force-with-lease'
 alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 
+alias rekde="kquitapp5 plasmashell && kstart5 plasmashell"
+
 unalias rm
 unalias cp
 unalias mv
