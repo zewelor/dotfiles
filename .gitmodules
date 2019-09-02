@@ -1,0 +1,3 @@
+[submodule "prv"]
+	path = prv
+	url = git@github.com:zewelor/dotfiles_prv.git
