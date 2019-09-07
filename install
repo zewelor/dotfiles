@@ -16,8 +16,7 @@ for bin in $BASE/bin/*; do
   ln -svf $bin ~/bin
 done
 
-mkdir -p ~/.antigen
-curl -L https://cdn.rawgit.com/zsh-users/antigen/v2.2.3/bin/antigen.zsh > ~/.antigen/antigen.zsh
+curl -sfL git.io/antibody | sh -s - -b ~/bin
 
 mkdir -p ~/.zshrc.d
 cp zshrc.d/* ~/.zshrc.d/
@@ -36,4 +35,7 @@ mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
 mkdir -p ~/.mc/
 curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
+
+make plugins
+
 ./install-vim

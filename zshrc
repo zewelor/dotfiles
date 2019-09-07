@@ -1,17 +1,9 @@
 PATH=$PATH:$HOME/bin
 PATH=$PATH:/snap/bin
 
-source ~/.antigen/antigen.zsh
-
-antigen use oh-my-zsh
+export ZSH="$(antibody home)/https-COLON--SLASH--SLASH-github.com-SLASH-robbyrussell-SLASH-oh-my-zsh"
 
 DISABLE_AUTO_TITLE="true"
-
-antigen bundle common-aliases
-antigen bundle cp
-antigen bundle extract
-antigen bundle git
-antigen bundle history
 
 export DEFAULT_USER=`whoami`
 # POWERLEVEL9K_SHORTEN_DIR_LENGTH=2
@@ -20,8 +12,6 @@ POWERLEVEL9K_SHORTEN_DIR_LENGTH=3
 POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(status vi_mode)
 POWERLEVEL9K_STATUS_VERBOSE=false
 POWERLEVEL9K_COLOR_SCHEME='light'
-
-antigen theme bhilburn/powerlevel9k powerlevel9k
 
 # Make ctrl + s work
 vim()
@@ -34,6 +24,9 @@ vim()
 
 export VISUAL=vim
 export EDITOR=$VISUAL
+
+source <(antibody init)
+source ~/.zsh_plugins.sh
 
 # VI-Mode
 # general activation
@@ -61,8 +54,6 @@ fi
 # Local config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
-antigen apply
-
 # Use sudo without aliases
 alias instaluj="\sudo apt install -y"
 alias szukaj="\sudo apt-cache search"
@@ -79,12 +70,15 @@ alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 
 alias rekde="kquitapp5 plasmashell && kstart5 plasmashell"
 
-unalias rm
-unalias cp
-unalias mv
+#unalias rm
+#unalias cp
+#unalias mv
 
 unsetopt share_history
 setopt  NO_NOMATCH
 setopt hist_ignore_all_dups
 unset PAGER
 
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+# [[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
