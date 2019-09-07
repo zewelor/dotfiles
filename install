@@ -4,38 +4,22 @@
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
-for rc in *rc *config tmux.conf zlogin gitignore_global rspec; do
+for rc in *rc *config tmux.conf zshenv gitignore_global rspec p10k.zsh; do
   mkdir -pv bak
   [ -e ~/.$rc ] && mv -v ~/.$rc bak/.$rc
   ln -sfv $BASE/$rc ~/.$rc
 done
 
-# scripts
-mkdir -p ~/bin
-for bin in $BASE/bin/*; do
-  ln -svf $bin ~/bin
-done
-
-curl -sfL git.io/antibody | sh -s - -b ~/bin
-
-mkdir -p ~/.zshrc.d
-cp zshrc.d/* ~/.zshrc.d/
-
-curl -L https://github.com/powerline/powerline/raw/develop/font/PowerlineSymbols.otf > PowerlineSymbols.otf
-curl -L https://github.com/powerline/powerline/raw/develop/font/10-powerline-symbols.conf > 10-powerline-symbols.conf
+mkdir -p ~/.zplugin
+chmod g-rwX "$HOME/.zplugin"
+git clone https://github.com/zdharma/zplugin.git ~/.zplugin/bin
 
 mkdir -p ~/.fonts/
-mv PowerlineSymbols.otf ~/.fonts/
-curl -L https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/UbuntuMono/Regular/complete/Ubuntu%20Mono%20Nerd%20Font%20Complete%20Mono.ttf > ~/.fonts/UbuntuMonoNerdFontComplete.tff
+for font in MesloLGS%20NF%20Regular.ttf MesloLGS%20NF%20Italic.ttf MesloLGS%20NF%20Bold.ttf MesloLGS%20NF%20Bold%20Italic.ttf; do
+  curl -L https://github.com/romkatv/dotfiles-public/blob/master/.local/share/fonts/NerdFonts/$font?raw=true > ~/.fonts/$font
+done
+
 fc-cache -vf ~/.fonts/
-
-
-mkdir -p ~/.config/fontconfig/conf.d/
-mv 10-powerline-symbols.conf ~/.config/fontconfig/conf.d/
 
 mkdir -p ~/.mc/
 curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
-
-make plugins
-
-./install-vim

@@ -1,4 +1,6 @@
-.PHONY: setup plugins
+.PHONY: setup setup-vim packages
+
+all: packages setup setup-vim
 
 define ZSH_PLUGINS_FILE_HEADER
 #!/usr/bin/env zsh
@@ -13,8 +15,8 @@ export ZSH_PLUGINS_FILE_HEADER
 setup:
 	./install
 
-plugins:
-	@echo "$$ZSH_PLUGINS_FILE_HEADER" > ~/.zsh_plugins.sh
-	@antibody bundle < zsh_plugins.txt >> ~/.zsh_plugins.sh
-	@antibody bundle < ~/.zsh_plugins.local >> ~/.zsh_plugins.sh
-	@echo "Zsh plugins installed"
+setup-vim:
+	./install-vim
+
+packages:
+	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag tmux
