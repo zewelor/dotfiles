@@ -14,6 +14,7 @@ setup:
 	./install
 
 plugins:
-	echo "$$ZSH_PLUGINS_FILE_HEADER" > ~/.zsh_plugins.sh
-	antibody bundle < zsh_plugins.txt >> ~/.zsh_plugins.sh
-	antibody bundle < ~/.zsh_plugins.local >> ~/.zsh_plugins.sh
+	@echo "$$ZSH_PLUGINS_FILE_HEADER" > ~/.zsh_plugins.sh
+	@antibody bundle < zsh_plugins.txt >> ~/.zsh_plugins.sh
+	@antibody bundle < ~/.zsh_plugins.local >> ~/.zsh_plugins.sh
+	@echo "Zsh plugins installed"
