@@ -1,3 +1,5 @@
+setopt nullglob  # allows filename patterns which match no files to expand to a null string, rather than themselves
+
 PATH=$PATH:$HOME/bin
 
 if [ -f "$HOME/.zplugin/bin/zmodules/Src/zdharma/zplugin.so" ]; then
