@@ -76,7 +76,11 @@ zplugin light zdharma/z-p-submods
 #
 
 zplugin ice as"completion" ; zplugin snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
-zplugin ice as"completion" ; zplugin snippet https://github.com/tmuxinator/tmuxinator/blob/master/completion/tmuxinator.zsh
+zplugin ice as"completion" mv"chezmoi* -> _chezmoi"; zplugin snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
+
+if [ -x "$(command -v tmuxinator)" ]; then
+  alias mux="tmuxinator"
+fi
 
 #
 # Programs
@@ -93,6 +97,7 @@ zplugin snippet PZT::modules/helper/init.zsh
 zstyle ':prezto:*:*' case-sensitive 'yes'
 zstyle ':prezto:*:*' color 'yes'
 zstyle ':prezto:module:editor' key-bindings 'vi'
+zstyle ':prezto:module:utility' correct 'no'
 
 # Plugins
 zplugin ice svn pick ""; zplugin snippet PZT::modules/archive # No files to source, pick nothing to prevent snippet not loaded warning
@@ -100,10 +105,11 @@ zplugin ice svn; zplugin snippet PZT::modules/git
 zplugin ice svn; zplugin snippet PZT::modules/dpkg
 zplugin ice svn; zplugin snippet PZT::modules/history
 zplugin ice svn; zplugin snippet PZT::modules/utility
-zplugin ice load'[[ -x "$(command -v docker)" ]]' svn lucid ; zplugin snippet PZT::modules/docker
-
-# Don't load tmux module inside tmux session
-zplugin ice load'[[ -z "$TMUX" ]]' svn lucid ; zplugin snippet PZT::modules/tmux
+zplugin ice svn; zplugin snippet PZT::modules/docker
+zplugin ice svn; zplugin snippet PZT::modules/tmux
+zplugin ice svn; zplugin snippet PZT::modules/ruby
+# zplugin ice svn; zplugin snippet PZT::modules/rails
+zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/contrib-kubernetes'
 
 # This module must be loaded after the utility module.
 zplugin ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
@@ -137,7 +143,10 @@ alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt f
 alias gst='git status'
 alias ga='git add'
 alias gd='git diff'
+alias gcb='git checkout -b'
+alias grbm='git rebase master'
 alias gpo="git push -u origin"
+alias gcm='git checkout master'
 alias gcmm="git commit -m"
 alias gds='git diff --staged'
 alias gpl='git pull'
