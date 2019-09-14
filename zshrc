@@ -66,7 +66,7 @@ autoload -Uz _zplugin
 # zplugin ice nocompletions atpull'prompt_zinc_compile' compile"{zinc_functions/*,segments/*,zinc.zsh}" ; zplugin load robobenklein/zinc
 # zplugin ice wait'1' lucid atload'zinc_optional_depenency_loaded' ; zplugin load romkatv/gitstatus
 # Powerlevel10k
-zplugin ice wait'!' lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zplugin light romkatv/powerlevel10k
+zplugin ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zplugin light romkatv/powerlevel10k
 # Powerlevel10k from PZT
 # zplugin ice svn submods'romkatv/powerlevel10k -> external/powerlevel10k' atload"prompt powerlevel10k"
 # zplugin snippet PZT::modules/prompt

@@ -5,8 +5,6 @@ cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
 for rc in *rc *config tmux.conf zshenv gitignore_global rspec p10k.zsh; do
-  mkdir -pv bak
-  [ -e ~/.$rc ] && mv -v ~/.$rc bak/.$rc
   ln -sfv $BASE/$rc ~/.$rc
 done
 
