@@ -110,7 +110,7 @@ zplugin ice svn; zplugin snippet PZT::modules/utility
 zplugin ice svn; zplugin snippet PZT::modules/docker
 zplugin ice svn; zplugin snippet PZT::modules/tmux
 zplugin ice svn; zplugin snippet PZT::modules/ruby
-# zplugin ice svn; zplugin snippet PZT::modules/rails
+zplugin ice svn; zplugin snippet PZT::modules/rails
 zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/contrib-kubernetes'
 
 # This module must be loaded after the utility module.
