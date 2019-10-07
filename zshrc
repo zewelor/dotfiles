@@ -205,6 +205,10 @@ if [ -f "$HOME/anaconda3/bin/conda" ]; then
     # <<< conda initialize <<<
     zplugin ice as"completion" ; zplugin snippet https://github.com/esc/conda-zsh-completion/blob/master/_conda
   }
+else
+  function loadconda() {
+    echo "Please install conda in $HOME/anaconda3/bin/conda"
+  }
 fi
 
 #
