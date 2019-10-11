@@ -9,7 +9,7 @@ for rc in *rc *config tmux.conf zshenv gitignore_global rspec p10k.zsh; do
 done
 
 for rc in tmuxinator; do
-  ln -sfv $BASE/prv/$rc ~/.$rc
+  ln -sfnvi $BASE/prv/$rc ~/.$rc/
 done
 
 mkdir -p ~/.zplugin
