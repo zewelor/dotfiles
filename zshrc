@@ -1,6 +1,8 @@
 setopt nullglob  # allows filename patterns which match no files to expand to a null string, rather than themselves
 
-PATH=$PATH:$HOME/bin
+if [ -d $HOME/bin ]; then
+  PATH=$PATH:$HOME/bin
+fi
 
 if [ -f "$HOME/.zplugin/bin/zmodules/Src/zdharma/zplugin.so" ]; then
   module_path+=( "$HOME/.zplugin/bin/zmodules/Src" )
@@ -41,10 +43,6 @@ if [ -d $HOME/.zshrc.d ]; then
     source $file
   done
 fi
-
-#unalias rm
-#unalias cp
-#unalias mv
 
 #
 # Zplugin
@@ -186,7 +184,7 @@ if [ -s "$HOME/.rvm/scripts/rvm" ]; then
   alias loadrvm='[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"'
 fi
 
-# Add alias only if rvm installed on system
+# Add alias only if conda installed on system
 if [ -f "$HOME/anaconda3/bin/conda" ]; then
   function loadconda() {
     # >>> conda initialize >>>
