@@ -107,8 +107,8 @@ zplugin ice svn; zplugin snippet PZT::modules/history
 zplugin ice svn; zplugin snippet PZT::modules/utility
 zplugin ice svn; zplugin snippet PZT::modules/docker
 zplugin ice svn; zplugin snippet PZT::modules/tmux
-zplugin ice svn; zplugin snippet PZT::modules/ruby
-zplugin ice svn; zplugin snippet PZT::modules/rails
+# zplugin ice svn; zplugin snippet PZT::modules/ruby
+# zplugin ice svn; zplugin snippet PZT::modules/rails
 zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/contrib-kubernetes'
 
 # This module must be loaded after the utility module.
@@ -181,7 +181,9 @@ fi
 
 # Add alias only if rvm installed on system
 if [ -s "$HOME/.rvm/scripts/rvm" ]; then
-  alias loadrvm='[[ -s "$HOME/.rvm/scripts/rvm" ]] && . "$HOME/.rvm/scripts/rvm"'
+  # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
+  # conflicts with RVM.
+  alias loadrvm='[[ -s "$HOME/.rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "$HOME/.rvm/scripts/rvm"'
 fi
 
 # Add alias only if conda installed on system
@@ -215,6 +217,8 @@ fi
 
 unsetopt SHARE_HISTORY
 export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=100000
+export SAVEHIST=100000  
 # setopt  NO_NOMATCH
 # unset PAGER
 
