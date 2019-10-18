@@ -34,3 +34,5 @@
 	required = true
 [difftool]
 	prompt = false
+[rebase]
+	autoStash = true
