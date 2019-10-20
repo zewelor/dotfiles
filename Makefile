@@ -9,4 +9,4 @@ setup-vim:
 	./install-vim
 
 packages:
-	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh
+	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf colormake tmux zsh
