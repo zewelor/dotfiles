@@ -12,10 +12,6 @@ for rc in tmuxinator; do
   ln -sfnvi $BASE/prv/$rc ~/.$rc/
 done
 
-mkdir -p ~/.zplugin
-chmod g-rwX "$HOME/.zplugin"
-git clone https://github.com/zdharma/zplugin.git ~/.zplugin/bin
-
 mkdir -p ~/.fonts/
 for font in MesloLGS%20NF%20Regular.ttf MesloLGS%20NF%20Italic.ttf MesloLGS%20NF%20Bold.ttf MesloLGS%20NF%20Bold%20Italic.ttf; do
   curl -L https://github.com/romkatv/dotfiles-public/blob/master/.local/share/fonts/NerdFonts/$font?raw=true > ~/.fonts/$font
