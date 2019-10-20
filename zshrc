@@ -104,7 +104,7 @@ zplugin ice svn pick ""; zplugin snippet PZT::modules/archive # No files to sour
 zplugin ice svn; zplugin snippet PZT::modules/git
 zplugin ice svn; zplugin snippet PZT::modules/dpkg
 zplugin ice svn; zplugin snippet PZT::modules/history
-zplugin ice svn atpull'rm functions/make' atclone'rm functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
+zplugin ice svn atpull'%atclone' atclone'rm functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
 zplugin ice svn; zplugin snippet PZT::modules/docker
 zplugin ice svn; zplugin snippet PZT::modules/tmux
 # zplugin ice svn; zplugin snippet PZT::modules/ruby
