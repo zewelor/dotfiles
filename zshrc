@@ -156,6 +156,21 @@ alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 alias grh='git reset HEAD'
 alias grhh='git reset HEAD --hard'
 
+#
+# Ruby on Rails
+#
+alias rorc='rails console'
+alias rordc='rails dbconsole'
+alias rordm='rake db:migrate'
+alias rordM='rake db:migrate db:test:clone'
+alias rordr='rake db:rollback'
+alias rorg='rails generate'
+alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
+alias rorlc='rake log:clear'
+alias rorp='rails plugin'
+alias rorr='rails runner'
+alias rors='rails server'
+
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && cd -'
 alias t='tail -f'
 alias extract='unarchive'
@@ -222,6 +237,28 @@ export HISTSIZE=100000
 export SAVEHIST=100000  
 # setopt  NO_NOMATCH
 # unset PAGER
+
+
+#
+# Functions
+#
+
+function ruby-app-root {
+
+  local root_dir="$PWD"
+
+  while [[ "$root_dir" != '/' ]]; do
+    if [[ -f "$root_dir/Gemfile" ]]; then
+      print "$root_dir"
+      break
+    fi
+    root_dir="$root_dir:h"
+  done
+
+  return 1
+
+}
+
 
 # Local config
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
