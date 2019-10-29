@@ -86,7 +86,7 @@ fi
 # Programs
 #
 zplugin ice as"program" pick"bin/tat" ; zplugin light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
-zplugin ice from"gh-r" as"program" ; zplugin load fgeller/kt 
+zplugin ice from"gh-r" as"program" ; zplugin load birdayz/kaf
 
 
 #
