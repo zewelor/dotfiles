@@ -4,6 +4,10 @@ if [ -d $HOME/bin ]; then
   PATH=$PATH:$HOME/bin
 fi
 
+if [ -d $HOME/.local/bin ]; then
+  PATH=$PATH:$HOME/.local/bin
+fi
+
 if [ -f "$HOME/.zplugin/bin/zmodules/Src/zdharma/zplugin.so" ]; then
   module_path+=( "$HOME/.zplugin/bin/zmodules/Src" )
   zmodload zdharma/zplugin
