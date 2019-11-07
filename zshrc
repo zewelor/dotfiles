@@ -100,7 +100,6 @@ zplugin snippet PZT::modules/helper/init.zsh
 
 # Settings
 # Set case-sensitivity for completion, history lookup, etc.
-zstyle ':prezto:*:*' case-sensitive 'yes'
 zstyle ':prezto:*:*' color 'yes'
 zstyle ':prezto:module:editor' key-bindings 'vi'
 zstyle ':prezto:module:utility' correct 'no'
