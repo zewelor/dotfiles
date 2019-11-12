@@ -60,6 +60,13 @@ autoload -Uz _zplugin
 (( ${+_comps} )) && _comps[zplugin]=_zplugin
 ### End of Zplugin's installer chunk
 
+
+# Url quotes magic
+autoload -Uz bracketed-paste-url-magic
+zle -N bracketed-paste bracketed-paste-url-magic
+autoload -Uz url-quote-magic
+zle -N self-insert url-quote-magic
+
 #
 # Themes
 #
@@ -230,6 +237,15 @@ if [ -f "$HOME/anaconda3/bin/conda" ]; then
 else
   function loadconda() {
     echo "Please install conda in $HOME/anaconda3/bin/conda"
+  }
+fi
+
+if [ -x "$(command -v youtube-dl)" ]; then
+  function youtube-mp3 () {
+    youtube-dl --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(title)s.%(ext)s' "$1"
+  }
+  function youtube-mp3-playlist () {
+    youtube-dl --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' "$1"
   }
 fi
 
