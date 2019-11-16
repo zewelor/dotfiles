@@ -249,6 +249,12 @@ if [ -x "$(command -v youtube-dl)" ]; then
   }
 fi
 
+if [ -x "$(command -v mixxx)" ]; then
+  function start-dj () {
+    nice -n -10 pasuspender mixxx
+  }
+fi
+
 #
 # Zplugin options overrides
 #
