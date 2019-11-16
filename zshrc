@@ -121,7 +121,7 @@ zplugin ice svn; zplugin snippet PZT::modules/docker
 zplugin ice svn; zplugin snippet PZT::modules/tmux
 # zplugin ice svn; zplugin snippet PZT::modules/ruby
 # zplugin ice svn; zplugin snippet PZT::modules/rails
-zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/contrib-kubernetes'
+zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/kubernetes'
 
 # This module must be loaded after the utility module.
 zplugin ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
