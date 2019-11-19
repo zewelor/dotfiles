@@ -116,12 +116,18 @@ zplugin ice svn pick ""; zplugin snippet PZT::modules/archive # No files to sour
 zplugin ice svn; zplugin snippet PZT::modules/git
 zplugin ice svn; zplugin snippet PZT::modules/dpkg
 zplugin ice svn; zplugin snippet PZT::modules/history
-zplugin ice svn atpull'%atclone' atclone'rm functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
+zplugin ice svn atpull'%atclone' run-atpull atclone'rm functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
 zplugin ice svn; zplugin snippet PZT::modules/docker
 zplugin ice svn; zplugin snippet PZT::modules/tmux
 # zplugin ice svn; zplugin snippet PZT::modules/ruby
 # zplugin ice svn; zplugin snippet PZT::modules/rails
-zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/kubernetes'
+
+if [ -x "$(command -v kubectl)" ]; then
+  zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/kubernetes'
+  function start-k8s-work () {
+    typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
+  }
+fi
 
 # This module must be loaded after the utility module.
 zplugin ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
@@ -254,7 +260,6 @@ if [ -x "$(command -v mixxx)" ]; then
     nice -n -10 pasuspender mixxx
   }
 fi
-
 #
 # Zplugin options overrides
 #
