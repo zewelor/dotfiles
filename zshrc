@@ -213,8 +213,15 @@ if [ -n "$DISPLAY" ]; then
   alias rekde="kquitapp5 plasmashell && kstart5 plasmashell"
 fi
 
+# Add alias only if rvm installed on system wide
+if [ -s "/usr/local/rvm/scripts/rvm" ] ; then
+  # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
+  # conflicts with RVM.
+  alias loadrvm='[[ -s "/usr/local/rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "/usr/local/rvm/scripts/rvm"'
+fi
+
 # Add alias only if rvm installed on system
-if [ -s "$HOME/.rvm/scripts/rvm" ]; then
+if [ -s "$HOME/.rvm/scripts/rvm" ] ; then
   # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
   # conflicts with RVM.
   alias loadrvm='[[ -s "$HOME/.rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "$HOME/.rvm/scripts/rvm"'
