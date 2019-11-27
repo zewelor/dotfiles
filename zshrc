@@ -175,6 +175,7 @@ alias gpf='git push --force-with-lease'
 alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 alias grh='git reset HEAD'
 alias grhh='git reset HEAD --hard'
+alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
 
 #
 # Ruby on Rails
