@@ -213,7 +213,7 @@ alias -g XG='| xargs egrep'
 alias -g X='| xargs'
 
 if [ -n "$DISPLAY" ]; then
-  alias rekde="kquitapp5 plasmashell && kstart5 plasmashell"
+  alias rekde="kquitapp5 plasmashell ; kstart5 plasmashell"
 fi
 
 # Add alias only if rvm installed on system wide
