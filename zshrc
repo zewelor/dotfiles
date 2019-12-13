@@ -267,7 +267,7 @@ fi
 
 if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
-    nice -n -10 pasuspender mixxx
+    sudo nice -n -10 pasuspender mixxx
   }
 fi
 #
