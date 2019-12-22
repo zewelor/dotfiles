@@ -37,6 +37,7 @@ export EDITOR=$VISUAL
 
 export DEFAULT_USER=`whoami`
 
+export DIRENV_LOG_FORMAT=
 # make it more responsive
 export KEYTIMEOUT=1
 
@@ -71,14 +72,8 @@ zle -N self-insert url-quote-magic
 # Themes
 #
 
-# # Zinc
-# zplugin ice nocompletions atpull'prompt_zinc_compile' compile"{zinc_functions/*,segments/*,zinc.zsh}" ; zplugin load robobenklein/zinc
-# zplugin ice wait'1' lucid atload'zinc_optional_depenency_loaded' ; zplugin load romkatv/gitstatus
 # Powerlevel10k
 zplugin ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zplugin light romkatv/powerlevel10k
-# Powerlevel10k from PZT
-# zplugin ice svn submods'romkatv/powerlevel10k -> external/powerlevel10k' atload"prompt powerlevel10k"
-# zplugin snippet PZT::modules/prompt
 
 zplugin light zdharma/z-p-submods
 
@@ -99,6 +94,7 @@ fi
 zplugin ice as"program" pick"bin/tat" ; zplugin light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 zplugin ice from"gh-r" as"program" ; zplugin load birdayz/kaf
 zplugin ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zplugin light direnv/direnv
+
 
 #
 # Prezto
