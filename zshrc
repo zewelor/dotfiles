@@ -98,6 +98,9 @@ fi
 #
 zplugin ice as"program" pick"bin/tat" ; zplugin light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 zplugin ice from"gh-r" as"program" ; zplugin load birdayz/kaf
+zplugin ice as"program" make'!' atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh"
+zplugin light direnv/direnv
+zplugin ice from"gh-r" as"program" mv"direnv* -> direnv"; zplugin light direnv/direnv
 
 
 #
