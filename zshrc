@@ -152,7 +152,7 @@ zplugin snippet PZT::modules/autosuggestions
 # Use sudo without aliases
 alias instaluj="\sudo apt install -y"
 alias szukaj="\sudo apt-cache search"
-alias czysc_dpkg="\sudo apt autoremove -y ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs \sudo dpkg --purge"
+alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs \sudo dpkg --purge"
 alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt full-upgrade -y"
 
 # Git
