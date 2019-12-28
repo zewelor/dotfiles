@@ -94,6 +94,7 @@ fi
 zplugin ice as"program" pick"bin/tat" ; zplugin light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 zplugin ice from"gh-r" as"program" ; zplugin load birdayz/kaf
 zplugin ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zplugin light direnv/direnv
+zplugin ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zplugin light sharkdp/bat
 
 
 #
@@ -191,6 +192,12 @@ alias rors='rails server'
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && cd -'
 alias t='tail -f'
 alias extract='unarchive'
+
+
+#
+# Cli improvements
+#
+alias cat='bat --theme=ansi-light'
 
 # Global
 alias -g ...='../..'

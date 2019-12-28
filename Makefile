@@ -31,4 +31,4 @@ install-zplugin:
 	git clone https://github.com/zdharma/zplugin.git ~/.zplugin/bin
 
 packages:
-	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh
+	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find fzf ncdu
