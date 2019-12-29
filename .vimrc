@@ -106,6 +106,8 @@ Plug 'ervandew/supertab'
 " Browsing
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle'    }
 Plug 'kien/ctrlp.vim'
+Plug '~/.zplugin/plugins/junegunn---fzf'
+Plug 'junegunn/fzf.vim'
 
 " Tmux Integration
 " Plug 'edkolev/tmuxline.vim'

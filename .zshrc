@@ -53,6 +53,18 @@ fi
 # Zplugin
 #
 
+
+#################################################################
+# FUNCTIONS TO MAKE CONFIGURATION LESS VERBOSE
+#
+
+turbo0()   { zplugin ice wait"0a" lucid             "${@}"; }
+turbo1()   { zplugin ice wait"0b" lucid             "${@}"; }
+turbo2()   { zplugin ice wait"0c" lucid             "${@}"; }
+zcommand() { zplugin ice wait"0b" lucid as"command" "${@}"; }
+zload()    { zplugin load                           "${@}"; }
+zsnippet() { zplugin snippet                        "${@}"; }
+
 zcompile ~/.zplugin/bin/zplugin.zsh
 
 ### Added by Zplugin's installer
@@ -88,6 +100,17 @@ if [ -x "$(command -v tmuxinator)" ]; then
   alias mux="tmuxinator"
 fi
 
+
+
+# local snippets
+zplugin ice lucid
+zplugin snippet $HOME/.zsh/10_utils.zsh
+zplugin ice wait"1" lucid
+zplugin snippet $HOME/.zsh/20_keybinds.zsh
+
+# compinit
+#zplugin cdreplay -q
+
 #
 # Programs
 #
@@ -95,7 +118,24 @@ zplugin ice as"program" pick"bin/tat" ; zplugin light thoughtbot/dotfiles # Atta
 zplugin ice from"gh-r" as"program" ; zplugin load birdayz/kaf
 zplugin ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zplugin light direnv/direnv
 zplugin ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zplugin light sharkdp/bat
+zplugin ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zplugin light jesseduffield/lazygit
+zplugin ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zplugin light jesseduffield/lazydocker
+zcommand from"gh-r"; zload junegunn/fzf-bin
+zcommand pick"bin/fzf-tmux"; zload junegunn/fzf
+# Create and bind multiple widgets using fzf
+turbo0 src"shell/completion.zsh" id-as"junegunn/fzf_completions" pick"/dev/null" ; zload junegunn/fzf
 
+# Install `fzy` fuzzy finder, if not yet present in the system
+# Also install helper scripts for tmux and dwtm
+turbo0 as"command" if'[[ -z "$commands[fzy]" ]]' \
+       make"!PREFIX=$ZPFX install" atclone"cp contrib/fzy-* $ZPFX/bin/" pick"$ZPFX/bin/fzy*"
+    zload jhawthorn/fzy
+# Install fzy-using widgets
+turbo0 silent; zload aperezdc/zsh-fzy
+bindkey '\ec' fzy-cd-widget
+bindkey '^T'  fzy-file-widget
+bindkey '^R'  fzy-history-widget
+bindkey '^P'  fzy-proc-widget
 
 #
 # Prezto
@@ -113,11 +153,15 @@ zplugin ice svn pick ""; zplugin snippet PZT::modules/archive # No files to sour
 zplugin ice svn; zplugin snippet PZT::modules/git
 zplugin ice svn; zplugin snippet PZT::modules/dpkg
 zplugin ice svn; zplugin snippet PZT::modules/history
-zplugin ice svn atpull'%atclone' run-atpull atclone'rm functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
+zplugin ice svn atpull'%atclone' run-atpull atclone'rm -f functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
 zplugin ice svn; zplugin snippet PZT::modules/docker
 zplugin ice svn; zplugin snippet PZT::modules/tmux
 # zplugin ice svn; zplugin snippet PZT::modules/ruby
 # zplugin ice svn; zplugin snippet PZT::modules/rails
+zplugin ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
+
+zstyle ":prezto:module:enhancd" command "fzy:fzf"
+zstyle ":prezto:module:enhancd" command "cd"
 
 if [ -x "$(command -v kubectl)" ]; then
   zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/kubernetes'
@@ -136,8 +180,6 @@ zplugin ice svn; zplugin snippet PZT::modules/editor
 
 typeset -gA FAST_BLIST_PATTERNS
 FAST_BLIST_PATTERNS[/mnt/*]=1
-zplugin load zdharma/history-search-multi-word
-
 zplugin ice wait"0" lucid atinit"ZPLGM[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay"
 zplugin light zdharma/fast-syntax-highlighting
 
@@ -192,12 +234,14 @@ alias rors='rails server'
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && cd -'
 alias t='tail -f'
 alias extract='unarchive'
-
+alias ..='cd ..'
 
 #
 # Cli improvements
 #
-alias cat='bat --theme=ansi-light'
+if has "bat"; then
+  alias cat='bat --theme=ansi-light'
+fi
 
 # Global
 alias -g ...='../..'

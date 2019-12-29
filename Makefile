@@ -21,8 +21,8 @@ install-fonts:
 	fc-cache -vf ~/.fonts/
 
 install-base-symlinks:
-	for rc in zshrc tmux.conf zshenv p10k.zsh; do \
-		ln -sfv "$(BASE)/$$rc" ~/.$$rc ;						\
+	for rc in .zshrc .tmux.conf .zshenv .p10k.zsh .vimrc; do \
+		ln -sfv "$(BASE)/$$rc" ~/$$rc ;						\
 	done
 
 install-zplugin:
@@ -31,4 +31,4 @@ install-zplugin:
 	git clone https://github.com/zdharma/zplugin.git ~/.zplugin/bin
 
 packages:
-	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find fzf ncdu
+	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu
