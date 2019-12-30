@@ -96,11 +96,6 @@ get_os() {
     done
 }
 
-gitlocal() {
-  git config --local user.name cappyzawa
-  git config --local user.email "cappyzawa@yahoo.ne.jp"
-}
-
 kind_start() {
   if ! has "kind"; then
     echo "kind command is missing"
