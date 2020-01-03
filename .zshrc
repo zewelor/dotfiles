@@ -128,7 +128,6 @@ zcommand from"gh-r"; zload junegunn/fzf-bin
 zcommand pick"bin/fzf-tmux"; zload junegunn/fzf
 # Create and bind multiple widgets using fzf
 turbo0 src"shell/completion.zsh" id-as"junegunn/fzf_completions" pick"/dev/null" ; zload junegunn/fzf
-zplugin ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zplugin light kubernetes-sigs/krew
 
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
@@ -170,6 +169,7 @@ zstyle ":prezto:module:enhancd" command "cd"
 
 if [ -x "$(command -v kubectl)" ]; then
   zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/kubernetes'
+  zplugin ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zplugin light kubernetes-sigs/krew
   function start-k8s-work () {
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS G kubecontext)" ] ; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
