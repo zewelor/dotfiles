@@ -8,6 +8,10 @@ if [ -d $HOME/.local/bin ]; then
   PATH=$PATH:$HOME/.local/bin
 fi
 
+if [ -d $HOME/.krew/bin ]; then
+  PATH=$PATH:$HOME/.krew/bin
+fi
+
 if [ -f "$HOME/.zplugin/bin/zmodules/Src/zdharma/zplugin.so" ]; then
   module_path+=( "$HOME/.zplugin/bin/zmodules/Src" )
   zmodload zdharma/zplugin
@@ -124,6 +128,7 @@ zcommand from"gh-r"; zload junegunn/fzf-bin
 zcommand pick"bin/fzf-tmux"; zload junegunn/fzf
 # Create and bind multiple widgets using fzf
 turbo0 src"shell/completion.zsh" id-as"junegunn/fzf_completions" pick"/dev/null" ; zload junegunn/fzf
+zplugin ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zplugin light kubernetes-sigs/krew
 
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
