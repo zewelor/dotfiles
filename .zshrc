@@ -21,8 +21,8 @@ else
   fi
 fi
 
-if [ -x "$(command -v snap)" ]; then
-  PATH=$PATH:/snap/bin
+if [ -f /etc/profile.d/apps-bin-path.sh ]; then
+  source /etc/profile.d/apps-bin-path.sh
 fi
 
 DISABLE_AUTO_TITLE="true"
