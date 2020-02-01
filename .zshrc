@@ -164,7 +164,8 @@ zplugin ice svn; zplugin snippet PZT::modules/tmux
 # zplugin ice svn; zplugin snippet PZT::modules/rails
 zplugin ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
 
-zstyle ":prezto:module:enhancd" command "fzy:fzf"
+export ENHANCD_DOT_ARG="..."
+zstyle ":prezto:module:enhancd" filter "fzy:fzf"
 zstyle ":prezto:module:enhancd" command "cd"
 
 if [ -x "$(command -v kubectl)" ]; then
@@ -249,8 +250,6 @@ if has "bat"; then
 fi
 
 # Global
-alias -g ...='../..'
-alias -g ....='../../..'
 alias -g C='| wc -l'
 alias -g G='| grep -E'  # egrep is deprecated
 alias -g L='| less'
