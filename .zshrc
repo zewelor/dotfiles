@@ -68,6 +68,9 @@ turbo2()   { zplugin ice wait"0c" lucid             "${@}"; }
 zcommand() { zplugin ice wait"0b" lucid as"command" "${@}"; }
 zload()    { zplugin load                           "${@}"; }
 zsnippet() { zplugin snippet                        "${@}"; }
+has()      { type "${1:?too few arguments}" &>/dev/null     }
+
+export ZSH_CACHE_DIR="${TMPDIR:-/tmp}"
 
 zcompile ~/.zplugin/bin/zplugin.zsh
 
@@ -107,8 +110,6 @@ fi
 
 
 # local snippets
-zplugin ice lucid
-zplugin snippet $HOME/.zsh/10_utils.zsh
 zplugin ice wait"1" lucid
 zplugin snippet $HOME/.zsh/20_keybinds.zsh
 

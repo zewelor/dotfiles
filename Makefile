@@ -2,8 +2,10 @@
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
+zplugin_dir = ~/.zplugin
+
 all: base setup
-base: packages install-base-symlinks install-fonts setup-vim install-zplugin
+base: packages install-base-symlinks install-fonts setup-vim | $(zplugin_dir)
 
 setup:
 	./install
@@ -25,7 +27,7 @@ install-base-symlinks:
 		ln -sfv "$(BASE)/$$rc" ~/$$rc ;						\
 	done
 
-install-zplugin:
+$(zplugin_dir):
 	mkdir -p ~/.zplugin
 	chmod g-rwX "${HOME}/.zplugin"
 	git clone https://github.com/zdharma/zplugin.git ~/.zplugin/bin
