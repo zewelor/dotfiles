@@ -281,6 +281,10 @@ if [ -s "$HOME/.rvm/scripts/rvm" ] ; then
   alias loadrvm='[[ -s "$HOME/.rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "$HOME/.rvm/scripts/rvm"'
 fi
 
+if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
+  alias load-platformio='source .platformio/penv/bin/activate'
+fi
+
 # Add alias only if conda installed on system
 if [ -f "$HOME/anaconda3/bin/conda" ]; then
   function loadconda() {
