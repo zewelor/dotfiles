@@ -282,7 +282,7 @@ if [ -s "$HOME/.rvm/scripts/rvm" ] ; then
 fi
 
 if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
-  alias load-platformio='source .platformio/penv/bin/activate'
+  alias load-platformio='source ~/.platformio/penv/bin/activate'
 fi
 
 # Add alias only if conda installed on system
