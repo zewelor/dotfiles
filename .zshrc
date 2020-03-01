@@ -61,12 +61,10 @@ zload()    { zinit load                           "${@}"; }
 zsnippet() { zinit snippet                        "${@}"; }
 has()      { type "${1:?too few arguments}" &>/dev/null     }
 
-export ZSH_CACHE_DIR="${TMPDIR:-/tmp}"
-
-zcompile ~/.zplugin/bin/zplugin.zsh
+# zcompile ~/.zplugin/bin/zinit.zsh
 
 ### Added by zinit's installer
-source "${HOME}/.zplugin/bin/zplugin.zsh"
+source "${HOME}/.zplugin/bin/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 ### End of zinit's installer chunk
