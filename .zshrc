@@ -12,15 +12,6 @@ if [ -d $HOME/.krew/bin ]; then
   PATH=$PATH:$HOME/.krew/bin
 fi
 
-if [ -f "$HOME/.zplugin/bin/zmodules/Src/zdharma/zplugin.so" ]; then
-  module_path+=( "$HOME/.zplugin/bin/zmodules/Src" )
-  zmodload zdharma/zplugin
-else
-  if [ -x "$(command -v gcc)" ]; then
-    echo "Missing zplugin binary module, compile it using 'zplugin module build'"
-  fi
-fi
-
 if [ -f /etc/profile.d/apps-bin-path.sh ]; then
   source /etc/profile.d/apps-bin-path.sh
 fi
@@ -54,7 +45,7 @@ if [ -d $HOME/.zshrc.d ]; then
 fi
 
 #
-# Zplugin
+# Zinit
 #
 
 
@@ -62,23 +53,32 @@ fi
 # FUNCTIONS TO MAKE CONFIGURATION LESS VERBOSE
 #
 
-turbo0()   { zplugin ice wait"0a" lucid             "${@}"; }
-turbo1()   { zplugin ice wait"0b" lucid             "${@}"; }
-turbo2()   { zplugin ice wait"0c" lucid             "${@}"; }
-zcommand() { zplugin ice wait"0b" lucid as"command" "${@}"; }
-zload()    { zplugin load                           "${@}"; }
-zsnippet() { zplugin snippet                        "${@}"; }
+turbo0()   { zinit ice wait"0a" lucid             "${@}"; }
+turbo1()   { zinit ice wait"0b" lucid             "${@}"; }
+turbo2()   { zinit ice wait"0c" lucid             "${@}"; }
+zcommand() { zinit ice wait"0b" lucid as"command" "${@}"; }
+zload()    { zinit load                           "${@}"; }
+zsnippet() { zinit snippet                        "${@}"; }
 has()      { type "${1:?too few arguments}" &>/dev/null     }
 
 export ZSH_CACHE_DIR="${TMPDIR:-/tmp}"
 
 zcompile ~/.zplugin/bin/zplugin.zsh
 
-### Added by Zplugin's installer
+### Added by zinit's installer
 source "${HOME}/.zplugin/bin/zplugin.zsh"
-autoload -Uz _zplugin
-(( ${+_comps} )) && _comps[zplugin]=_zplugin
-### End of Zplugin's installer chunk
+autoload -Uz _zinit
+(( ${+_comps} )) && _comps[zinit]=_zinit
+### End of zinit's installer chunk
+
+if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma/zplugin.so" ]; then
+  module_path+=( "$HOME/.zplugin/bin/zmodules/Src" )
+  zmodload zdharma/zplugin
+else
+  if [ -x "$(command -v gcc)" ]; then
+    echo "Missing zinit binary module, compile it using 'zinit module build'"
+  fi
+fi
 
 
 # Url quotes magic
@@ -92,16 +92,16 @@ zle -N self-insert url-quote-magic
 #
 
 # Powerlevel10k
-zplugin ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zplugin light romkatv/powerlevel10k
+zinit ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zinit light romkatv/powerlevel10k
 
-zplugin light zdharma/z-p-submods
+zinit light zdharma/z-p-submods
 
 #
 # Completions
 #
 
-zplugin ice as"completion" ; zplugin snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
-zplugin ice as"completion" mv"chezmoi* -> _chezmoi"; zplugin snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
+zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
+zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
   alias mux="tmuxinator"
@@ -110,20 +110,20 @@ fi
 
 
 # local snippets
-zplugin ice wait"1" lucid
-zplugin snippet $HOME/.zsh/20_keybinds.zsh
+zinit ice wait"1" lucid
+zinit snippet $HOME/.zsh/20_keybinds.zsh
 
 # compinit
-#zplugin cdreplay -q
+#zinit cdreplay -q
 
 #
 # Programs
 #
-zplugin ice as"program" pick"bin/tat" ; zplugin light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
-zplugin ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zplugin light direnv/direnv
-zplugin ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zplugin light sharkdp/bat
-zplugin ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zplugin light jesseduffield/lazygit
-zplugin ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zplugin light jesseduffield/lazydocker
+zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
+zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
+zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
+zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
+zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
 zcommand from"gh-r"; zload junegunn/fzf-bin
 zcommand pick"bin/fzf-tmux"; zload junegunn/fzf
 # Create and bind multiple widgets using fzf
@@ -144,7 +144,7 @@ bindkey '^P'  fzy-proc-widget
 #
 # Prezto
 #
-zplugin snippet PZT::modules/helper/init.zsh
+zinit snippet PZT::modules/helper/init.zsh
 
 # Settings
 # Set case-sensitivity for completion, history lookup, etc.
@@ -153,24 +153,23 @@ zstyle ':prezto:module:editor' key-bindings 'vi'
 zstyle ':prezto:module:utility' correct 'no'
 
 # Plugins
-zplugin ice svn pick ""; zplugin snippet PZT::modules/archive # No files to source, pick nothing to prevent snippet not loaded warning
-zplugin ice svn; zplugin snippet PZT::modules/git
-zplugin ice svn; zplugin snippet PZT::modules/dpkg
-zplugin ice svn; zplugin snippet PZT::modules/history
-zplugin ice svn atpull'%atclone' run-atpull atclone'rm -f functions/make'; zplugin snippet PZT::modules/utility # Remove make function as it breaks make
-zplugin ice svn; zplugin snippet PZT::modules/docker
-zplugin ice svn; zplugin snippet PZT::modules/tmux
-# zplugin ice svn; zplugin snippet PZT::modules/ruby
-# zplugin ice svn; zplugin snippet PZT::modules/rails
-zplugin ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
+zinit ice svn pick ""; zinit snippet PZT::modules/archive # No files to source, pick nothing to prevent snippet not loaded warning
+zinit ice svn; zinit snippet PZT::modules/git
+zinit ice svn; zinit snippet PZT::modules/dpkg
+zinit ice svn; zinit snippet PZT::modules/history
+zinit ice svn atpull'%atclone' run-atpull atclone'rm -f functions/make'; zinit snippet PZT::modules/utility # Remove make function as it breaks make
+zinit ice svn; zinit snippet PZT::modules/docker
+zinit ice svn; zinit snippet PZT::modules/tmux
+# zinit ice svn; zinit snippet PZT::modules/ruby
+# zinit ice svn; zinit snippet PZT::modules/rails
+zinit ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zinit snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
 
 export ENHANCD_DOT_ARG="..."
 zstyle ":prezto:module:enhancd" filter "fzy:fzf"
 zstyle ":prezto:module:enhancd" command "cd"
 
 if [ -x "$(command -v kubectl)" ]; then
-  zplugin ice svn; zplugin snippet 'https://github.com/belak/prezto-contrib/trunk/kubernetes'
-  zplugin ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zplugin light kubernetes-sigs/krew
+  zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
   function start-k8s-work () {
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS G kubecontext)" ] ; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
@@ -179,18 +178,18 @@ if [ -x "$(command -v kubectl)" ]; then
 fi
 
 # This module must be loaded after the utility module.
-zplugin ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
-zplugin snippet PZT::modules/completion
+zinit ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
+zinit snippet PZT::modules/completion
 
-zplugin ice svn; zplugin snippet PZT::modules/editor
+zinit ice svn; zinit snippet PZT::modules/editor
 
 typeset -gA FAST_BLIST_PATTERNS
 FAST_BLIST_PATTERNS[/mnt/*]=1
-zplugin ice wait"0" lucid atinit"ZPLGM[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay"
-zplugin light zdharma/fast-syntax-highlighting
+zinit ice wait"0" lucid atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay"
+zinit light zdharma/fast-syntax-highlighting
 
-zplugin ice svn submods'zsh-users/zsh-autosuggestions -> external'
-zplugin snippet PZT::modules/autosuggestions
+zinit ice svn submods'zsh-users/zsh-autosuggestions -> external'
+zinit snippet PZT::modules/autosuggestions
 
 #
 # Aliases
@@ -302,7 +301,7 @@ if [ -f "$HOME/anaconda3/bin/conda" ]; then
     fi
     unset __conda_setup
     # <<< conda initialize <<<
-    zplugin ice as"completion" ; zplugin snippet https://github.com/esc/conda-zsh-completion/blob/master/_conda
+    zinit ice as"completion" ; zinit snippet https://github.com/esc/conda-zsh-completion/blob/master/_conda
     compinit
   }
 else
@@ -326,7 +325,7 @@ if [ -x "$(command -v mixxx)" ]; then
   }
 fi
 #
-# Zplugin options overrides
+# Zinit options overrides
 #
 
 unsetopt SHARE_HISTORY
