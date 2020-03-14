@@ -30,7 +30,7 @@ install-base-symlinks:
 $(zplugin_dir):
 	mkdir -p ~/.zplugin
 	chmod g-rwX "${HOME}/.zplugin"
-	git clone https://github.com/zdharma/zplugin.git ~/.zplugin/bin
+	git clone git://github.com/zdharma/zinit.git ~/.zplugin/bin
 
 packages:
 	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu
