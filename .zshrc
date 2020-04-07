@@ -245,6 +245,10 @@ alias ..='cd ..'
 if has "bat"; then
   alias cat='bat --theme=ansi-light'
 fi
+if has "docker"; then
+  alias czysc_docker='docker container prune ; dkrmI'
+fi
+
 
 # Global
 alias -g C='| wc -l'
@@ -281,6 +285,12 @@ fi
 if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
   alias load-platformio='source ~/.platformio/penv/bin/activate'
 fi
+
+if [ -s "$HOME/bin/Slic3rPE.AppImage" ] ; then
+  builtin source "${ZINIT[BIN_DIR]}/zinit-install.zsh"
+  alias update-slic3r='CPUTYPE="x64" .zinit-get-latest-gh-r-version prusa3d PrusaSlicer ; wget "https://github.com$REPLY" -O $HOME/bin/Slic3rPE.AppImage -q'
+fi
+
 
 # Add alias only if conda installed on system
 if [ -f "$HOME/anaconda3/bin/conda" ]; then
