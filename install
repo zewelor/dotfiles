@@ -4,7 +4,7 @@
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
-for rc in .*rc .*config .gitignore_global .zsh; do
+for rc in .*rc .*config .gitignore_global; do
   ln -sfv $BASE/$rc ~/$rc
 done
 

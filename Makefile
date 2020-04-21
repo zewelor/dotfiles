@@ -23,7 +23,7 @@ install-fonts:
 	fc-cache -vf ~/.fonts/
 
 install-base-symlinks:
-	for rc in .zshrc .tmux.conf .zshenv .p10k.zsh .vimrc; do \
+	for rc in .zshrc .tmux.conf .zshenv .p10k.zsh .vimrc .zsh; do \
 		ln -sfv "$(BASE)/$$rc" ~/$$rc ;						\
 	done
 
