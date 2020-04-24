@@ -1,3 +1,4 @@
 set hlsearch
 set ignorecase smartcase
 set incsearch
+set easymotion

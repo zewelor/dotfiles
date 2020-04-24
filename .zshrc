@@ -243,7 +243,7 @@ alias ..='cd ..'
 # Cli improvements
 #
 if has "bat"; then
-  alias cat='bat --theme=ansi-light'
+  alias cat='bat --theme=ansi-light -p'
 fi
 if has "docker"; then
   alias czysc_docker='docker container prune ; dkrmI'
