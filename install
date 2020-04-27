@@ -12,5 +12,11 @@ for rc in tmuxinator; do
   ln -sfnvi $BASE/prv/$rc ~/.$rc/
 done
 
+mkdir -p ~/.ssh/config.d/
+
+for ssh_config in $BASE/prv/ssh/config.d/*; do
+  ln -sfnvi $ssh_config ~/.ssh/config.d/$(basename $ssh_config)
+done
+
 mkdir -p ~/.mc/
 curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
