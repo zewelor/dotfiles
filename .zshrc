@@ -218,6 +218,7 @@ alias gpf='git push --force-with-lease'
 alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 alias grh='git reset HEAD'
 alias grhh='git reset HEAD --hard'
+alias git_undo_commit='git reset --soft HEAD~;'
 alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
 
 #
@@ -340,6 +341,7 @@ fi
 unsetopt SHARE_HISTORY
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=100000
+export HISTIGNORE="ignorespace"
 export SAVEHIST=100000  
 # setopt  NO_NOMATCH
 # unset PAGER
