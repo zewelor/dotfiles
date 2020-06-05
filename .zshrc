@@ -67,14 +67,14 @@ autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 ### End of zinit's installer chunk
 
-if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma/zplugin.so" ]; then
-  module_path+=( "$HOME/.zinit/bin/zmodules/Src" )
-  zmodload zdharma/zinit
-else
-  if [ -x "$(command -v gcc)" ]; then
-    echo "Missing zinit binary module, compile it using 'zinit module build'"
-  fi
-fi
+# if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma/zplugin.so" ]; then
+#   module_path+=( "$HOME/.zinit/bin/zmodules/Src" )
+#   zmodload zdharma/zplugin
+# else
+#   if [ -x "$(command -v gcc)" ]; then
+#     echo "Missing zinit binary module, compile it using 'zinit module build'"
+#   fi
+# fi
 
 
 # Url quotes magic
