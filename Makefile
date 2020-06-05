@@ -2,10 +2,10 @@
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-zplugin_dir = ~/.zplugin
+zinit_dir = ~/.zinit
 
 all: base setup
-base: packages install-base-symlinks install-fonts setup-vim | $(zplugin_dir)
+base: packages install-base-symlinks install-fonts setup-vim | $(zinit_dir)
 
 setup:
 	./install
@@ -27,10 +27,10 @@ install-base-symlinks:
 		ln -sfv "$(BASE)/$$rc" ~/$$rc ;						\
 	done
 
-$(zplugin_dir):
-	mkdir -p $(zplugin_dir)
-	chmod g-rwX $(zplugin_dir)
-	git clone git://github.com/zdharma/zinit.git $(zplugin_dir)/bin
+$(zinit_dir):
+	mkdir -p $(zinit_dir)
+	chmod g-rwX $(zinit_dir)
+	git clone git://github.com/zdharma/zinit.git $(zinit_dir)/bin
 
 packages:
 	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu

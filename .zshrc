@@ -61,17 +61,15 @@ zload()    { zinit load                           "${@}"; }
 zsnippet() { zinit snippet                        "${@}"; }
 has()      { type "${1:?too few arguments}" &>/dev/null     }
 
-# zcompile ~/.zplugin/bin/zinit.zsh
-
 ### Added by zinit's installer
-source "${HOME}/.zplugin/bin/zinit.zsh"
+source "${HOME}/.zinit/bin/zinit.zsh"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 ### End of zinit's installer chunk
 
 if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma/zplugin.so" ]; then
-  module_path+=( "$HOME/.zplugin/bin/zmodules/Src" )
-  zmodload zdharma/zplugin
+  module_path+=( "$HOME/.zinit/bin/zmodules/Src" )
+  zmodload zdharma/zinit
 else
   if [ -x "$(command -v gcc)" ]; then
     echo "Missing zinit binary module, compile it using 'zinit module build'"
@@ -100,6 +98,9 @@ zinit light zdharma/z-p-submods
 
 zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
+# zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
+zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma/null
+zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
   alias mux="tmuxinator"
@@ -175,6 +176,7 @@ if [ -x "$(command -v kubectl)" ]; then
     fi
   }
 fi
+
 
 # This module must be loaded after the utility module.
 zinit ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
