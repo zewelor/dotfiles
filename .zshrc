@@ -32,7 +32,7 @@ export EDITOR=$VISUAL
 
 export DEFAULT_USER=`whoami`
 
-export DIRENV_LOG_FORMAT=
+# export DIRENV_LOG_FORMAT=
 # make it more responsive
 export KEYTIMEOUT=1
 
@@ -100,6 +100,7 @@ zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/mast
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 # zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
 zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma/null
+zinit light-mode lucid wait has"k3d" for id-as"k3d_completion" as"completion" atclone"k3d completion zsh > _k3d" atpull"%atclone" run-atpull zdharma/null
 zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
@@ -119,7 +120,7 @@ zinit snippet $HOME/.zsh/20_keybinds.zsh
 # Programs
 #
 zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
-zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
+# zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
 zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
 zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
 zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
