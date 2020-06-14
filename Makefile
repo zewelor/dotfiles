@@ -5,7 +5,7 @@ BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 zinit_dir = ~/.zinit
 
 all: base setup
-base: packages install-base-symlinks install-fonts setup-vim | $(zinit_dir)
+base: packages setup-vim install-base-symlinks install-fonts | $(zinit_dir)
 
 setup:
 	./install

@@ -1,22 +1,72 @@
 #!/bin/bash
 
 # RC files
+
+function x {
+  echo "$" "$@"
+  # eval "$(printf '%q ' "$@")"
+}
+
+# Ensure directory exists
+function xmkdir {
+  if [ ! -d "$1" ]; then
+    x mkdir -p "$1"
+  fi
+}
+
+# Returns success if found
+function exists {
+  type -P "$1" > /dev/null
+}
+
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
 for rc in .*rc .*config .gitignore_global; do
-  ln -sfv $BASE/$rc ~/$rc
+  if [ ! -L ~/$rc ]; then
+    x ln -sfv $BASE/$rc ~/
+  fi
 done
 
 for rc in tmuxinator; do
-  ln -sfnvi $BASE/prv/$rc ~/.$rc/
+  if [ ! -L ~/.$rc  ]; then
+    x ln -sfnvi $BASE/prv/$rc ~/
+  fi
 done
 
 mkdir -p ~/.ssh/config.d/
 
 for ssh_config in $BASE/prv/ssh/config.d/*; do
-  ln -sfnvi $ssh_config ~/.ssh/config.d/$(basename $ssh_config)
+  if [ ! -L ~/.ssh/config.d/$(basename $ssh_config) ]; then
+    ln -sfnvi $ssh_config ~/.ssh/config.d/
+  fi
 done
 
 mkdir -p ~/.mc/
 curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
+
+if exists code ; then
+  DST=~/.config/Code/User
+
+  xmkdir "$DST"
+
+  for f in "$BASE"/.config/Code/User/* ; do
+    if [ ! -L $DST/$(basename "$f") ]; then
+      x rm -rf "$DST/$(basename "$f")"
+      x ln -sf "$f" "$DST"
+    fi
+  done
+
+  # expected=$(echo "ms-azuretools.vscode-docker ms-vscode.vscode-typescript-tslint-plugin ms-vscode.Go stkb.rewrap esbenp.prettier-vscode eg2.vscode-npm-script dbaeumer.vscode-eslint GitHub.vscode-pull-request-github DavidAnson.vscode-markdownlint glitch.glitch dart-code.flutter dart-code.dart-code" | tr '[:upper:]' '[:lower:]')
+  # actual=$(code --list-extensions | perl -pe '$_ = lc; chomp if eof' | tr '\n' ' ') # perl to remove trailing newline
+  #
+  # # can't use xargs because GNU xargs need -r; macOS xargs does -r by default, but rejects the switch
+  # for ext in $(comm -23 <(echo "$actual" | tr ' ' '\n' | sort) <(echo "$expected" | tr ' ' '\n' | sort)); do
+  #   code --uninstall-extension "$ext"
+  # done
+  # for ext in $(comm -13 <(echo "$actual" | tr ' ' '\n' | sort) <(echo "$expected" | tr ' ' '\n' | sort)); do
+  #   code --install-extension "$ext"
+  # done
+
+fi
+
