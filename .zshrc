@@ -273,6 +273,22 @@ if [ -n "$DISPLAY" ]; then
   alias rekde="kquitapp5 plasmashell ; kstart5 plasmashell"
 fi
 
+if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
+  set-konsole-tab-title-type ()
+  {
+      local _title=$1
+      local _type=${2:-0}
+      [[ -z "${_title}" ]]               && return 1
+      [[ -z "${KONSOLE_DBUS_SERVICE}" ]] && return 1
+      [[ -z "${KONSOLE_DBUS_SESSION}" ]] && return 1
+      qdbus >/dev/null "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_SESSION}" setTabTitleFormat "${_type}" "${_title}"
+  }
+  set-konsole-tab-title ()
+  {
+      set-konsole-tab-title-type $1 && set-konsole-tab-title-type $1 1
+  }
+fi
+
 # Add alias only if rvm installed on system wide
 if [ -s "/usr/local/rvm/scripts/rvm" ] ; then
   # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
@@ -354,21 +370,23 @@ export SAVEHIST=100000
 # Functions
 #
 
-function ruby-app-root {
+if has "ruby"; then
+  function ruby-app-root {
 
-  local root_dir="$PWD"
+    local root_dir="$PWD"
 
-  while [[ "$root_dir" != '/' ]]; do
-    if [[ -f "$root_dir/Gemfile" ]]; then
-      print "$root_dir"
-      break
-    fi
-    root_dir="$root_dir:h"
-  done
+    while [[ "$root_dir" != '/' ]]; do
+      if [[ -f "$root_dir/Gemfile" ]]; then
+        print "$root_dir"
+        break
+      fi
+      root_dir="$root_dir:h"
+    done
 
-  return 1
+    return 1
 
-}
+  }
+fi
 
 
 # Local config
