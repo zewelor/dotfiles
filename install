@@ -2,9 +2,14 @@
 
 # RC files
 
+# DEBUG=1
+
 function x {
-  echo "$" "$@"
-  # eval "$(printf '%q ' "$@")"
+  if [ -n "$DEBUG" ]; then
+    echo "$" "$@"
+  else
+    eval "$(printf '%q ' "$@")"
+  fi
 }
 
 # Ensure directory exists
