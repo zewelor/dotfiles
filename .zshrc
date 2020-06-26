@@ -59,7 +59,7 @@ turbo2()   { zinit ice wait"0c" lucid             "${@}"; }
 zcommand() { zinit ice wait"0b" lucid as"command" "${@}"; }
 zload()    { zinit load                           "${@}"; }
 zsnippet() { zinit snippet                        "${@}"; }
-has()      { type "${1:?too few arguments}" &>/dev/null     }
+has()      { type "${1:?too few arguments}" &>/dev/null   }
 
 ### Added by zinit's installer
 source "${HOME}/.zinit/bin/zinit.zsh"
@@ -352,6 +352,11 @@ if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
     sudo nice -n -10 pasuspender mixxx
   }
+fi
+
+
+if has "codium"; then
+  alias code='codium'
 fi
 #
 # Zinit options overrides

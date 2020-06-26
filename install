@@ -27,7 +27,7 @@ function exists {
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
-for rc in .*rc .*config .gitignore_global; do
+for rc in .*rc .gitconfig .gitignore_global; do
   if [ ! -L ~/$rc ]; then
     x ln -sfv $BASE/$rc ~/
   fi
@@ -50,7 +50,7 @@ done
 mkdir -p ~/.mc/
 curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
 
-if exists code ; then
+if exists code || exists codium ; then
   DST=~/.config/Code/User
 
   xmkdir "$DST"
