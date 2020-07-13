@@ -42,5 +42,17 @@
   {
     "key": "ctrl+k ctrl+right",
     "command": "-workbench.action.focusRightGroup"
-  }
+  },
+  {
+    "key": "ctrl+shift+n",
+    "command": "-workbench.action.newWindow"
+  },
+  {
+    "key": "ctrl+shift+n",
+    "command": "workbench.action.quickOpen"
+  },
+  {
+    "key": "ctrl+e",
+    "command": "-workbench.action.quickOpen"
+  },
 ]
