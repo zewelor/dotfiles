@@ -33,4 +33,4 @@ $(zinit_dir):
 	git clone git://github.com/zdharma/zinit.git $(zinit_dir)/bin
 
 packages:
-	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl
+	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim

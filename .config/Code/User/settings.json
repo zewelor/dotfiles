@@ -17,4 +17,26 @@
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
     "python.languageServer": "Microsoft"
+    "vim.normalModeKeyBindingsNonRecursive": [
+    {
+        "before": ["u"],
+        "after": [],
+        "commands": [
+            {
+                "command": "undo",
+                "args": []
+            }
+        ]
+    },
+    {
+        "before": ["<C-r>"],
+        "after": [],
+        "commands": [
+            {
+                "command": "redo",
+                "args": []
+            }
+        ]
+    }
+]
 }
