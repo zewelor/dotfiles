@@ -1,5 +1,4 @@
 {
-    "python.jediEnabled": false,
     "editor.accessibilitySupport": "off",
     "editor.minimap.enabled": false,
     "vs-kubernetes": {
@@ -16,7 +15,6 @@
     "vim.neovimPath": "/usr/bin/nvim",
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
-    "python.languageServer": "Microsoft"
     "vim.normalModeKeyBindingsNonRecursive": [
     {
         "before": ["u"],
