@@ -348,6 +348,16 @@ if [ -x "$(command -v youtube-dl)" ]; then
   }
 fi
 
+function du_sorted () {
+  if [ -z "$@" ]; then
+    ARGS='.'
+  else
+    ARGS="$@"
+  fi
+
+  du -h --max-depth=1 $ARGS | sort -h -r
+}
+
 if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
     sudo nice -n -10 pasuspender mixxx
