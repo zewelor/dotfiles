@@ -360,7 +360,7 @@ function du_sorted () {
 
 if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
-    sudo nice -n -10 pasuspender mixxx
+    sudo nice -n -10 su -c mixxx omen
   }
 fi
 
