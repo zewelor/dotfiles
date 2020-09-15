@@ -246,7 +246,7 @@ alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive 
 alias t='tail -f'
 alias extract='unarchive'
 alias ..='cd ..'
-alias export_dotenv='export $(cat .env | xargs)'
+alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 
 #
 # Cli improvements
