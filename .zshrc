@@ -239,10 +239,14 @@ alias rorp='rails plugin'
 alias rorr='rails runner'
 alias rors='rails server'
 
+#
+# Utils
+#
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && cd -'
 alias t='tail -f'
 alias extract='unarchive'
 alias ..='cd ..'
+alias export_dotenv='export $(cat .env | xargs)'
 
 #
 # Cli improvements
