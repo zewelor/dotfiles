@@ -359,7 +359,7 @@ function du_sorted () {
     ARGS="$@"
   fi
 
-  du -h --max-depth=1 $ARGS | sort -h -r
+  du -h --max-depth=1 $ARGS | sort -h
 }
 
 if [ -x "$(command -v mixxx)" ]; then
