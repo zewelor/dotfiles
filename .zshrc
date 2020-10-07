@@ -101,7 +101,7 @@ zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.
 # zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
 zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma/null
 zinit light-mode lucid wait has"k3d" for id-as"k3d_completion" as"completion" atclone"k3d completion zsh > _k3d" atpull"%atclone" run-atpull zdharma/null
-zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
+# zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
   alias mux="tmuxinator"
