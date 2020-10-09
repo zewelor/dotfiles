@@ -1,1 +1,0 @@
-/home/omen/dotfiles/.zsh
