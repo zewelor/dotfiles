@@ -112,6 +112,7 @@ Plug 'junegunn/fzf.vim'
 " Tmux Integration
 " Plug 'edkolev/tmuxline.vim'
 
+Plug 'chr4/nginx.vim'
 " Plug 'pangloss/vim-javascript'
 " Plug 'kchmck/vim-coffee-script'
 " Plug 'slim-template/vim-slim'
