@@ -352,6 +352,12 @@ if [ -x "$(command -v youtube-dl)" ]; then
   }
 fi
 
+if [ -x "$(command -v dkc)" ]; then
+  function dkcrs () {
+    dkc stop homeassistant ; dkc up "$@" homeassistant    
+  }
+fi
+
 function du_sorted () {
   if [ -z "$@" ]; then
     ARGS='.'
