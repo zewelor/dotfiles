@@ -352,9 +352,9 @@ if [ -x "$(command -v youtube-dl)" ]; then
   }
 fi
 
-if [ -x "$(command -v dkc)" ]; then
+if has "docker-compose"; then
   function dkcrs () {
-    dkc stop homeassistant ; dkc up "$@" homeassistant    
+    dkc stop $1 && dkc up "$@[2,-1]" $1    
   }
 fi
 
