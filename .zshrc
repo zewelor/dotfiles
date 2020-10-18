@@ -224,6 +224,10 @@ alias grhh='git reset HEAD --hard'
 alias git_undo_commit='git reset --soft HEAD~;'
 alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
 
+function gcmmpo () {
+  gcmm "$1" "$@[2,-1]" && gpo
+}
+
 #
 # Ruby on Rails
 #
