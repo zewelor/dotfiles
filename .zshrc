@@ -360,6 +360,10 @@ if has "docker-compose"; then
   function dkcrs () {
     dkc stop $1 && dkc up "$@[2,-1]" $1    
   }
+
+  function dkcrsd () {
+    dkcrs $1 -d
+  }
 fi
 
 function du_sorted () {
