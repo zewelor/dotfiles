@@ -361,9 +361,7 @@ if has "docker-compose"; then
     dkc stop $1 && dkc up "$@[2,-1]" $1    
   }
 
-  function dkcrsd () {
-    dkcrs $1 -d
-  }
+  alias dkcrsd='dkcrs -d'
 fi
 
 function du_sorted () {
