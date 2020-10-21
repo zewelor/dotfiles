@@ -361,6 +361,8 @@ if has "docker-compose"; then
     dkc stop $1 && dkc up "$@[2,-1]" $1    
   }
 
+  zpcompdef _docker-compose dkcrs="_docker-compose_services"
+
   alias dkcrsd='dkcrs -d'
 fi
 
