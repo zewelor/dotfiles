@@ -363,7 +363,11 @@ if has "docker-compose"; then
 
   zpcompdef _docker-compose dkcrs="_docker-compose_services"
 
-  alias dkcrsd='dkcrs -d'
+  function dkcrsd () {
+    dkcrs $1 -d
+  }
+
+  zpcompdef _docker-compose dkcrsd="_docker-compose_services"
 fi
 
 function du_sorted () {

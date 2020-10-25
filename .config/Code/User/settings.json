@@ -10,7 +10,7 @@
     },
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
-    "window.zoomLevel": 0,
+    "window.zoomLevel": 1,
     "vim.enableNeovim": true,
     "vim.neovimPath": "/usr/bin/nvim",
     "workbench.colorTheme": "Solarized Light",
