@@ -98,7 +98,6 @@ zinit light zdharma/z-p-submods
 
 zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
-# zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
 zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma/null
 zinit light-mode lucid wait has"k3d" for id-as"k3d_completion" as"completion" atclone"k3d completion zsh > _k3d" atpull"%atclone" run-atpull zdharma/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
@@ -122,8 +121,8 @@ zinit snippet $HOME/.zsh/20_keybinds.zsh
 zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 # zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
 zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
-zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
-zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
+# zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
+# zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
 zcommand from"gh-r"; zload junegunn/fzf-bin
 zcommand pick"bin/fzf-tmux"; zload junegunn/fzf
 # Create and bind multiple widgets using fzf
@@ -170,7 +169,9 @@ zstyle ":prezto:module:enhancd" filter "fzy:fzf"
 zstyle ":prezto:module:enhancd" command "cd"
 
 if [ -x "$(command -v kubectl)" ]; then
-  zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
+  # zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
+  zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
+
   function start-k8s-work () {
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS G kubecontext)" ] ; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
