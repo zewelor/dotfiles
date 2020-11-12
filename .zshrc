@@ -358,6 +358,7 @@ if [ -x "$(command -v youtube-dl)" ]; then
 fi
 
 if has "docker-compose"; then
+  zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
   function dkcrs () {
     dkc stop $1 && dkc up "$@[2,-1]" $1    
   }
@@ -369,6 +370,12 @@ if has "docker-compose"; then
   }
 
   zpcompdef _docker-compose dkcrsd="_docker-compose_services"
+
+  function dkcupdate () {
+    dkc stop $1 && dkc pull $1 && dkc up -d $1 && sleep 5 && dkcl -f $1
+  }
+
+  zpcompdef _docker-compose dkcupdate="_docker-compose_services"
 fi
 
 function du_sorted () {
