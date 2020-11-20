@@ -371,6 +371,12 @@ if has "docker-compose"; then
 
   zpcompdef _docker-compose dkcrsd="_docker-compose_services"
 
+  function dkcrsdl () {
+    dkcrsd $1 && dkcl -f $1
+  }
+
+  zpcompdef _docker-compose dkcrsdl="_docker-compose_services"
+
   function dkcupdate () {
     dkc stop $1 && dkc pull $1 && dkc up -d $1 && sleep 5 && dkcl -f $1
   }
