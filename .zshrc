@@ -230,21 +230,6 @@ function gcmmpo () {
 }
 
 #
-# Ruby on Rails
-#
-alias rorc='rails console'
-alias rordc='rails dbconsole'
-alias rordm='rake db:migrate'
-alias rordM='rake db:migrate db:test:clone'
-alias rordr='rake db:rollback'
-alias rorg='rails generate'
-alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
-alias rorlc='rake log:clear'
-alias rorp='rails plugin'
-alias rorr='rails runner'
-alias rors='rails server'
-
-#
 # Utils
 #
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && cd -'
@@ -252,17 +237,6 @@ alias t='tail -f'
 alias extract='unarchive'
 alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
-
-#
-# Cli improvements
-#
-if has "bat"; then
-  alias cat='bat --theme=ansi-light -p'
-fi
-if has "docker"; then
-  alias czysc_docker='docker container prune ; dkrmI'
-fi
-
 
 # Global
 alias -g C='| wc -l'
@@ -277,6 +251,23 @@ alias -g X0G='| xargs -0 egrep'
 alias -g X0='| xargs -0'
 alias -g XG='| xargs egrep'
 alias -g X='| xargs'
+
+#
+# Cli improvements
+#
+if has "bat"; then
+  alias cat='bat --theme=ansi-light -p'
+fi
+
+if has "docker"; then
+  alias czysc_docker='docker container prune ; dkrmI'
+
+  function dkEsh () {
+    dkE $1 sh
+  }
+
+  zpcompdef _docker dkEsh='_docker_complete_containers_names'
+fi
 
 if [ -n "$DISPLAY" ]; then
   alias rekde="kquitapp5 plasmashell ; kstart5 plasmashell"
@@ -359,6 +350,7 @@ fi
 
 if has "docker-compose"; then
   zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
+
   function dkcrs () {
     dkc stop $1 && dkc up "$@[2,-1]" $1    
   }
