@@ -229,6 +229,9 @@ function gcmmpo () {
   gcmm "$1" "$@[2,-1]" && gpo
 }
 
+function gcmmpoa () {
+  gcmmpo "$@" -a && gpo
+}
 #
 # Utils
 #
