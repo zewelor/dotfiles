@@ -76,3 +76,4 @@ if exists codium; then
   done
 fi
 
+pip install lastversion

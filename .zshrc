@@ -225,6 +225,9 @@ alias grhh='git reset HEAD --hard'
 alias git_undo_commit='git reset --soft HEAD~;'
 alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
 
+# Bonus
+alias update_bonus="ssh bonuswww@94.23.226.99 -t 'cd ~/www ; git pull origin'"
+
 function gcmmpo () {
   gcmm "$1" "$@[2,-1]" && gpo
 }
@@ -311,8 +314,7 @@ if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
 fi
 
 if [ -s "$HOME/bin/Slic3rPE.AppImage" ] ; then
-  builtin source "${ZINIT[BIN_DIR]}/zinit-install.zsh"
-  alias update-slic3r='CPUTYPE="x64" .zinit-get-latest-gh-r-version prusa3d PrusaSlicer ; wget "https://github.com$REPLY" -O $HOME/bin/Slic3rPE.AppImage -q'
+  alias update-slic3r='lastversion -d $HOME/bin/Slic3rPE.AppImage prusa3d/PrusaSlicer'
 fi
 
 
@@ -437,3 +439,6 @@ fi
 
 # Local config
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+export PATH="$PATH:$HOME/.rvm/bin"

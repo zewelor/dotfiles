@@ -11,7 +11,6 @@
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
     "window.zoomLevel": 1,
-    "vim.enableNeovim": true,
     "vim.neovimPath": "/usr/bin/nvim",
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
@@ -37,5 +36,12 @@
         ]
     }
 ],
-"ansible.validation": false
+"ansible.validation": false,
+"editor.renderControlCharacters": false,
+"workbench.editorAssociations": [
+    {
+        "viewType": "jupyter.notebook.ipynb",
+        "filenamePattern": "*.ipynb"
+    }
+]
 }
