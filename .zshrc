@@ -303,6 +303,29 @@ if [ -s "/usr/local/rvm/scripts/rvm" ] ; then
   alias loadrvm='[[ -s "/usr/local/rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "/usr/local/rvm/scripts/rvm"'
 fi
 
+function loadrails() {
+  if has "bundle"; then
+
+    alias ror='bundle exec rails'
+    alias rorc='bundle exec rails console'
+    alias rordc='bundle exec rails dbconsole'
+    alias rordm='bundle exec rake db:migrate'
+    alias rordM='bundle exec rake db:migrate db:test:clone'
+    alias rordr='bundle exec rake db:rollback'
+    alias rorg='bundle exec rails generate'
+    alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
+    alias rorlc='bundle exec rake log:clear'
+    alias rorp='bundle exec rails plugin'
+    alias rorr='bundle exec rails runner'
+    alias rors='bundle exec rails server'
+    alias rorsd='bundle exec rails server --debugger'
+    alias rorx='bundle exec rails destroy'
+  else
+    echo "Missing bundle, rails aliases not loaded"
+  fi
+}
+
+
 # Add alias only if rvm installed on system
 if [ -s "$HOME/.rvm/scripts/rvm" ] ; then
   # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
