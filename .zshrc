@@ -403,6 +403,12 @@ if has "docker-compose"; then
   }
 
   zpcompdef _docker-compose dkcupdate="_docker-compose_services"
+
+  function dkcupdated () {
+    dkc stop $1 && dkc pull $1 && dkc up -d $1
+  }
+
+  zpcompdef _docker-compose dkcupdated="_docker-compose_services"
 fi
 
 function du_sorted () {
