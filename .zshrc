@@ -381,7 +381,7 @@ if has "docker-compose"; then
   zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
 
   function dkcrs () {
-    dkc stop $1 && dkc up "$@[2,-1]" $1    
+    dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1    
   }
 
   zpcompdef _docker-compose dkcrs="_docker-compose_services"
