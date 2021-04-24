@@ -217,12 +217,12 @@ alias gcm='git checkout master'
 alias gcmm="git commit -m"
 alias gds='git diff --staged'
 alias gpl='git pull'
-alias git_delete_merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
+alias git-delete-merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
 alias gpf='git push --force-with-lease'
 alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
 alias grh='git reset HEAD'
 alias grhh='git reset HEAD --hard'
-alias git_undo_commit='git reset --soft HEAD~;'
+alias git-undo-commit='git reset --soft HEAD~;'
 alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
 
 # Bonus
