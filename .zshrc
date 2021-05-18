@@ -277,7 +277,7 @@ if has "docker"; then
 fi
 
 if [ -n "$DISPLAY" ]; then
-  alias rekde="kquitapp5 plasmashell ; kstart5 plasmashell"
+  alias rekde="kquitapp5 plasmashell || killall plasmashell && kstart5 plasmashell"
 fi
 
 if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
