@@ -99,7 +99,6 @@ zinit light zdharma/z-p-submods
 zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma/null
-zinit light-mode lucid wait has"k3d" for id-as"k3d_completion" as"completion" atclone"k3d completion zsh > _k3d" atpull"%atclone" run-atpull zdharma/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
@@ -267,7 +266,7 @@ alias -g X='| xargs'
 # Cli improvements
 #
 if has "bat"; then
-  alias cat='bat --theme=ansi-light -p'
+  alias cat='bat --theme=ansi -p'
 fi
 
 if has "docker"; then
