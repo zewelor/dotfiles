@@ -207,23 +207,28 @@ alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | 
 alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt full-upgrade -y"
 
 # Git
-alias gst='git status'
-alias ga='git add'
-alias gd='git diff'
-alias gcb='git checkout -b'
-alias grbm='git rebase master'
-alias gpo="git push -u origin"
-alias gcm='git checkout master'
-alias gcmm="git commit -m"
-alias gds='git diff --staged'
-alias gpl='git pull'
-alias git-delete-merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
-alias gpf='git push --force-with-lease'
-alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
-alias grh='git reset HEAD'
-alias grhh='git reset HEAD --hard'
-alias git-undo-commit='git reset --soft HEAD~;'
-alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
+if has "git"; then
+  alias gst='git status'
+  alias ga='git add'
+  alias gd='git diff'
+  alias grbm='git rebase master'
+  alias gpo="git push -u origin"
+  alias gcm='git checkout master'
+  alias gcmm="git commit -m"
+  alias gds='git diff --staged'
+  alias gpl='git pull'
+  alias git-delete-merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
+  alias gpf='git push --force-with-lease'
+  alias grbi='git rebase -i `git merge-base ${1:-master} HEAD`'
+  alias grh='git reset HEAD'
+  alias grhh='git reset HEAD --hard'
+  alias git-undo-commit='git reset --soft HEAD~;'
+  alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
+
+  function gcb () {
+    git switch $1 2>/dev/null || git switch -c $1; 
+  }
+fi
 
 # Bonus
 alias update_bonus="ssh bonuswww@94.23.226.99 -t 'cd ~/www ; git pull origin'"
