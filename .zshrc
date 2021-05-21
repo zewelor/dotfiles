@@ -120,6 +120,7 @@ zinit snippet $HOME/.zsh/20_keybinds.zsh
 zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 # zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
 zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
+zinit ice from"gh-r" as"program" mv"kubeseal-* -> kubeseal"; zinit light bitnami-labs/sealed-secrets
 # zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
 # zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
 zcommand from"gh-r"; zload junegunn/fzf-bin
