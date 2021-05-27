@@ -348,31 +348,31 @@ if [ -s "$HOME/bin/Slic3rPE.AppImage" ] ; then
 fi
 
 
-# Add alias only if conda installed on system
-if [ -f "$HOME/anaconda3/bin/conda" ]; then
-  function loadconda() {
-    # >>> conda initialize >>>
-    # !! Contents within this block are managed by 'conda init' !!
-    __conda_setup="$("$HOME/anaconda3/bin/conda" 'shell.bash' 'hook' 2> /dev/null)"
-    if [ $? -eq 0 ]; then
-        eval "$__conda_setup"
-    else
-        if [ -f "$HOME/anaconda3/etc/profile.d/conda.sh" ]; then
-# . "$HOME/anaconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
-        else
-# export PATH="~/anaconda3/bin:$PATH"  # commented out by conda initialize
-        fi
-    fi
-    unset __conda_setup
-    # <<< conda initialize <<<
-    zinit ice as"completion" ; zinit snippet https://github.com/esc/conda-zsh-completion/blob/master/_conda
-    compinit
-  }
-else
-  function loadconda() {
-    echo "Please install conda in $HOME/anaconda3/bin/conda"
-  }
-fi
+# # Add alias only if conda installed on system
+# if [ -f "$HOME/anaconda3/bin/conda" ]; then
+#   function loadconda() {
+#     # >>> conda initialize >>>
+#     # !! Contents within this block are managed by 'conda init' !!
+#     __conda_setup="$("$HOME/anaconda3/bin/conda" 'shell.bash' 'hook' 2> /dev/null)"
+#     if [ $? -eq 0 ]; then
+#         eval "$__conda_setup"
+#     else
+#         if [ -f "$HOME/anaconda3/etc/profile.d/conda.sh" ]; then
+# # . "$HOME/anaconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
+#         else
+# # export PATH="~/anaconda3/bin:$PATH"  # commented out by conda initialize
+#         fi
+#     fi
+#     unset __conda_setup
+#     # <<< conda initialize <<<
+#     zinit ice as"completion" ; zinit snippet https://github.com/esc/conda-zsh-completion/blob/master/_conda
+#     compinit
+#   }
+# else
+#   function loadconda() {
+#     echo "Please install conda in $HOME/anaconda3/bin/conda"
+#   }
+# fi
 
 if [ -x "$(command -v youtube-dl)" ]; then
   function youtube-extract-audio () {
