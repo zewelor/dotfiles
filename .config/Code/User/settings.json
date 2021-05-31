@@ -43,5 +43,6 @@
         "viewType": "jupyter.notebook.ipynb",
         "filenamePattern": "*.ipynb"
     }
-]
+],
+"vscode-neovim.neovimExecutablePaths.linux": "/usr/bin/nvim"
 }

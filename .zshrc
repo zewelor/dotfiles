@@ -312,6 +312,7 @@ fi
 function loadrails() {
   if has "bundle"; then
 
+    alias be='bundle exec'
     alias ror='bundle exec rails'
     alias rorc='bundle exec rails console'
     alias rordc='bundle exec rails dbconsole'
