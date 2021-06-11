@@ -10,7 +10,7 @@
     },
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
-    "window.zoomLevel": 1,
+    "window.zoomLevel": 2,
     "vim.neovimPath": "/usr/bin/nvim",
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
