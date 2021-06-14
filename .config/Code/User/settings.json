@@ -6,7 +6,8 @@
             "/home/omen/.kube/config"
         ],
         "vs-kubernetes.kubeconfig": "/home/omen/.kube/config",
-        "vs-kubernetes.minikube-path.linux": "/home/omen/.vs-kubernetes/tools/minikube/linux-amd64/minikube"
+        "vs-kubernetes.minikube-path.linux": "/home/omen/.vs-kubernetes/tools/minikube/linux-amd64/minikube",
+        "vscode-kubernetes.minikube-path.linux": "/home/omen/.vs-kubernetes/tools/minikube/linux-amd64/minikube"
     },
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
@@ -45,5 +46,7 @@
     }
 ],
 "vscode-neovim.neovimExecutablePaths.linux": "/usr/bin/nvim",
-"explorer.confirmDragAndDrop": false
+"explorer.confirmDragAndDrop": false,
+"vscode-kubernetes.helm-path": "/snap/bin/helm",
+"vscode-kubernetes.kubectl-path": "/snap/bin/kubectl"
 }
