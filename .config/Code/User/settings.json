@@ -39,12 +39,9 @@
 ],
 "ansible.validation": false,
 "editor.renderControlCharacters": false,
-"workbench.editorAssociations": [
-    {
-        "viewType": "jupyter.notebook.ipynb",
-        "filenamePattern": "*.ipynb"
-    }
-],
+"workbench.editorAssociations": {
+    "*.ipynb": "jupyter.notebook.ipynb"
+},
 "vscode-neovim.neovimExecutablePaths.linux": "/usr/bin/nvim",
 "explorer.confirmDragAndDrop": false,
 "vscode-kubernetes.helm-path": "/snap/bin/helm",
