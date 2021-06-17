@@ -237,7 +237,7 @@ fi
 alias update_bonus="ssh bonuswww@94.23.226.99 -t 'cd ~/www ; git pull origin'"
 
 function gcmmpoa () {
-  gcmm "$1" "$@[2,-1]" -a -u && gpl && gpo
+  gcmm "$1" "$@[2,-1]" -a -u && gpl ; gpo
 }
 #
 # Utils

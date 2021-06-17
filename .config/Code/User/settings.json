@@ -45,5 +45,6 @@
 "vscode-neovim.neovimExecutablePaths.linux": "/usr/bin/nvim",
 "explorer.confirmDragAndDrop": false,
 "vscode-kubernetes.helm-path": "/snap/bin/helm",
-"vscode-kubernetes.kubectl-path": "/snap/bin/kubectl"
+"vscode-kubernetes.kubectl-path": "/snap/bin/kubectl",
+"redhat.telemetry.enabled": false
 }
