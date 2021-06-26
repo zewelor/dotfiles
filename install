@@ -2,7 +2,7 @@
 
 # RC files
 
-# DEBUG=1
+#DEBUG=1
 
 function x {
   if [ -n "$DEBUG" ]; then
@@ -48,7 +48,7 @@ for ssh_config in $BASE/prv/ssh/config.d/*; do
 done
 
 mkdir -p ~/.mc/
-curl -L https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
+curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
 
 if exists code && ! exists codium; then
   DST=~/.config/Code/User
@@ -72,6 +72,18 @@ if exists codium; then
     if [ ! -L $DST/$(basename "$f") ]; then
       x rm -rf "$DST/$(basename "$f")"
       x ln -sf "$f" "$DST"
+    fi
+  done
+fi
+
+DST=~/.local/share/applications
+if [ -d $DST ]; then
+  for f in "$BASE"/.local/share/applications/* ; do
+    if [ ! -L "$DST/$(basename "$f")" ]; then
+      x rm -rf "$DST/$(basename "$f")"
+      # Without -s bcoz kde doesnt want to run .desktop file with executable permissions, and symlink has executable bit set
+      x ln -f "$f" "$DST"
+      x chmod a-x "$DST/$(basename "$f")"
     fi
   done
 fi
