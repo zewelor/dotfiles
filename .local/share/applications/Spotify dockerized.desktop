@@ -1,6 +1,6 @@
 [Desktop Entry]
 Comment=
-Exec=kdocker -mqi /snap/spotify/current/usr/share/spotify/icons/spotify-linux-128.png -d 10 spotify
+Exec=kdocker -mqi /snap/spotify/current/usr/share/spotify/icons/spotify-linux-128.png -d 15 spotify
 Icon=/snap/spotify/current/usr/share/spotify/icons/spotify-linux-128.png
 Name=Spotify dockerized
 NoDisplay=false

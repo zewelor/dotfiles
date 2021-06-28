@@ -242,7 +242,7 @@ function gcmmpoa () {
 #
 # Utils
 #
-alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && cd -'
+alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && ./install && cd -'
 alias t='tail -f'
 alias extract='unarchive'
 alias ..='cd ..'
