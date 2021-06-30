@@ -266,7 +266,7 @@ alias -g X='| xargs'
 # Cli improvements
 #
 if has "bat"; then
-  alias cat='bat --theme=ansi -p'
+  alias cat='bat --theme=ansi-light -p'
 fi
 
 if has "docker"; then
