@@ -2,12 +2,11 @@
     "editor.accessibilitySupport": "off",
     "editor.minimap.enabled": false,
     "vs-kubernetes": {
+
         "vs-kubernetes.knownKubeconfigs": [
             "/home/omen/.kube/config"
         ],
         "vs-kubernetes.kubeconfig": "/home/omen/.kube/config",
-        "vs-kubernetes.minikube-path.linux": "/home/omen/.vs-kubernetes/tools/minikube/linux-amd64/minikube",
-        "vscode-kubernetes.minikube-path.linux": "/home/omen/.vs-kubernetes/tools/minikube/linux-amd64/minikube"
     },
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
