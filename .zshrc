@@ -179,6 +179,12 @@ if [ -x "$(command -v kubectl)" ]; then
     zinit ice svn pick"init.zsh"; zinit snippet 'https://github.com/prezto-contributions/prezto-kubectl/trunk'
 
     zinit ice from"gh-r" as"program" mv"kubeseal-* -> kubeseal"; zinit light bitnami-labs/sealed-secrets
+
+    for krew_plugin in get-all view-allocations pod-lens; do
+      if [ ! -f "$HOME/.krew/receipts/$krew_plugin.yaml" ]; then
+        kubectl krew install $krew_plugin
+      fi
+    done
   }
 fi
 
