@@ -45,5 +45,6 @@
 "explorer.confirmDragAndDrop": false,
 "vscode-kubernetes.helm-path": "/snap/bin/helm",
 "vscode-kubernetes.kubectl-path": "/snap/bin/kubectl",
-"redhat.telemetry.enabled": false
+"redhat.telemetry.enabled": false,
+"http.proxySupport": "off"
 }
