@@ -217,12 +217,17 @@ alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt f
 
 # Git
 if has "git"; then
+
+  function git_main_branch () {
+    git branch -l master main | cut -f 2 -d ' '
+  }
+
   alias gst='git status'
   alias ga='git add'
   alias gd='git diff'
-  alias grbm='git rebase master'
+  alias grbm='git rebase `git_main_branch`'
   alias gpo="git push -u origin"
-  alias gcm='git checkout master'
+  alias gcm='git checkout `git_main_branch`'
   alias gcmm="git commit -m"
   alias gds='git diff --staged'
   alias gpl='git pull'
