@@ -219,7 +219,7 @@ alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt f
 if has "git"; then
 
   function git_main_branch () {
-    git branch -l master main | cut -f 2 -d ' '
+    git branch -l master main | xargs | cut -f 2 -d ' '
   }
 
   alias gst='git status'
