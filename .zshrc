@@ -120,6 +120,7 @@ zinit snippet $HOME/.zsh/20_keybinds.zsh
 zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
 zinit ice from"gh-r" as"program" mv"dust-*/dust -> dust"; zinit light bootandy/dust
+zinit ice from"gh-r" as"program" mv"fd-*/fd -> fd"; zinit light sharkdp/fd
 # zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
 # zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
 # zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
@@ -260,6 +261,7 @@ alias extract='unarchive'
 alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias du="echo 'Remember to check dust'; du"
+alias find="echo 'Remember to check fd'; find"
 
 # Global
 alias -g C='| wc -l'
