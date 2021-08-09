@@ -133,7 +133,7 @@ zinit ice from"gh-r" as"program" mv"dust-*/dust -> dust"; zinit light bootandy/d
 # A simple, fast and user-friendly alternative to find
 zinit ice from"gh-r" as"program" mv"fd-*/fd -> fd"; zinit light sharkdp/fd
 # An extremely fast alternative to grep that respects your gitignore
-zinit ice from"gh-r" as"program" mv"ripgrep-*/ripgrep -> ripgrep"; zinit light BurntSushi/ripgrep
+zinit ice from"gh-r" as"program" mv"ripgrep-*/rg -> rg"; zinit light BurntSushi/ripgrep
 ##########################
 
 # zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
@@ -277,6 +277,7 @@ alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias du="echo 'Remember to check dust'; du"
 alias find="echo 'Remember to check fd'; find"
+alias grep="echo 'Remember to check rg'; grep"
 
 # Global
 alias -g C='| wc -l'
