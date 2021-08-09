@@ -259,6 +259,7 @@ alias t='tail -f'
 alias extract='unarchive'
 alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
+alias du="echo 'Remember to check dust'; du"
 
 # Global
 alias -g C='| wc -l'
