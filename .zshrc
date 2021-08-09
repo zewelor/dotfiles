@@ -118,9 +118,24 @@ zinit snippet $HOME/.zsh/20_keybinds.zsh
 # Programs
 #
 zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
+
+#
+# Modern linux alternatives from https://github.com/ibraheemdev/modern-unix
+#
+##########################
+
+# A cat clone with syntax highlighting and Git integration.
 zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
+# A viewer for git and diff output
+zinit ice from"gh-r" as"program" mv"delta-*/delta -> delta"; zinit light dandavison/delta
+# A more intuitive version of du written in rust.
 zinit ice from"gh-r" as"program" mv"dust-*/dust -> dust"; zinit light bootandy/dust
+# A simple, fast and user-friendly alternative to find
 zinit ice from"gh-r" as"program" mv"fd-*/fd -> fd"; zinit light sharkdp/fd
+# An extremely fast alternative to grep that respects your gitignore
+zinit ice from"gh-r" as"program" mv"ripgrep-*/ripgrep -> ripgrep"; zinit light BurntSushi/ripgrep
+##########################
+
 # zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
 # zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
 # zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
