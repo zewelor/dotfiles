@@ -46,5 +46,8 @@
 "vscode-kubernetes.helm-path": "/snap/bin/helm",
 "vscode-kubernetes.kubectl-path": "/snap/bin/kubectl",
 "redhat.telemetry.enabled": false,
-"http.proxySupport": "off"
+"http.proxySupport": "off",
+"yaml.schemas":{
+    "kubernetes" : "*.yaml",
+}
 }
