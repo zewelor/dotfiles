@@ -187,7 +187,7 @@ zstyle ":prezto:module:enhancd" command "cd"
 if [ -x "$(command -v kubectl)" ]; then
   function start-k8s-work () {
     alias k="kubectl"
-    if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS G kubecontext)" ] ; then
+    if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ] ; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
     fi
     zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
@@ -195,7 +195,7 @@ if [ -x "$(command -v kubectl)" ]; then
 
     zinit ice svn pick"init.zsh"; zinit snippet 'https://github.com/prezto-contributions/prezto-kubectl/trunk'
 
-    zinit ice from"gh-r" as"program" mv"kubeseal-* -> kubeseal"; zinit light bitnami-labs/sealed-secrets
+    # zinit ice from"gh-r" as"program" mv"kubeseal-* -> kubeseal"; zinit light bitnami-labs/sealed-secrets
 
     for krew_plugin in get-all view-allocations pod-lens ns; do
       if [ ! -f "$HOME/.krew/receipts/$krew_plugin.yaml" ]; then
@@ -277,7 +277,7 @@ alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias du="echo 'Remember to check dust'; du"
 alias find="echo 'Remember to check fd'; find"
-alias grep="echo 'Remember to check rg'; grep"
+# alias grep="echo 'Remember to check rg'; grep"
 
 # Global
 alias -g C='| wc -l'
