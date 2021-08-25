@@ -187,9 +187,12 @@ zstyle ":prezto:module:enhancd" command "cd"
 if [ -x "$(command -v kubectl)" ]; then
   function start-k8s-work () {
     alias k="kubectl"
+    alias kmurder="kubectl delete pod --grace-period=0 --force"
+
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ] ; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
     fi
+
     zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
     zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
 
@@ -277,11 +280,10 @@ alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias du="echo 'Remember to check dust'; du"
 alias find="echo 'Remember to check fd'; find"
-# alias grep="echo 'Remember to check rg'; grep"
 
 # Global
 alias -g C='| wc -l'
-alias -g G='| grep -E'  # egrep is deprecated
+alias -g G='| grep -e'  # egrep is deprecated
 alias -g L='| less'
 alias -g RNS='| sort -nr'
 alias -g S='| sort'

@@ -5,7 +5,7 @@
 	email = zewelor@gmail.com
 [core]
 	excludesfile = ~/.gitignore_global
-	pager = less -F -X
+	# pager = less -F -X
 	editor = vim
 [branch]
   autosetuprebase = always
@@ -36,3 +36,28 @@
 	prompt = false
 [rebase]
 	autoStash = true
+
+[pager]
+    diff = delta
+    log = delta
+    reflog = delta
+    show = delta
+
+[interactive]
+    diffFilter = delta --color-only --features=interactive
+
+[delta]
+    features = decorations
+    syntax-theme = GitHub
+
+[delta "interactive"]
+    keep-plus-minus-markers = false
+
+[delta "decorations"]
+    commit-decoration-style = blue ol
+    commit-style = raw
+    file-style = omit
+    hunk-header-decoration-style = blue box
+    hunk-header-file-style = red
+    hunk-header-line-number-style = "#067a00"
+    hunk-header-style = file line-number syntax
