@@ -259,6 +259,7 @@ if has "git"; then
   alias grhh='git reset HEAD --hard'
   alias git-undo-commit='git reset --soft HEAD~;'
   alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
+  alias glp="git log -p"
 
   function gcb () {
     git switch $1 2>/dev/null || git switch -c $1; 
