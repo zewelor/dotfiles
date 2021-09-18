@@ -55,4 +55,8 @@
     "key": "ctrl+e",
     "command": "-workbench.action.quickOpen"
   },
+  {
+    "key": "shift+alt+n",
+    "command": "workbench.action.newWindow"
+  },
 ]
