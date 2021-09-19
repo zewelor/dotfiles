@@ -59,4 +59,8 @@
     "key": "shift+alt+n",
     "command": "workbench.action.newWindow"
   },
+  {
+    "key": "shift+alt+t",
+    "command": "workbench.action.terminal.newInActiveWorkspace"
+  },
 ]
