@@ -49,5 +49,7 @@
 "http.proxySupport": "off",
 "yaml.schemas":{
     "kubernetes" : "*.yaml",
-}
+},
+"editor.fontSize": 15,
+"editor.fontFamily": "\"MesloLGS NF\"",
 }
