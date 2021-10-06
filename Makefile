@@ -8,6 +8,7 @@ all: base setup
 base: packages setup-vim install-base-symlinks install-fonts | $(zinit_dir)
 
 setup:
+	git submodule update --init
 	./install
 
 setup-vim:

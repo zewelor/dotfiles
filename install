@@ -2,7 +2,7 @@
 
 # RC files
 
-#DEBUG=1
+# DEBUG=1
 
 function x {
   if [ -n "$DEBUG" ]; then
@@ -35,7 +35,7 @@ done
 
 for rc in tmuxinator; do
   if [ ! -L ~/.$rc  ]; then
-    x ln -sfnvi $BASE/prv/$rc ~/
+    x ln -sfnvi $BASE/prv/$rc ~/.$rc
   fi
 done
 

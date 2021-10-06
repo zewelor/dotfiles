@@ -1,1 +1,1 @@
-/home/omen/dotfiles/.zsh
+/root/dotfiles/.zsh
