@@ -238,11 +238,6 @@ alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt f
 
 # Git
 if has "git"; then
-
-  function git_main_branch () {
-    git branch -l master main | xargs | cut -f 2 -d ' '
-  }
-
   alias gst='git status'
   alias ga='git add'
   alias gd='git diff'
@@ -261,17 +256,22 @@ if has "git"; then
   alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
   alias glp="git log -p"
 
+  function git_main_branch () {
+    git branch -l master main | xargs | cut -f 2 -d ' '
+  }
+
   function gcb () {
     git switch $1 2>/dev/null || git switch -c $1; 
+  }
+
+  function gcmmpoa () {
+    gcmm "$1" "$@[2,-1]" -a -u && gpl ; gpo
   }
 fi
 
 # Bonus
 alias update_bonus="ssh bonuswww@94.23.226.99 -t 'cd ~/www ; git pull origin'"
 
-function gcmmpoa () {
-  gcmm "$1" "$@[2,-1]" -a -u && gpl ; gpo
-}
 #
 # Utils
 #
@@ -296,6 +296,11 @@ alias -g X0G='| xargs -0 egrep'
 alias -g X0='| xargs -0'
 alias -g XG='| xargs egrep'
 alias -g X='| xargs'
+
+function export_vault_token() {
+  echo "Type vault token:"
+  export VAULT_TOKEN=$(read v; echo $v)
+}
 
 #
 # Cli improvements
