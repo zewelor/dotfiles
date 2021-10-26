@@ -300,6 +300,7 @@ alias -g X='| xargs'
 function export_vault_token() {
   echo "Type vault token:"
   export VAULT_TOKEN=$(read v; echo $v)
+  clear
 }
 
 #
