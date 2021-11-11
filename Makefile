@@ -25,7 +25,9 @@ install-fonts:
 
 install-base-symlinks:
 	for rc in .zshrc .tmux.conf .zshenv .p10k.zsh .vimrc .zsh; do \
-		ln -sfv "$(BASE)/$$rc" ~/$$rc ;						\
+		if [ ! -L ~/$$rc ]; then 																		\
+			ln -sfv "$(BASE)/$$rc" ~/$$rc ;														\
+		fi 																													\
 	done
 
 $(zinit_dir):
