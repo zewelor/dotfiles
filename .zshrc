@@ -90,7 +90,7 @@ zle -N self-insert url-quote-magic
 # Powerlevel10k
 zinit ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zinit light romkatv/powerlevel10k
 
-zinit light zdharma-continuum/z-p-submods
+zinit light zdharma-continuum/z-a-submods
 
 #
 # Completions
