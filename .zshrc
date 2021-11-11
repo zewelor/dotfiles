@@ -67,9 +67,9 @@ autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 ### End of zinit's installer chunk
 
-# if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma/zplugin.so" ]; then
+# if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma-continuum/zplugin.so" ]; then
 #   module_path+=( "$HOME/.zinit/bin/zmodules/Src" )
-#   zmodload zdharma/zplugin
+#   zmodload zdharma-continuum/zplugin
 # else
 #   if [ -x "$(command -v gcc)" ]; then
 #     echo "Missing zinit binary module, compile it using 'zinit module build'"
@@ -90,7 +90,7 @@ zle -N self-insert url-quote-magic
 # Powerlevel10k
 zinit ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zinit light romkatv/powerlevel10k
 
-zinit light zdharma/z-p-submods
+zinit light zdharma-continuum/z-p-submods
 
 #
 # Completions
@@ -98,7 +98,7 @@ zinit light zdharma/z-p-submods
 
 zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
-zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma/null
+zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
@@ -195,7 +195,7 @@ if [ -x "$(command -v kubectl)" ]; then
     fi
 
     zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
-    zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma/null
+    zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma-continuum/null
 
     zinit ice svn pick"init.zsh"; zinit snippet 'https://github.com/prezto-contributions/prezto-kubectl/trunk'
 
@@ -219,7 +219,7 @@ zinit ice svn; zinit snippet PZT::modules/editor
 typeset -gA FAST_BLIST_PATTERNS
 FAST_BLIST_PATTERNS[/mnt/*]=1
 zinit ice wait"0" lucid atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay"
-zinit light zdharma/fast-syntax-highlighting
+zinit light zdharma-continuum/fast-syntax-highlighting
 
 zinit ice svn submods'zsh-users/zsh-autosuggestions -> external'
 zinit snippet PZT::modules/autosuggestions
