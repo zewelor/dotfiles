@@ -265,7 +265,7 @@ if has "git"; then
   }
 
   function gcmmpoa () {
-    git commit -m "$1" "$@[2,-1]" -a -u && git pull && git push -u origin
+    git commit -m "$1" "$@[2,-1]" -a -u && git pull ; git push -u origin
   }
 fi
 

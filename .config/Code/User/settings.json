@@ -55,5 +55,5 @@
 "ruby.codeCompletion": "rcodetools",
 "ruby.useBundler": true, //run non-lint commands with bundle exec
 "ruby.useLanguageServer": true,
-"workbench.startupEditor": "none", // use the internal language server (see below)
+"update.mode": "none", // use the internal language server (see below)
 }
