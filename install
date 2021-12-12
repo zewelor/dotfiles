@@ -33,6 +33,12 @@ for rc in .*rc .gitconfig .gitignore_global; do
   fi
 done
 
+for conf_dir in nvim; do
+  if [ ! -L ~/.config/$conf_dir ]; then
+    x ln -sfv $BASE/.config/$conf_dir ~/.config
+  fi
+done
+
 for rc in tmuxinator; do
   if [ ! -L ~/.$rc  ]; then
     x ln -sfnvi $BASE/prv/$rc ~/.$rc
