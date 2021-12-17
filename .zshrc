@@ -318,6 +318,10 @@ if has "docker"; then
     dkE $1 sh
   }
 
+  function dkCRsh () {
+    docker container run -it --rm --entrypoint "" $1 sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
+  }
+
   zpcompdef _docker dkEsh='_docker_complete_containers_names'
 fi
 
