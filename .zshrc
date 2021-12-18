@@ -12,6 +12,10 @@ if [ -d $HOME/.krew/bin ]; then
   PATH=$PATH:$HOME/.krew/bin
 fi
 
+if [ -d $HOME/go/bin ]; then
+  PATH=$PATH:$HOME/go/bin
+fi
+
 if [ -f /etc/profile.d/apps-bin-path.sh ]; then
   source /etc/profile.d/apps-bin-path.sh
 fi
