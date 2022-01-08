@@ -37,3 +37,7 @@ $(zinit_dir):
 
 packages:
 	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim
+
+# appimage:
+# 	lastversion -d $(HOME)/bin/Lens.AppImage lensapp/lens
+# 	chmod +x $(HOME)/bin/Lens.AppImage
