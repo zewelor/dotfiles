@@ -22,14 +22,11 @@ fi
 
 DISABLE_AUTO_TITLE="true"
 
-# Make ctrl + s work
-vim()
-{
-    local STTYOPTS="$(stty --save)"
-    stty stop '' -ixoff
-    command vim "$@"
-    stty "$STTYOPTS"
-}
+setopt noflowcontrol
+# # Make ctrl + s work
+# alias vim="stty stop '' -ixoff ; vim"
+# # `Frozing' tty, so after any command terminal settings will be restored
+# # ttyctl -f
 
 export VISUAL=vim
 export EDITOR=$VISUAL
