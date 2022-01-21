@@ -525,6 +525,13 @@ if has "ruby"; then
   }
 fi
 
+function cpu_performance {
+  echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+}
+
+function cpu_powersave {
+  echo powersave | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+}
 
 # Local config
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
