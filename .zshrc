@@ -194,9 +194,9 @@ if [ -x "$(command -v kubectl)" ]; then
       kubectl run $2 --image=$1 --attach -ti --restart=Never --rm --command -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
     }
 
-    # function kcEsh () {
-    #   kubectl exec $2 --attach -ti sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
-    # }
+    function kcEsh () {
+      kubectl exec -ti $1 -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
+    }
 
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ] ; then
       typeset -g POWERLEVEL9K_KUBECONTEXT_DEFAULT_CONTENT_EXPANSION='$P9K_KUBECONTEXT_NAMESPACE'
