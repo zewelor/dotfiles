@@ -291,6 +291,7 @@ alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias du="echo 'Remember to check dust'; du"
 alias find="echo 'Remember to check fd'; find"
+alias start_ssh_agent="eval `ssh-agent` && ssh-add"
 
 # Global
 alias -g C='| wc -l'
