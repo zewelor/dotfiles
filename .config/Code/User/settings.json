@@ -55,5 +55,6 @@
 "ruby.codeCompletion": "rcodetools",
 "ruby.useBundler": true, //run non-lint commands with bundle exec
 "ruby.useLanguageServer": true,
-"update.mode": "none", // use the internal language server (see below)
+"update.mode": "none",
+"crystal-lang.completion": true, // use the internal language server (see below)
 }
