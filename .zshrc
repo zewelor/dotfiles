@@ -167,6 +167,14 @@ zinit snippet PZT::modules/helper/init.zsh
 zstyle ':prezto:*:*' color 'yes'
 zstyle ':prezto:module:editor' key-bindings 'vi'
 zstyle ':prezto:module:utility' correct 'no'
+zstyle ':prezto:module:utility' safe-ops 'no'. # Because new enchand uses cp, and it waited soo long
+
+zinit ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zinit snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
+
+export ENHANCD_DOT_ARG="..."
+export ENHANCD_HYPHEN_ARG="--"
+zstyle ":prezto:module:enhancd" filter "fzy:fzf"
+zstyle ":prezto:module:enhancd" command "cd"
 
 # Plugins
 zinit ice svn pick ""; zinit snippet PZT::modules/archive # No files to source, pick nothing to prevent snippet not loaded warning
@@ -178,12 +186,6 @@ zinit ice svn; zinit snippet PZT::modules/docker
 zinit ice svn; zinit snippet PZT::modules/tmux
 # zinit ice svn; zinit snippet PZT::modules/ruby
 # zinit ice svn; zinit snippet PZT::modules/rails
-zinit ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zinit snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
-
-export ENHANCD_DOT_ARG="..."
-export ENHANCD_HYPHEN_ARG="--"
-zstyle ":prezto:module:enhancd" filter "fzy:fzf"
-zstyle ":prezto:module:enhancd" command "cd"
 
 if [ -x "$(command -v kubectl)" ]; then
   function start-k8s-work () {
