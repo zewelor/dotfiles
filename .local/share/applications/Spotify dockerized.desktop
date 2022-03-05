@@ -4,7 +4,6 @@ Exec=kdocker -mqi /snap/spotify/current/usr/share/spotify/icons/spotify-linux-12
 Icon=/snap/spotify/current/usr/share/spotify/icons/spotify-linux-128.png
 Name=Spotify dockerized
 NoDisplay=false
-Path[$e]=
 StartupNotify=true
 Terminal=0
 TerminalOptions=

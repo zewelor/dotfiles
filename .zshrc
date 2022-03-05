@@ -12,6 +12,10 @@ if [ -d $HOME/.krew/bin ]; then
   PATH=$PATH:$HOME/.krew/bin
 fi
 
+if [ -d $HOME/.local/share/yabridge/ ]; then
+  PATH=$PATH:$HOME/.local/share/yabridge/
+fi
+
 if [ -d $HOME/go/bin ]; then
   PATH=$PATH:$HOME/go/bin
 fi
@@ -99,7 +103,7 @@ zinit light zdharma-continuum/z-a-submods
 
 zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
-zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
+# zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
