@@ -41,3 +41,7 @@ packages:
 # appimage:
 # 	lastversion -d $(HOME)/bin/Lens.AppImage lensapp/lens
 # 	chmod +x $(HOME)/bin/Lens.AppImage
+#
+zinit_update:
+	echo "Remember to update root also"
+	zinit update

@@ -56,5 +56,6 @@
 "ruby.useBundler": true, //run non-lint commands with bundle exec
 "ruby.useLanguageServer": true,
 "update.mode": "none",
-"crystal-lang.completion": true, // use the internal language server (see below)
+"editor.renderWhitespace": "none",
+"editor.guides.indentation": false, // use the internal language server (see below)
 }

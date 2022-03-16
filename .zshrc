@@ -14,7 +14,17 @@ fi
 
 if [ -d $HOME/.local/share/yabridge/ ]; then
   PATH=$PATH:$HOME/.local/share/yabridge/
-fi
+
+  function update-yabridge () {
+    wget `lastversion robbert-vdh/yabridge --assets --filter '^((?!ubuntu).)*$'` -O /tmp/yabridge.tar.gz
+    cd /tmp
+    tar zxvf yabridge.tar.gz
+    rm -rf /home/omen/.local/share/yabridge/
+    mv -f yabridge /home/omen/.local/share
+    rm /tmp/yabridge.tar.gz
+    yabridgectl sync
+  }
+  fi
 
 if [ -d $HOME/go/bin ]; then
   PATH=$PATH:$HOME/go/bin
