@@ -1,6 +1,5 @@
 {
     "editor.accessibilitySupport": "off",
-    "editor.minimap.enabled": false,
     "vs-kubernetes": {
         "vs-kubernetes.knownKubeconfigs": [
             "/home/omen/.kube/config"
@@ -54,8 +53,17 @@
 "editor.fontFamily": "\"MesloLGS NF\"",
 "ruby.codeCompletion": "rcodetools",
 "ruby.useBundler": true, //run non-lint commands with bundle exec
+"ruby.lint": {
+    "standard": {
+      "useBundler": true // enable rubocop via bundler
+    },
+},
+"ruby.format": "standard",
 "ruby.useLanguageServer": true,
 "update.mode": "none",
 "editor.renderWhitespace": "none",
-"editor.guides.indentation": false, // use the internal language server (see below)
+"editor.guides.indentation": false,
+"ruby.intellisense": "rubyLocate",
+"ruby.pathToBundler": "\\bundle",
+"editor.minimap.enabled": false, // use the internal language server (see below)
 }

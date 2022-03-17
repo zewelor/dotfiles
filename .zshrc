@@ -220,7 +220,7 @@ if [ -x "$(command -v kubectl)" ]; then
     fi
 
     zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
-    zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma-continuum/null
+    zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" nocompile as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma-continuum/null
 
     zinit ice svn pick"init.zsh"; zinit snippet 'https://github.com/prezto-contributions/prezto-kubectl/trunk'
 
