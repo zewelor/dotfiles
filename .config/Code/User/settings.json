@@ -58,12 +58,11 @@
       "useBundler": true // enable rubocop via bundler
     },
 },
-"ruby.format": "standard",
-"ruby.useLanguageServer": true,
 "update.mode": "none",
 "editor.renderWhitespace": "none",
 "editor.guides.indentation": false,
 "ruby.intellisense": "rubyLocate",
 "ruby.pathToBundler": "\\bundle",
-"editor.minimap.enabled": false, // use the internal language server (see below)
+"editor.minimap.enabled": false,
+"solargraph.bundlerPath": "\\bundle",
 }

@@ -219,6 +219,7 @@ if [ -x "$(command -v kubectl)" ]; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
     fi
 
+    zinit ice from"gh-r" as"program"; zinit light derailed/k9s
     zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
     zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" nocompile as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma-continuum/null
 
