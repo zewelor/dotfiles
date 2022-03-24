@@ -545,11 +545,11 @@ if has "ruby"; then
 fi
 
 function cpu_performance {
-  echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+  powerprofilesctl set performance
 }
 
 function cpu_powersave {
-  echo powersave | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+  powerprofilesctl set balanced
 }
 
 # Local config
