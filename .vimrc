@@ -64,8 +64,8 @@ nnoremap <S-tab> <c-w>W
 " ----------------------------------------------------------------------------
 " vim-fugitive
 " ----------------------------------------------------------------------------
-nmap     <Leader>g :Gstatus<CR>gg<c-n>
-nnoremap <Leader>d :Gdiff<CR>
+" nmap     <Leader>g :Gstatus<CR>gg<c-n>
+" nnoremap <Leader>d :Gdiff<CR>
 
 " ----------------------------------------------------------------------------
 " vim-easy-align
@@ -114,7 +114,6 @@ Plug 'chr4/nginx.vim'
 " Plug 'vim-ruby/vim-ruby'
 " Plug 'tpope/vim-haml'
 " Plug 'thoughtbot/vim-rspec'
-Plug 'sudar/vim-arduino-syntax'
 " Plug 'rust-lang/rust.vim'
 " Plug 'xolox/vim-lua-ftplugin'
 " Plug 'xolox/vim-misc'
@@ -124,7 +123,7 @@ Plug 'junegunn/vim-easy-align'
 Plug 'michaeljsmith/vim-indent-object'
 
 " Git
-Plug 'tpope/vim-fugitive'
+" Plug 'tpope/vim-fugitive'
 Plug 'gregsexton/gitv', { 'on': 'Gitv' }
 
 call plug#end()
