@@ -33,10 +33,10 @@ install-base-symlinks:
 $(zinit_dir):
 	mkdir -p $(zinit_dir)
 	chmod g-rwX $(zinit_dir)
-	git clone git://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
+	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
 
 packages:
-	sudo apt-get install -y --no-install-recommends vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim
+	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim
 
 # appimage:
 # 	lastversion -d $(HOME)/bin/Lens.AppImage lensapp/lens

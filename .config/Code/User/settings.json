@@ -65,4 +65,16 @@
 "ruby.pathToBundler": "\\bundle",
 "editor.minimap.enabled": false,
 "solargraph.bundlerPath": "\\bundle",
+"sqltools.connections": [
+  {
+    "previewLimit": 50,
+    "server": "localhost",
+    "port": 5433,
+    "driver": "PostgreSQL",
+    "name": "Nerds",
+    "database": "nerds_hub_development",
+    "username": "postgres",
+    "password": "password"
+  }
+],
 }
