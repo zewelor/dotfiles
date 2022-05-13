@@ -18,7 +18,7 @@ install-fonts:
 	mkdir -p ~/.fonts/
 
 	for font in MesloLGS%20NF%20Regular.ttf MesloLGS%20NF%20Italic.ttf MesloLGS%20NF%20Bold.ttf MesloLGS%20NF%20Bold%20Italic.ttf; do \
-		curl -L https://github.com/romkatv/dotfiles-public/blob/master/.local/share/fonts/NerdFonts/$$font?raw=true > ~/.fonts/$$font; \
+		curl -q -L https://github.com/romkatv/dotfiles-public/blob/master/.local/share/fonts/NerdFonts/$$font?raw=true > ~/.fonts/$$font; \
 	done
 
 	fc-cache -vf ~/.fonts/

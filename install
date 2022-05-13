@@ -94,4 +94,6 @@ if [ -d $DST ]; then
   done
 fi
 
-pip install lastversion
+if exists pip; then
+  pip install lastversion
+fi
