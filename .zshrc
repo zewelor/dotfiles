@@ -127,6 +127,9 @@ fi
 zinit ice wait"1" lucid
 zinit snippet $HOME/.zsh/20_keybinds.zsh
 
+zinit light zdharma-continuum/zinit-annex-bin-gem-node
+zinit light zdharma-continuum/zinit-annex-patch-dl
+
 # compinit
 #zinit cdreplay -q
 
@@ -155,10 +158,7 @@ zinit ice from"gh-r" as"program" mv"ripgrep-*/rg -> rg"; zinit light BurntSushi/
 # zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
 # zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
 # zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
-zcommand from"gh-r"; zload junegunn/fzf-bin
-zcommand pick"bin/fzf-tmux"; zload junegunn/fzf
-# Create and bind multiple widgets using fzf
-turbo0 src"shell/completion.zsh" id-as"junegunn/fzf_completions" pick"/dev/null" ; zload junegunn/fzf
+zinit pack"bgn-binary+keys" for fzf
 
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
@@ -372,6 +372,11 @@ if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
   {
       set-konsole-tab-title-type $1 && set-konsole-tab-title-type $1 1
   }
+fi
+
+# Add alias only if asdf is installed
+if [ -f "$HOME/.asdf/asdf.sh" ] ; then
+  alias loadasdf='source ~/.asdf/asdf.sh'
 fi
 
 # Add alias only if rvm installed on system wide
