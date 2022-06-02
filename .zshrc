@@ -112,7 +112,6 @@ zinit light zdharma-continuum/z-a-submods
 # Completions
 #
 
-zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 # zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
@@ -338,22 +337,6 @@ if has "bat"; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 
-if has "docker"; then
-  export DOCKER_BUILDKIT=1
-  export COMPOSE_DOCKER_CLI_BUILD=1
-  alias czysc_docker='docker container prune ; dkrmI'
-
-  function dkEsh () {
-    dkE $1 sh
-  }
-
-  function dkCRsh () {
-    docker container run -it --rm --entrypoint "" $1 sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
-  }
-
-  zpcompdef _docker dkEsh='_docker_complete_containers_names'
-fi
-
 if [ -n "$DISPLAY" ]; then
   alias rekde="kquitapp5 plasmashell || killall plasmashell && kstart5 plasmashell"
 fi
@@ -461,8 +444,29 @@ if [ -x "$(command -v youtube-dl)" ]; then
   }
 fi
 
-if has "docker-compose"; then
-  zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
+if has "docker"; then
+  export DOCKER_BUILDKIT=1
+  export COMPOSE_DOCKER_CLI_BUILD=1
+
+  zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
+
+  alias czysc_docker='docker container prune ; dkrmI'
+
+  function dkEsh () {
+    dkE $1 sh
+  }
+
+  function dkCRsh () {
+    docker container run -it --rm --entrypoint "" $1 sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
+  }
+
+  zpcompdef _docker dkEsh='_docker_complete_containers_names'
+fi
+
+if [ ! -z "`docker compose version`" ]; then
+  alias docker-compose='docker compose'
+
+  # zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
 
   function dkcrs () {
     dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1    
