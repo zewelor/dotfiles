@@ -464,7 +464,12 @@ if has "docker"; then
 fi
 
 if [ ! -z "`docker compose version`" ]; then
-  alias docker-compose='docker compose'
+
+  function docker-compose () {
+    docker compose "$@"
+  }
+
+  zpcompdef _docker-compose dkcrs="_docker-compose_services"
 
   # zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
 
