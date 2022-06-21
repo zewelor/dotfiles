@@ -369,13 +369,6 @@ if [ -f "$HOME/.asdf/asdf.sh" ] ; then
   alias loadasdf='source ~/.asdf/asdf.sh'
 fi
 
-# Add alias only if rvm installed on system wide
-if [ -s "/usr/local/rvm/scripts/rvm" ] ; then
-  # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
-  # conflicts with RVM.
-  alias loadrvm='[[ -s "/usr/local/rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "/usr/local/rvm/scripts/rvm"'
-fi
-
 function loadrails() {
   if has "bundle"; then
 
@@ -399,13 +392,6 @@ function loadrails() {
   fi
 }
 
-
-# Add alias only if rvm installed on system
-if [ -s "$HOME/.rvm/scripts/rvm" ] ; then
-  # Unset AUTO_NAME_DIRS since auto adding variable-stored paths to ~ list
-  # conflicts with RVM.
-  alias loadrvm='[[ -s "$HOME/.rvm/scripts/rvm" ]] && unsetopt AUTO_NAME_DIRS ; . "$HOME/.rvm/scripts/rvm"'
-fi
 
 if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
   alias load-platformio='source ~/.platformio/penv/bin/activate'
@@ -576,9 +562,6 @@ function cpu_powersave {
 
 # Local config
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
-
-# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
-# export PATH="$PATH:$HOME/.rvm/bin"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
