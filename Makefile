@@ -36,7 +36,7 @@ $(zinit_dir):
 	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
 
 packages:
-	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim
+	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim jq
 
 # appimage:
 # 	lastversion -d $(HOME)/bin/Lens.AppImage lensapp/lens
