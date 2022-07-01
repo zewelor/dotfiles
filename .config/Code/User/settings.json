@@ -51,8 +51,7 @@
 },
 "editor.fontSize": 15,
 "editor.fontFamily": "\"MesloLGS NF\"",
-"ruby.codeCompletion": "rcodetools",
-"ruby.useBundler": true, //run non-lint commands with bundle exec
+"ruby.codeCompletion": "rcodetools", //run non-lint commands with bundle exec
 "ruby.lint": {
     "standard": {
       "useBundler": true // enable rubocop via bundler
@@ -62,9 +61,7 @@
 "editor.renderWhitespace": "none",
 "editor.guides.indentation": false,
 "ruby.intellisense": "rubyLocate",
-"ruby.pathToBundler": "\\bundle",
 "editor.minimap.enabled": false,
-"solargraph.bundlerPath": "\\bundle",
 "sqltools.connections": [
   {
     "previewLimit": 50,
@@ -77,4 +74,5 @@
     "password": "password"
   }
 ],
+"telemetry.telemetryLevel": "off",
 }
