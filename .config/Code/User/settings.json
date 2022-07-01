@@ -75,4 +75,5 @@
   }
 ],
 "telemetry.telemetryLevel": "off",
+"files.insertFinalNewline": true,
 }
