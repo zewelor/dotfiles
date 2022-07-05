@@ -76,4 +76,5 @@
 ],
 "telemetry.telemetryLevel": "off",
 "files.insertFinalNewline": true,
+"remote.containers.dockerComposePath": "docker compose",
 }
