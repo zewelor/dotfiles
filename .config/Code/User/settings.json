@@ -1,12 +1,5 @@
 {
     "editor.accessibilitySupport": "off",
-    "vs-kubernetes": {
-        "vs-kubernetes.knownKubeconfigs": [
-            "/home/omen/.kube/config"
-        ],
-        "vs-kubernetes.kubeconfig": "/home/omen/.kube/config",
-        "vscode-kubernetes.minikube-path.linux": "/home/omen/.vs-kubernetes/tools/minikube/linux-amd64/minikube"
-    },
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
     "window.zoomLevel": 2,
@@ -37,18 +30,9 @@
 ],
 "ansible.validation": false,
 "editor.renderControlCharacters": false,
-"workbench.editorAssociations": {
-    "*.ipynb": "jupyter.notebook.ipynb"
-},
-"vscode-neovim.neovimExecutablePaths.linux": "/usr/bin/nvim",
 "explorer.confirmDragAndDrop": false,
-"vscode-kubernetes.helm-path": "/snap/bin/helm",
-"vscode-kubernetes.kubectl-path": "/snap/bin/kubectl",
 "redhat.telemetry.enabled": false,
 "http.proxySupport": "off",
-"yaml.schemas":{
-    "kubernetes" : "*.yaml",
-},
 "editor.fontSize": 15,
 "editor.fontFamily": "\"MesloLGS NF\"",
 "ruby.codeCompletion": "rcodetools", //run non-lint commands with bundle exec
@@ -77,4 +61,5 @@
 "telemetry.telemetryLevel": "off",
 "files.insertFinalNewline": true,
 "remote.containers.dockerComposePath": "docker compose",
+"vim.easymotion": true,
 }
