@@ -119,7 +119,7 @@ zinit light zdharma-continuum/z-a-submods
 # Completions
 #
 
-zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
+# zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 # zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
