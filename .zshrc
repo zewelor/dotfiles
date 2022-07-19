@@ -178,6 +178,7 @@ bindkey '^T'  fzy-file-widget
 bindkey '^R'  fzy-history-widget
 bindkey '^P'  fzy-proc-widget
 
+turbo0 silent; zload asdf-vm/asdf
 #
 # Prezto
 #
@@ -370,26 +371,21 @@ if [ -f "$HOME/.asdf/asdf.sh" ] ; then
 fi
 
 function loadrails() {
-  if has "bundle"; then
-
-    alias be='bundle exec'
-    alias ror='bundle exec rails'
-    alias rorc='bundle exec rails console'
-    alias rordc='bundle exec rails dbconsole'
-    alias rordm='bundle exec rake db:migrate'
-    alias rordM='bundle exec rake db:migrate db:test:clone'
-    alias rordr='bundle exec rake db:rollback'
-    alias rorg='bundle exec rails generate'
-    alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
-    alias rorlc='bundle exec rake log:clear'
-    alias rorp='bundle exec rails plugin'
-    alias rorr='bundle exec rails runner'
-    alias rors='bundle exec rails server'
-    alias rorsd='bundle exec rails server --debugger'
-    alias rorx='bundle exec rails destroy'
-  else
-    echo "Missing bundle, rails aliases not loaded"
-  fi
+  alias be='bundle exec'
+  alias ror='bundle exec rails'
+  alias rorc='bundle exec rails console'
+  alias rordc='bundle exec rails dbconsole'
+  alias rordm='bundle exec rake db:migrate'
+  alias rordM='bundle exec rake db:migrate db:test:clone'
+  alias rordr='bundle exec rake db:rollback'
+  alias rorg='bundle exec rails generate'
+  alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
+  alias rorlc='bundle exec rake log:clear'
+  alias rorp='bundle exec rails plugin'
+  alias rorr='bundle exec rails runner'
+  alias rors='bundle exec rails server'
+  alias rorsd='bundle exec rails server --debugger'
+  alias rorx='bundle exec rails destroy'
 }
 
 
