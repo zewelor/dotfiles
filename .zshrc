@@ -365,10 +365,12 @@ if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
   }
 fi
 
-# Add alias only if asdf is installed
-if [ -f "$HOME/.asdf/asdf.sh" ] ; then
-  alias loadasdf='source ~/.asdf/asdf.sh'
-fi
+# # Add alias only if asdf is installed
+# if [ -f "$HOME/.asdf/asdf.sh" ] ; then
+#   alias loadasdf='source ~/.asdf/asdf.sh'
+# elif [ -f "$HOME/.zinit/plugins/asdf-vm---asdf/asdf.sh" ] ; then
+#   alias loadasdf='source ~/.zinit/plugins/asdf-vm---asdf/asdf.sh'
+# fi
 
 function loadrails() {
   alias be='bundle exec'
