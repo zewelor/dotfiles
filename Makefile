@@ -2,6 +2,8 @@
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
+ZINIT_COMMIT_SHA=f5b59449ffd4e39f57e7c5af02e37766dab713f1
+
 zinit_dir = ~/.zinit
 
 all: base setup
@@ -34,6 +36,8 @@ $(zinit_dir):
 	mkdir -p $(zinit_dir)
 	chmod g-rwX $(zinit_dir)
 	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
+	cd $(zinit_dir)/bin
+	git reset --hard $(ZINIT_COMMIT_SHA)
 
 packages:
 	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim jq
