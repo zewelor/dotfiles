@@ -33,7 +33,7 @@
 "explorer.confirmDragAndDrop": false,
 "redhat.telemetry.enabled": false,
 "http.proxySupport": "off",
-"editor.fontSize": 15,
+"editor.fontSize": 17,
 "editor.fontFamily": "\"MesloLGS NF\"",
 "ruby.codeCompletion": "rcodetools", //run non-lint commands with bundle exec
 "ruby.lint": {
@@ -62,4 +62,7 @@
 "files.insertFinalNewline": true,
 "remote.containers.dockerComposePath": "docker compose",
 "vim.easymotion": true,
+"settingsSync.ignoredSettings": [
+    "editor.fontSize"
+],
 }
