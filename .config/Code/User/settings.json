@@ -65,4 +65,7 @@
 "settingsSync.ignoredSettings": [
     "editor.fontSize"
 ],
+"editor.inlineSuggest.enabled": true,
+"solargraph.useBundler": true,
+"solargraph.bundlerPath": "/home/omen/.asdf/shims/bundle",
 }
