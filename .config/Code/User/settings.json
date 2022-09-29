@@ -36,11 +36,6 @@
 "editor.fontSize": 17,
 "editor.fontFamily": "\"MesloLGS NF\"",
 "ruby.codeCompletion": "rcodetools", //run non-lint commands with bundle exec
-"ruby.lint": {
-    "standard": {
-      "useBundler": true // enable rubocop via bundler
-    },
-},
 "update.mode": "none",
 "editor.renderWhitespace": "none",
 "editor.guides.indentation": false,
