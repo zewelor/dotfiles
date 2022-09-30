@@ -63,4 +63,5 @@
 "editor.inlineSuggest.enabled": true,
 "solargraph.useBundler": true,
 "solargraph.bundlerPath": "/home/omen/.asdf/shims/bundle",
+"git.ignoreMissingGitWarning": true,
 }
