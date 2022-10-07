@@ -41,18 +41,7 @@
 "editor.guides.indentation": false,
 "ruby.intellisense": "rubyLocate",
 "editor.minimap.enabled": false,
-"sqltools.connections": [
-  {
-    "previewLimit": 50,
-    "server": "localhost",
-    "port": 5433,
-    "driver": "PostgreSQL",
-    "name": "Nerds",
-    "database": "nerds_hub_development",
-    "username": "postgres",
-    "password": "password"
-  }
-],
+"sqltools.connections": [],
 "telemetry.telemetryLevel": "off",
 "files.insertFinalNewline": true,
 "remote.containers.dockerComposePath": "docker compose",
@@ -64,4 +53,7 @@
 "solargraph.useBundler": true,
 "solargraph.bundlerPath": "/home/omen/.asdf/shims/bundle",
 "git.ignoreMissingGitWarning": true,
+"[sql]": {
+    "editor.defaultFormatter": "mtxr.sqltools"
+},
 }
