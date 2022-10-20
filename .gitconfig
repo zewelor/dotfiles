@@ -63,3 +63,5 @@
     hunk-header-style = file line-number syntax
 [init]
 	defaultBranch = main
+[fixup]
+	rebase = true
