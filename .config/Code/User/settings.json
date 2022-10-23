@@ -56,4 +56,5 @@
 "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
 },
+"git.enableSmartCommit": true,
 }

@@ -2,7 +2,7 @@
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-ZINIT_COMMIT_SHA=f5b59449ffd4e39f57e7c5af02e37766dab713f1
+ZINIT_COMMIT_SHA=7f6dc7da6c824b30c0e8e30ae0ecbda5be118e68
 
 zinit_dir = ~/.zinit
 
