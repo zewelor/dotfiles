@@ -36,8 +36,7 @@ $(zinit_dir):
 	mkdir -p $(zinit_dir)
 	chmod g-rwX $(zinit_dir)
 	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
-	cd $(zinit_dir)/bin
-	git reset --hard $(ZINIT_COMMIT_SHA)
+	cd $(zinit_dir)/bin ; git reset --hard $(ZINIT_COMMIT_SHA)
 
 packages:
 	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim jq
