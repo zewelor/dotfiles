@@ -76,10 +76,6 @@ fi
 # FUNCTIONS TO MAKE CONFIGURATION LESS VERBOSE
 #
 
-turbo0()   { zinit ice wait"0a" lucid             "${@}"; }
-turbo1()   { zinit ice wait"0b" lucid             "${@}"; }
-turbo2()   { zinit ice wait"0c" lucid             "${@}"; }
-zcommand() { zinit ice wait"0b" lucid as"command" "${@}"; }
 zload()    { zinit load                           "${@}"; }
 zsnippet() { zinit snippet                        "${@}"; }
 has()      { type "${1:?too few arguments}" &>/dev/null   }
@@ -111,7 +107,7 @@ zle -N self-insert url-quote-magic
 #
 
 # Powerlevel10k
-zinit ice lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd ; zinit light romkatv/powerlevel10k
+zinit light-mode lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd for @romkatv/powerlevel10k
 
 zinit light zdharma-continuum/z-a-submods
 
@@ -120,7 +116,7 @@ zinit light zdharma-continuum/z-a-submods
 #
 
 # zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
-# zinit light-mode lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
+# zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 # zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
@@ -142,7 +138,7 @@ zinit light zdharma-continuum/zinit-annex-patch-dl
 #
 # Programs
 #
-zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
+zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 
 #
 # Modern linux alternatives from https://github.com/ibraheemdev/modern-unix
@@ -150,36 +146,36 @@ zinit ice as"program" pick"bin/tat" ; zinit light thoughtbot/dotfiles # Attach o
 ##########################
 
 # A cat clone with syntax highlighting and Git integration.
-zinit ice from"gh-r" as"program" mv"bat-*/bat -> bat"; zinit light sharkdp/bat
+zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
-zinit ice from"gh-r" as"program" mv"delta-*/delta -> delta"; zinit light dandavison/delta
+zinit light-mode from"gh-r" as"program" mv"delta-*/delta -> delta" for @dandavison/delta
 # A more intuitive version of du written in rust.
-zinit ice from"gh-r" as"program" mv"dust-*/dust -> dust"; zinit light bootandy/dust
+zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/dust
 # A simple, fast and user-friendly alternative to find
-zinit ice from"gh-r" as"program" mv"fd-*/fd -> fd"; zinit light sharkdp/fd
+zinit light-mode from"gh-r" as"program" mv"fd-*/fd -> fd" for @sharkdp/fd
 # An extremely fast alternative to grep that respects your gitignore
-zinit ice from"gh-r" as"program" mv"ripgrep-*/rg -> rg"; zinit light BurntSushi/ripgrep
+zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
 ##########################
 
-zinit ice wait"2" as"program" pick"git-fixup" lucid ; zinit light keis/git-fixup
-# zinit ice from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv" ; zinit light direnv/direnv
-# zinit ice wait"2" as"program" from"gh-r" pick"lazygit" lucid ; zinit light jesseduffield/lazygit
-# zinit ice wait"2" as"program" from"gh-r" pick"lazydocker" lucid ; zinit light jesseduffield/lazydocker
+zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
+# zinit light-mode from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv"  for @direnv/direnv
+# zinit light-mode wait"2" as"program" from"gh-r" pick"lazygit" lucid  for @jesseduffield/lazygit
+# zinit light-mode wait"2" as"program" from"gh-r" pick"lazydocker" lucid  for @jesseduffield/lazydocker
 zinit pack"bgn-binary" for fzf
 
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
-turbo0 as"command" if'[[ -z "$commands[fzy]" ]]' \
+zinit ice wait"0a" lucid  as"command" if'[[ -z "$commands[fzy]" ]]' \
        make"!PREFIX=$ZPFX install" atclone"cp contrib/fzy-* $ZPFX/bin/" pick"$ZPFX/bin/fzy*"
     zload jhawthorn/fzy
 # Install fzy-using widgets
-turbo0 silent; zload aperezdc/zsh-fzy
+zinit ice lucid wait silent; zload aperezdc/zsh-fzy
 bindkey '\ec' fzy-cd-widget
 bindkey '^T'  fzy-file-widget
 bindkey '^R'  fzy-history-widget
 bindkey '^P'  fzy-proc-widget
 
-turbo0 silent; zload asdf-vm/asdf
+zinit ice wait"0a" lucid silent; zload asdf-vm/asdf
 #
 # Prezto
 #
@@ -211,6 +207,12 @@ zinit ice svn; zinit snippet PZT::modules/tmux
 # zinit ice svn; zinit snippet PZT::modules/rails
 
 if [ -x "$(command -v kubectl)" ]; then
+  # lazy-load kubectl completion
+  _kubectl() {
+    unset -f _kubectl
+    eval "$(command kubectl completion zsh)"
+  }
+
   function start-k8s-work () {
     alias k="kubectl"
     alias kmurder="kubectl delete pod --grace-period=0 --force"
@@ -232,13 +234,11 @@ if [ -x "$(command -v kubectl)" ]; then
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
     fi
 
-    zinit ice from"gh-r" as"program"; zinit light derailed/k9s
-    zinit ice from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz" ; zinit light kubernetes-sigs/krew
-    zinit light-mode lucid wait has"kubectl" for id-as"kubectl_completion" nocompile as"completion" atclone"kubectl completion zsh > _kubectl" atpull"%atclone" run-atpull zdharma-continuum/null
-
+    zinit light-mode from"gh-r" as"program" for @derailed/k9s
+    zinit light-mode from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz"  for @kubernetes-sigs/krew
     zinit ice svn pick"init.zsh"; zinit snippet 'https://github.com/prezto-contributions/prezto-kubectl/trunk'
 
-    # zinit ice from"gh-r" as"program" mv"kubeseal-* -> kubeseal"; zinit light bitnami-labs/sealed-secrets
+    # zinit light-mode from"gh-r" as"program" mv"kubeseal-* -> kubeseal" for @bitnami-labs/sealed-secrets
 
     for krew_plugin in get-all view-allocations pod-lens ns; do
       if [ ! -f "$HOME/.krew/receipts/$krew_plugin.yaml" ]; then
@@ -394,33 +394,6 @@ fi
 if [ -s "$HOME/bin/Slic3rPE.AppImage" ] ; then
   alias update-slic3r='lastversion -d $HOME/bin/Slic3rPE.AppImage prusa3d/PrusaSlicer'
 fi
-
-
-# # Add alias only if conda installed on system
-# if [ -f "$HOME/anaconda3/bin/conda" ]; then
-#   function loadconda() {
-#     # >>> conda initialize >>>
-#     # !! Contents within this block are managed by 'conda init' !!
-#     __conda_setup="$("$HOME/anaconda3/bin/conda" 'shell.bash' 'hook' 2> /dev/null)"
-#     if [ $? -eq 0 ]; then
-#         eval "$__conda_setup"
-#     else
-#         if [ -f "$HOME/anaconda3/etc/profile.d/conda.sh" ]; then
-# # . "$HOME/anaconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
-#         else
-# # export PATH="~/anaconda3/bin:$PATH"  # commented out by conda initialize
-#         fi
-#     fi
-#     unset __conda_setup
-#     # <<< conda initialize <<<
-#     zinit ice as"completion" ; zinit snippet https://github.com/esc/conda-zsh-completion/blob/master/_conda
-#     compinit
-#   }
-# else
-#   function loadconda() {
-#     echo "Please install conda in $HOME/anaconda3/bin/conda"
-#   }
-# fi
 
 if [ -x "$(command -v youtube-dl)" ]; then
   function youtube-extract-audio () {
