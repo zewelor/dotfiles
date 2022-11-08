@@ -117,7 +117,6 @@ zinit light zdharma-continuum/z-a-submods
 
 # zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 # zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
-# zplugin wait lucid for OMZ::plugins/kubectl/kubectl.plugin.zsh
 
 if [ -x "$(command -v tmuxinator)" ]; then
   alias mux="tmuxinator"
@@ -206,52 +205,13 @@ zinit ice svn; zinit snippet PZT::modules/tmux
 # zinit ice svn; zinit snippet PZT::modules/ruby
 # zinit ice svn; zinit snippet PZT::modules/rails
 
-if [ -x "$(command -v kubectl)" ]; then
-  # lazy-load kubectl completion
-  _kubectl() {
-    unset -f _kubectl
-    eval "$(command kubectl completion zsh)"
-  }
-
-  function start-k8s-work () {
-    alias k="kubectl"
-    alias kmurder="kubectl delete pod --grace-period=0 --force"
-
-    function kcRsh () {
-      kubectl run $2 --image=$1 --attach -ti --restart=Never --rm --command -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
-    }
-
-    function kcEsh () {
-      kubectl exec -ti $1 -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
-    }
-
-    function k8s-secret-encode () {
-      echo -n $(read v; echo $v) | base64
-    }
-
-    if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ] ; then
-      typeset -g POWERLEVEL9K_KUBECONTEXT_DEFAULT_CONTENT_EXPANSION='$P9K_KUBECONTEXT_NAMESPACE'
-      typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
-    fi
-
-    zinit light-mode from"gh-r" as"program" for @derailed/k9s
-    zinit light-mode from"gh-r" as"program" mv"krew-linux_amd64 -> kubectl-krew" if'[[ $MACHTYPE == "x86_64" ]]' atpull'%atclone' atclone'rm -f krew-*' bpick"krew.tar.gz"  for @kubernetes-sigs/krew
-    zinit ice svn pick"init.zsh"; zinit snippet 'https://github.com/prezto-contributions/prezto-kubectl/trunk'
-
-    # zinit light-mode from"gh-r" as"program" mv"kubeseal-* -> kubeseal" for @bitnami-labs/sealed-secrets
-
-    for krew_plugin in get-all view-allocations pod-lens ns; do
-      if [ ! -f "$HOME/.krew/receipts/$krew_plugin.yaml" ]; then
-        kubectl krew install $krew_plugin
-      fi
-    done
-  }
-fi
-
-
 # This module must be loaded after the utility module.
+# zinit light-mode wait lucid blockf for @zsh-users/zsh-completions
 zinit ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
 zinit snippet PZT::modules/completion
+
+source $HOME/.zsh/kubernetes.zsh
+source $HOME/.zsh/docker.zsh
 
 zinit ice svn; zinit snippet PZT::modules/editor
 
@@ -404,65 +364,6 @@ if [ -x "$(command -v youtube-dl)" ]; then
   }
 fi
 
-if has "docker"; then
-  export DOCKER_BUILDKIT=1
-  export COMPOSE_DOCKER_CLI_BUILD=1
-
-  zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
-
-  alias czysc_docker='docker container prune ; dkrmI'
-
-  function dkEsh () {
-    dkE $1 sh
-  }
-
-  function dkCRsh () {
-    docker container run -it --rm --entrypoint "" $1 sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
-  }
-
-  zpcompdef _docker dkEsh='_docker_complete_containers_names'
-fi
-
-if [ ! -z "`docker compose version`" ]; then
-
-  function docker-compose () {
-    docker compose "$@"
-  }
-
-  zpcompdef _docker-compose dkcrs="_docker-compose_services"
-
-  # zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
-
-  function dkcrs () {
-    dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1    
-  }
-
-  zpcompdef _docker-compose dkcrs="_docker-compose_services"
-
-  function dkcrsd () {
-    dkcrs $1 -d
-  }
-
-  zpcompdef _docker-compose dkcrsd="_docker-compose_services"
-
-  function dkcrsdl () {
-    dkcrsd $1 && dkcl -f $1
-  }
-
-  zpcompdef _docker-compose dkcrsdl="_docker-compose_services"
-
-  function dkcupdate () {
-    dkc stop $1 && dkc pull $1 && dkc up -d $1 && sleep 5 && dkcl -f $1
-  }
-
-  zpcompdef _docker-compose dkcupdate="_docker-compose_services"
-
-  function dkcupdated () {
-    dkc stop $1 && dkc pull $1 && dkc up -d $1
-  }
-
-  zpcompdef _docker-compose dkcupdated="_docker-compose_services"
-fi
 
 function du_sorted () {
   if [ -z "$@" ]; then
