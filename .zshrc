@@ -203,7 +203,6 @@ zinit ice svn atpull'%atclone' run-atpull atclone'rm -f functions/make'; zinit s
 zinit ice svn; zinit snippet PZT::modules/docker
 zinit ice svn; zinit snippet PZT::modules/tmux
 # zinit ice svn; zinit snippet PZT::modules/ruby
-# zinit ice svn; zinit snippet PZT::modules/rails
 
 # This module must be loaded after the utility module.
 # zinit light-mode wait lucid blockf for @zsh-users/zsh-completions
@@ -329,6 +328,8 @@ if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
 fi
 
 function loadrails() {
+  zinit ice svn; zinit snippet PZT::modules/rails
+
   alias be='bundle exec'
   alias ror='bundle exec rails'
   alias rorc='bundle exec rails console'
@@ -339,20 +340,13 @@ function loadrails() {
   alias rorg='bundle exec rails generate'
   alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
   alias rorlc='bundle exec rake log:clear'
-  alias rorp='bundle exec rails plugin'
   alias rorr='bundle exec rails runner'
   alias rors='bundle exec rails server'
-  alias rorsd='bundle exec rails server --debugger'
-  alias rorx='bundle exec rails destroy'
 }
 
 
 if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
   alias load-platformio='source ~/.platformio/penv/bin/activate'
-fi
-
-if [ -s "$HOME/bin/Slic3rPE.AppImage" ] ; then
-  alias update-slic3r='lastversion -d $HOME/bin/Slic3rPE.AppImage prusa3d/PrusaSlicer'
 fi
 
 if [ -x "$(command -v youtube-dl)" ]; then
