@@ -121,6 +121,7 @@ Plug 'chr4/nginx.vim'
 
 Plug 'junegunn/vim-easy-align'
 Plug 'michaeljsmith/vim-indent-object'
+Plug 'github/copilot.vim'
 
 " Git
 " Plug 'tpope/vim-fugitive'

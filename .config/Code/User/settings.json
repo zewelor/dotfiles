@@ -2,7 +2,7 @@
     "editor.accessibilitySupport": "off",
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
-    "window.zoomLevel": 2,
+    "window.zoomLevel": 1,
     "vim.neovimPath": "/usr/bin/nvim",
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
@@ -61,4 +61,11 @@
     "vs-kubernetes.crd-code-completion": "disabled"
 },
 "checkForMinikubeUpgrade": false,
+"kubeseal.executablePath": "/home/omen/.local/bin/kubeseal",
+"github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "plaintext": false,
+    "markdown": false
+},
 }

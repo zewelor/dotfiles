@@ -20,7 +20,7 @@ if has "kubectl"; then
     }
 
     function k8s-secret-encode () {
-      echo -n $(read v; echo $v) | base64
+      echo -n $(read v; echo $v) | base64 -w 0
     }
 
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ] ; then
