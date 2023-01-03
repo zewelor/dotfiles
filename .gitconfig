@@ -1,16 +1,17 @@
 [color]
-	ui = auto
+  ui = auto
 [user]
-	name = zewelor
-	email = zewelor@gmail.com
+  name = zewelor
+  email = zewelor@gmail.com
 [core]
-	excludesfile = ~/.gitignore_global
-	# pager = less -F -X
-	editor = vim
+  excludesfile = ~/.gitignore_global
+  # pager = less -F -X
+  editor = vim
+  pager = delta
 [branch]
   autosetuprebase = always
 [push]
-	default = current
+  default = current
 [pull]
   rebase = true
 [fetch]
@@ -18,50 +19,46 @@
 [include]
   path = ~/.gitconfig.local
 [diff]
-	tool = vimdiff
+  tool = vimdiff
   noprefix = true
+  colorMoved = default
 [merge]
-	tool = vimdiff
+  tool = vimdiff
+  conflictstyle = diff3
 [alias]
   undo-commit = reset --soft HEAD^
   rbi = !sh -c \"git rebase -i `git merge-base $1 HEAD`\" -
-	squash = "!f(){ git reset --soft HEAD~${1} && git commit --edit -m\"$(git log --format=%B --reverse HEAD..HEAD@{1})\"; };f"
   set-upstream = !git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`
+  rm-merged = !git branch --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" { print $1 }' | xargs -r git branch -D
+  sync = !git switch main && git pull --prune && git rm-merged
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
 [difftool]
-	prompt = false
+  prompt = false
 [rebase]
-	autoStash = true
-
-[pager]
-    diff = delta
-    log = delta
-    reflog = delta
-    show = delta
+  autoStash = true
 
 [interactive]
-    diffFilter = delta --color-only --features=interactive --light
+  diffFilter = delta --color-only
 
 [delta]
-    features = decorations
-    syntax-theme = GitHub
-
-[delta "interactive"]
-    keep-plus-minus-markers = false
+  features = decorations
+  syntax-theme = GitHub
+  light = true
 
 [delta "decorations"]
-    # commit-decoration-style = blue ol
-    commit-style = raw
-    file-style = omit
-    # hunk-header-decoration-style = blue box
-    hunk-header-file-style = red
-    hunk-header-line-number-style = "#067a00"
-    hunk-header-style = file line-number syntax
+  commit-decoration-style = blue ol
+  commit-style = raw
+  # file-style = omit
+  hunk-header-decoration-style = blue box
+  hunk-header-file-style = red
+  hunk-header-line-number-style = "#067a00"
+  hunk-header-style = file line-number syntax
+
 [init]
-	defaultBranch = main
+  defaultBranch = main
 [fixup]
-	rebase = true
+  rebase = true
