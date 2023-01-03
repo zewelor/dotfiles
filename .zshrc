@@ -151,7 +151,7 @@ zinit light-mode from"gh-r" as"program" mv"delta-*/delta -> delta" for @dandavis
 # A more intuitive version of du written in rust.
 zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/dust
 # A simple, fast and user-friendly alternative to find
-zinit light-mode from"gh-r" as"program" mv"fd-*/fd -> fd" for @sharkdp/fd
+zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/fd
 # An extremely fast alternative to grep that respects your gitignore
 zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
 ##########################
