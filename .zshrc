@@ -5,6 +5,10 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
+if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
+    zcompile $HOME/.zshrc
+fi
+
 setopt nullglob  # allows filename patterns which match no files to expand to a null string, rather than themselves
 
 if [ -d $HOME/bin ]; then
@@ -154,6 +158,8 @@ zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/du
 zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/fd
 # An extremely fast alternative to grep that respects your gitignore
 zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
+# Feature-rich terminal-based text viewer. It is a so-called terminal pager.
+zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
 ##########################
 
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
