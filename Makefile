@@ -39,7 +39,7 @@ $(zinit_dir):
 	cd $(zinit_dir)/bin ; git reset --hard $(ZINIT_COMMIT_SHA)
 
 packages:
-	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim jq hunspell-pl hunspell-en-gb hunspell-en-us 
+	sudo apt-get install -y --no-install-recommends fontconfig vim subversion silversearcher-ag autoconf tmux zsh fd-find ncdu curl neovim jq
 
 # appimage:
 # 	lastversion -d $(HOME)/bin/Lens.AppImage lensapp/lens

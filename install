@@ -67,8 +67,6 @@ if exists code && ! exists codium; then
       x ln -sf "$f" "$DST"
     fi
   done
-
-  ln -s /usr/share/hunspell/* "$BASE"/.config/Code/Dictionaries
 fi
 
 # if exists codium; then

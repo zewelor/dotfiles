@@ -68,4 +68,5 @@
     "plaintext": false,
     "markdown": false
 },
+"gitlens.currentLine.enabled": false,
 }
