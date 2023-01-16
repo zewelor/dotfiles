@@ -2,7 +2,7 @@ if has "docker"; then
   export DOCKER_BUILDKIT=1
   export COMPOSE_DOCKER_CLI_BUILD=1
 
-  # zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
+  zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 
   alias czysc_docker='docker container prune ; dkrmI'
 
@@ -18,10 +18,6 @@ if has "docker"; then
 fi
 
 if [ ! -z "`docker compose version`" ]; then
-
-  function docker-compose () {
-    docker compose "$@"
-  }
 
   zpcompdef _docker-compose dkcrs="_docker-compose_services"
 

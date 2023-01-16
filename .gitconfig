@@ -3,6 +3,7 @@
 [user]
   name = zewelor
   email = zewelor@gmail.com
+  signingkey = 0x7BE843082292E972
 [core]
   excludesfile = ~/.gitignore_global
   # pager = less -F -X

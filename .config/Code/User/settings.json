@@ -69,4 +69,12 @@
     "markdown": false
 },
 "gitlens.currentLine.enabled": false,
+"cSpell.userWords": [
+    "stakater"
+],
+"cSpell.enableFiletypes": [
+    "!yaml"
+],
+"gitlens.codeLens.authors.enabled": false,
+"gitlens.codeLens.recentChange.enabled": false,
 }
