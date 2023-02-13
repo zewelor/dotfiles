@@ -34,7 +34,7 @@ if has "kubectl"; then
 
     # zinit light-mode from"gh-r" as"program" mv"kubeseal-* -> kubeseal" for @bitnami-labs/sealed-secrets
 
-    for krew_plugin in get-all view-allocations pod-lens ns; do
+    for krew_plugin in get-all view-allocations pod-lens ns pv-migrate; do
       if [ ! -f "$HOME/.krew/receipts/$krew_plugin.yaml" ]; then
         kubectl krew install $krew_plugin
       fi

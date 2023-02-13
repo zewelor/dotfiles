@@ -58,7 +58,8 @@
 },
 "git.enableSmartCommit": true,
 "vs-kubernetes": {
-    "vs-kubernetes.crd-code-completion": "disabled"
+    "vs-kubernetes.crd-code-completion": "disabled",
+    "vs-kubernetes.minikube-show-information-expiration": "2023-07-28T18:33:30.735Z"
 },
 "checkForMinikubeUpgrade": false,
 "kubeseal.executablePath": "/home/omen/.local/bin/kubeseal",
@@ -66,7 +67,7 @@
     "*": true,
     "yaml": true,
     "plaintext": false,
-    "markdown": false
+    "markdown": true
 },
 "gitlens.currentLine.enabled": false,
 "cSpell.userWords": [
