@@ -259,6 +259,7 @@ if has "git"; then
   alias git-undo-commit='git reset --soft HEAD~;'
   alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
   alias glp="git log -p"
+  alias git-fixup="ga . && git fixup -c --rebase && gpf"
 
   function git_main_branch () {
     git branch -l master main | xargs | cut -f 2 -d ' '
