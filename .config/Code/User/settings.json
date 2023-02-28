@@ -80,4 +80,8 @@
 "gitlens.codeLens.recentChange.enabled": false,
 "git.confirmSync": false,
 "git.openRepositoryInParentFolders": "never",
+"[ruby]": {
+    "editor.defaultFormatter": "testdouble.vscode-standard-ruby"
+},
+"ruby.lint": {},
 }
