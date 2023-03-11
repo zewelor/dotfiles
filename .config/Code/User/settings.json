@@ -81,7 +81,24 @@
 "git.confirmSync": false,
 "git.openRepositoryInParentFolders": "never",
 "[ruby]": {
-    "editor.defaultFormatter": "testdouble.vscode-standard-ruby"
+    "editor.defaultFormatter": "rebornix.ruby"
 },
 "ruby.lint": {},
+"rubyLsp.enableExperimentalFeatures": false,
+"rubyLsp.enabledFeatures": {
+
+    "codeActions": true,
+    "diagnostics": true,
+    "documentHighlights": true,
+    "documentLink": true,
+    "documentSymbols": true,
+    "foldingRanges": true,
+    "formatting": true,
+    "hover": true,
+    "inlayHint": true,
+    "onTypeFormatting": true,
+    "selectionRanges": true,
+    "semanticHighlighting": true,
+    "completion": true
+},
 }
