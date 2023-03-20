@@ -101,4 +101,5 @@
     "semanticHighlighting": true,
     "completion": true
 },
+"rubyLsp.rubyVersionManager": "asdf",
 }
