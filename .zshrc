@@ -166,7 +166,17 @@ zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
 # zinit light-mode from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv"  for @direnv/direnv
 # zinit light-mode wait"2" as"program" from"gh-r" pick"lazygit" lucid  for @jesseduffield/lazygit
 # zinit light-mode wait"2" as"program" from"gh-r" pick"lazydocker" lucid  for @jesseduffield/lazydocker
-zinit pack"bgn-binary" for fzf
+
+#I was curiose about the null (which seems to be not documented): if I read this line right, it's a shorthand for pick'/dev/null', so essentially "don't source anything" (there are two more places with ICE[null], both disable loading snippets/plugins as well.
+zinit as"null" wait"0a" lucid light-mode from"gh-r" for \
+  sbin"fzf*" \
+    dl'https://raw.githubusercontent.com/junegunn/fzf/master/bin/fzf-tmux;
+       https://raw.githubusercontent.com/junegunn/fzf/master/shell/completion.zsh -> _fzf_completion;
+       https://raw.githubusercontent.com/junegunn/fzf/master/shell/key-bindings.zsh;
+       https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf-tmux.1 -> $ZPFX/man/man1/fzf-tmux.1;
+       https://raw.githubusercontent.com/junegunn/fzf/master/man/man1/fzf.1 -> $ZPFX/man/man1/fzf.1' \
+    src"key-bindings.zsh" \
+    junegunn/fzf
 
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
