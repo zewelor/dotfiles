@@ -190,8 +190,6 @@ zinit snippet PZT::modules/helper/init.zsh
 # Set case-sensitivity for completion, history lookup, etc.
 zstyle ':prezto:*:*' color 'yes'
 zstyle ':prezto:module:editor' key-bindings 'vi'
-zstyle ':prezto:module:utility' correct 'no'
-zstyle ':prezto:module:utility' safe-ops 'no'. # Because new enchand uses cp, and it waited soo long
 
 zinit ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zinit snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
 
@@ -205,12 +203,10 @@ zinit ice svn pick ""; zinit snippet PZT::modules/archive # No files to source, 
 zinit ice svn; zinit snippet PZT::modules/git
 zinit ice svn; zinit snippet PZT::modules/dpkg
 zinit ice svn; zinit snippet PZT::modules/history
-zinit ice svn atpull'%atclone' run-atpull atclone'rm -f functions/make'; zinit snippet PZT::modules/utility # Remove make function as it breaks make
 zinit ice svn; zinit snippet PZT::modules/docker
 zinit ice svn; zinit snippet PZT::modules/tmux
 # zinit ice svn; zinit snippet PZT::modules/ruby
 
-# This module must be loaded after the utility module.
 # zinit light-mode wait lucid blockf for @zsh-users/zsh-completions
 zinit ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
 zinit snippet PZT::modules/completion
@@ -301,6 +297,27 @@ alias -g X0='| xargs -0'
 alias -g XG='| xargs egrep'
 alias -g X='| xargs'
 
+# Directory listing
+alias l='ls -1A'         # Lists in one column, hidden files.
+alias ll='ls -lh'        # Lists human readable sizes.
+alias lr='ll -R'         # Lists human readable sizes, recursively.
+alias la='ll -A'         # Lists human readable sizes, hidden files.
+alias lm='la | "$PAGER"' # Lists human readable sizes, hidden files through pager.
+alias lk='ll -Sr'        # Lists sorted by size, largest last.
+alias lt='ll -tr'        # Lists sorted by date, most recent last.
+alias lc='lt -c'         # Lists sorted by date, most recent last, shows change time.
+alias lu='lt -u'         # Lists sorted by date, most recent last, shows access time.
+
+# Disable globbing.
+alias fc='noglob fc'
+alias find='noglob find'
+alias ftp='noglob ftp'
+alias history='noglob history'
+alias locate='noglob locate'
+alias rsync='noglob rsync'
+alias scp='noglob scp'
+alias sftp='noglob sftp'
+
 function export_vault_token() {
   echo "Type vault token:"
   export VAULT_TOKEN=$(read v; echo $v)
@@ -344,6 +361,7 @@ function loadrails() {
   alias rordm='bundle exec rake db:migrate'
   alias rordM='bundle exec rake db:migrate db:test:clone'
   alias rordr='bundle exec rake db:rollback'
+  alias rake='noglob rake'
   alias rorg='bundle exec rails generate'
   alias rorl='tail -f "$(ruby-app-root)/log/development.log"'
   alias rorlc='bundle exec rake log:clear'
