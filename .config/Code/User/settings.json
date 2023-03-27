@@ -84,9 +84,8 @@
     "editor.defaultFormatter": "rebornix.ruby"
 },
 "ruby.lint": {},
-"rubyLsp.enableExperimentalFeatures": false,
+"rubyLsp.enableExperimentalFeatures": true,
 "rubyLsp.enabledFeatures": {
-
     "codeActions": true,
     "diagnostics": true,
     "documentHighlights": true,
@@ -101,5 +100,4 @@
     "semanticHighlighting": true,
     "completion": true
 },
-"rubyLsp.rubyVersionManager": "asdf",
 }
