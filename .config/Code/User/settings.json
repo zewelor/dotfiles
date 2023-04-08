@@ -100,4 +100,7 @@
     "semanticHighlighting": true,
     "completion": true
 },
+"[markdown]": {
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+},
 }
