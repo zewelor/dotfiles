@@ -81,7 +81,7 @@
 "git.confirmSync": false,
 "git.openRepositoryInParentFolders": "never",
 "[ruby]": {
-    "editor.defaultFormatter": "rebornix.ruby"
+    "editor.defaultFormatter": "Shopify.ruby-lsp"
 },
 "ruby.lint": {},
 "rubyLsp.enableExperimentalFeatures": true,
@@ -103,4 +103,5 @@
 "[markdown]": {
     "editor.defaultFormatter": "yzhang.markdown-all-in-one"
 },
+"rubyLsp.rubyVersionManager": "asdf",
 }
