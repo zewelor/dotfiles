@@ -61,23 +61,13 @@
     "vs-kubernetes.crd-code-completion": "disabled",
     "vs-kubernetes.minikube-show-information-expiration": "2023-07-28T18:33:30.735Z"
 },
-"checkForMinikubeUpgrade": false,
-"kubeseal.executablePath": "/home/omen/.local/bin/kubeseal",
 "github.copilot.enable": {
     "*": true,
     "yaml": true,
     "plaintext": true,
-    "markdown": true
+    "markdown": true,
+    "scminput": false
 },
-"gitlens.currentLine.enabled": false,
-"cSpell.userWords": [
-    "stakater"
-],
-"cSpell.enableFiletypes": [
-    "!yaml"
-],
-"gitlens.codeLens.authors.enabled": false,
-"gitlens.codeLens.recentChange.enabled": false,
 "git.confirmSync": false,
 "git.openRepositoryInParentFolders": "never",
 "[ruby]": {
@@ -101,7 +91,21 @@
     "completion": true
 },
 "[markdown]": {
-    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
 },
 "rubyLsp.rubyVersionManager": "asdf",
+"github.copilot.advanced": {},
+"dev.containers.defaultExtensions": [
+    "GitHub.copilot"
+],
+"gitlens.showWhatsNewAfterUpgrades": false,
+"gitlens.plusFeatures.enabled": false,
+"gitlens.currentLine.enabled": false,
+"gitlens.showWelcomeOnInstall": false,
+"gitlens.virtualRepositories.enabled": false,
+"gitlens.codeLens.enabled": false,
+"apklab.apkSignerPath": "/root/.apklab/uber-apk-signer-1.2.1.jar",
+"apklab.apktoolPath": "/root/.apklab/apktool_2.7.0.jar",
+"apklab.jadxDirPath": "/root/.apklab/jadx-1.4.6",
+"apklab.initProjectDirAsGit": false,
 }
