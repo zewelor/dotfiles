@@ -104,8 +104,6 @@
 "gitlens.showWelcomeOnInstall": false,
 "gitlens.virtualRepositories.enabled": false,
 "gitlens.codeLens.enabled": false,
-"apklab.apkSignerPath": "/root/.apklab/uber-apk-signer-1.2.1.jar",
-"apklab.apktoolPath": "/root/.apklab/apktool_2.7.0.jar",
-"apklab.jadxDirPath": "/root/.apklab/jadx-1.4.6",
-"apklab.initProjectDirAsGit": false,
+"java.autobuild.enabled": false,
+"java.configuration.updateBuildConfiguration": "disabled",
 }
