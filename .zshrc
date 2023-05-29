@@ -328,6 +328,10 @@ alias rsync='noglob rsync'
 alias scp='noglob scp'
 alias sftp='noglob sftp'
 
+# Misc
+# https://github.com/TheR1D/shell_gpt
+alias sgpt="docker run --rm -it --env OPENAI_API_KEY="whatever" --env OPENAI_API_HOST=http://172.31.0.1:8080 --volume gpt-cache:/tmp/shell_gpt ghcr.io/ther1d/shell_gpt"
+
 function export_vault_token() {
   echo "Type vault token:"
   export VAULT_TOKEN=$(read v; echo $v)
