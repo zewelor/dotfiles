@@ -330,7 +330,14 @@ alias sftp='noglob sftp'
 
 # Misc
 # https://github.com/TheR1D/shell_gpt
-alias sgpt="docker run --rm -it --env OPENAI_API_KEY="whatever" --env OPENAI_API_HOST=http://172.31.0.1:8080 --volume gpt-cache:/tmp/shell_gpt ghcr.io/ther1d/shell_gpt"
+# Installed via pipx
+if has "sgpt"; then
+  export OPENAI_API_KEY="whatever"
+  export OPENAI_API_HOST="http://`docker network inspect bridge --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'`:8089"
+  alias sgpt4="sgpt --model gpt-4"
+fi
+# alias sgpt="docker run --rm -it --env OPENAI_API_KEY="whatever" --env OPENAI_API_HOST=http://`docker network inspect bridge --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'`:8089 --volume gpt-cache:/tmp/shell_gpt ghcr.io/ther1d/shell_gpt"
+# alias sgpt4="sgpt --model gpt-4"
 
 function export_vault_token() {
   echo "Type vault token:"
