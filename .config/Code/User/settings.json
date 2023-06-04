@@ -44,7 +44,7 @@
 "sqltools.connections": [],
 "telemetry.telemetryLevel": "off",
 "files.insertFinalNewline": true,
-"remote.containers.dockerComposePath": "docker compose",
+"dev.containers.dockerComposePath": "docker compose",
 "vim.easymotion": true,
 "settingsSync.ignoredSettings": [
     "editor.fontSize"
@@ -73,7 +73,6 @@
 "[ruby]": {
     "editor.defaultFormatter": "Shopify.ruby-lsp"
 },
-"ruby.lint": {},
 "rubyLsp.enableExperimentalFeatures": true,
 "rubyLsp.enabledFeatures": {
     "codeActions": true,

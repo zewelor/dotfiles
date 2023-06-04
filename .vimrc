@@ -13,6 +13,10 @@ set undofile
 set undolevels=1000 "maximum number of changes that can be undone
 set undoreload=10000 "maximum number lines to save for undo on a buffer reload
 
+" ================ Swap Files ======================
+set directory=~/.vim/swapfiles
+set backupdir=~/.vim/backupfiles
+
 " ================ Indentation ======================
 set autoindent
 set smartindent
@@ -37,9 +41,8 @@ filetype plugin on    " Enable filetype-specific plugins
 
 " ================ Turn Off Swap Files ==============
 "
-set noswapfile
-set nobackup
-set nowb
+" set nobackup
+" set nowb
 
 map <C-s> <esc>:w<CR>
 imap <C-s> <esc>:w<CR>
