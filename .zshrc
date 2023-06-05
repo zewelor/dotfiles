@@ -328,12 +328,18 @@ alias rsync='noglob rsync'
 alias scp='noglob scp'
 alias sftp='noglob sftp'
 
+export OPENAI_API_IP=127.0.0.1
+export OPENAI_API_PORT=8082
 # Misc
 # https://github.com/TheR1D/shell_gpt
 # Installed via pipx
 if has "sgpt"; then
-  export OPENAI_API_KEY="whatever"
-  export OPENAI_API_HOST="http://`docker network inspect bridge --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'`:8089"
+  # If OPENAI_API_IP is set
+  if [ "$OPENAI_API_IP" ]; then
+    export OPENAI_API_KEY="whatever"
+    export OPENAI_API_HOST="http://${OPENAI_API_IP}:${OPENAI_API_PORT}"
+  fi
+
   alias sgpt4="sgpt --model gpt-4"
 
   # Shell-GPT integration ZSH v0.1
