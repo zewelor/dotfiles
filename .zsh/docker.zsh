@@ -53,7 +53,11 @@ if has "docker"; then
     zpcompdef _docker-compose dkcupdated="_docker-compose_services"
 
     function docker_compose_run_on_exec() {
-      docker compose ps|grep -q $1 && docker compose exec -it $1 "$@[2,-1]" || docker compose run --rm -it $1 "$@[2,-1]"
+      if docker compose ps | grep -q $1; then
+        docker compose exec -it $1 "$@[2,-1]"
+      else
+        docker compose run --rm -it $1 "$@[2,-1]"
+      fi
     }
   fi
 fi

@@ -105,4 +105,5 @@
 "gitlens.codeLens.enabled": false,
 "java.autobuild.enabled": false,
 "java.configuration.updateBuildConfiguration": "disabled",
+"git.autofetch": true,
 }
