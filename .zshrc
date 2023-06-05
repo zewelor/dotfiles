@@ -335,6 +335,18 @@ if has "sgpt"; then
   export OPENAI_API_KEY="whatever"
   export OPENAI_API_HOST="http://`docker network inspect bridge --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'`:8089"
   alias sgpt4="sgpt --model gpt-4"
+
+  # Shell-GPT integration ZSH v0.1
+  _sgpt_zsh() {
+      _sgpt_prev_cmd=$BUFFER
+      BUFFER+="⌛"
+      zle -I && zle redisplay
+      BUFFER=$(sgpt --shell <<< "$_sgpt_prev_cmd")
+      zle end-of-line
+  }
+  zle -N _sgpt_zsh
+  bindkey ^l _sgpt_zsh
+  # Shell-GPT integration ZSH v0.1
 fi
 # alias sgpt="docker run --rm -it --env OPENAI_API_KEY="whatever" --env OPENAI_API_HOST=http://`docker network inspect bridge --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'`:8089 --volume gpt-cache:/tmp/shell_gpt ghcr.io/ther1d/shell_gpt"
 # alias sgpt4="sgpt --model gpt-4"
