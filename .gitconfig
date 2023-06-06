@@ -32,6 +32,7 @@
   set-upstream = !git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`
   rm-merged = !git branch --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" { print $1 }' | xargs -r git branch -D
   sync = !git switch main && git pull --prune && git rm-merged
+  upstream-sync = !git pull upstream `git symbolic-ref --short HEAD` && git push origin
 [filter "lfs"]
   clean = git-lfs clean -- %f
   smudge = git-lfs smudge -- %f
