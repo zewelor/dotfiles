@@ -330,6 +330,8 @@ alias sftp='noglob sftp'
 
 export OPENAI_API_IP=127.0.0.1
 export OPENAI_API_PORT=8082
+export OPENAI_API_BASE="http://${OPENAI_API_IP}:${OPENAI_API_PORT}/v1"
+
 # Misc
 # https://github.com/TheR1D/shell_gpt
 # Installed via pipx
