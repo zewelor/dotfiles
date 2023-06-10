@@ -83,7 +83,7 @@ nmap ga <Plug>(EasyAlign)
 " VIM-PLUG BLOCK {{{
 " ============================================================================
 
-silent! if plug#begin('~/.vim/plugged')
+call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
 
 Plug 'pbrisbin/vim-mkdir'
 
@@ -131,7 +131,6 @@ Plug 'github/copilot.vim'
 Plug 'gregsexton/gitv', { 'on': 'Gitv' }
 
 call plug#end()
-endif
 
 colorscheme solarized
 " colorscheme Tomorrow-Night
