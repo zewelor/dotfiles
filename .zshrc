@@ -359,8 +359,6 @@ if has "sgpt"; then
   bindkey ^l _sgpt_zsh
   # Shell-GPT integration ZSH v0.1
 fi
-# alias sgpt="docker run --rm -it --env OPENAI_API_KEY="whatever" --env OPENAI_API_HOST=http://`docker network inspect bridge --format='{{range .IPAM.Config}}{{.Gateway}}{{end}}'`:8089 --volume gpt-cache:/tmp/shell_gpt ghcr.io/ther1d/shell_gpt"
-# alias sgpt4="sgpt --model gpt-4"
 
 function export_vault_token() {
   echo "Type vault token:"
