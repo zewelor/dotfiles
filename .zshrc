@@ -339,8 +339,8 @@ export OCO_OPENAI_BASE_PATH=${OPENAI_API_BASE}
 # https://github.com/TheR1D/shell_gpt
 # Installed via pipx
 if has "sgpt"; then
-  # If OPENAI_API_IP is set
-  if [ "$OPENAI_API_IP" ]; then
+  # If OPENAI_API_IP is set and equals 127.0.0.1
+  if [ -n "$OPENAI_API_IP" ] && [ "$OPENAI_API_IP" = "127.0.0.1" ]; then
     export OPENAI_API_KEY="whatever"
     export OPENAI_API_HOST="http://${OPENAI_API_IP}:${OPENAI_API_PORT}"
   fi
