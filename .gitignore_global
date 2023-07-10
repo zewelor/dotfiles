@@ -2,3 +2,4 @@
 .pry_history
 .cap_tasks~
 .ruby-env
+.zsh/envs.zsh
