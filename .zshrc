@@ -337,7 +337,7 @@ alias sftp='noglob sftp'
 
 # Misc
 # https://github.com/TheR1D/shell_gpt
-# Installed via pipx
+# Installed via pipx, because docker version doesn't integrate with shell auto execution ( it executes commands inside docker )
 if has "sgpt"; then
   # If OPENAI_API_IP is set and equals 127.0.0.1
   if [ -n "$OPENAI_API_IP" ] && [ "$OPENAI_API_IP" = "127.0.0.1" ]; then
