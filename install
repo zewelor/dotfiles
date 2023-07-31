@@ -108,6 +108,6 @@ if [ -d $DST ] && [ -e $BASE_FILES ]; then  # checks if directory exists and fil
     fi  
   done
 else
-  echo "$DST does not exist or no files in $BASE/.local/share/applications/"
+  echo "[DEBUG] $DST does not exist or no files in $BASE/.local/share/applications/"
 fi
 
