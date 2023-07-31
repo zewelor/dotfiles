@@ -71,7 +71,7 @@
 "git.confirmSync": false,
 "git.openRepositoryInParentFolders": "never",
 "[ruby]": {
-    "editor.defaultFormatter": "rebornix.ruby"
+    "editor.defaultFormatter": "Shopify.ruby-lsp"
 },
 "rubyLsp.enableExperimentalFeatures": true,
 "rubyLsp.enabledFeatures": {
