@@ -360,12 +360,6 @@ if has "sgpt"; then
   # Shell-GPT integration ZSH v0.1
 fi
 
-function export_vault_token() {
-  echo "Type vault token:"
-  export VAULT_TOKEN=$(read v; echo $v)
-  clear
-}
-
 #
 # Cli improvements
 #

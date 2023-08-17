@@ -63,10 +63,10 @@
 },
 "github.copilot.enable": {
     "*": true,
-    "yaml": true,
     "plaintext": true,
     "markdown": true,
-    "scminput": false
+    "scminput": false,
+    "yaml": true
 },
 "git.confirmSync": false,
 "git.openRepositoryInParentFolders": "never",
