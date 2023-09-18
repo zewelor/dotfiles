@@ -107,7 +107,7 @@ if [ -d $DST ] && [ -e $BASE_FILES ]; then  # checks if directory exists and fil
       x chmod a-x "$DST/$(basename "$f")"
     fi  
   done
-else
-  echo "[DEBUG] $DST does not exist or no files in $BASE/.local/share/applications/"
+# else
+#   echo "[DEBUG] $DST does not exist or no files in $BASE/.local/share/applications/"
 fi
 
