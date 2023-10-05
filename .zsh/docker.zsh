@@ -54,9 +54,9 @@ if has "docker"; then
 
     function docker_compose_run_on_exec() {
       if docker compose ps | grep -q $1; then
-        docker compose exec -it $1 "$@[2,-1]"
+        docker compose --progress quiet exec -it $1 "$@[2,-1]"
       else
-        docker compose run --rm -it $1 "$@[2,-1]"
+        docker compose --progress quiet run --rm -it $1 "$@[2,-1]"
       fi
     }
   fi
