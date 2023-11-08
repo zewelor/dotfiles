@@ -160,6 +160,8 @@ zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/f
 zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
 # Feature-rich terminal-based text viewer. It is a so-called terminal pager.
 zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
+# Sgpt
+zinit light-mode from"gh-r" as"program" pick"sgpt" for @tbckr/sgpt
 ##########################
 
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
@@ -352,12 +354,34 @@ if has "sgpt"; then
       _sgpt_prev_cmd=$BUFFER
       BUFFER+="⌛"
       zle -I && zle redisplay
-      BUFFER=$(sgpt --shell <<< "$_sgpt_prev_cmd")
+      BUFFER=$(echo -n "$_sgpt_prev_cmd" | sgpt sh)
       zle end-of-line
   }
   zle -N _sgpt_zsh
   bindkey ^l _sgpt_zsh
   # Shell-GPT integration ZSH v0.1
+  
+  ## git summarize ##
+  # Leverage SGPT to produce intelligent and context-sensitive git commit messages.
+  # By providing one argument, you can define the type of semantic commit (e.g. feat, fix, chore).
+  # When supplying two arguments, the second parameter allows you to include more details for a more explicit prompt.
+  gsum() {
+    if [ $# -eq 2 ]; then
+        query="Generate git commit message using semantic versioning. Declare commit message as $1. $2. My changes: $(git diff)"
+    elif [ $# -eq 1 ]; then
+        query="Generate git commit message using semantic versioning. Declare commit message as $1. My changes: $(git diff)"
+    else
+        query="Generate git commit message using semantic versioning. My changes: $(git diff)"
+    fi
+    commit_message="$(sgpt txt "$query")"
+    printf "%s\n" "$commit_message"
+    read -r "response?Do you want to commit your changes with this commit message? [y/N] "
+    if [[ $response =~ ^[Yy]$ ]]; then
+        git add . && git commit -m "$commit_message"
+    else
+        echo "Commit cancelled."
+    fi
+  }
 fi
 
 #
