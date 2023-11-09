@@ -366,20 +366,32 @@ if has "sgpt"; then
   # By providing one argument, you can define the type of semantic commit (e.g. feat, fix, chore).
   # When supplying two arguments, the second parameter allows you to include more details for a more explicit prompt.
   gsum() {
-    if [ $# -eq 2 ]; then
-        query="Generate git commit message using semantic versioning. Declare commit message as $1. $2. My changes: $(git diff)"
-    elif [ $# -eq 1 ]; then
-        query="Generate git commit message using semantic versioning. Declare commit message as $1. My changes: $(git diff)"
+    if ! git diff --quiet --cached; then
+      git_changes="$(git diff --staged)"
+      if [ $# -eq 2 ]; then
+          query="Generate git commit message using semantic versioning. Declare commit message as $1. $2. My changes:\n $git_changes"
+      elif [ $# -eq 1 ]; then
+          query="Generate git commit message using semantic versioning. Declare commit message as $1. My changes:\n $git_changes"
+      else
+          query="Generate git commit message using semantic versioning. My changes:\n $git_changes"
+      fi
+      commit_message="$(sgpt txt "$query")"
+      printf "%s\n" "$commit_message"
+      read -r "response?Do you want to commit your changes with this commit message? [y/N] "
+      if [[ $response =~ ^[Yy]$ ]]; then
+          git commit -m "$commit_message"
+      else
+          echo "Commit cancelled."
+      fi
     else
-        query="Generate git commit message using semantic versioning. My changes: $(git diff)"
-    fi
-    commit_message="$(sgpt txt "$query")"
-    printf "%s\n" "$commit_message"
-    read -r "response?Do you want to commit your changes with this commit message? [y/N] "
-    if [[ $response =~ ^[Yy]$ ]]; then
-        git add . && git commit -m "$commit_message"
-    else
+      echo "No staged changes found. Do you want to stage changes? [y/N]"
+      read -r "response?"
+      if [[ $response =~ ^[Yy]$ ]]; then
+        git add .
+        gsum "$@"
+      else
         echo "Commit cancelled."
+      fi
     fi
   }
 fi
