@@ -396,7 +396,7 @@ if has "sgpt"; then
   }
 
   gsumpoa() {
-    git add . && gsum "$@" && gpo
+    git add . && gsum "$@" && git push -u origin
   }
 fi
 
