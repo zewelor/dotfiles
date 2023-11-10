@@ -394,6 +394,10 @@ if has "sgpt"; then
       fi
     fi
   }
+
+  gsumpoa() {
+    git add . && gsum "$@" && gpo
+  }
 fi
 
 #
