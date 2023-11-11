@@ -148,6 +148,7 @@ zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or 
 #
 ##########################
 
+zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
@@ -183,21 +184,15 @@ for package in "${packages[@]}"; do
   zinit light "$package"
 done
 
-
-# zinit light-m de from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv"  for @direnv/direnv
-# zinit light-mode wait"2" as"program" from"gh-r" pick"lazygit" lucid  for @jesseduffield/lazygit
-# zinit light-mode wait"2" as"program" from"gh-r" pick"lazydocker" lucid  for @jesseduffield/lazydocker
-
-zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf-bin
 zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
 
-export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse --border --inline-info --height ${FZF_TMUX_HEIGHT:-40%}"
+export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse --border"
 
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
-zinit ice wait"0a" lucid  as"command" if'[[ -z "$commands[fzy]" ]]' \
-       make"!PREFIX=$ZPFX install" atclone"cp contrib/fzy-* $ZPFX/bin/" pick"$ZPFX/bin/fzy*"
-    zload jhawthorn/fzy
+# zinit ice wait"0a" lucid  as"command" if'[[ -z "$commands[fzy]" ]]' \
+#        make"!PREFIX=$ZPFX install" atclone"cp contrib/fzy-* $ZPFX/bin/" pick"$ZPFX/bin/fzy*"
+#     zload jhawthorn/fzy
 
 zinit ice wait"0a" lucid silent; zload asdf-vm/asdf
 #
