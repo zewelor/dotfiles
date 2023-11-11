@@ -90,16 +90,6 @@ autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 ### End of zinit's installer chunk
 
-# if [ -f "${ZINIT[BIN_DIR]}/zmodules/Src/zdharma-continuum/zplugin.so" ]; then
-#   module_path+=( "$HOME/.zinit/bin/zmodules/Src" )
-#   zmodload zdharma-continuum/zplugin
-# else
-#   if [ -x "$(command -v gcc)" ]; then
-#     echo "Missing zinit binary module, compile it using 'zinit module build'"
-#   fi
-# fi
-
-
 # Url quotes magic
 autoload -Uz bracketed-paste-url-magic
 zle -N bracketed-paste bracketed-paste-url-magic
@@ -122,9 +112,6 @@ zinit light zdharma-continuum/z-a-submods
 # zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 # zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 
-if [ -x "$(command -v tmuxinator)" ]; then
-  alias mux="tmuxinator"
-fi
 
 
 
@@ -141,14 +128,11 @@ zinit light zdharma-continuum/zinit-annex-patch-dl
 #
 # Programs
 #
-zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
-
-#
-# Modern linux alternatives from https://github.com/ibraheemdev/modern-unix
-#
 ##########################
 
+zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
+zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
@@ -167,12 +151,6 @@ zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
 
 zinit light-mode from"gh-r" as"program" mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
 
-# zinit ice wait"5" lucid \
-#     from"gh" pick"atuin.plugin.zsh" \
-#     atinit"export ATUIN_NOBIND='true'" \
-#     atload"bindkey '^e' _atuin_search_widget"
-#
-# init snippet https://github.com/atuinsh/atuin/blob/main/atuin.plugin.zsh
 ##########################
 # Packages
 #
@@ -184,15 +162,7 @@ for package in "${packages[@]}"; do
   zinit light "$package"
 done
 
-zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
-
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse --border"
-
-# Install `fzy` fuzzy finder, if not yet present in the system
-# Also install helper scripts for tmux and dwtm
-# zinit ice wait"0a" lucid  as"command" if'[[ -z "$commands[fzy]" ]]' \
-#        make"!PREFIX=$ZPFX install" atclone"cp contrib/fzy-* $ZPFX/bin/" pick"$ZPFX/bin/fzy*"
-#     zload jhawthorn/fzy
 
 zinit ice wait"0a" lucid silent; zload asdf-vm/asdf
 #
@@ -476,10 +446,14 @@ if [ -x "$(command -v mixxx)" ]; then
   }
 fi
 
+if has "tmuxinator" ]; then
+  alias mux="tmuxinator"
+fi
 
 if has "codium"; then
   alias code='codium'
 fi
+
 #
 # Zinit options overrides
 #
@@ -524,6 +498,7 @@ function cpu_powersave {
 }
 
 # Local config
+# Not using it anywhere I think ?
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 # if (( $+commands[atuin] )); then
