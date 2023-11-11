@@ -130,9 +130,9 @@ fi
 
 # local snippets
 zinit ice wait"1" lucid
-zinit snippet $HOME/.zsh/20_keybinds.zsh
 
 zinit light zdharma-continuum/zinit-annex-bin-gem-node
+zinit light zdharma-continuum/zinit-annex-link-man
 zinit light zdharma-continuum/zinit-annex-patch-dl
 
 # compinit
@@ -163,6 +163,15 @@ zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
 # Sgpt
 zinit light-mode from"gh-r" as"program" pick"sgpt" for @tbckr/sgpt
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
+
+zinit light-mode from"gh-r" as"program" mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
+
+# zinit ice wait"5" lucid \
+#     from"gh" pick"atuin.plugin.zsh" \
+#     atinit"export ATUIN_NOBIND='true'" \
+#     atload"bindkey '^e' _atuin_search_widget"
+#
+# init snippet https://github.com/atuinsh/atuin/blob/main/atuin.plugin.zsh
 ##########################
 # Packages
 #
@@ -182,17 +191,13 @@ done
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf-bin
 zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
 
+export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse --border --inline-info --height ${FZF_TMUX_HEIGHT:-40%}"
+
 # Install `fzy` fuzzy finder, if not yet present in the system
 # Also install helper scripts for tmux and dwtm
 zinit ice wait"0a" lucid  as"command" if'[[ -z "$commands[fzy]" ]]' \
        make"!PREFIX=$ZPFX install" atclone"cp contrib/fzy-* $ZPFX/bin/" pick"$ZPFX/bin/fzy*"
     zload jhawthorn/fzy
-# Install fzy-using widgets
-zinit ice lucid wait silent; zload aperezdc/zsh-fzy
-bindkey '\ec' fzy-cd-widget
-bindkey '^T'  fzy-file-widget
-bindkey '^R'  fzy-history-widget
-bindkey '^P'  fzy-proc-widget
 
 zinit ice wait"0a" lucid silent; zload asdf-vm/asdf
 #
@@ -525,6 +530,10 @@ function cpu_powersave {
 
 # Local config
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+if (( $+commands[atuin] )); then
+  source <(atuin init zsh --disable-up-arrow)
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
