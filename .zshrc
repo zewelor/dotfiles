@@ -162,10 +162,20 @@ zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/r
 zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
 # Sgpt
 zinit light-mode from"gh-r" as"program" pick"sgpt" for @tbckr/sgpt
-##########################
-
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
-# zinit light-mode from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv"  for @direnv/direnv
+##########################
+# Packages
+#
+packages=(
+"b4b4r07/enhancd"
+)
+
+for package in "${packages[@]}"; do
+  zinit light "$package"
+done
+
+
+# zinit light-m de from"gh-r" as"program" mv"direnv* -> direnv" atclone'./direnv hook zsh > zhook.zsh' atpull'%atclone' src"zhook.zsh" pick"direnv"  for @direnv/direnv
 # zinit light-mode wait"2" as"program" from"gh-r" pick"lazygit" lucid  for @jesseduffield/lazygit
 # zinit light-mode wait"2" as"program" from"gh-r" pick"lazydocker" lucid  for @jesseduffield/lazydocker
 
@@ -195,12 +205,9 @@ zinit snippet PZT::modules/helper/init.zsh
 zstyle ':prezto:*:*' color 'yes'
 zstyle ':prezto:module:editor' key-bindings 'vi'
 
-zinit ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git external' ; zinit snippet 'https://github.com/belak/prezto-contrib/trunk/enhancd'
-
-export ENHANCD_DOT_ARG="..."
-export ENHANCD_HYPHEN_ARG="--"
-zstyle ":prezto:module:enhancd" filter "fzy:fzf"
-zstyle ":prezto:module:enhancd" command "cd"
+# https://github.com/babarot/enhancd#configuration
+export ENHANCD_ENABLE_DOUBLE_DOT=false
+export ENHANCD_FILTER="fzf --height 40%:fzy"
 
 # Plugins
 zinit ice svn pick ""; zinit snippet PZT::modules/archive # No files to source, pick nothing to prevent snippet not loaded warning
@@ -215,6 +222,7 @@ zinit ice svn; zinit snippet PZT::modules/tmux
 zinit ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
 zinit snippet PZT::modules/completion
 
+# Includes
 source $HOME/.zsh/kubernetes.zsh
 source $HOME/.zsh/docker.zsh
 
