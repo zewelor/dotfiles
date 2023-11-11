@@ -526,9 +526,9 @@ function cpu_powersave {
 # Local config
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
-if (( $+commands[atuin] )); then
-  source <(atuin init zsh --disable-up-arrow)
-fi
+# if (( $+commands[atuin] )); then
+#   source <(atuin init zsh --disable-up-arrow)
+# fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
