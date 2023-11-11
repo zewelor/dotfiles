@@ -199,7 +199,7 @@ zinit ice svn atclone'git clone --depth 3 https://github.com/b4b4r07/enhancd.git
 
 export ENHANCD_DOT_ARG="..."
 export ENHANCD_HYPHEN_ARG="--"
-# zstyle ":prezto:module:enhancd" filter "fzy:fzf"
+zstyle ":prezto:module:enhancd" filter "fzy:fzf"
 zstyle ":prezto:module:enhancd" command "cd"
 
 # Plugins
