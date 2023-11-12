@@ -131,7 +131,7 @@ zinit light b4b4r07/enhancd
 
 zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
-zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
+# zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
@@ -492,9 +492,9 @@ function cpu_powersave {
 # Not using it anywhere I think ?
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
-# if (( $+commands[atuin] )); then
-#   source <(atuin init zsh --disable-up-arrow)
-# fi
+if (( $+commands[atuin] )); then
+  source <(atuin init zsh --disable-up-arrow)
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
