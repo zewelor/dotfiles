@@ -33,9 +33,10 @@ for rc in .*rc .gitconfig .gitignore_global; do
   fi
 done
 
-for conf_dir in nvim; do
-  if [ ! -L ~/.config/$conf_dir ]; then
-    x ln -sfv $BASE/.config/$conf_dir ~/.config
+for conf_file in $(find "$BASE/.config" -type f); do
+  dst="${conf_file/$BASE\//}"
+  if [ ! -L ~/$dst ]; then
+    x ln -sfv "$conf_file" ~/$dst
   fi
 done
 
@@ -53,26 +54,10 @@ for ssh_config in $BASE/prv/ssh/config.d/*; do
   fi
 done
 
-mkdir -p ~/.mc/
-curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
-
 if exists code && ! exists codium; then
   DST=$HOME/.config/Code/User
 
   xmkdir "$DST"
-
-  for f in "$BASE"/.config/Code/User/* ; do
-    if [ ! -L "$DST/$(basename "$f")" ]; then
-      x rm -rf "$DST/$(basename "$f")"
-      x ln -sf "$f" "$DST"
-    fi
-  done
-fi
-
-if exists code-insiders; then
-  DST="$HOME/.config/Code - Insiders/User"
-
-  mkdir -p "$DST"
 
   for f in "$BASE"/.config/Code/User/* ; do
     if [ ! -L "$DST/$(basename "$f")" ]; then
@@ -95,8 +80,8 @@ fi
 #   done
 # fi
 
-DST=~/.local/share/applications
-BASE_FILES="$BASE/.local/share/applications/*"
+DST=~/.local/share
+BASE_FILES="$BASE/.local/share/*"
 
 if [ -d $DST ] && [ -e $BASE_FILES ]; then  # checks if directory exists and files exist
   for f in $BASE_FILES ; do
@@ -111,3 +96,5 @@ if [ -d $DST ] && [ -e $BASE_FILES ]; then  # checks if directory exists and fil
 #   echo "[DEBUG] $DST does not exist or no files in $BASE/.local/share/applications/"
 fi
 
+mkdir -p ~/.mc/
+curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
