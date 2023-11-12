@@ -122,9 +122,7 @@ zinit ice wait"1" lucid
 zinit light zdharma-continuum/zinit-annex-bin-gem-node
 zinit light zdharma-continuum/zinit-annex-link-man
 zinit light zdharma-continuum/zinit-annex-patch-dl
-
-# compinit
-#zinit cdreplay -q
+zinit light b4b4r07/enhancd
 
 #
 # Programs
@@ -153,17 +151,9 @@ zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
 zinit light-mode from"gh-r" as"program" mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
 
 ##########################
-# Packages
-#
-packages=(
-"b4b4r07/enhancd"
-)
 
-for package in "${packages[@]}"; do
-  zinit light "$package"
-done
 
-export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse --border"
+export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
 zinit ice wait"0a" lucid silent; zload asdf-vm/asdf
 #
