@@ -262,13 +262,14 @@ alias -g G='| grep -e'  # egrep is deprecated
 alias -g L='| less'
 alias -g RNS='| sort -nr'
 alias -g S='| sort'
-alias -g TL='| tail -20'
+# alias -g TL='| tail -20'
 alias -g T='| tail'
-alias -g TF='| tail -f'
-alias -g X0G='| xargs -0 egrep'
-alias -g X0='| xargs -0'
-alias -g XG='| xargs egrep'
+# alias -g TF='| tail -f'
+# alias -g X0G='| xargs -0 egrep'
+# alias -g X0='| xargs -0'
+# alias -g XG='| xargs egrep'
 alias -g X='| xargs'
+alias -g J='| jq'
 
 # Directory listing
 alias l='ls -1A'         # Lists in one column, hidden files.
