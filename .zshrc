@@ -167,7 +167,8 @@ zstyle ':prezto:*:*' color 'yes'
 zstyle ':prezto:module:editor' key-bindings 'vi'
 
 # https://github.com/babarot/enhancd#configuration
-export ENHANCD_ENABLE_DOUBLE_DOT=false
+export ENHANCD_ARG_DOUBLE_DOT="..."
+export ENHANCD_ARG_HYPHEN="--"
 export ENHANCD_FILTER="fzf --height 40%:fzy"
 
 # Plugins
