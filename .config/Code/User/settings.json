@@ -37,7 +37,7 @@
 "editor.fontFamily": "\"MesloLGS NF\"",
 "ruby.codeCompletion": "rcodetools", //run non-lint commands with bundle exec
 "update.mode": "none",
-"editor.renderWhitespace": "none",
+"editor.renderWhitespace": "trailing",
 "editor.guides.indentation": false,
 "ruby.intellisense": "rubyLocate",
 "editor.minimap.enabled": false,
@@ -106,4 +106,5 @@
 "java.autobuild.enabled": false,
 "java.configuration.updateBuildConfiguration": "disabled",
 "git.autofetch": true,
+"files.trimTrailingWhitespace": true,
 }
