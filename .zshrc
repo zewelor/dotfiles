@@ -148,7 +148,9 @@ zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
 zinit light-mode from"gh-r" as"program" pick"sgpt" for @tbckr/sgpt
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
 
-zinit light-mode from"gh-r" as"program" mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
+zinit light-mode from"gh-r" as"program" \
+  atclone"./atuin gen-completions --shell zsh > _atuin" atpull"%atclone" \
+  mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
 
 ##########################
 
