@@ -331,7 +331,7 @@ if has "sgpt"; then
   # When supplying two arguments, the second parameter allows you to include more details for a more explicit prompt.
   gsum() {
     if ! git diff --quiet --cached; then
-      git_changes="$(git diff --staged)"
+      git_changes="$(git --no-pager diff --staged)"
       if [ $# -eq 2 ]; then
           query="Generate git commit message using semantic versioning. Declare commit message as $1. $2."
       elif [ $# -eq 1 ]; then
@@ -339,6 +339,7 @@ if has "sgpt"; then
       else
           query="Generate git commit message using semantic versioning."
       fi
+      # query="$query Only return the commit message."
       commit_message="$(echo "$git_changes" | sgpt "$query")"
       printf "%s\n" "$commit_message"
       read -r "response?Do you want to commit your changes with this commit message? [y/N] "
