@@ -144,8 +144,6 @@ zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/f
 zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
 # Feature-rich terminal-based text viewer. It is a so-called terminal pager.
 zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
-# Sgpt
-zinit light-mode from"gh-r" as"program" pick"sgpt" for @tbckr/sgpt
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
 
 zinit light-mode from"gh-r" as"program" \
@@ -238,7 +236,7 @@ if has "git"; then
   }
 
   function gcb () {
-    git switch $1 2>/dev/null || git switch -c $1; 
+    git switch $1 2>/dev/null || git switch -c $1;
   }
 
   function gcmmpoa () {
@@ -319,13 +317,13 @@ if has "sgpt"; then
       _sgpt_prev_cmd=$BUFFER
       BUFFER+="⌛"
       zle -I && zle redisplay
-      BUFFER=$(echo -n "$_sgpt_prev_cmd" | sgpt sh)
+      BUFFER=$(sgpt --shell <<< "$_sgpt_prev_cmd")
       zle end-of-line
   }
   zle -N _sgpt_zsh
   bindkey ^l _sgpt_zsh
   # Shell-GPT integration ZSH v0.1
-  
+
   ## git summarize ##
   # Leverage SGPT to produce intelligent and context-sensitive git commit messages.
   # By providing one argument, you can define the type of semantic commit (e.g. feat, fix, chore).
@@ -340,7 +338,7 @@ if has "sgpt"; then
       else
           query="Generate git commit message using semantic versioning. My changes:\n $git_changes"
       fi
-      commit_message="$(sgpt txt "$query")"
+      commit_message="$(sgpt "$query")"
       printf "%s\n" "$commit_message"
       read -r "response?Do you want to commit your changes with this commit message? [y/N] "
       if [[ $response =~ ^[Yy]$ ]]; then
@@ -363,6 +361,9 @@ if has "sgpt"; then
   gsumpoa() {
     git add . && gsum "$@" && git push -u origin
   }
+else
+  pipx install shell-gpt
+  echo "Please restart shell to enable shell-gpt integration"
 fi
 
 #
@@ -457,7 +458,7 @@ unsetopt SHARE_HISTORY
 export HISTFILE="$HOME/.zsh_history"
 export HISTSIZE=100000
 export HISTIGNORE="ignorespace"
-export SAVEHIST=100000  
+export SAVEHIST=100000
 # setopt  NO_NOMATCH
 # unset PAGER
 
