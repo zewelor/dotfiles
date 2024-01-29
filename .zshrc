@@ -312,17 +312,18 @@ if has "sgpt"; then
 
   alias sgpt4="sgpt --model gpt-4"
 
-  # Shell-GPT integration ZSH v0.1
+  # Shell-GPT integration ZSH v0.2
   _sgpt_zsh() {
+  if [[ -n "$BUFFER" ]]; then
       _sgpt_prev_cmd=$BUFFER
       BUFFER+="⌛"
       zle -I && zle redisplay
-      BUFFER=$(sgpt --shell <<< "$_sgpt_prev_cmd")
+      BUFFER=$(sgpt --shell <<< "$_sgpt_prev_cmd" --no-interaction)
       zle end-of-line
+  fi
   }
   zle -N _sgpt_zsh
   bindkey ^l _sgpt_zsh
-  # Shell-GPT integration ZSH v0.1
 
   ## git summarize ##
   # Leverage SGPT to produce intelligent and context-sensitive git commit messages.
@@ -332,13 +333,13 @@ if has "sgpt"; then
     if ! git diff --quiet --cached; then
       git_changes="$(git diff --staged)"
       if [ $# -eq 2 ]; then
-          query="Generate git commit message using semantic versioning. Declare commit message as $1. $2. My changes:\n $git_changes"
+          query="Generate git commit message using semantic versioning. Declare commit message as $1. $2."
       elif [ $# -eq 1 ]; then
-          query="Generate git commit message using semantic versioning. Declare commit message as $1. My changes:\n $git_changes"
+          query="Generate git commit message using semantic versioning. Declare commit message as $1."
       else
-          query="Generate git commit message using semantic versioning. My changes:\n $git_changes"
+          query="Generate git commit message using semantic versioning."
       fi
-      commit_message="$(sgpt "$query")"
+      commit_message="$(echo "$git_changes" | sgpt "$query")"
       printf "%s\n" "$commit_message"
       read -r "response?Do you want to commit your changes with this commit message? [y/N] "
       if [[ $response =~ ^[Yy]$ ]]; then
