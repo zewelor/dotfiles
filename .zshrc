@@ -332,14 +332,13 @@ if has "sgpt"; then
   gsum() {
     if ! git diff --quiet --cached; then
       git_changes="$(git --no-pager diff --staged)"
+      query="Please generate git commit message for following git diff"
       if [ $# -eq 2 ]; then
-          query="Generate git commit message using semantic versioning. Declare commit message as $1. $2."
+          query+="Declare commit message as $1. $2."
       elif [ $# -eq 1 ]; then
-          query="Generate git commit message using semantic versioning. Declare commit message as $1."
+          query+="Declare commit message as $1."
       else
-          query="Generate git commit message using semantic versioning."
       fi
-      # query="$query Only return the commit message."
       commit_message="$(echo "$git_changes" | sgpt "$query")"
       printf "%s\n" "$commit_message"
       read -r "response?Do you want to commit your changes with this commit message? [y/N] "
