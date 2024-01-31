@@ -332,7 +332,7 @@ if has "sgpt"; then
   gsum() {
     if ! git diff --quiet --cached; then
       git_changes="$(git --no-pager diff --staged)"
-      query="Please generate git commit message for following git diff"
+      query="Please generate git commit message for following git diff. Respond only with git message"
       if [ $# -eq 2 ]; then
           query+="Declare commit message as $1. $2."
       elif [ $# -eq 1 ]; then
