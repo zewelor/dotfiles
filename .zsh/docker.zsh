@@ -60,5 +60,36 @@ if has "docker"; then
       fi
     }
   fi
+
+  # Aliases
+  # source: https://github.com/sorin-ionescu/prezto/blob/master/modules/docker/alias.zsh
+  alias dkC='docker container'
+  alias dkCls='docker container ls'
+
+  ## Image (I)
+  alias dkI='docker image'
+  alias dkIin='docker image inspect'
+  alias dkIls='docker image ls'
+  alias dkIpr='docker image prune'
+  alias dkIpl='docker image pull'
+  alias dkIrm='docker image rm'
+
+  ## Volume (V)
+  alias dkV='docker volume'
+  alias dkVin='docker volume inspect'
+  alias dkVls='docker volume ls'
+  alias dkVpr='docker volume prune'
+  alias dkVrm='docker volume rm'
+
+  ## Network (N)
+  alias dkN='docker network'
+  alias dkNin='docker network inspect'
+  alias dkNls='docker network ls'
+  alias dkNpr='docker network prune'
+  alias dkNrm='docker network rm'
+
+  ## Compose (c)
+  alias dkcr='docker compose run'
+  alias dkcR='docker compose run --rm'
 fi
 

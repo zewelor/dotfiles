@@ -172,30 +172,27 @@ export ENHANCD_ARG_HYPHEN="--"
 export ENHANCD_FILTER="fzf --height 40%:fzy"
 
 # Plugins
-zinit ice svn pick ""; zinit snippet PZT::modules/archive # No files to source, pick nothing to prevent snippet not loaded warning
-zinit ice svn; zinit snippet PZT::modules/git
-zinit ice svn; zinit snippet PZT::modules/dpkg
-zinit ice svn; zinit snippet PZT::modules/history
-zinit ice svn; zinit snippet PZT::modules/docker
-zinit ice svn; zinit snippet PZT::modules/tmux
-# zinit ice svn; zinit snippet PZT::modules/ruby
+# They need svn support
+zinit snippet PZT::modules/dpkg
+zinit snippet PZT::modules/history
+zinit snippet PZT::modules/tmux
 
-# zinit light-mode wait lucid blockf for @zsh-users/zsh-completions
-zinit ice wait"0" lucid svn blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
+zinit light le0me55i/zsh-extract
+zinit ice wait"0" lucid blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
 zinit snippet PZT::modules/completion
 
 # Includes
 source $HOME/.zsh/kubernetes.zsh
 source $HOME/.zsh/docker.zsh
 
-zinit ice svn; zinit snippet PZT::modules/editor
+zinit snippet PZT::modules/editor
 
 typeset -gA FAST_BLIST_PATTERNS
 FAST_BLIST_PATTERNS[/mnt/*]=1
 zinit ice wait"0" lucid atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay"
 zinit light zdharma-continuum/fast-syntax-highlighting
 
-zinit ice svn submods'zsh-users/zsh-autosuggestions -> external'
+zinit ice submods'zsh-users/zsh-autosuggestions -> external'
 zinit snippet PZT::modules/autosuggestions
 
 #
@@ -212,10 +209,13 @@ alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt f
 
 # Git
 if has "git"; then
+  # https://github.com/sorin-ionescu/prezto/blob/master/modules/git/alias.zsh
+
   alias gst='git status'
   alias ga='git add'
   alias gd='git diff'
   alias grbm='git rebase `git_main_branch`'
+  alias gco='git checkout'
   alias gpo="git push -u origin"
   alias gcm='git checkout `git_main_branch`'
   alias gcmm="git commit -m"
@@ -252,7 +252,6 @@ alias update_bonus="ssh bonuswww@94.23.226.99 -t 'cd ~/www ; git pull origin'"
 #
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && ./install && cd -'
 alias t='tail -f'
-alias extract='unarchive'
 alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias start_ssh_agent="eval `ssh-agent` && ssh-add"
@@ -395,7 +394,7 @@ if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
 fi
 
 function loadrails() {
-  zinit ice svn; zinit snippet PZT::modules/rails
+  zinit snippet PZT::modules/rails
 
   alias be='bundle exec'
   alias ror='bundle exec rails'
