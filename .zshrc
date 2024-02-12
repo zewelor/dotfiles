@@ -220,6 +220,9 @@ if has "git"; then
   alias gcm='git checkout `git_main_branch`'
   alias gcmm="git commit -m"
   alias gds='git diff --staged'
+    # Stash (s)
+  alias gs='git stash'
+  alias gsp='git stash pop'
   alias gpl='git pull'
   alias git-delete-merged='git branch --merged | grep -v "\*" | xargs -n 1 git branch -d && git fetch -p'
   alias gpf='git push --force-with-lease'
