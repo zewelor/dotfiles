@@ -150,6 +150,9 @@ zinit light-mode from"gh-r" as"program" \
   atclone"./atuin gen-completions --shell zsh > _atuin" atpull"%atclone" \
   mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
 
+zinit light-mode from"gh-r" as"program" \
+  atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
+  mv"gh_*/bin/gh -> gh" for @cli/cli
 ##########################
 
 
