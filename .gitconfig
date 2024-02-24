@@ -1,67 +1,68 @@
 [color]
-  ui = auto
+	ui = auto
 [user]
-  name = zewelor
-  email = zewelor@gmail.com
-  signingkey = 0x7BE843082292E972
+	name = zewelor
+	email = zewelor@gmail.com
+	signingkey = 0x7BE843082292E972
 [core]
-  excludesfile = ~/.gitignore_global
-  # pager = less -F -X
-  editor = vim
-  pager = delta
+	excludesfile = ~/.gitignore_global
+	# pager = less -F -X
+	editor = vim
+	pager = delta
 [branch]
-  autosetuprebase = always
+	autosetuprebase = always
 [push]
-  default = current
+	default = current
 [pull]
-  rebase = true
+	rebase = true
 [fetch]
-  prune = true
+	prune = true
 [include]
-  path = ~/.gitconfig.local
+	path = ~/.gitconfig.local
 [diff]
-  tool = vimdiff
-  noprefix = true
-  colorMoved = default
+	tool = vimdiff
+	noprefix = true
+	colorMoved = default
+	algorithm = histogram
 [merge]
-  tool = vimdiff
-  conflictstyle = diff3
+	tool = vimdiff
+	conflictstyle = zdiff3
 [alias]
-  undo-commit = reset --soft HEAD^
-  rbi = !sh -c \"git rebase -i `git merge-base $1 HEAD`\" -
-  set-upstream = !git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`
-  rm-merged = !git branch --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" { print $1 }' | xargs -r git branch -D
-  sync = !git switch main && git pull --prune && git rm-merged
-  upstream-sync = !git pull upstream `git symbolic-ref --short HEAD` && git push origin
+	undo-commit = reset --soft HEAD^
+	rbi = !sh -c \"git rebase -i `git merge-base $1 HEAD`\" -
+	set-upstream = !git branch --set-upstream-to=origin/`git symbolic-ref --short HEAD`
+	rm-merged = !git branch --format '%(refname:short) %(upstream:track)' | awk '$2 == \"[gone]\" { print $1 }' | xargs -r git branch -D
+	sync = !git switch main && git pull --prune && git rm-merged
+	upstream-sync = !git pull upstream `git symbolic-ref --short HEAD` && git push origin
 [filter "lfs"]
-  clean = git-lfs clean -- %f
-  smudge = git-lfs smudge -- %f
-  process = git-lfs filter-process
-  required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
 [difftool]
-  prompt = false
+	prompt = false
 [rebase]
-  autoStash = true
+	autoStash = true
 
 [interactive]
-  diffFilter = delta --color-only
+	diffFilter = delta --color-only
 
 [delta]
-  navigate = true         # use n and N to move between diff sections
-  features = decorations
-  syntax-theme = GitHub
-  light = true
+	navigate = true				 # use n and N to move between diff sections
+	features = decorations
+	syntax-theme = GitHub
+	light = true
 
 [delta "decorations"]
-  commit-decoration-style = blue ol
-  commit-style = raw
-  # file-style = omit
-  hunk-header-decoration-style = blue box
-  hunk-header-file-style = red
-  hunk-header-line-number-style = "#067a00"
-  hunk-header-style = file line-number syntax
+	commit-decoration-style = blue ol
+	commit-style = raw
+	# file-style = omit
+	hunk-header-decoration-style = blue box
+	hunk-header-file-style = red
+	hunk-header-line-number-style = "#067a00"
+	hunk-header-style = file line-number syntax
 
 [init]
-  defaultBranch = main
+	defaultBranch = main
 [fixup]
-  rebase = true
+	rebase = true
