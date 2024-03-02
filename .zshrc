@@ -422,12 +422,12 @@ if [ -s "$HOME/.platformio/penv/bin/activate" ] ; then
   alias load-platformio='source ~/.platformio/penv/bin/activate'
 fi
 
-if [ -x "$(command -v youtube-dl)" ]; then
+if has yt-dlp; then
   function youtube-extract-audio () {
-    youtube-dl --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(title)s.%(ext)s' "$@"
+    yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(title)s.%(ext)s' "$@"
   }
   function youtube-mp3-playlist () {
-    youtube-dl --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' "$@"
+    yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' "$@"
   }
 fi
 
@@ -448,7 +448,7 @@ if [ -x "$(command -v mixxx)" ]; then
   }
 fi
 
-if has "tmuxinator" ]; then
+if has "tmuxinator" ; then
   alias mux="tmuxinator"
 fi
 
