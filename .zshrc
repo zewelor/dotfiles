@@ -456,6 +456,28 @@ if has "codium"; then
   alias code='codium'
 fi
 
+if has "ledfx"; then
+  # Start ledfx in while loop for auto restart
+  function start-ledfx () {
+    # Check if docker is running
+
+    while true; do
+      ledfx --offline --host 0.0.0.0
+    done
+  }
+
+  function start-ledfx-full-setup () {
+    echo "Disabling bluetooth"
+    sudo rfkill block bluetooth
+
+    echo "Turn off docker"
+    sudo systemctl stop docker
+
+    echo "Starting ledfx"
+    start-ledfx
+  }
+fi
+
 #
 # Zinit options overrides
 #
