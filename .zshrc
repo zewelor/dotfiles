@@ -472,9 +472,17 @@ if has "ledfx"; then
 
     echo "Turn off docker"
     sudo systemctl stop docker
+    sudo systemctl stop docker.socket
 
     echo "Starting ledfx"
     start-ledfx
+
+    echo "Enabling bluetooth"
+    sudo rfkill unblock bluetooth
+
+    echo "Turn on docker"
+    sudo systemctl start docker
+    sudo systemctl start docker.socket
   }
 fi
 
