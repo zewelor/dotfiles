@@ -187,6 +187,7 @@ zinit snippet PZT::modules/completion
 # Includes
 source $HOME/.zsh/kubernetes.zsh
 source $HOME/.zsh/docker.zsh
+source $HOME/.zsh/gh_copilot.zsh
 
 zinit snippet PZT::modules/editor
 
