@@ -92,7 +92,9 @@
 "[markdown]": {
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
 },
-"rubyLsp.rubyVersionManager": "asdf",
+"rubyLsp.rubyVersionManager": {
+    "identifier": "asdf"
+},
 "github.copilot.advanced": {},
 "dev.containers.defaultExtensions": [
     "GitHub.copilot"

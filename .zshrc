@@ -491,11 +491,13 @@ fi
 # Zinit options overrides
 #
 
+# https://martinheinz.dev/blog/110
 unsetopt SHARE_HISTORY
 export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=100000
+export HISTSIZE=1000000
 export HISTIGNORE="ignorespace"
-export SAVEHIST=100000
+export SAVEHIST=1000000
+export HISTORY_IGNORE="(ls|cd|pwd|exit|cd)*"
 # setopt  NO_NOMATCH
 # unset PAGER
 
