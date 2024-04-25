@@ -35,13 +35,10 @@
 "http.proxySupport": "off",
 "editor.fontSize": 17,
 "editor.fontFamily": "\"MesloLGS NF\"",
-"ruby.codeCompletion": "rcodetools", //run non-lint commands with bundle exec
 "update.mode": "none",
 "editor.renderWhitespace": "trailing",
 "editor.guides.indentation": false,
-"ruby.intellisense": "rubyLocate",
 "editor.minimap.enabled": false,
-"sqltools.connections": [],
 "telemetry.telemetryLevel": "off",
 "files.insertFinalNewline": true,
 "dev.containers.dockerComposePath": "docker compose",
@@ -50,17 +47,11 @@
     "editor.fontSize"
 ],
 "editor.inlineSuggest.enabled": true,
-"solargraph.useBundler": true,
-"solargraph.bundlerPath": "/home/omen/.asdf/shims/bundle",
 "git.ignoreMissingGitWarning": true,
 "[sql]": {
     "editor.defaultFormatter": "mtxr.sqltools"
 },
 "git.enableSmartCommit": true,
-"vs-kubernetes": {
-    "vs-kubernetes.crd-code-completion": "disabled",
-    "vs-kubernetes.minikube-show-information-expiration": "2023-07-28T18:33:30.735Z"
-},
 "github.copilot.enable": {
     "*": true,
     "plaintext": true,
@@ -105,8 +96,6 @@
 "gitlens.showWelcomeOnInstall": false,
 "gitlens.virtualRepositories.enabled": false,
 "gitlens.codeLens.enabled": false,
-"java.autobuild.enabled": false,
-"java.configuration.updateBuildConfiguration": "disabled",
 "git.autofetch": true,
 "files.trimTrailingWhitespace": true,
 }
