@@ -158,7 +158,7 @@ zinit light-mode from"gh-r" as"program" \
 
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
-zinit ice wait"0a" lucid silent; zload asdf-vm/asdf
+zinit ice wait"0a" lucid silent src="asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/'; zload asdf-vm/asdf
 #
 # Prezto
 #
