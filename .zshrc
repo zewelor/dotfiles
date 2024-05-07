@@ -153,12 +153,13 @@ zinit light-mode from"gh-r" as"program" \
 zinit light-mode from"gh-r" as"program" \
   atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
   mv"gh_*/bin/gh -> gh" for @cli/cli
+
+zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
 ##########################
 
 
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
-zinit ice wait"0a" lucid silent src="asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/'; zload asdf-vm/asdf
 #
 # Prezto
 #
