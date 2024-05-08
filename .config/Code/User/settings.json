@@ -98,4 +98,5 @@
 "gitlens.codeLens.enabled": false,
 "git.autofetch": true,
 "files.trimTrailingWhitespace": true,
+"rubyLsp.rubyExecutablePath": "/home/omen/.asdf/shims/ruby",
 }
