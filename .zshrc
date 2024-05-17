@@ -446,6 +446,7 @@ function du_sorted () {
 
 if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
+    cpu_performance
     sudo nice -n -10 su -c mixxx omen
   }
 fi
