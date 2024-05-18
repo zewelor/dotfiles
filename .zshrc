@@ -447,7 +447,11 @@ function du_sorted () {
 if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
     cpu_performance
+    kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock false 
+    qdbus org.kde.KWin /KWin reconfigure
     sudo nice -n -10 su -c mixxx omen
+    kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock true
+    qdbus org.kde.KWin /KWin reconfigure
   }
 fi
 
