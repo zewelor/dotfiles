@@ -546,6 +546,10 @@ if (( $+commands[atuin] )); then
   source <(atuin init zsh --disable-up-arrow)
 fi
 
+# if [ -f /snap/google-cloud-cli/current/completion.zsh.inc ]; then
+#   source /snap/google-cloud-cli/current/completion.zsh.inc
+# fi
+
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 (( ! ${+functions[p10k]} )) || p10k finalize
