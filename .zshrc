@@ -122,6 +122,7 @@ zinit ice wait"1" lucid
 zinit light zdharma-continuum/zinit-annex-bin-gem-node
 zinit light zdharma-continuum/zinit-annex-link-man
 zinit light zdharma-continuum/zinit-annex-patch-dl
+zinit light zdharma-continuum/zinit-annex-binary-symlink
 zinit light b4b4r07/enhancd
 
 #
@@ -152,7 +153,7 @@ zinit light-mode from"gh-r" as"program" \
 
 zinit light-mode from"gh-r" as"program" \
   atclone"./atuin gen-completions --shell zsh > _atuin" atpull"%atclone" \
-  mv"atuin-*/atuin -> atuin" for @atuinsh/atuin
+  mv"atuin-*/atuin -> atuin" bpick"*tar.gz" for @atuinsh/atuin
 
 zinit light-mode from"gh-r" as"program" \
   atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
