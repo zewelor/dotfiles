@@ -191,6 +191,7 @@ zinit ice wait"0" lucid blockf atclone'git clone --depth 3 https://github.com/zs
 zinit snippet PZT::modules/completion
 
 # Includes
+source $HOME/.zsh/set_konsole_title.zsh
 source $HOME/.zsh/kubernetes.zsh
 source $HOME/.zsh/docker.zsh
 source $HOME/.zsh/gh_copilot.zsh
@@ -390,22 +391,6 @@ if [ -n "$DISPLAY" ]; then
   alias rekde="kquitapp5 plasmashell || killall plasmashell && kstart5 plasmashell"
 fi
 
-if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
-  set-konsole-tab-title-type ()
-  {
-      local _title=$1
-      local _type=${2:-0}
-      [[ -z "${_title}" ]]               && return 1
-      [[ -z "${KONSOLE_DBUS_SERVICE}" ]] && return 1
-      [[ -z "${KONSOLE_DBUS_SESSION}" ]] && return 1
-      qdbus >/dev/null "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_SESSION}" setTabTitleFormat "${_type}" "${_title}"
-  }
-  set-konsole-tab-title ()
-  {
-      set-konsole-tab-title-type $1 && set-konsole-tab-title-type $1 1
-  }
-fi
-
 function loadrails() {
   zinit snippet PZT::modules/rails
 
@@ -452,7 +437,7 @@ function du_sorted () {
 if [ -x "$(command -v mixxx)" ]; then
   function start-dj () {
     cpu_performance
-    kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock false 
+    kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock false
     qdbus org.kde.KWin /KWin reconfigure
     sudo nice -n -10 su -c mixxx omen
     kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock true
