@@ -323,7 +323,7 @@ if has "sgpt"; then
     export OPENAI_API_HOST="http://${OPENAI_API_IP}:${OPENAI_API_PORT}"
   fi
 
-  alias sgpt4="sgpt --model gpt-4"
+  # alias sgpt4="sgpt --model gpt-4"
 
   # Shell-GPT integration ZSH v0.2
   _sgpt_zsh() {
