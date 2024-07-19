@@ -347,18 +347,19 @@ if has "sgpt"; then
       git_changes="$(git --no-pager diff --staged)"
       query="Please generate git commit message for following git diff. Respond only with git message. Dont quote it in markdown"
       if [ $# -eq 2 ]; then
-          query+="Declare commit message as $1. $2."
+        query+="Declare commit message as $1. $2."
       elif [ $# -eq 1 ]; then
-          query+="Declare commit message as $1."
+        query+="Declare commit message as $1."
       else
       fi
+
       commit_message="$(echo "$git_changes" | sgpt "$query")"
       printf "%s\n" "$commit_message"
-      read -r "response?Do you want to commit your changes with this commit message? [y/N] "
-      if [[ $response =~ ^[Yy]$ ]]; then
-          git commit -m "$commit_message"
+      read -r "response?Do you want to cancel your commit? [Y/n] "
+      if [[ $response =~ ^[Nn]$ ]]; then
+        echo "Commit cancelled."
       else
-          echo "Commit cancelled."
+        git commit -m "$commit_message"
       fi
     else
       echo "No staged changes found. Do you want to stage changes? [y/N]"
