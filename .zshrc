@@ -376,9 +376,11 @@ if has "sgpt"; then
   gsumpoa() {
     git add . && gsum "$@" && git push -u origin
   }
-else
+elif has "pipx" ; then
   pipx install shell-gpt
   echo "Please restart shell to enable shell-gpt integration"
+else
+  echo "Please install shell-gpt via pipx"
 fi
 
 #
