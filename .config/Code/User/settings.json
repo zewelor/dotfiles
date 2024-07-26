@@ -100,4 +100,8 @@
 "files.trimTrailingWhitespace": true,
 "rubyLsp.rubyExecutablePath": "/home/omen/.asdf/shims/ruby",
 "git.ignoreRebaseWarning": true,
+"vs-kubernetes": {
+    "vs-kubernetes.crd-code-completion": "enabled"
+},
+"gitlens.launchpad.indicator.enabled": false,
 }

@@ -17,8 +17,6 @@
 	rebase = true
 [fetch]
 	prune = true
-[include]
-	path = ~/.gitconfig.local
 [diff]
 	tool = vimdiff
 	noprefix = true
@@ -66,3 +64,6 @@
 	defaultBranch = main
 [fixup]
 	rebase = true
+
+[include]
+	path = ~/.gitconfig.local
