@@ -21,7 +21,7 @@ function xmkdir {
 
 # Returns success if found
 function exists {
-  type -P "$1" > /dev/null
+  type "$1" > /dev/null
 }
 
 cd $(dirname $BASH_SOURCE)
