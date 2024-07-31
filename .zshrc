@@ -379,8 +379,6 @@ if has "sgpt"; then
 elif has "pipx" ; then
   pipx install shell-gpt
   echo "Please restart shell to enable shell-gpt integration"
-else
-  echo "Please install shell-gpt via pipx"
 fi
 
 #
