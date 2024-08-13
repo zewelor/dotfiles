@@ -9,6 +9,7 @@ if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
     zcompile $HOME/.zshrc
 fi
 
+setopt globdots
 setopt nullglob  # allows filename patterns which match no files to expand to a null string, rather than themselves
 
 # Path manipulation
