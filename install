@@ -5,14 +5,27 @@ BASE=$(pwd)
 
 # Install symlinks via stow
 
-STOW_COMMAND="stow -t $HOME -v --ignore .config/atuin/config.toml ."
-$STOW_COMMAND -n
+function install_with_stow() {
+  echo "Running stow with $@"
+  local stow_command="stow -v $@"
+  $stow_command -n
 
-read -p "Do you want to apply the changes? [y/N] " -n 1 -r
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-  $STOW_COMMAND
-fi
+  if [ $? -ne 0 ]; then
+    echo "Error running stow command: $stow_command"
+    exit 1
+  fi
 
+  read -p "Do you want to apply the changes? [y/N] " -n 1 -r
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # echo "Applying changes..."
+    $stow_command
+  fi
+}
+
+install_with_stow -t $HOME --ignore .config/atuin/config.toml .
+install_with_stow -t $HOME -d prv .
+
+exit
 # Atuin keeps updating file so lets link it manually
 mkdir -p ~/.config/atuin/
 ln -sfn $BASE/.config/atuin/config.toml ~/.config/atuin/config.toml
