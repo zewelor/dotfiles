@@ -25,7 +25,6 @@ function install_with_stow() {
 install_with_stow -t $HOME --ignore .config/atuin/config.toml .
 install_with_stow -t $HOME -d prv .
 
-exit
 # Atuin keeps updating file so lets link it manually
 mkdir -p ~/.config/atuin/
 ln -sfn $BASE/.config/atuin/config.toml ~/.config/atuin/config.toml
