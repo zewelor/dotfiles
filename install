@@ -1,51 +1,23 @@
 #!/bin/bash
 
-# RC files
-
-# DEBUG=1
-
-function x {
-  if [ -n "$DEBUG" ]; then
-    echo "$" "$@"
-  else
-    eval "$(printf '%q ' "$@")"
-  fi
-}
-
-# Ensure directory exists
-function xmkdir {
-  if [ ! -d "$1" ]; then
-    x mkdir -p "$1"
-  fi
-}
-
-# Returns success if found
-function exists {
-  type "$1" > /dev/null
-}
-
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
 
-for rc in .*rc .gitconfig .gitignore_global; do
-  if [ ! -L ~/$rc ]; then
-    x ln -sfv $BASE/$rc ~/
-  fi
-done
+# Install symlinks via stow
 
-for conf_file in $(find "$BASE/.config" -type f); do
-  dst="${conf_file/$BASE\//}"
-  if [ ! -L ~/$dst ]; then
-    x ln -sfv "$conf_file" ~/$dst
-  fi
-done
+STOW_COMMAND="stow -t $HOME -v --ignore .config/atuin/config.toml ."
+$STOW_COMMAND -n
 
-for rc in tmuxinator; do
-  if [ ! -L ~/.$rc  ]; then
-    x ln -sfnvi $BASE/prv/$rc ~/.$rc
-  fi
-done
+read -p "Do you want to apply the changes? [y/N] " -n 1 -r
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  $STOW_COMMAND
+fi
 
+# Atuin keeps updating file so lets link it manually
+mkdir -p ~/.config/atuin/
+ln -sfn $BASE/.config/atuin/config.toml ~/.config/atuin/config.toml
+
+# SSH
 mkdir -p ~/.ssh/config.d/
 
 for ssh_config in $BASE/prv/ssh/config.d/*; do
@@ -54,47 +26,14 @@ for ssh_config in $BASE/prv/ssh/config.d/*; do
   fi
 done
 
-if exists code && ! exists codium; then
-  DST=$HOME/.config/Code/User
-
-  xmkdir "$DST"
-
-  for f in "$BASE"/.config/Code/User/* ; do
-    if [ ! -L "$DST/$(basename "$f")" ]; then
-      x rm -rf "$DST/$(basename "$f")"
-      x ln -sf "$f" "$DST"
-    fi
-  done
-fi
-
-# if exists codium; then
-#   DST=~/.config/VSCodium/User
-#
-#   xmkdir "$DST"
-#
-#   for f in "$BASE"/.config/Code/User/* ; do
-#     if [ ! -L $DST/$(basename "$f") ]; then
-#       x rm -rf "$DST/$(basename "$f")"
-#       x ln -sf "$f" "$DST"
-#     fi
-#   done
-# fi
-
-DST=~/.local/share
-BASE_FILES="$BASE/.local/share/*"
-
-if [ -d $DST ] && [ -e $BASE_FILES ]; then  # checks if directory exists and files exist
-  for f in $BASE_FILES ; do
-    if [ ! -L "$DST/$(basename "$f")" ]; then
-      x rm -rf "$DST/$(basename "$f")"
-      # Without -s because KDE doesn't want to run .desktop file with executable permissions, and symlink has executable bit set
-      x ln -f "$f" "$DST"
-      x chmod a-x "$DST/$(basename "$f")"
-    fi  
-  done
-# else
-#   echo "[DEBUG] $DST does not exist or no files in $BASE/.local/share/applications/"
-fi
-
+# Midnight Commander
 mkdir -p ~/.mc/
 curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
+
+# VIM
+
+# export GIT_SSL_NO_VERIFY=true
+mkdir -p ~/.vim/autoload ~/.vim/undo ~/.vim/swapfiles ~/.vim/backupfiles
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+vim +PlugInstall +qall

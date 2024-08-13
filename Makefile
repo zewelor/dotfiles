@@ -1,4 +1,4 @@
-.PHONY: setup setup-vim packages
+.PHONY: setup packages
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -7,14 +7,11 @@ ZINIT_COMMIT_SHA=7f6dc7da6c824b30c0e8e30ae0ecbda5be118e68
 zinit_dir = ~/.zinit
 
 all: base setup
-base: packages setup-vim install-base-symlinks install-fonts | $(zinit_dir)
+base: packages install-fonts | $(zinit_dir)
 
 setup:
 	-git submodule update --init
 	./install
-
-setup-vim:
-	./install-vim
 
 install-fonts:
 	mkdir -p ~/.fonts/
@@ -24,13 +21,6 @@ install-fonts:
 	done
 
 	fc-cache -vf ~/.fonts/
-
-install-base-symlinks:
-	for rc in .zshrc .tmux.conf .zshenv .p10k.zsh .vimrc .zsh; do \
-		if [ ! -L ~/$$rc ]; then 																		\
-			ln -sfv "$(BASE)/$$rc" ~/$$rc ;														\
-		fi 																													\
-	done
 
 $(zinit_dir):
 	mkdir -p $(zinit_dir)

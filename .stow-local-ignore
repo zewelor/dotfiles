@@ -1,0 +1,7 @@
+prv
+install.*
+bin
+.git
+.gitmodules
+Makefile
+.*\.md
