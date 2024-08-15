@@ -355,8 +355,8 @@ if has "sgpt"; then
       fi
 
       commit_message="$(echo "$git_changes" | sgpt "$query")"
-      printf "%s\n" "$commit_message"
-      read -r "response?\n\nDo you want to cancel your commit? [Y/n] "
+      printf "%s\n\nDo you want to cancel your commit? [Y/n]" "$commit_message"
+      read -r "response?"
       if [[ $response =~ ^[Nn]$ ]]; then
         echo "Commit cancelled."
       else
