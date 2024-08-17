@@ -49,3 +49,26 @@ mkdir -p ~/.vim/autoload ~/.vim/undo ~/.vim/swapfiles ~/.vim/backupfiles
 curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 vim +PlugInstall +qall
+
+
+echo "Would you like to add secret envs from vault ? [y/N]"
+read -r response
+if [[ $response =~ ^[Yy]$ ]]; then
+  echo "Please provide your vault token"
+  read -r VAULT_TOKEN
+
+  # Fetch environment variables from Vault
+  response=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" -X GET https://vault.8567153.xyz/v1/shell_envs/data/envs.zsh)
+
+  # Check if the curl request was successful
+  if [ $? -ne 0 ]; then
+    echo "Failed to fetch data from Vault."
+    exit 1
+  fi
+
+  # Process each key-value pair and save them to individual files
+  echo "$response" | jq -r ".data.data | to_entries[] | \"export \(.key)=\(.value)\"" | while read -r line; do
+    key=$(echo "$line" | cut -d'=' -f1 | sed 's/export //')
+    echo "$line" > ~/.zshrc.d/envs.zsh
+  done
+fi
