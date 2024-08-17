@@ -15,10 +15,14 @@ function install_with_stow() {
     exit 1
   fi
 
-  read -p "Do you want to apply the changes? [y/N] " -n 1 -r
+  echo -e "\nDo you want to apply the changes? [y/N] "
+  read -n 1 -r
+  echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
-    # echo "Applying changes..."
+    echo -e "\nApplying changes..."
     $stow_command
+  else
+    echo -e "\nChanges were not applied."
   fi
 }
 
@@ -32,12 +36,6 @@ ln -sfn $BASE/.config/atuin/config.toml ~/.config/atuin/config.toml
 # SSH
 mkdir -p ~/.ssh/config.d/
 
-for ssh_config in $BASE/prv/ssh/config.d/*; do
-  if [ ! -L ~/.ssh/config.d/$(basename $ssh_config) ]; then
-    x ln -sfnvi $ssh_config ~/.ssh/config.d/
-  fi
-done
-
 # Midnight Commander
 mkdir -p ~/.mc/
 curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
@@ -50,25 +48,28 @@ curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.c
 
 vim +PlugInstall +qall
 
-
 echo "Would you like to add secret envs from vault ? [y/N]"
 read -r response
 if [[ $response =~ ^[Yy]$ ]]; then
   echo "Please provide your vault token"
   read -r VAULT_TOKEN
 
-  # Fetch environment variables from Vault
-  response=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" -X GET https://vault.8567153.xyz/v1/shell_envs/data/envs.zsh)
+  # Define an array of keys to fetch from Vault
+  keys=("envs.zsh") # Add more keys as needed
 
-  # Check if the curl request was successful
-  if [ $? -ne 0 ]; then
-    echo "Failed to fetch data from Vault."
-    exit 1
-  fi
+  # Loop through each key and process them individually
+  for key in "${keys[@]}"; do
+    response=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" -X GET "https://vault.8567153.xyz/v1/shell_envs/data/$key")
 
-  # Process each key-value pair and save them to individual files
-  echo "$response" | jq -r ".data.data | to_entries[] | \"export \(.key)=\(.value)\"" | while read -r line; do
-    key=$(echo "$line" | cut -d'=' -f1 | sed 's/export //')
-    echo "$line" > ~/.zshrc.d/envs.zsh
+    # Check if the curl request was successful
+    if [ $? -ne 0 ]; then
+      echo "Failed to fetch data for $key from Vault."
+      continue
+    fi
+
+    # Process each key-value pair and save them to a file named after the key
+    echo "$response" | jq -r ".data.data | to_entries[] | \"export \(.key)=\(.value)\"" > ~/.zshrc.d/"$key"
+
+    echo "Environment variables for $key have been saved to ~/.zshrc.d/$key"
   done
 fi
