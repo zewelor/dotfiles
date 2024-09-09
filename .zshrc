@@ -98,6 +98,27 @@ zle -N bracketed-paste bracketed-paste-url-magic
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
 
+# Workaround for zinit issue#504: remove subversion dependency. Function clones all files in plugin
+# directory (on github) that might be useful to zinit snippet directory. Should only be invoked
+# via zinit atclone"_fix-pzt-module" atpull"%atclone"
+# _fix-pzt-module() {
+#   if [[ ! -f ._zinit/teleid ]] then return -1; fi
+#   if [[ ! $(cat ._zinit/teleid) =~ "^PZT::.*" ]] then return 0; fi
+#   local PZTM_NAME=$(cat ._zinit/teleid | sed -n 's/PZT::modules\///p')
+#   git clone --quiet --no-checkout --depth=1 --filter=tree:0 https://github.com/sorin-ionescu/prezto
+#   cd prezto
+#   git sparse-checkout set --no-cone modules/$PZTM_NAME
+#   git checkout --quiet
+#   cd ..
+#   local file
+#   for file in prezto/modules/$PZTM_NAME/*~(.gitignore|*.plugin.zsh)(D); do
+#     local filename="${file:t}"
+#     echo "Copying $file to $(pwd)/$filename..."
+#     cp -R $file $filename
+#   done
+#   rm -rf prezto
+# }
+
 #
 # Themes
 #
@@ -166,46 +187,30 @@ zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME
 
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
-#
-# Prezto
-#
-zinit snippet PZT::modules/helper/init.zsh
-
-# Settings
-# Set case-sensitivity for completion, history lookup, etc.
-zstyle ':prezto:*:*' color 'yes'
-zstyle ':prezto:module:editor' key-bindings 'vi'
-
 # https://github.com/babarot/enhancd#configuration
 export ENHANCD_ARG_DOUBLE_DOT="..."
 export ENHANCD_ARG_HYPHEN="--"
 export ENHANCD_FILTER="fzf --height 40%:fzy"
 
 # Plugins
-# They need svn support
-zinit snippet PZT::modules/dpkg
-zinit snippet PZT::modules/history
-zinit snippet PZT::modules/tmux
-
 zinit light le0me55i/zsh-extract
-zinit ice wait"0" lucid blockf atclone'git clone --depth 3 https://github.com/zsh-users/zsh-completions.git external'
-zinit snippet PZT::modules/completion
+
+typeset -gA FAST_BLIST_PATTERNS
+FAST_BLIST_PATTERNS[/mnt/*]=1
+
+zinit wait lucid for \
+  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
+    zdharma-continuum/fast-syntax-highlighting \
+  atload"_zsh_autosuggest_start" \
+    zsh-users/zsh-autosuggestions \
+  blockf atpull'zinit creinstall -q .' \
+    zsh-users/zsh-completions
 
 # Includes
 source $HOME/.zsh/set_konsole_title.zsh
 source $HOME/.zsh/kubernetes.zsh
 source $HOME/.zsh/docker.zsh
 source $HOME/.zsh/gh_copilot.zsh
-
-zinit snippet PZT::modules/editor
-
-typeset -gA FAST_BLIST_PATTERNS
-FAST_BLIST_PATTERNS[/mnt/*]=1
-zinit ice wait"0" lucid atinit"ZINIT[COMPINIT_OPTS]=-C; zpcompinit; zpcdreplay"
-zinit light zdharma-continuum/fast-syntax-highlighting
-
-zinit ice submods'zsh-users/zsh-autosuggestions -> external'
-zinit snippet PZT::modules/autosuggestions
 
 #
 # Aliases
@@ -394,8 +399,6 @@ if [ -n "$DISPLAY" ]; then
 fi
 
 function loadrails() {
-  zinit snippet PZT::modules/rails
-
   alias be='bundle exec'
   alias ror='bundle exec rails'
   alias rorc='bundle exec rails console'
@@ -534,13 +537,13 @@ function cpu_powersave {
 # Not using it anywhere I think ?
 # [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
-if (( $+commands[atuin] )); then
-  source <(atuin init zsh --disable-up-arrow)
-fi
-
 # if [ -f /snap/google-cloud-cli/current/completion.zsh.inc ]; then
 #   source /snap/google-cloud-cli/current/completion.zsh.inc
 # fi
+
+if (( $+commands[atuin] )); then
+  source <(atuin init zsh --disable-up-arrow)
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
