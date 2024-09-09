@@ -211,6 +211,7 @@ source $HOME/.zsh/set_konsole_title.zsh
 source $HOME/.zsh/kubernetes.zsh
 source $HOME/.zsh/docker.zsh
 source $HOME/.zsh/gh_copilot.zsh
+source $HOME/.zsh/vim_mode.zsh
 
 #
 # Aliases
