@@ -6,7 +6,7 @@
 # fi
 
 if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
-    zcompile $HOME/.zshrc
+  zcompile $HOME/.zshrc
 fi
 
 setopt globdots
