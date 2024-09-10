@@ -51,14 +51,9 @@ fi
 DISABLE_AUTO_TITLE="true"
 
 setopt noflowcontrol
-# # Make ctrl + s work
-# alias vim="stty stop '' -ixoff ; vim"
-# # `Frozing' tty, so after any command terminal settings will be restored
-# # ttyctl -f
 
 export VISUAL=vim
 export EDITOR=$VISUAL
-
 export DEFAULT_USER=`whoami`
 
 # export DIRENV_LOG_FORMAT=
@@ -66,12 +61,6 @@ export DEFAULT_USER=`whoami`
 export KEYTIMEOUT=1
 
 export MC_SKIN=$HOME/.mc/solarized.ini
-
-if [ -d $HOME/.zshrc.d ]; then
-  for file in $HOME/.zshrc.d/*.zsh; do
-    source $file
-  done
-fi
 
 #
 # Zinit
@@ -205,11 +194,6 @@ zinit wait lucid for \
     zsh-users/zsh-autosuggestions \
   blockf atpull'zinit creinstall -q .' \
     zsh-users/zsh-completions
-
-# Includes
-for file in $HOME/.zsh/*.zsh; do
-  source $file
-done
 
 #
 # Aliases
@@ -413,7 +397,6 @@ export HISTORY_IGNORE="(ls|cd|pwd|exit|cd)*"
 
 if has "ruby"; then
   function ruby-app-root {
-
     local root_dir="$PWD"
 
     while [[ "$root_dir" != '/' ]]; do
@@ -425,7 +408,6 @@ if has "ruby"; then
     done
 
     return 1
-
   }
 
   function loadrails() {
@@ -460,6 +442,18 @@ function cpu_powersave {
 # if [ -f /snap/google-cloud-cli/current/completion.zsh.inc ]; then
 #   source /snap/google-cloud-cli/current/completion.zsh.inc
 # fi
+
+# Includes
+for file in $HOME/.zsh/*.zsh; do
+  source $file
+done
+
+# Local includes
+if [ -d $HOME/.zshrc.d ]; then
+  for file in $HOME/.zshrc.d/*.zsh; do
+    source $file
+  done
+fi
 
 if (( $+commands[atuin] )); then
   source <(atuin init zsh --disable-up-arrow)
