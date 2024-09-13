@@ -134,7 +134,14 @@ zinit light zdharma-continuum/zinit-annex-bin-gem-node
 zinit light zdharma-continuum/zinit-annex-link-man
 zinit light zdharma-continuum/zinit-annex-patch-dl
 zinit light zdharma-continuum/zinit-annex-binary-symlink
+zinit light le0me55i/zsh-extract
+
+## Enhancd
 zinit light b4b4r07/enhancd
+# https://github.com/babarot/enhancd#configuration
+export ENHANCD_ARG_DOUBLE_DOT="..."
+export ENHANCD_ARG_HYPHEN="--"
+export ENHANCD_FILTER="fzf --height 40%:fzy"
 
 #
 # Programs
@@ -142,8 +149,10 @@ zinit light b4b4r07/enhancd
 ##########################
 
 zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
+
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
-# zinit ice lucid wait'0'; zinit light joshskidmore/zsh-fzf-history-search
+export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
+
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
@@ -173,20 +182,6 @@ zinit light-mode from"gh-r" as"program" \
 zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
 ##########################
 
-
-export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
-
-# https://github.com/babarot/enhancd#configuration
-export ENHANCD_ARG_DOUBLE_DOT="..."
-export ENHANCD_ARG_HYPHEN="--"
-export ENHANCD_FILTER="fzf --height 40%:fzy"
-
-# Plugins
-zinit light le0me55i/zsh-extract
-
-typeset -gA FAST_BLIST_PATTERNS
-FAST_BLIST_PATTERNS[/mnt/*]=1
-
 zinit wait lucid for \
   atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
     zdharma-continuum/fast-syntax-highlighting \
@@ -194,6 +189,11 @@ zinit wait lucid for \
     zsh-users/zsh-autosuggestions \
   blockf atpull'zinit creinstall -q .' \
     zsh-users/zsh-completions
+
+# Hash holding paths that shouldn't be grepped (globbed) – blacklist for slow disks, mounts, etc.
+# https://github.com/zdharma-continuum/fast-syntax-highlighting/blob/cf318e06a9b7c9f2219d78f41b46fa6e06011fd9/CHANGELOG.md?plain=1#L104
+typeset -gA FAST_BLIST_PATTERNS
+FAST_BLIST_PATTERNS[/mnt/*]=1
 
 #
 # Aliases
@@ -265,12 +265,7 @@ alias -g G='| grep -e'  # egrep is deprecated
 alias -g L='| less'
 alias -g RNS='| sort -nr'
 alias -g S='| sort'
-# alias -g TL='| tail -20'
 alias -g T='| tail'
-# alias -g TF='| tail -f'
-# alias -g X0G='| xargs -0 egrep'
-# alias -g X0='| xargs -0'
-# alias -g XG='| xargs egrep'
 alias -g X='| xargs'
 alias -g J='| jq'
 
@@ -434,14 +429,6 @@ function cpu_performance {
 function cpu_powersave {
   powerprofilesctl set balanced
 }
-
-# Local config
-# Not using it anywhere I think ?
-# [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
-
-# if [ -f /snap/google-cloud-cli/current/completion.zsh.inc ]; then
-#   source /snap/google-cloud-cli/current/completion.zsh.inc
-# fi
 
 # Includes
 for file in $HOME/.zsh/*.zsh; do
