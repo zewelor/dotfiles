@@ -141,9 +141,10 @@ zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/r
 # Feature-rich terminal-based text viewer. It is a so-called terminal pager.
 zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
 
-zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
+# Lucid - Turbo mode is verbose, so you need an option for quiet.
+zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
 
-zinit light-mode wait"2" from"gh-r" as"program" \
+zinit light-mode wait"2" lucid from"gh-r" as"program" \
   atclone"./just --completions zsh > _just" atpull"%atclone" \
   pick"just" for @casey/just
 
