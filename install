@@ -59,20 +59,27 @@ add_secret_envs_from_vault() {
 
     for key in "${VAULT_KEYS[@]}"; do
       echo "Fetching data for key: $key"
-      local response
-      response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL/$key") || {
-        echo "Failed to fetch data for $key from Vault." >&2
-        continue
-      }
 
-      # Process and save environment variables
-      echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' > "$HOME_DIR/.zshrc.d/$key"
+      # Use a subshell with a localized IFS to safely handle JSON parsing
+      (
+        IFS=$'\n\t'
+        local response
+        response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL/$key") || {
+          echo "Failed to fetch data for $key from Vault." >&2
+          exit 1
+        }
+
+        # Process and save environment variables
+        echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' > "$HOME_DIR/.zshrc.d/$key"
+      )
+
       echo "Environment variables for $key have been saved to $HOME_DIR/.zshrc.d/$key"
     done
   else
     echo "Skipped adding secret environment variables from Vault."
   fi
 }
+
 
 # Function to configure Git conflict style
 configure_git_conflict_style() {
