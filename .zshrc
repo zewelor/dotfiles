@@ -9,8 +9,10 @@ if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
   zcompile $HOME/.zshrc
 fi
 
-setopt globdots
-setopt nullglob  # allows filename patterns which match no files to expand to a null string, rather than themselves
+setopt globdots               # Include hidden files (those starting with a dot) in pathname expansion
+setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
+setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
+setopt interactivecomments    # Enable the use of comments in interactive shells
 
 # Path manipulation
 if [ -d $HOME/bin ]; then
@@ -49,8 +51,6 @@ if [ -f /etc/profile.d/apps-bin-path.sh ]; then
 fi
 
 DISABLE_AUTO_TITLE="true"
-
-setopt noflowcontrol
 
 export VISUAL=vim
 export EDITOR=$VISUAL
