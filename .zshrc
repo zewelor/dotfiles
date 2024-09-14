@@ -87,35 +87,12 @@ zle -N bracketed-paste bracketed-paste-url-magic
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
 
-# Workaround for zinit issue#504: remove subversion dependency. Function clones all files in plugin
-# directory (on github) that might be useful to zinit snippet directory. Should only be invoked
-# via zinit atclone"_fix-pzt-module" atpull"%atclone"
-# _fix-pzt-module() {
-#   if [[ ! -f ._zinit/teleid ]] then return -1; fi
-#   if [[ ! $(cat ._zinit/teleid) =~ "^PZT::.*" ]] then return 0; fi
-#   local PZTM_NAME=$(cat ._zinit/teleid | sed -n 's/PZT::modules\///p')
-#   git clone --quiet --no-checkout --depth=1 --filter=tree:0 https://github.com/sorin-ionescu/prezto
-#   cd prezto
-#   git sparse-checkout set --no-cone modules/$PZTM_NAME
-#   git checkout --quiet
-#   cd ..
-#   local file
-#   for file in prezto/modules/$PZTM_NAME/*~(.gitignore|*.plugin.zsh)(D); do
-#     local filename="${file:t}"
-#     echo "Copying $file to $(pwd)/$filename..."
-#     cp -R $file $filename
-#   done
-#   rm -rf prezto
-# }
-
 #
 # Themes
 #
 
 # Powerlevel10k
-zinit light-mode lucid atload'source ~/.p10k.zsh; _p9k_precmd' nocd for @romkatv/powerlevel10k
-
-zinit light zdharma-continuum/z-a-submods
+zinit light-mode lucid nocd depth='1' atload'source ~/.p10k.zsh; _p9k_precmd' for @romkatv/powerlevel10k
 
 #
 # Completions
@@ -124,17 +101,15 @@ zinit light zdharma-continuum/z-a-submods
 # zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
 # zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 
+# Local snippets
 
-
-
-# local snippets
-zinit ice wait"1" lucid
-
-zinit light zdharma-continuum/zinit-annex-bin-gem-node
-zinit light zdharma-continuum/zinit-annex-link-man
-zinit light zdharma-continuum/zinit-annex-patch-dl
-zinit light zdharma-continuum/zinit-annex-binary-symlink
-zinit light le0me55i/zsh-extract
+zinit light-mode for \
+  zdharma-continuum/zinit-annex-bin-gem-node \
+  zdharma-continuum/zinit-annex-link-man \
+  zdharma-continuum/zinit-annex-patch-dl \
+  zdharma-continuum/zinit-annex-binary-symlink \
+  zdharma-continuum/z-a-submods \
+  le0me55i/zsh-extract
 
 ## Enhancd
 zinit light b4b4r07/enhancd
@@ -165,9 +140,10 @@ zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/f
 zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
 # Feature-rich terminal-based text viewer. It is a so-called terminal pager.
 zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
+
 zinit light-mode wait"2" as"program" pick"git-fixup" lucid  for @keis/git-fixup
 
-zinit light-mode from"gh-r" as"program" \
+zinit light-mode wait"2" from"gh-r" as"program" \
   atclone"./just --completions zsh > _just" atpull"%atclone" \
   pick"just" for @casey/just
 
@@ -442,7 +418,7 @@ if [ -d $HOME/.zshrc.d ]; then
   done
 fi
 
-if (( $+commands[atuin] )); then
+if has "atuin"; then
   source <(atuin init zsh --disable-up-arrow)
 fi
 

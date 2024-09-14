@@ -1,5 +1,8 @@
 # Dotfiles
 
+Some examples here:
+https://github.com/zdharma-continuum/zinit-configs
+
 ## Installation
 
 ```bash

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/zsh
 
 cd $(dirname $BASH_SOURCE)
 BASE=$(pwd)
@@ -26,50 +26,57 @@ function install_with_stow() {
   fi
 }
 
+function add_secret_envs_from_vault() {
+  echo "Would you like to add secret envs from vault ? [y/N]"
+  read -r response
+  if [[ $response =~ ^[Yy]$ ]]; then
+    echo "Please provide your vault token"
+    read -r VAULT_TOKEN
+
+    # Define an array of keys to fetch from Vault
+    keys=("envs.zsh") # Add more keys as needed
+
+    # Loop through each key and process them individually
+    for key in "${keys[@]}"; do
+      response=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" -X GET "https://vault.8567153.xyz/v1/shell_envs/data/$key")
+
+      # Check if the curl request was successful
+      if [ $? -ne 0 ]; then
+        echo "Failed to fetch data for $key from Vault."
+        continue
+      fi
+
+      # Process each key-value pair and save them to a file named after the key
+      echo "$response" | jq -r ".data.data | to_entries[] | \"export \(.key)=\(.value)\"" > ~/.zshrc.d/"$key"
+
+      echo "Environment variables for $key have been saved to ~/.zshrc.d/$key"
+    done
+  fi
+}
 install_with_stow -t $HOME --ignore .config/atuin/config.toml .
 install_with_stow -t $HOME -d prv .
 
-# Atuin keeps updating file so lets link it manually
-mkdir -p ~/.config/atuin/
-ln -sfn $BASE/.config/atuin/config.toml ~/.config/atuin/config.toml
+if has "atuin"; then
+  # Atuin keeps updating file so lets link it manually
+  mkdir -p ~/.config/atuin/
+  ln -sfn $BASE/.config/atuin/config.toml ~/.config/atuin/config.toml
+fi
 
 # SSH
 mkdir -p ~/.ssh/config.d/
 
 # Midnight Commander
-mkdir -p ~/.mc/
-curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
+if has "mc"; then
+  mkdir -p ~/.mc/
+  curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini > ~/.mc/solarized.ini
+fi
 
 # VIM
+if has "vim"; then
+  mkdir -p ~/.vim/autoload ~/.vim/undo ~/.vim/swapfiles ~/.vim/backupfiles
+  curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
-# export GIT_SSL_NO_VERIFY=true
-mkdir -p ~/.vim/autoload ~/.vim/undo ~/.vim/swapfiles ~/.vim/backupfiles
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-
-vim +PlugInstall +qall
-
-echo "Would you like to add secret envs from vault ? [y/N]"
-read -r response
-if [[ $response =~ ^[Yy]$ ]]; then
-  echo "Please provide your vault token"
-  read -r VAULT_TOKEN
-
-  # Define an array of keys to fetch from Vault
-  keys=("envs.zsh") # Add more keys as needed
-
-  # Loop through each key and process them individually
-  for key in "${keys[@]}"; do
-    response=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" -X GET "https://vault.8567153.xyz/v1/shell_envs/data/$key")
-
-    # Check if the curl request was successful
-    if [ $? -ne 0 ]; then
-      echo "Failed to fetch data for $key from Vault."
-      continue
-    fi
-
-    # Process each key-value pair and save them to a file named after the key
-    echo "$response" | jq -r ".data.data | to_entries[] | \"export \(.key)=\(.value)\"" > ~/.zshrc.d/"$key"
-
-    echo "Environment variables for $key have been saved to ~/.zshrc.d/$key"
-  done
+  vim +PlugInstall +qall
 fi
+
+add_secret_envs_from_vault
