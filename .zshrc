@@ -148,7 +148,7 @@ zinit light-mode wait"2" lucid from"gh-r" as"program" \
   atclone"./just --completions zsh > _just" atpull"%atclone" \
   pick"just" for @casey/just
 
-zinit light-mode from"gh-r" as"program" \
+zinit light-mode if"is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev`" from"gh-r" as"program" \
   atclone"./atuin gen-completions --shell zsh > _atuin" atpull"%atclone" \
   mv"atuin-*/atuin -> atuin" bpick"*tar.gz" for @atuinsh/atuin
 
