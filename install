@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Function to handle errors
-trap 'echo "Error occurred at line $LINENO. Exiting." >&2; exit 1' ERR
+# trap 'echo "Error occurred at line $LINENO. Exiting." >&2; exit 1' ERR
 
 # Determine the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
