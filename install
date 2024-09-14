@@ -5,7 +5,7 @@
 set -euo pipefail
 
 # Function to handle errors
-# trap 'echo "Error occurred at line $LINENO. Exiting." >&2; exit 1' ERR
+trap 'echo "Error occurred at line $LINENO. Exiting." >&2; exit 1' ERR
 
 # Determine the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
@@ -86,16 +86,6 @@ configure_git_conflict_style() {
   # Get the current Git version
   current_version=$(git --version | awk '{print $3}')
 
-  # Function to compare two version numbers
-  version_lower_than() {
-    # Returns 0 (true) if first version < second version
-    if [[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" == "$1" ]]; then
-      return 0
-    else
-      return 1
-    fi
-  }
-
   # Function to set the conflict style in ~/.gitconfig.local
   set_conflict_style() {
     local conflict_style="$1"
@@ -109,8 +99,9 @@ configure_git_conflict_style() {
     fi
   }
 
+  autoload is-at-least
   # Determine the appropriate conflict style based on Git version
-  if version_lower_than "$current_version" "$required_version"; then
+  if ! is-at-least "$required_version" "$current_version" ; then
     echo "Your Git version ($current_version) is older than $required_version."
     set_conflict_style "diff3"
   fi
@@ -130,7 +121,7 @@ configure_git_conflict_style
 
 # Setup Atuin if installed
 if has "atuin"; then
-  echo "Setting up Atuin configuration..."
+  echo "#\nSetting up Atuin configuration...\n#"
   mkdir -p ~/.config/atuin/
   ln -sfn "$BASE/.config/atuin/config.toml" ~/.config/atuin/config.toml
 fi
@@ -141,17 +132,17 @@ mkdir -p ~/.ssh/config.d/
 
 # Setup Midnight Commander if installed
 if has "mc"; then
-  echo "Setting up Midnight Commander..."
+  echo "#\nSetting up Midnight Commander...\n#"
   mkdir -p ~/.mc/
   curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini -o ~/.mc/solarized.ini
 fi
 
 # Setup VIM if installed
 if has "vim"; then
-  echo "Setting up VIM..."
+  echo "#\nSetting up VIM...\n#"
   mkdir -p ~/.vim/autoload ~/.vim/undo ~/.vim/swapfiles ~/.vim/backupfiles
   curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
   vim +PlugInstall +qall
 fi
 
-echo "Installation completed successfully."
+echo "#\nInstallation completed successfully.\n#"
