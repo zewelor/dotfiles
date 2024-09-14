@@ -4,15 +4,23 @@
 # if using an undefined variable, or if any command in a pipeline fails
 set -euo pipefail
 
-# Function to handle errors
-# trap 'echo "Error occurred at line $LINENO. Exiting." >&2; exit 1' ERR
-
 # Determine the directory where the script is located
 SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
-BASE="$SCRIPT_DIR"
+BASE_DIR="$SCRIPT_DIR"
 
+# Common paths and URLs
+HOME_DIR="$HOME"
+CONFIG_DIR="$HOME_DIR/.config"
+VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
+VAULT_KEYS=("envs.zsh") # Add more keys as needed
 
-has() { type "${1:?too few arguments}" &>/dev/null   }
+# Function to check if a command exists
+has() { command -v "${1:-}" >/dev/null 2>&1; }
+
+# Function to print banners
+print_banner() {
+    printf "\n#\n%s\n#\n" "$1"
+}
 
 # Function to install symlinks using stow
 install_with_stow() {
@@ -27,9 +35,9 @@ install_with_stow() {
   fi
 
   # Prompt the user to apply changes
-  read -r "?Do you want to apply the changes? [y/N] " response
+  read -r "response?Do you want to apply the changes? [y/N] "
   case "$response" in
-    [Yy])
+    [Yy]*)
       echo "Applying changes..."
       stow -v "${stow_opts[@]}"
       ;;
@@ -41,29 +49,25 @@ install_with_stow() {
 
 # Function to add secret environment variables from Vault
 add_secret_envs_from_vault() {
-  read -r "?Would you like to add secret envs from Vault? [y/N] " response
+  read -r "response?Would you like to add secret envs from Vault? [y/N] "
   if [[ "$response" =~ ^[Yy]$ ]]; then
-    read -rs -p "Please provide your Vault token: " VAULT_TOKEN
+    read -rs "VAULT_TOKEN?Please provide your Vault token: "
     echo
 
     # Ensure the target directory exists
-    mkdir -p ~/.zshrc.d
+    mkdir -p "$HOME_DIR/.zshrc.d"
 
-    # Define an array of keys to fetch from Vault
-    local keys=("envs.zsh") # Add more keys as needed
-
-    for key in "${keys[@]}"; do
+    for key in "${VAULT_KEYS[@]}"; do
       echo "Fetching data for key: $key"
       local response
-      response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" \
-        -X GET "https://vault.8567153.xyz/v1/shell_envs/data/$key") || {
+      response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL/$key") || {
         echo "Failed to fetch data for $key from Vault." >&2
         continue
       }
 
       # Process and save environment variables
-      echo "$response" | jq -r ".data.data | to_entries[] | \"export \(.key)=\(.value)\"" > "~/.zshrc.d/$key"
-      echo "Environment variables for $key have been saved to ~/.zshrc.d/$key"
+      echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' > "$HOME_DIR/.zshrc.d/$key"
+      echo "Environment variables for $key have been saved to $HOME_DIR/.zshrc.d/$key"
     done
   else
     echo "Skipped adding secret environment variables from Vault."
@@ -72,44 +76,55 @@ add_secret_envs_from_vault() {
 
 # Function to configure Git conflict style
 configure_git_conflict_style() {
-  # Ensure all variables are local to this function
-  local required_version="2.35.0"
+  local required_git_version="2.35.0"
   local current_version
-  local config_file="$HOME/.gitconfig.local"
-
-  # Check if Git is installed
-  if ! command -v git &> /dev/null; then
-    echo "Git is not installed. Please install Git and rerun the script."
-    return 1
-  fi
-
-  # Get the current Git version
   current_version=$(git --version | awk '{print $3}')
 
-  # Function to set the conflict style in ~/.gitconfig.local
-  set_conflict_style() {
-    local conflict_style="$1"
-    local existing_conflictstyle
-    # Use git config to read from ~/.gitconfig.local
-    existing_conflictstyle=$(git config --get merge.conflictstyle)
+  autoload -Uz is-at-least
+  if ! is-at-least "$required_git_version" "$current_version"; then
+    echo "Your Git version ($current_version) is older than $required_git_version."
+    git config --file "$HOME_DIR/.gitconfig.local" merge.conflictstyle "diff3"
+    echo "Set 'merge.conflictstyle' to 'diff3' in $HOME_DIR/.gitconfig.local."
+  fi
+}
 
-    if [[ "$existing_conflictstyle" != "$conflict_style" ]]; then
-      echo "Changing 'merge.conflictstyle' to '$conflict_style' in $config_file."
-      git config --file "$config_file" merge.conflictstyle "$conflict_style"
-    fi
-  }
+# Function to setup Atuin
+setup_atuin() {
+  if has "atuin"; then
+    print_banner "Setting up Atuin configuration..."
+    mkdir -p "$CONFIG_DIR/atuin/"
+    ln -sfn "$BASE_DIR/.config/atuin/config.toml" "$CONFIG_DIR/atuin/config.toml"
+  fi
+}
 
-  autoload is-at-least
-  # Determine the appropriate conflict style based on Git version
-  if ! is-at-least "$required_version" "$current_version" ; then
-    echo "Your Git version ($current_version) is older than $required_version."
-    set_conflict_style "diff3"
+# Function to setup SSH configuration
+setup_ssh() {
+  print_banner "Ensuring SSH configuration directory exists..."
+  mkdir -p "$HOME_DIR/.ssh/config.d/"
+}
+
+# Function to setup Midnight Commander
+setup_mc() {
+  if has "mc"; then
+    print_banner "Setting up Midnight Commander..."
+    mkdir -p "$HOME_DIR/.mc/"
+    curl -fsSL "https://raw.githubusercontent.com/peel/mc/master/solarized.ini" -o "$HOME_DIR/.mc/solarized.ini"
+  fi
+}
+
+# Function to setup Vim
+setup_vim() {
+  if has "vim"; then
+    print_banner "Setting up Vim..."
+    mkdir -p "$HOME_DIR/.vim/"{autoload,undo,swapfiles,backupfiles}
+    curl -fsSLo "$HOME_DIR/.vim/autoload/plug.vim" --create-dirs "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+    vim +PlugInstall +qall
   fi
 }
 
 # Install symlinks using stow
-install_with_stow -t "$HOME" --ignore ".config/atuin/config.toml" "."
-install_with_stow -t "$HOME" -d "prv" "."
+install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" "."
+install_with_stow -t "$HOME_DIR" -d "prv" "."
 
 # Add secret environment variables from Vault
 add_secret_envs_from_vault
@@ -117,32 +132,10 @@ add_secret_envs_from_vault
 # Configure Git conflict style
 configure_git_conflict_style
 
-# Set
+# Setup various tools
+setup_atuin
+setup_ssh
+setup_mc
+setup_vim
 
-# Setup Atuin if installed
-if has "atuin"; then
-  echo "#\nSetting up Atuin configuration...\n#"
-  mkdir -p ~/.config/atuin/
-  ln -sfn "$BASE/.config/atuin/config.toml" ~/.config/atuin/config.toml
-fi
-
-# Setup SSH configuration
-echo "Ensuring SSH configuration directory exists..."
-mkdir -p ~/.ssh/config.d/
-
-# Setup Midnight Commander if installed
-if has "mc"; then
-  echo "#\nSetting up Midnight Commander...\n#"
-  mkdir -p ~/.mc/
-  curl -Ls https://raw.githubusercontent.com/peel/mc/master/solarized.ini -o ~/.mc/solarized.ini
-fi
-
-# Setup VIM if installed
-if has "vim"; then
-  echo "#\nSetting up VIM...\n#"
-  mkdir -p ~/.vim/autoload ~/.vim/undo ~/.vim/swapfiles ~/.vim/backupfiles
-  curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-  vim +PlugInstall +qall
-fi
-
-echo "#\nInstallation completed successfully.\n#"
+print_banner "Installation completed successfully."
