@@ -160,17 +160,19 @@ zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME
 ##########################
 
 zinit wait lucid for \
-  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
+  light-mode \
+  atinit"
+    # Hash holding paths that shouldn't be grepped (globbed) – blacklist for slow disks, mounts, etc.
+    # https://github.com/zdharma-continuum/fast-syntax-highlighting/blob/cf318e06a9b7c9f2219d78f41b46fa6e06011fd9/CHANGELOG.md?plain=1#L104
+    typeset -gA FAST_BLIST_PATTERNS; FAST_BLIST_PATTERNS[/mnt/*]=1
+    ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay
+  " \
     zdharma-continuum/fast-syntax-highlighting \
-  atload"_zsh_autosuggest_start" \
+  light-mode atinit"ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=80" atload"_zsh_autosuggest_start" \
     zsh-users/zsh-autosuggestions \
   blockf atpull'zinit creinstall -q .' \
     zsh-users/zsh-completions
 
-# Hash holding paths that shouldn't be grepped (globbed) – blacklist for slow disks, mounts, etc.
-# https://github.com/zdharma-continuum/fast-syntax-highlighting/blob/cf318e06a9b7c9f2219d78f41b46fa6e06011fd9/CHANGELOG.md?plain=1#L104
-typeset -gA FAST_BLIST_PATTERNS
-FAST_BLIST_PATTERNS[/mnt/*]=1
 
 #
 # Aliases
