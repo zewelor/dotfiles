@@ -65,10 +65,16 @@ if has "sgpt"; then
 
       commit_message="$(echo "$git_changes" | sgpt "$query")"
 
+      # Display the commit message
+      echo "Generated Commit Message:"
+      echo "-------------------------"
+      echo "$commit_message"
+      echo "-------------------------"
+
       if [ "$auto_accept" = true ]; then
         git commit -m "$commit_message"
       else
-        printf "%s\n\nDo you want to accept this commit? [Y/n] " "$commit_message"
+        printf "Do you want to accept this commit? [Y/n] "
         read -r response
         if [[ $response =~ ^[Nn]$ ]]; then
           echo "Commit cancelled."
@@ -88,6 +94,7 @@ if has "sgpt"; then
       fi
     fi
   }
+
 
   gsumpoa() {
     git add . && gsum "$@" && git push -u origin
