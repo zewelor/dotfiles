@@ -35,30 +35,54 @@ if has "sgpt"; then
   # By providing one argument, you can define the type of semantic commit (e.g. feat, fix, chore).
   # When supplying two arguments, the second parameter allows you to include more details for a more explicit prompt.
   gsum() {
+    local auto_accept=false
+    local OPTIND opt
+
+    # Parse options
+    while getopts ":y" opt; do
+      case $opt in
+        y)
+          auto_accept=true
+          ;;
+        \?)
+          echo "Invalid option: -$OPTARG" >&2
+          return 1
+          ;;
+      esac
+    done
+    shift $((OPTIND -1))
+
+    # Check for staged changes
     if ! git diff --quiet --cached; then
       git_changes="$(git --no-pager diff --staged)"
-      query="Please generate git commit message for following git diff. Respond only with git message. Dont quote it in markdown. Focus only on real changes, added remove things"
+      query="Please generate git commit message for following git diff. Respond only with git message. Don't quote it in markdown. Focus only on real changes, added or removed things. "
+
       if [ $# -eq 2 ]; then
         query+="Declare commit message as $1. $2."
       elif [ $# -eq 1 ]; then
         query+="Declare commit message as $1."
-      else
       fi
 
       commit_message="$(echo "$git_changes" | sgpt "$query")"
-      printf "%s\r\n\r\nDo you want to accept this commit? [Y/n]" "$commit_message"
-      read -r "response?"
-      if [[ $response =~ ^[Nn]$ ]]; then
-        echo "Commit cancelled."
-      else
+
+      if [ "$auto_accept" = true ]; then
         git commit -m "$commit_message"
+      else
+        printf "%s\n\nDo you want to accept this commit? [Y/n] " "$commit_message"
+        read -r response
+        if [[ $response =~ ^[Nn]$ ]]; then
+          echo "Commit cancelled."
+        else
+          git commit -m "$commit_message"
+        fi
       fi
     else
-      echo "No staged changes found. Do you want to stage changes? [y/N]"
-      read -r "response?"
+      echo "No staged changes found. Do you want to stage all changes? [y/N] "
+      read -r response
       if [[ $response =~ ^[Yy]$ ]]; then
         git add .
-        gsum "$@"
+        # Restart the function with the same options and arguments
+        gsum "${auto_accept:+-y}" "$@"
       else
         echo "Commit cancelled."
       fi
