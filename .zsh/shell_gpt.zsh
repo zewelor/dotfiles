@@ -69,7 +69,7 @@ if has "sgpt"; then
       echo "Generated Commit Message:"
       echo "-------------------------"
       echo "$commit_message"
-      echo "-------------------------"
+      echo "-------------------------\n"
 
       if [ "$auto_accept" = true ]; then
         git commit -m "$commit_message"
