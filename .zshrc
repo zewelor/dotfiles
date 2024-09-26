@@ -156,9 +156,10 @@ zinit light-mode from"gh-r" as"program" \
 zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
 
 if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
-  zinit light-mode as"program" \
-    atclone"./atuin gen-completions --shell zsh > _atuin" atpull"%atclone" \
-    mv"atuin-*/atuin -> atuin" bpick"*tar.gz" for @atuinsh/atuin
+  zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
+    atclone"./atuin init zsh > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
+    atpull"%atclone" src"init.zsh"
+  zinit light atuinsh/atuin
 else
   zinit light-mode for joshskidmore/zsh-fzf-history-search
 fi
@@ -320,6 +321,8 @@ if [ -x "$(command -v mixxx)" ]; then
 fi
 
 if has "tmuxinator" ; then
+  zinit ice as"completion" mv"tmuxinator* -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
+
   alias mux="tmuxinator"
 fi
 

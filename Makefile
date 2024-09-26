@@ -1,8 +1,8 @@
-.PHONY: setup packages
+.PHONY: setup packages $(zinit_dir) zinit_update
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-ZINIT_COMMIT_SHA=7f6dc7da6c824b30c0e8e30ae0ecbda5be118e68
+ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
 
 zinit_dir = ~/.zinit
 
@@ -14,6 +14,9 @@ setup:
 	./install
 
 install-fonts:
+	@echo "=========================="
+	@echo "Installing MesloLGS NF font"
+
 	mkdir -p ~/.fonts/
 
 	for font in MesloLGS%20NF%20Regular.ttf MesloLGS%20NF%20Italic.ttf MesloLGS%20NF%20Bold.ttf MesloLGS%20NF%20Bold%20Italic.ttf; do \
@@ -21,12 +24,17 @@ install-fonts:
 	done
 
 	fc-cache -vf ~/.fonts/
+	@echo "=========================="
 
 $(zinit_dir):
+	@echo "=========================="
+	@echo "Installing zinit"
+
 	mkdir -p $(zinit_dir)
 	chmod g-rwX $(zinit_dir)
 	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
 	cd $(zinit_dir)/bin ; git reset --hard $(ZINIT_COMMIT_SHA)
+	@echo "=========================="
 
 packages:
 	sudo apt-get install -y --no-install-recommends fontconfig vim silversearcher-ag autoconf tmux zsh fd-find ncdu curl jq stow
