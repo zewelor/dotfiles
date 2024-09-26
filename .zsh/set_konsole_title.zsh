@@ -8,6 +8,7 @@ if [ -n "$KONSOLE_DBUS_SERVICE" ]; then
       [[ -z "${KONSOLE_DBUS_SESSION}" ]] && return 1
       qdbus >/dev/null "${KONSOLE_DBUS_SERVICE}" "${KONSOLE_DBUS_SESSION}" setTabTitleFormat "${_type}" "${_title}"
   }
+
   set-konsole-tab-title ()
   {
       set-konsole-tab-title-type $1 && set-konsole-tab-title-type $1 1
