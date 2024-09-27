@@ -155,16 +155,6 @@ zinit light-mode from"gh-r" as"program" \
 
 zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
 
-if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
-  zinit ice as"command" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
-    atclone"./atuin init zsh --disable-up-arrow > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
-    atpull"%atclone" src"init.zsh"
-  zinit light atuinsh/atuin
-else
-  zinit light-mode for joshskidmore/zsh-fzf-history-search
-fi
-
-
 ##########################
 
 zinit wait lucid for \
@@ -180,7 +170,6 @@ zinit wait lucid for \
     zsh-users/zsh-autosuggestions \
   blockf atpull'zinit creinstall -q .' \
     zsh-users/zsh-completions
-
 
 #
 # Aliases
@@ -429,6 +418,14 @@ if [ -d $HOME/.zshrc.d ]; then
   for file in $HOME/.zshrc.d/*.zsh; do
     source $file
   done
+fi
+
+if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
+  zinit light-mode as"program" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
+    atclone"./atuin init zsh --disable-up-arrow > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
+    atpull"%atclone" src"init.zsh" for @atuinsh/atuin
+else
+  zinit light-mode for joshskidmore/zsh-fzf-history-search
 fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
