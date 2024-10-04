@@ -89,6 +89,7 @@ if has "docker"; then
   alias dkNrm='docker network rm'
 
   ## Compose (c)
+  alias dkc='docker compose'
   alias dkcr='docker compose run'
   alias dkcR='docker compose run --rm'
 fi
