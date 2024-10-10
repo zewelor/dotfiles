@@ -214,6 +214,10 @@ if has "git"; then
     git branch -l master main | xargs | cut -f 2 -d ' '
   }
 
+  function grhco () {
+    grh $1 && gco $1
+  }
+
   function gcb () {
     git switch $1 2>/dev/null || git switch -c $1;
   }
