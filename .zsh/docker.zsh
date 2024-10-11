@@ -23,7 +23,7 @@ if has "docker"; then
     # zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
 
     function dkcrs () {
-      dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1    
+      dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1
     }
 
     zpcompdef _docker-compose dkcrs="_docker-compose_services"
@@ -52,11 +52,18 @@ if has "docker"; then
 
     zpcompdef _docker-compose dkcupdated="_docker-compose_services"
 
-    function docker_compose_run_on_exec() {
-      if docker compose ps | grep -q $1; then
-        docker compose --progress quiet exec -it $1 "$@[2,-1]"
+    function docker_compose_run_or_exec() {
+      local FLAGS
+      if [ ! -t 0 ]; then
+        FLAGS="-T"
       else
-        docker compose --progress quiet run --rm -it $1 "$@[2,-1]"
+        FLAGS="-it"
+      fi
+
+      if docker compose ps | grep -q $1; then
+        docker compose --progress quiet exec $FLAGS $1 "$@[2,-1]"
+      else
+        docker compose --progress quiet run --rm $FLAGS $1 "$@[2,-1]"
       fi
     }
   fi
