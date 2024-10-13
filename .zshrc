@@ -99,7 +99,6 @@ zinit light-mode lucid nocd depth='1' atload'source ~/.p10k.zsh; _p9k_precmd' fo
 #
 
 # zinit ice as"completion" mv"chezmoi* -> _chezmoi"; zinit snippet https://github.com/twpayne/chezmoi/blob/master/completions/chezmoi.zsh
-# zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
 
 # Local snippets
 

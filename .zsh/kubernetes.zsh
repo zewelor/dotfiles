@@ -1,4 +1,6 @@
 if has "kubectl"; then
+  zinit light-mode from"gh-r" as"program" for @vitobotta/hetzner-k3s
+
   # lazy-load kubectl completion
   _kubectl() {
     unset -f _kubectl
@@ -31,6 +33,7 @@ if has "kubectl"; then
     zinit light-mode from"gh-r" as"program" for @derailed/k9s
     zinit light-mode from"gh-r" as"program" mv"krew-* -> kubectl-krew" for @kubernetes-sigs/krew
 
+    # zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
     # zinit light-mode from"gh-r" as"program" mv"kubeseal-* -> kubeseal" for @bitnami-labs/sealed-secrets
 
     for krew_plugin in get-all view-allocations pod-lens ns pv-migrate; do
