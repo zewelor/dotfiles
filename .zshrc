@@ -412,6 +412,44 @@ function cpu_powersave {
   powerprofilesctl set balanced
 }
 
+export_on_demand_env() {
+  local ENV_NAME VAULT_URL response value
+
+  # Check if environment variable name is provided
+  if [[ -z "$1" ]]; then
+    echo "Usage: export_on_demand_env <ENV_NAME>"
+    return 1
+  fi
+
+  ENV_NAME="$1"
+
+  echo $VAULT_TOKEN
+  # Check if VAULT_TOKEN is already set, else prompt for it
+  if [[ -z "${VAULT_TOKEN:-}" ]]; then
+    read -rs "VAULT_TOKEN?Please enter your Vault token: "
+    echo
+  fi
+
+  # Define Vault URL for the specific on-demand secret
+  VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data/on_demand"
+
+  # Fetch the secret from Vault
+  response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL") || {
+    echo "Failed to fetch secret for '$ENV_NAME' from Vault." >&2
+    return 1
+  }
+
+  # Extract the value of the specified environment variable using jq
+  value=$(echo "$response" | jq -r ".data.data.\"$ENV_NAME\"") || {
+    echo "Failed to parse the secret data for '$ENV_NAME'." >&2
+    return 1
+  }
+
+  # Export the environment variable in the current shell session
+  export "$ENV_NAME"="$value"
+
+  echo "Environment variable '$ENV_NAME' has been exported."
+}
 # Includes
 for file in $HOME/.zsh/*.zsh; do
   source $file
