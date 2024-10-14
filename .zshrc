@@ -422,7 +422,6 @@ export_on_demand_env() {
 
   ENV_NAME="$1"
 
-  echo $VAULT_TOKEN
   # Check if VAULT_TOKEN is already set, else prompt for it
   if [[ -z "${VAULT_TOKEN:-}" ]]; then
     read -rs "VAULT_TOKEN?Please enter your Vault token: "
