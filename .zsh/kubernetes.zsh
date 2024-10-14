@@ -1,5 +1,5 @@
 if has "kubectl"; then
-  zinit light-mode from"gh-r" as"program" for @vitobotta/hetzner-k3s
+  zinit light-mode from"gh-r" as"program" mv"hetzner-k3s-* -> hetzner-k3s" for @vitobotta/hetzner-k3s
 
   # lazy-load kubectl completion
   _kubectl() {

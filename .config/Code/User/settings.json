@@ -33,7 +33,7 @@
 "explorer.confirmDragAndDrop": false,
 "redhat.telemetry.enabled": false,
 "http.proxySupport": "off",
-"editor.fontSize": 17,
+"editor.fontSize": 16,
 "editor.fontFamily": "\"MesloLGS NF\"",
 "update.mode": "none",
 "editor.renderWhitespace": "trailing",
