@@ -106,22 +106,6 @@ Plug 'kien/ctrlp.vim'
 Plug '~/.zplugin/plugins/junegunn---fzf'
 Plug 'junegunn/fzf.vim'
 
-" Tmux Integration
-" Plug 'edkolev/tmuxline.vim'
-
-Plug 'chr4/nginx.vim'
-" Plug 'pangloss/vim-javascript'
-" Plug 'kchmck/vim-coffee-script'
-" Plug 'slim-template/vim-slim'
-" Plug 'plasticboy/vim-markdown'
-" Plug 'vim-ruby/vim-ruby'
-" Plug 'tpope/vim-haml'
-" Plug 'thoughtbot/vim-rspec'
-" Plug 'rust-lang/rust.vim'
-" Plug 'xolox/vim-lua-ftplugin'
-" Plug 'xolox/vim-misc'
-" Plug 'fatih/vim-go'
-
 Plug 'junegunn/vim-easy-align'
 Plug 'michaeljsmith/vim-indent-object'
 Plug 'github/copilot.vim'
