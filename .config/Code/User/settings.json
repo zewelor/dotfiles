@@ -7,103 +7,107 @@
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
     "vim.normalModeKeyBindingsNonRecursive": [
-    {
-        "before": ["u"],
-        "after": [],
-        "commands": [
-            {
-                "command": "undo",
-                "args": []
-            }
-        ]
+        {
+            "before": [
+                "u"
+            ],
+            "after": [],
+            "commands": [
+                {
+                    "command": "undo",
+                    "args": []
+                }
+            ]
+        },
+        {
+            "before": [
+                "<C-r>"
+            ],
+            "after": [],
+            "commands": [
+                {
+                    "command": "redo",
+                    "args": []
+                }
+            ]
+        }
+    ],
+    "ansible.validation": false,
+    "editor.renderControlCharacters": false,
+    "explorer.confirmDragAndDrop": false,
+    "redhat.telemetry.enabled": false,
+    "http.proxySupport": "off",
+    "editor.fontSize": 16,
+    "editor.fontFamily": "\"MesloLGS NF\"",
+    "update.mode": "none",
+    "editor.renderWhitespace": "trailing",
+    "editor.guides.indentation": false,
+    "editor.minimap.enabled": false,
+    "telemetry.telemetryLevel": "off",
+    "files.insertFinalNewline": true,
+    "dev.containers.dockerComposePath": "docker compose",
+    "vim.easymotion": true,
+    "settingsSync.ignoredSettings": [
+        "editor.fontSize"
+    ],
+    "editor.inlineSuggest.enabled": true,
+    "git.ignoreMissingGitWarning": true,
+    "[sql]": {
+        "editor.defaultFormatter": "mtxr.sqltools"
     },
-    {
-        "before": ["<C-r>"],
-        "after": [],
-        "commands": [
-            {
-                "command": "redo",
-                "args": []
-            }
-        ]
-    }
-],
-"ansible.validation": false,
-"editor.renderControlCharacters": false,
-"explorer.confirmDragAndDrop": false,
-"redhat.telemetry.enabled": false,
-"http.proxySupport": "off",
-"editor.fontSize": 16,
-"editor.fontFamily": "\"MesloLGS NF\"",
-"update.mode": "none",
-"editor.renderWhitespace": "trailing",
-"editor.guides.indentation": false,
-"editor.minimap.enabled": false,
-"telemetry.telemetryLevel": "off",
-"files.insertFinalNewline": true,
-"dev.containers.dockerComposePath": "docker compose",
-"vim.easymotion": true,
-"settingsSync.ignoredSettings": [
-    "editor.fontSize"
-],
-"editor.inlineSuggest.enabled": true,
-"git.ignoreMissingGitWarning": true,
-"[sql]": {
-    "editor.defaultFormatter": "mtxr.sqltools"
-},
-"git.enableSmartCommit": true,
-"github.copilot.enable": {
-    "*": true,
-    "plaintext": true,
-    "markdown": true,
-    "scminput": false,
-    "yaml": true
-},
-"git.confirmSync": false,
-"git.openRepositoryInParentFolders": "never",
-"[ruby]": {
-    "editor.defaultFormatter": "Shopify.ruby-lsp"
-},
-"rubyLsp.enableExperimentalFeatures": true,
-"rubyLsp.enabledFeatures": {
-    "codeActions": true,
-    "diagnostics": true,
-    "documentHighlights": true,
-    "documentLink": true,
-    "documentSymbols": true,
-    "foldingRanges": true,
-    "formatting": true,
-    "hover": true,
-    "inlayHint": true,
-    "onTypeFormatting": true,
-    "selectionRanges": true,
-    "semanticHighlighting": true,
-    "completion": true
-},
-"[markdown]": {
-    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-},
-"rubyLsp.rubyVersionManager": {
-    "identifier": "asdf"
-},
-"github.copilot.advanced": {},
-"dev.containers.defaultExtensions": [
-    "GitHub.copilot"
-],
-"gitlens.showWhatsNewAfterUpgrades": false,
-"gitlens.plusFeatures.enabled": false,
-"gitlens.currentLine.enabled": false,
-"gitlens.showWelcomeOnInstall": false,
-"gitlens.virtualRepositories.enabled": false,
-"gitlens.codeLens.enabled": false,
-"git.autofetch": true,
-"files.trimTrailingWhitespace": true,
-"rubyLsp.rubyExecutablePath": "/home/omen/.asdf/shims/ruby",
-"git.ignoreRebaseWarning": true,
-"vs-kubernetes": {
-    "vs-kubernetes.crd-code-completion": "enabled"
-},
-"gitlens.launchpad.indicator.enabled": false,
-"editor.formatOnPaste": true,
-"editor.formatOnSave": true,
+    "git.enableSmartCommit": true,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": false,
+        "yaml": true
+    },
+    "git.confirmSync": false,
+    "git.openRepositoryInParentFolders": "never",
+    "[ruby]": {
+        "editor.defaultFormatter": "Shopify.ruby-lsp"
+    },
+    "rubyLsp.enableExperimentalFeatures": true,
+    "rubyLsp.enabledFeatures": {
+        "codeActions": true,
+        "diagnostics": true,
+        "documentHighlights": true,
+        "documentLink": true,
+        "documentSymbols": true,
+        "foldingRanges": true,
+        "formatting": true,
+        "hover": true,
+        "inlayHint": true,
+        "onTypeFormatting": true,
+        "selectionRanges": true,
+        "semanticHighlighting": true,
+        "completion": true
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+    },
+    "rubyLsp.rubyVersionManager": {
+        "identifier": "asdf"
+    },
+    "github.copilot.advanced": {},
+    "dev.containers.defaultExtensions": [
+        "GitHub.copilot"
+    ],
+    "gitlens.showWhatsNewAfterUpgrades": false,
+    "gitlens.plusFeatures.enabled": false,
+    "gitlens.currentLine.enabled": false,
+    "gitlens.showWelcomeOnInstall": false,
+    "gitlens.virtualRepositories.enabled": false,
+    "gitlens.codeLens.enabled": false,
+    "git.autofetch": true,
+    "files.trimTrailingWhitespace": true,
+    "rubyLsp.rubyExecutablePath": "/home/omen/.asdf/shims/ruby",
+    "git.ignoreRebaseWarning": true,
+    "vs-kubernetes": {
+        "vs-kubernetes.crd-code-completion": "enabled"
+    },
+    "gitlens.launchpad.indicator.enabled": false,
+    "editor.formatOnPaste": true,
+    "editor.formatOnSave": true,
 }
