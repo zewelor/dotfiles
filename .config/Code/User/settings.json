@@ -104,4 +104,6 @@
     "vs-kubernetes.crd-code-completion": "enabled"
 },
 "gitlens.launchpad.indicator.enabled": false,
+"editor.formatOnPaste": true,
+"editor.formatOnSave": true,
 }
