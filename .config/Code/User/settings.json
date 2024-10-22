@@ -88,7 +88,7 @@
         "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
     },
     "rubyLsp.rubyVersionManager": {
-        "identifier": "asdf"
+        "identifier": "auto"
     },
     "github.copilot.advanced": {},
     "dev.containers.defaultExtensions": [
