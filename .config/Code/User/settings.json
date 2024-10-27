@@ -3,7 +3,6 @@
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
     "window.zoomLevel": 1,
-    "vim.neovimPath": "/usr/bin/nvim",
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'MesloLGS NF'",
     "vim.normalModeKeyBindingsNonRecursive": [
@@ -32,7 +31,6 @@
             ]
         }
     ],
-    "ansible.validation": false,
     "editor.renderControlCharacters": false,
     "explorer.confirmDragAndDrop": false,
     "redhat.telemetry.enabled": false,
@@ -52,9 +50,6 @@
     ],
     "editor.inlineSuggest.enabled": true,
     "git.ignoreMissingGitWarning": true,
-    "[sql]": {
-        "editor.defaultFormatter": "mtxr.sqltools"
-    },
     "git.enableSmartCommit": true,
     "github.copilot.enable": {
         "*": true,
@@ -84,9 +79,6 @@
         "semanticHighlighting": true,
         "completion": true
     },
-    "[markdown]": {
-        "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
-    },
     "rubyLsp.rubyVersionManager": {
         "identifier": "auto"
     },
@@ -104,9 +96,6 @@
     "files.trimTrailingWhitespace": true,
     "rubyLsp.rubyExecutablePath": "/home/omen/.asdf/shims/ruby",
     "git.ignoreRebaseWarning": true,
-    "vs-kubernetes": {
-        "vs-kubernetes.crd-code-completion": "enabled"
-    },
     "gitlens.launchpad.indicator.enabled": false,
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,

@@ -1,6 +1,7 @@
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
+#
 # if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
 #   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 # fi
@@ -152,7 +153,15 @@ zinit light-mode from"gh-r" as"program" \
   atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
   mv"gh_*/bin/gh -> gh" for @cli/cli
 
-zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
+# zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
+
+# mise
+zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
+    pick'mise/bin/mise' \
+    atclone'./mise/bin/mise complete zsh >_mise' atpull'%atclone' \
+    @jdx/mise
+
+zinit light-mode wait"1" lucid from"gh-r" as"program" pick"usage" for @jdx/usage
 
 ##########################
 
@@ -467,6 +476,8 @@ if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ;
 else
   zinit light-mode for joshskidmore/zsh-fzf-history-search
 fi
+
+eval "$(mise activate zsh)"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
