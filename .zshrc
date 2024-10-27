@@ -321,12 +321,6 @@ if [ -x "$(command -v mixxx)" ]; then
   }
 fi
 
-if has "tmuxinator" ; then
-  zinit ice as"completion" mv"tmuxinator* -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
-
-  alias mux="tmuxinator"
-fi
-
 if has "codium"; then
   alias code='codium'
 fi
@@ -477,7 +471,13 @@ else
   zinit light-mode for joshskidmore/zsh-fzf-history-search
 fi
 
-eval "$(mise activate zsh)"
+eval "$(mise activate zsh --shims)"
+
+if has "tmuxinator" ; then
+  zinit ice as"completion" mv"tmuxinator* -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
+
+  alias mux="tmuxinator"
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
