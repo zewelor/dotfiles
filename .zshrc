@@ -256,6 +256,7 @@ alias -g S='| sort'
 alias -g T='| tail'
 alias -g X='| xargs'
 alias -g J='| jq'
+alias -g JL='| jq -C | less -R'
 
 # Directory listing
 alias l='ls -1A'         # Lists in one column, hidden files.
