@@ -34,13 +34,14 @@ if has "kubectl"; then
     zinit light-mode from"gh-r" as"program" mv"krew-* -> kubectl-krew" for @kubernetes-sigs/krew
 
     helm_template_debug_with_deps () {
+      local dir="${1:-.}"
       local output
-      output=$(helm template --debug . 2>&1) 
+      output=$(helm template --debug "$dir" 2>&1)
       if echo "$output" | grep -q 'You may need to run `helm dependency build`'; then
         echo "Missing dependencies detected. Running 'helm dependency build'..."
         helm dependency build
         echo "Re-running 'helm_template_debug_with_deps' recursively..."
-        helm_template_debug_with_deps
+        helm_template_debug_with_deps "$dir"
       else
         echo "$output"
       fi
