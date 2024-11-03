@@ -33,6 +33,19 @@ if has "kubectl"; then
     zinit light-mode from"gh-r" as"program" for @derailed/k9s
     zinit light-mode from"gh-r" as"program" mv"krew-* -> kubectl-krew" for @kubernetes-sigs/krew
 
+    helm_template_debug_with_deps () {
+      local output
+      output=$(helm template --debug . 2>&1) 
+      if echo "$output" | grep -q 'You may need to run `helm dependency build`'; then
+        echo "Missing dependencies detected. Running 'helm dependency build'..."
+        helm dependency build
+        echo "Re-running 'helm_template_debug_with_deps' recursively..."
+        helm_template_debug_with_deps
+      else
+        echo "$output"
+      fi
+    }
+
     # zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
     # zinit light-mode from"gh-r" as"program" mv"kubeseal-* -> kubeseal" for @bitnami-labs/sealed-secrets
 
