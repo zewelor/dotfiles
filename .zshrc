@@ -287,10 +287,6 @@ if has "bat"; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 
-if [ -n "$DISPLAY" ]; then
-  alias rekde="kquitapp5 plasmashell || killall plasmashell && kstart5 plasmashell"
-fi
-
 if has yt-dlp; then
   function youtube-extract-audio () {
     yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(title)s.%(ext)s' "$@"
@@ -310,17 +306,6 @@ function du_sorted () {
 
   du -h --max-depth=1 $ARGS | sort -h
 }
-
-if [ -x "$(command -v mixxx)" ]; then
-  function start-dj () {
-    cpu_performance
-    kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock false
-    qdbus org.kde.KWin /KWin reconfigure
-    sudo nice -n -10 su -c mixxx omen
-    kwriteconfig5 --file kscreenlockerrc --group Daemon --key Autolock true
-    qdbus org.kde.KWin /KWin reconfigure
-  }
-fi
 
 if has "codium"; then
   alias code='codium'
