@@ -2,7 +2,10 @@ if has "docker"; then
   export DOCKER_BUILDKIT=1
   export COMPOSE_DOCKER_CLI_BUILD=1
 
-  zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
+  # zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
+
+  # https://github.com/docker/cli/issues/993
+  zstyle ':completion:*:*:docker:*' option-stacking yes
 
   alias czysc_docker='docker container prune ; dkrmI'
 
@@ -19,8 +22,6 @@ if has "docker"; then
   if [ ! -z "`docker compose version`" ]; then
 
     zpcompdef _docker-compose dkcrs="_docker-compose_services"
-
-    # zinit ice as"completion" ; zinit snippet https://github.com/docker/compose/blob/master/contrib/completion/zsh/_docker-compose
 
     function dkcrs () {
       dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1
@@ -71,6 +72,7 @@ if has "docker"; then
   # Aliases
   # source: https://github.com/sorin-ionescu/prezto/blob/master/modules/docker/alias.zsh
   alias dkC='docker container'
+  alias dkCrm='docker container rm'
   alias dkCls='docker container ls'
 
   ## Image (I)
