@@ -4,6 +4,23 @@ if has "docker"; then
 
   # zinit ice as"completion" ; zinit snippet https://github.com/docker/cli/blob/master/contrib/completion/zsh/_docker
 
+  # Lazy load Docker completions to improve shell startup time
+  function _docker() {
+    # Remove the function to prevent recursion on subsequent calls
+    unfunction _docker
+
+    # Ensure the completion system is initialized
+    if ! type compinit &>/dev/null; then
+        autoload -Uz compinit
+        compinit
+    fi
+
+    eval "$(docker completion zsh)"
+
+    _docker "$@"
+  }
+
+
   # https://github.com/docker/cli/issues/993
   zstyle ':completion:*:*:docker:*' option-stacking yes
 
