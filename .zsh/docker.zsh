@@ -7,7 +7,7 @@ if has "docker"; then
   # Lazy load Docker completions to improve shell startup time
   function _docker() {
     # Remove the function to prevent recursion on subsequent calls
-    unfunction _docker
+    unfunction $0
 
     # Ensure the completion system is initialized
     if ! type compinit &>/dev/null; then
@@ -17,7 +17,7 @@ if has "docker"; then
 
     eval "$(docker completion zsh)"
 
-    _docker "$@"
+    $0 "$@"
   }
 
 
@@ -38,37 +38,37 @@ if has "docker"; then
 
   if [ ! -z "`docker compose version`" ]; then
 
-    zpcompdef _docker-compose dkcrs="_docker-compose_services"
+    # zpcompdef _docker-compose dkcrs="_docker-compose_services"
 
     function dkcrs () {
       dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1
     }
 
-    zpcompdef _docker-compose dkcrs="_docker-compose_services"
+    # zpcompdef _docker-compose dkcrs="_docker-compose_services"
 
     function dkcrsd () {
       dkcrs $1 -d
     }
 
-    zpcompdef _docker-compose dkcrsd="_docker-compose_services"
+    # zpcompdef _docker-compose dkcrsd="_docker-compose_services"
 
     function dkcrsdl () {
       dkcrsd $1 && dkcl -f $1
     }
 
-    zpcompdef _docker-compose dkcrsdl="_docker-compose_services"
+    # zpcompdef _docker-compose dkcrsdl="_docker-compose_services"
 
     function dkcupdate () {
       dkc stop $1 && dkc pull $1 && dkc up -d $1 && sleep 5 && dkcl -f $1
     }
 
-    zpcompdef _docker-compose dkcupdate="_docker-compose_services"
+    # zpcompdef _docker-compose dkcupdate="_docker-compose_services"
 
     function dkcupdated () {
       dkc stop $1 && dkc pull $1 && dkc up -d $1
     }
 
-    zpcompdef _docker-compose dkcupdated="_docker-compose_services"
+    # zpcompdef _docker-compose dkcupdated="_docker-compose_services"
 
     function docker_compose_run_or_exec() {
       local FLAGS
