@@ -14,7 +14,7 @@
 NEW_TIMEOUT_MINUTES=20         # New screen lock timeout: 20 minutes
 
 # Default Wait Time
-DEFAULT_WAIT_TIME_SECONDS=3600  # Default wait time: 3600 seconds (1 hour)
+DEFAULT_WAIT_TIME_MINUTES=60  # Default wait time: 60 minutes (1 hour)
 
 # Configuration File and Keys
 CONFIG_FILE="$HOME/.config/kscreenlockerrc"
@@ -30,18 +30,18 @@ QDBUS_COMMAND="qdbus org.freedesktop.ScreenSaver /org/freedesktop/ScreenSaver or
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 [wait_time_in_seconds]"
+    echo "Usage: $0 [wait_time_in_minutes]"
     echo ""
     echo "Parameters:"
-    echo "  wait_time_in_seconds    Duration to wait before restoring settings. Default is 3600 seconds (1 hour)."
-    echo "  If no parameter is provided, the script defaults to a wait time of 3600 seconds."
+    echo "  wait_time_in_minutes    Duration to wait before restoring settings. Default is 60 minutes (1 hour)."
+    echo "  If no parameter is provided, the script defaults to a wait time of 60 minutes."
     echo ""
     echo "Examples:"
     echo "  # Run with default wait time (1 hour)"
     echo "  $0"
     echo ""
-    echo "  # Run with a custom wait time of 1800 seconds (30 minutes)"
-    echo "  $0 1800"
+    echo "  # Run with a custom wait time of 30 minutes"
+    echo "  $0 30"
     exit 1
 }
 
@@ -128,7 +128,7 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 # Initialize variables with default values
-WAIT_TIME_SECONDS=$DEFAULT_WAIT_TIME_SECONDS
+WAIT_TIME_MINUTES=$DEFAULT_WAIT_TIME_MINUTES
 
 # Parse positional arguments
 if [[ $# -gt 1 ]]; then
@@ -138,9 +138,9 @@ fi
 
 if [[ $# -eq 1 ]]; then
     if [[ "$1" =~ ^[0-9]+$ ]]; then
-        WAIT_TIME_SECONDS="$1"
+        WAIT_TIME_MINUTES="$1"
     else
-        echo "Error: 'wait_time_in_seconds' must be a positive integer."
+        echo "Error: 'wait_time_in_minutes' must be a positive integer."
         usage
     fi
 fi
@@ -181,11 +181,11 @@ apply_qdbus_command
 send_notification "Screen Lock Timeout" "Timeout set to $NEW_TIMEOUT_MINUTES minutes."
 
 echo "Screen lock timeout set to $NEW_TIMEOUT_MINUTES minutes."
-echo "Waiting for $WAIT_TIME_SECONDS seconds before restoring original settings..."
+echo "Waiting for $WAIT_TIME_MINUTES minutes before restoring original settings..."
 echo ""
 
 # Wait for the specified duration
-sleep "$WAIT_TIME_SECONDS"
+sleep "$WAIT_TIME_MINUTES"m
 
 # Restore original settings
 echo ""

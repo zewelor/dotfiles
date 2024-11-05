@@ -19,7 +19,7 @@ if [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]]; then
   toggle_screen_lock() {
       local script_path="$HOME/.zsh/kde/toggle_screen_lock.sh"
       # echo "script_path: $script_path"
-      local wait_time="${1:-3600}"
+      local wait_time="${1:-60}"  # Default wait time in minutes
 
       if [[ -x "$script_path" ]]; then
           "$script_path" "$wait_time"
