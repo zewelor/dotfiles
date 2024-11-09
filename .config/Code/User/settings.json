@@ -102,4 +102,5 @@
     "files.associations": {
         ".bash_history": "plaintext"
     },
+    "chat.editing.alwaysSaveWithGeneratedChanges": true,
 }

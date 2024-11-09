@@ -97,7 +97,7 @@ if has "sgpt"; then
 
 
   gsumpoa() {
-    git add . && gsum "$@" && git push -u origin
+    git add . && gsum "$@" && git pull ; git push -u origin
   }
 elif has "pipx" ; then
   pipx install shell-gpt
