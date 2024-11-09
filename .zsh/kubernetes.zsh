@@ -9,23 +9,25 @@ if has "kubectl"; then
 
   zpcompdef _kubectl kubectl
 
-  function start-k8s-work () {
+  function start-k8s-work() {
     alias k="kubectl"
     alias kmurder="kubectl delete pod --grace-period=0 --force"
 
-    function kcRsh () {
+    function kcRsh() {
       kubectl run $2 --image=$1 --attach -ti --restart=Never --rm --command -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
     }
 
-    function kcEsh () {
+    function kcEsh() {
       kubectl exec -ti $1 -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
     }
 
-    function k8s-secret-encode () {
-      read v; echo -n "$v" | base64 -w 0; echo
+    function k8s-secret-encode() {
+      read v
+      echo -n "$v" | base64 -w 0
+      echo
     }
 
-    if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ] ; then
+    if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ]; then
       typeset -g POWERLEVEL9K_KUBECONTEXT_DEFAULT_CONTENT_EXPANSION='$P9K_KUBECONTEXT_NAMESPACE'
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
     fi
@@ -33,13 +35,19 @@ if has "kubectl"; then
     zinit light-mode from"gh-r" as"program" for @derailed/k9s
     zinit light-mode from"gh-r" as"program" mv"krew-* -> kubectl-krew" for @kubernetes-sigs/krew
 
-    helm_template_debug_with_deps () {
+    helm_template_debug_with_deps() {
       local dir="${1:-.}"
       local output
       output=$(helm template --debug "$dir" 2>&1)
+
       if echo "$output" | grep -q 'You may need to run `helm dependency build`'; then
         echo "Missing dependencies detected. Running 'helm dependency build'..."
         helm dependency build
+        echo "Re-running 'helm_template_debug_with_deps' recursively..."
+        helm_template_debug_with_deps "$dir"
+      elif echo "$output" | grep -q 'Please update the dependencies'; then
+        echo "Outdated dependencies detected. Running 'helm dependency update'..."
+        helm dependency update
         echo "Re-running 'helm_template_debug_with_deps' recursively..."
         helm_template_debug_with_deps "$dir"
       else
@@ -57,4 +65,3 @@ if has "kubectl"; then
     done
   }
 fi
-
