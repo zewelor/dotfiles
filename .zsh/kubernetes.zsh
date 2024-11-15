@@ -42,12 +42,12 @@ if has "kubectl"; then
 
       if echo "$output" | grep -q 'You may need to run `helm dependency build`'; then
         echo "Missing dependencies detected. Running 'helm dependency build'..."
-        helm dependency build
+        helm dependency build "$dir"
         echo "Re-running 'helm_template_debug_with_deps' recursively..."
         helm_template_debug_with_deps "$dir"
       elif echo "$output" | grep -q 'Please update the dependencies'; then
         echo "Outdated dependencies detected. Running 'helm dependency update'..."
-        helm dependency update
+        helm dependency update "$dir"
         echo "Re-running 'helm_template_debug_with_deps' recursively..."
         helm_template_debug_with_deps "$dir"
       else
@@ -58,7 +58,7 @@ if has "kubectl"; then
     # zinit ice lucid wait has"minikube" for id-as"minikube_completion" as"completion" atclone"minikube completion zsh > _minikube" atpull"%atclone" run-atpull zdharma-continuum/null
     # zinit light-mode from"gh-r" as"program" mv"kubeseal-* -> kubeseal" for @bitnami-labs/sealed-secrets
 
-    for krew_plugin in get-all view-allocations pod-lens ns pv-migrate; do
+    for krew_plugin in get-all view-allocations ns pv-migrate; do
       if [ ! -f "$HOME/.krew/receipts/$krew_plugin.yaml" ]; then
         kubectl krew install $krew_plugin
       fi
