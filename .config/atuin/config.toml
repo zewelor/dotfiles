@@ -1,3 +1,6 @@
 auto_sync = true
 sync_address = "https://atuin.8567153.xyz"
 sync_frequency = "2h"
+
+[sync]
+records = true
