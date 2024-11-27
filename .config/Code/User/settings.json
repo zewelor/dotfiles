@@ -63,7 +63,6 @@
     "[ruby]": {
         "editor.defaultFormatter": "Shopify.ruby-lsp"
     },
-    "rubyLsp.enableExperimentalFeatures": true,
     "rubyLsp.enabledFeatures": {
         "codeActions": true,
         "diagnostics": true,
@@ -103,4 +102,10 @@
         ".bash_history": "plaintext"
     },
     "chat.editing.alwaysSaveWithGeneratedChanges": true,
+    "vs-kubernetes": {
+        "vs-kubernetes.crd-code-completion": "disabled"
+    },
+    "rubyLsp.featureFlags": {
+        "all": true
+    },
 }
