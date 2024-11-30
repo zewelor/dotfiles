@@ -93,7 +93,7 @@ zle -N self-insert url-quote-magic
 #
 
 # Powerlevel10k
-zinit light-mode lucid nocd depth='1' atload'source ~/.p10k.zsh; _p9k_precmd' for @romkatv/powerlevel10k
+zinit light-mode lucid nocd depth='1' for @romkatv/powerlevel10k
 
 #
 # Completions
@@ -437,6 +437,14 @@ export_on_demand_env() {
 
   echo "Environment variable '$ENV_NAME' has been exported."
 }
+
+if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
+  zinit light-mode as"program" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
+    atclone"./atuin init zsh --disable-up-arrow > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
+    atpull"%atclone" src"init.zsh" for @atuinsh/atuin
+else
+  zinit light-mode for joshskidmore/zsh-fzf-history-search
+fi
 # Includes
 for file in $HOME/.zsh/*.zsh; do
   source $file
@@ -449,13 +457,6 @@ if [ -d $HOME/.zshrc.d ]; then
   done
 fi
 
-if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
-  zinit light-mode as"program" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
-    atclone"./atuin init zsh --disable-up-arrow > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
-    atpull"%atclone" src"init.zsh" for @atuinsh/atuin
-else
-  zinit light-mode for joshskidmore/zsh-fzf-history-search
-fi
 
 eval "$(mise activate zsh --shims)"
 
@@ -465,6 +466,4 @@ if has "tmuxinator" ; then
   alias mux="tmuxinator"
 fi
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 (( ! ${+functions[p10k]} )) || p10k finalize
