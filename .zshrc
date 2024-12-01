@@ -457,7 +457,6 @@ if [ -d $HOME/.zshrc.d ]; then
   done
 fi
 
-
 eval "$(mise activate zsh --shims)"
 
 if has "tmuxinator" ; then
