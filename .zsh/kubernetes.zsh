@@ -11,6 +11,11 @@ if has "kubectl"; then
     alias k="kubectl"
     alias kmurder="kubectl delete pod --grace-period=0 --force"
 
+    function kexec() {
+      kubectl exec -it "$1" -- sh -c '(bash > /dev/null 2>&1 || ash || sh)'
+    }
+
+
     function kcRsh() {
       kubectl run $2 --image=$1 --attach -ti --restart=Never --rm --command -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
     }
