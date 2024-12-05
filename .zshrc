@@ -441,8 +441,8 @@ export_on_demand_env() {
 # Includes, it needs to be here to prevent some fuckups with atuin ctrl + r
 for file in $HOME/.zsh/*.zsh; do
   source $file
-  echo "Sourced $file"
-  echo "Bindkey `bindkey |grep 'R'`"
+  # echo "Sourced $file"
+  # echo "Bindkey `bindkey |grep 'R'`"
 done
 
 if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
