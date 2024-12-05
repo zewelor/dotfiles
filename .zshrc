@@ -438,6 +438,13 @@ export_on_demand_env() {
   echo "Environment variable '$ENV_NAME' has been exported."
 }
 
+# Includes, it needs to be here to prevent some fuckups with atuin ctrl + r
+for file in $HOME/.zsh/*.zsh; do
+  source $file
+  echo "Sourced $file"
+  echo "Bindkey `bindkey |grep 'R'`"
+done
+
 if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
   zinit light-mode as"program" from"gh-r" bpick"atuin-*.tar.gz" mv"atuin*/atuin -> atuin" \
     atclone"./atuin init zsh --disable-up-arrow > init.zsh; ./atuin gen-completions --shell zsh > _atuin" \
@@ -445,10 +452,6 @@ if is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ;
 else
   zinit light-mode for joshskidmore/zsh-fzf-history-search
 fi
-# Includes
-for file in $HOME/.zsh/*.zsh; do
-  source $file
-done
 
 # Local includes
 if [ -d $HOME/.zshrc.d ]; then
