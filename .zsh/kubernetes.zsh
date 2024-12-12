@@ -30,6 +30,62 @@ if has "kubectl"; then
       echo
     }
 
+    # Usage:
+    #   k8ssecretgen [pwgen options]
+    # Examples:
+    #   k8ssecretgen                 # Uses default: -s 30 -1
+    #   k8ssecretgen -s 50           # Overrides default length to 50
+    #   k8ssecretgen -A -n 5         # Generates 5 passwords with additional options
+    k8ssecretgen() {
+        # Define default options
+        local defaults=("-1" "-s" "30")
+
+        # Initialize an array for final pwgen arguments
+        local args=()
+
+        # Flags to check if certain options are provided
+        local has_s=0
+        local has_n=0
+
+        # Iterate over the input arguments to detect if -s or -n/-1 are provided
+        for arg in "$@"; do
+            case "$arg" in
+                -s|--secure)
+                    has_s=1
+                    ;;
+                -n|--number)
+                    has_n=1
+                    ;;
+                -1)
+                    has_n=1
+                    ;;
+                *)
+                    ;;
+            esac
+        done
+
+        # If -n or -1 is not provided, append default -1
+        if [[ $has_n -eq 0 ]]; then
+            args+=("-1")
+        fi
+
+        # If -s is not provided, append default -s 30
+        if [[ $has_s -eq 0 ]]; then
+            args+=("-s" "30")
+        fi
+
+        # Append user-provided arguments
+        args+=("$@")
+
+        echo "Generating password with the following arguments: ${args[@]}"
+        # Execute the pwgen command with the constructed arguments, remove newline, and encode in Base64
+        pwgen "${args[@]}" | tr -d '\n' | base64 -w 0
+
+        # Add a newline for better readability
+        echo
+    }
+
+
     if [ -z "$(typeset -p POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS | \grep kubecontext)" ]; then
       typeset -g POWERLEVEL9K_KUBECONTEXT_DEFAULT_CONTENT_EXPANSION='$P9K_KUBECONTEXT_NAMESPACE'
       typeset -ga POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=($POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS kubecontext)
