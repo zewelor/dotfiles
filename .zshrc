@@ -138,8 +138,6 @@ zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/du
 zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/fd
 # An extremely fast alternative to grep that respects your gitignore
 zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
-# Feature-rich terminal-based text viewer. It is a so-called terminal pager.
-zinit light-mode from"gh-r" as"program" pick"ov" for @noborus/ov
 # Tool to conveniently learn about the usage of disk space of a given directory.
 zinit light-mode from"gh-r" as"program" mv"dua* -> dua" pick"dua/dua" for @byron/dua-cli
 # Lucid - Turbo mode is verbose, so you need an option for quiet.
