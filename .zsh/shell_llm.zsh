@@ -29,9 +29,21 @@ EOF
       fi
     }
 
+    # Function to commit changes and display result
+    do_commit() {
+      local message="$1"
+      if git commit -m "$message"; then
+        echo "Changes committed successfully!"
+        return 0
+      else
+        echo "Commit failed. Please check your changes and try again."
+        return 1
+      fi
+    }
+
     # Main script
     force_accept="false"
-    if [ "$1" = "-f" ]; then
+    if [ "$1" = "-y" ]; then
       force_accept="true"
       shift
     fi
@@ -39,13 +51,8 @@ EOF
     commit_message=$(generate_commit_message)
 
     if [ "$force_accept" = "true" ]; then
-      if git commit -m "$commit_message"; then
-        echo "Changes committed with forced message!"
-        return 0
-      else
-        echo "Commit failed. Please check your changes and try again."
-        return 1
-      fi
+      do_commit "$commit_message"
+      return $?
     fi
 
     while true; do
@@ -54,31 +61,14 @@ EOF
       echo "$commit_message"
       echo "-------------------------\n"
 
-      # read_input "Do you want to (a)ccept, (e)dit, (r)egenerate, or (c)ancel? "
       read_input "Do you want to (a)ccept, (r)egenerate, or (c)ancel? "
       choice=$REPLY
 
       case "$choice" in
         [aA])
-          if git commit -m "$commit_message"; then
-            echo "Changes committed successfully!"
-            return 0
-          else
-            echo "Commit failed. Please check your changes and try again."
-            return 1
-          fi
+          do_commit "$commit_message"
+          return $?
           ;;
-        # 'e|E' )
-        #   read_input "Enter your commit message: "
-        #   commit_message=$REPLY
-        #   if [ -n "$commit_message" ] && git commit -m "$commit_message"; then
-        #     echo "Changes committed successfully with your message!"
-        #     return 0
-        #   else
-        #     echo "Commit failed. Please check your message and try again."
-        #     return 1
-        #   fi
-        #   ;;
         [rR])
           echo "Regenerating commit message using gemini..."
           commit_message=$(generate_commit_message)
