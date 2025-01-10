@@ -69,8 +69,9 @@ add_secret_envs_from_vault() {
           exit 1
         }
 
+        echo "# Generated with install script from dotfiles" > "$HOME_DIR/.zshrc.d/$key"
         # Process and save environment variables
-        echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' > "$HOME_DIR/.zshrc.d/$key"
+        echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' >> "$HOME_DIR/.zshrc.d/$key"
       )
 
       echo "Environment variables for $key have been saved to $HOME_DIR/.zshrc.d/$key"
