@@ -8,7 +8,7 @@ if has "llm"; then
   gsum() {
     # Function to generate commit message using the gemini model
     generate_commit_message() {
-      local model="gemini-1.5-flash-8b-latest"
+      local model="gemini-1.5-flash-latest"
 
       git diff --cached | llm -m "$model" <<EOF
 Below is a diff of all staged changes, coming from:
