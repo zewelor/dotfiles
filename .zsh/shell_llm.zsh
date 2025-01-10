@@ -33,7 +33,6 @@ EOF
     do_commit() {
       local message="$1"
       if git commit -m "$message"; then
-        echo "Changes committed successfully!"
         return 0
       else
         echo "Commit failed. Please check your changes and try again."
