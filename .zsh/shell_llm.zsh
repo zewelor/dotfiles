@@ -83,8 +83,12 @@ EOF
     done
   }
 
+  gsumpo() {
+    gsum "$@" && git pull ; git push -u origin
+  }
+
   gsumpoa() {
-    git add . && gsum "$@" && git pull ; git push -u origin
+    git add . && gsumpo "$@"
   }
 elif has "pipx" ; then
   pipx install llm
