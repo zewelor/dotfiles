@@ -2,9 +2,9 @@
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
 #
-# if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-#   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-# fi
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
 
 if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
   zcompile $HOME/.zshrc
@@ -111,12 +111,12 @@ zinit light-mode for \
   zdharma-continuum/z-a-submods \
   le0me55i/zsh-extract
 
-## Enhancd
-zinit light b4b4r07/enhancd
-# https://github.com/babarot/enhancd#configuration
-export ENHANCD_ARG_DOUBLE_DOT="..."
-export ENHANCD_ARG_HYPHEN="--"
-export ENHANCD_FILTER="fzf --height 40%:fzy"
+# ## Enhancd
+# zinit light b4b4r07/enhancd
+# # https://github.com/babarot/enhancd#configuration
+# export ENHANCD_ARG_DOUBLE_DOT="..."
+# export ENHANCD_ARG_HYPHEN="--"
+# export ENHANCD_FILTER="fzf --height 40%:fzy"
 
 #
 # Programs
