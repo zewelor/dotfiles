@@ -49,7 +49,7 @@
     background_jobs         # presence of background jobs
     # direnv                  # direnv status (https://direnv.net/)
     virtualenv              # python virtual environment (https://docs.python.org/3/library/venv.html)
-    mise
+    # mise
     # anaconda                # conda environment (https://conda.io/)
     # pyenv                   # python environment (https://github.com/pyenv/pyenv)
     # goenv                   # go environment (https://github.com/syndbg/goenv)
