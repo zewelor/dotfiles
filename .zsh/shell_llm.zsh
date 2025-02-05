@@ -8,14 +8,22 @@ if has "llm"; then
   gsum() {
     # Function to generate commit message using the gemini model
     generate_commit_message() {
-      local model="gemini-1.5-flash-latest"
+      local model="gemini-2.0-flash-lite-preview-02-05"
+      local diff_content=$(git --no-pager diff --cached)
 
-      git diff --cached | llm -m "$model" <<EOF
+      if [ -z "$diff_content" ]; then
+        echo "!!!\nNo staged changes detected.\n!!!"
+        return 1
+      fi
+
+      echo "$diff_content" | llm -m "$model" <<EOF
 Below is a diff of all staged changes, coming from:
+
 \`\`\`
 git diff --cached
 \`\`\`
-Please generate a concise, one-line commit message for these changes.
+
+Please generate a concise, one-line commit message for these changes. Keep it very short
 EOF
     }
 
@@ -48,6 +56,12 @@ EOF
     fi
 
     commit_message=$(generate_commit_message)
+
+    if [ $? -ne 0 ]; then
+      echo $commit_message
+      echo "\nCommit message generation failed."
+      return 1
+    fi
 
     if [ "$force_accept" = "true" ]; then
       do_commit "$commit_message"
