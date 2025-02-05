@@ -23,7 +23,7 @@ Below is a diff of all staged changes, coming from:
 git diff --cached
 \`\`\`
 
-Please generate a concise, one-line commit message for these changes. Keep it very short
+Please generate a concise, git commit message for these changes. In the first line, write a short summary of the changes. In the following lines, provide more detailed context if necessary.
 EOF
     }
 
