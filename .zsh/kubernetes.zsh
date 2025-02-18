@@ -110,7 +110,7 @@ if has "kubectl"; then
         echo "Re-running 'helm_template_debug_with_deps' recursively..."
         helm_template_debug_with_deps "$dir"
       else
-        echo "$output"
+        echo -e "$output"
       fi
     }
 
