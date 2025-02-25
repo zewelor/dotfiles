@@ -8,7 +8,7 @@ if has "llm"; then
   gsum() {
     # Function to generate commit message using the gemini model
     generate_commit_message() {
-      local model="gemini-2.0-flash-lite-preview-02-05"
+      local model="gemini-2.0-flash"
       local diff_content=$(git --no-pager diff --cached)
 
       if [ -z "$diff_content" ]; then
