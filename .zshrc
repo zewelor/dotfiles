@@ -285,6 +285,10 @@ if has "bat"; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 
+if has "rg"; then
+  alias rg='rg -i'
+fi
+
 if has yt-dlp; then
   function youtube-extract-audio () {
     yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(title)s.%(ext)s' "$@"
