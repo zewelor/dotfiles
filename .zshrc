@@ -187,7 +187,8 @@ zinit wait lucid for \
 alias instaluj="\sudo apt install -y"
 alias szukaj="\sudo apt-cache search"
 alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs --no-run-if-empty \sudo dpkg --purge"
-alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt full-upgrade -y && \sudo apt autoremove -y --purge$(has "flatpak" && echo " && flatpak update -y") $(has "snap" && echo " && snap refresh")"
+# Pipx nees to be updated as user
+alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt full-upgrade -y && \sudo apt autoremove -y --purge$(has "flatpak" && echo " && flatpak update -y") $(has "snap" && echo " && snap refresh") $(has "pipx" && echo " && sudo -u omen pipx upgrade-all")"
 
 # Git
 if has "git"; then
