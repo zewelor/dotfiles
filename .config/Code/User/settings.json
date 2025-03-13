@@ -97,7 +97,6 @@
     "git.ignoreRebaseWarning": true,
     "gitlens.launchpad.indicator.enabled": false,
     "editor.formatOnPaste": true,
-    "editor.formatOnSave": true,
     "files.associations": {
         ".bash_history": "plaintext"
     },
