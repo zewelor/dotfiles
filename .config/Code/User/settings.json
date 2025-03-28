@@ -112,4 +112,7 @@
     "github.copilot.selectedCompletionModel": "gpt-4o-copilot",
     "github.copilot.chat.codesearch.enabled": true,
     "liveServer.settings.donotShowInfoMsg": true,
+    "gitlens.telemetry.enabled": false,
+    "ansible.lightspeed.suggestions.enabled": false,
+    "terminal.integrated.suggest.enabled": true,
 }
