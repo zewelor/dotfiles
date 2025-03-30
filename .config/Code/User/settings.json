@@ -115,4 +115,5 @@
     "gitlens.telemetry.enabled": false,
     "ansible.lightspeed.suggestions.enabled": false,
     "terminal.integrated.suggest.enabled": true,
+    "ansible.lightspeed.enabled": false,
 }
