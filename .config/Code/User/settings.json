@@ -133,6 +133,17 @@
                     "BRAVE_API_KEY",
                     "mcp/brave-search"
                 ]
+            },
+            "perplexity-ask": {
+                "command": "docker",
+                "args": [
+                    "run",
+                    "-i",
+                    "--rm",
+                    "-e",
+                    "PERPLEXITY_API_KEY",
+                    "mcp/perplexity-ask"
+                ]
             }
         }
     },
