@@ -46,7 +46,9 @@
     "dev.containers.dockerComposePath": "docker compose",
     "vim.easymotion": true,
     "settingsSync.ignoredSettings": [
-        "editor.fontSize"
+        "editor.fontSize",
+        "-ansible.python.activationScript",
+        "-ansible.python.interpreterPath"
     ],
     "editor.inlineSuggest.enabled": true,
     "git.ignoreMissingGitWarning": true,
@@ -109,7 +111,7 @@
     },
     "github.copilot.nextEditSuggestions.enabled": true,
     "github.copilot.chat.edits.codesearch.enabled": true,
-    "github.copilot.selectedCompletionModel": "gpt-4o-copilot",
+    "github.copilot.selectedCompletionModel": "",
     "github.copilot.chat.codesearch.enabled": true,
     "liveServer.settings.donotShowInfoMsg": true,
     "gitlens.telemetry.enabled": false,
@@ -119,4 +121,19 @@
     "chat.agent.enabled": true,
     "github.copilot.chat.agent.thinkingTool": true,
     "chat.editing.confirmEditRequestRetry": false,
+    "mcp": {
+        "servers": {
+            "brave": {
+                "command": "docker",
+                "args": [
+                    "run",
+                    "-i",
+                    "--rm",
+                    "-e",
+                    "BRAVE_API_KEY",
+                    "mcp/brave-search"
+                ]
+            }
+        }
+    },
 }
