@@ -110,7 +110,6 @@
         "all": true
     },
     "github.copilot.nextEditSuggestions.enabled": true,
-    "github.copilot.chat.edits.codesearch.enabled": true,
     "github.copilot.selectedCompletionModel": "",
     "github.copilot.chat.codesearch.enabled": true,
     "liveServer.settings.donotShowInfoMsg": true,
