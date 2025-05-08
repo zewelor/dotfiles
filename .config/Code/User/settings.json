@@ -47,8 +47,6 @@
     "vim.easymotion": true,
     "settingsSync.ignoredSettings": [
         "editor.fontSize",
-        "-ansible.python.activationScript",
-        "-ansible.python.interpreterPath"
     ],
     "editor.inlineSuggest.enabled": true,
     "git.ignoreMissingGitWarning": true,
@@ -87,24 +85,13 @@
     "dev.containers.defaultExtensions": [
         "GitHub.copilot"
     ],
-    "gitlens.showWhatsNewAfterUpgrades": false,
-    "gitlens.plusFeatures.enabled": false,
-    "gitlens.currentLine.enabled": false,
-    "gitlens.showWelcomeOnInstall": false,
-    "gitlens.virtualRepositories.enabled": false,
-    "gitlens.codeLens.enabled": false,
     "git.autofetch": true,
     "files.trimTrailingWhitespace": true,
     "rubyLsp.rubyExecutablePath": "/home/omen/.local/share/mise/shims/ruby",
     "git.ignoreRebaseWarning": true,
-    "gitlens.launchpad.indicator.enabled": false,
     "editor.formatOnPaste": true,
     "files.associations": {
         ".bash_history": "plaintext"
-    },
-    "chat.editing.alwaysSaveWithGeneratedChanges": true,
-    "vs-kubernetes": {
-        "vs-kubernetes.crd-code-completion": "disabled"
     },
     "rubyLsp.featureFlags": {
         "all": true
@@ -112,9 +99,6 @@
     "github.copilot.nextEditSuggestions.enabled": true,
     "github.copilot.selectedCompletionModel": "",
     "github.copilot.chat.codesearch.enabled": true,
-    "liveServer.settings.donotShowInfoMsg": true,
-    "gitlens.telemetry.enabled": false,
-    "ansible.lightspeed.suggestions.enabled": false,
     "terminal.integrated.suggest.enabled": true,
     "ansible.lightspeed.enabled": false,
     "chat.agent.enabled": true,
@@ -143,7 +127,29 @@
                     "PERPLEXITY_API_KEY",
                     "mcp/perplexity-ask"
                 ]
+            },
+            "github": {
+                "command": "docker",
+                "args": [
+                    "run",
+                    "-i",
+                    "--rm",
+                    "-e",
+                    "GITHUB_PERSONAL_ACCESS_TOKEN",
+                    "ghcr.io/github/github-mcp-server"
+                ],
+                "env": {
+                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
+                }
             }
-        }
+        },
+        "inputs": [
+            {
+                "id": "github_token",
+                "type": "promptString",
+                "description": "GitHub Personal Access Token",
+                "password": true
+            }
+        ]
     },
 }
