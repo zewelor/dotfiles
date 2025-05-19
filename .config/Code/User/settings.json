@@ -152,7 +152,6 @@
             }
         ]
     },
-    "rubyLsp.customRubyCommand": "source dockerized.sh",
     "vs-kubernetes": {
         "vs-kubernetes.crd-code-completion": "disabled"
     },
