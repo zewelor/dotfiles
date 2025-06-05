@@ -155,4 +155,7 @@
     "vs-kubernetes": {
         "vs-kubernetes.crd-code-completion": "disabled"
     },
+    "remote.autoForwardPortsSource": "hybrid",
+    "remote.autoForwardPorts": false,
+    "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
 }
