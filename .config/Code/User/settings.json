@@ -158,4 +158,5 @@
     "remote.autoForwardPortsSource": "hybrid",
     "remote.autoForwardPorts": false,
     "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
+    "docker.extension.enableComposeLanguageServer": false,
 }
