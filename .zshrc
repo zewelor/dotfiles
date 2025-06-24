@@ -348,7 +348,9 @@ fi
 
 # https://martinheinz.dev/blog/110
 unsetopt SHARE_HISTORY
-export HISTFILE="$HOME/.zsh_history"
+# Store history in XDG compliant location
+export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
+[[ ! -d ${HISTFILE:h} ]] && mkdir -p "${HISTFILE:h}"
 export HISTSIZE=1000000
 export HISTIGNORE="ignorespace"
 export SAVEHIST=1000000

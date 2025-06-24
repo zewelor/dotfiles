@@ -14,7 +14,9 @@ LS_COLORS=${LS_COLORS:-'di=34:ln=35:so=32:pi=33:ex=31:bd=36;01:cd=33;01:su=31;40
 
 # enable caching to make completion for commands such as dpkg and apt usable
 zstyle ':completion::complete:*' use-cache on
-zstyle ':completion::complete:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zcompcache"
+zcompcache_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+mkdir -p "$zcompcache_dir"
+zstyle ':completion::complete:*' cache-path "$zcompcache_dir/zcompcache"
 
 # group matches and describe
 zstyle ':completion:*:*:*:*:*' menu select
