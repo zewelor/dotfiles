@@ -33,12 +33,12 @@ if [ -d "$HOME/.local/share/yabridge/" ]; then
   path+=("$HOME/.local/share/yabridge/")
 
   function update-yabridge () {
-    wget `docker run --rm ghcr.io/dvershinin/lastversion:latest robbert-vdh/yabridge --assets --filter '^((?!ubuntu).)*$'` -O /tmp/yabridge.tar.gz && \
-    cd /tmp && \
-    tar zxvf yabridge.tar.gz && \
-    rm -rf /home/omen/.local/share/yabridge/ && \
-    mv -f yabridge /home/omen/.local/share && \
-    rm /tmp/yabridge.tar.gz
+    wget "$(docker run --rm ghcr.io/dvershinin/lastversion:latest robbert-vdh/yabridge --assets --filter '^((?!ubuntu).)*$')" -O "/tmp/yabridge.tar.gz" && \
+    cd "/tmp" && \
+    tar zxvf "yabridge.tar.gz" && \
+    rm -rf "$HOME/.local/share/yabridge/" && \
+    mv -f "yabridge" "$HOME/.local/share" && \
+    rm "/tmp/yabridge.tar.gz"
     yabridgectl sync
   }
 fi
