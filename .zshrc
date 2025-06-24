@@ -186,7 +186,24 @@ alias instaluj="\sudo apt install -y"
 alias szukaj="\sudo apt-cache search"
 alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs --no-run-if-empty \sudo dpkg --purge"
 # Pipx nees to be updated as user
-alias update="\sudo apt autoremove -y --purge && \sudo apt update && \sudo apt full-upgrade -y && \sudo apt autoremove -y --purge$(has "flatpak" && echo " && sudo -u omen flatpak update -y") $(has "snap" && echo " && snap refresh") $(has "pipx" && echo " && sudo -u omen pipx upgrade-all --include-injected")"
+function update () {
+  sudo apt autoremove -y --purge &&
+  sudo apt update &&
+  sudo apt full-upgrade -y &&
+  sudo apt autoremove -y --purge
+
+  if has "flatpak"; then
+    sudo -u "$USER" flatpak update -y
+  fi
+
+  if has "snap"; then
+    snap refresh
+  fi
+
+  if has "pipx"; then
+    sudo -u "$USER" pipx upgrade-all --include-injected
+  fi
+}
 
 # Git
 if has "git"; then
