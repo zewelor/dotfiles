@@ -14,22 +14,23 @@ setopt globdots               # Include hidden files (those starting with a dot)
 setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
 setopt interactivecomments    # Enable the use of comments in interactive shells
+typeset -U path
 
 # Path manipulation
-if [ -d $HOME/bin ]; then
-  PATH=$PATH:$HOME/bin
+if [ -d "$HOME/bin" ]; then
+  path+=("$HOME/bin")
 fi
 
-if [ -d $HOME/.local/bin ]; then
-  PATH=$PATH:$HOME/.local/bin
+if [ -d "$HOME/.local/bin" ]; then
+  path+=("$HOME/.local/bin")
 fi
 
-if [ -d $HOME/.krew/bin ]; then
-  PATH=$PATH:$HOME/.krew/bin
+if [ -d "$HOME/.krew/bin" ]; then
+  path+=("$HOME/.krew/bin")
 fi
 
-if [ -d $HOME/.local/share/yabridge/ ]; then
-  PATH=$PATH:$HOME/.local/share/yabridge/
+if [ -d "$HOME/.local/share/yabridge/" ]; then
+  path+=("$HOME/.local/share/yabridge/")
 
   function update-yabridge () {
     wget `docker run --rm ghcr.io/dvershinin/lastversion:latest robbert-vdh/yabridge --assets --filter '^((?!ubuntu).)*$'` -O /tmp/yabridge.tar.gz && \
@@ -42,8 +43,8 @@ if [ -d $HOME/.local/share/yabridge/ ]; then
   }
 fi
 
-if [ -d $HOME/go/bin ]; then
-  PATH=$PATH:$HOME/go/bin
+if [ -d "$HOME/go/bin" ]; then
+  path+=("$HOME/go/bin")
 fi
 
 # For snap
