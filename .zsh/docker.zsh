@@ -56,10 +56,10 @@ if has "docker"; then
   # https://github.com/docker/cli/issues/993
   zstyle ':completion:*:*:docker:*' option-stacking yes
 
-  alias czysc_docker='docker container prune ; dkrmI'
+  alias dkcl='docker compose logs'
 
   function dkEsh () {
-    dkE $1 sh
+    docker exec -it $1 sh
   }
 
   function dkCRsh () {
@@ -73,7 +73,7 @@ if has "docker"; then
     # zpcompdef _docker-compose dkcrs="_docker-compose_services"
 
     function dkcrs () {
-      dkc stop $1 && dkc up --force-recreate "$@[2,-1]" $1
+      docker compose stop $1 && docker compose up --force-recreate "$@[2,-1]" $1
     }
 
     # zpcompdef _docker-compose dkcrs="_docker-compose_services"
@@ -85,19 +85,19 @@ if has "docker"; then
     # zpcompdef _docker-compose dkcrsd="_docker-compose_services"
 
     function dkcrsdl () {
-      dkcrsd $1 && dkcl -f $1
+      dkcrsd $1 && docker compose logs -f $1
     }
 
     # zpcompdef _docker-compose dkcrsdl="_docker-compose_services"
 
     function dkcupdate () {
-      dkc stop $1 && dkc pull $1 && dkc up -d $1 && sleep 5 && dkcl -f $1
+      docker compose stop $1 && docker compose pull $1 && docker compose up -d $1 && sleep 5 && docker compose logs -f $1
     }
 
     # zpcompdef _docker-compose dkcupdate="_docker-compose_services"
 
     function dkcupdated () {
-      dkc stop $1 && dkc pull $1 && dkc up -d $1
+      docker compose stop $1 && docker compose pull $1 && docker compose up -d $1
     }
 
     # zpcompdef _docker-compose dkcupdated="_docker-compose_services"
