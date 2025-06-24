@@ -456,9 +456,9 @@ else
 fi
 
 # Local includes
-if [ -d $HOME/.zshrc.d ]; then
-  for file in $HOME/.zshrc.d/*.zsh; do
-    source $file
+if [[ -d "$HOME/.zshrc.d" ]]; then
+  for file in "$HOME"/.zshrc.d/*.zsh(N); do
+    source "$file"
   done
 fi
 
