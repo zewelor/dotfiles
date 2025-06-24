@@ -191,13 +191,15 @@ alias szukaj="\sudo apt-cache search"
 alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs --no-run-if-empty \sudo dpkg --purge"
 # Pipx nees to be updated as user
 function update () {
+  local user='#1000'
+
   sudo apt autoremove -y --purge &&
   sudo apt update &&
   sudo apt full-upgrade -y &&
   sudo apt autoremove -y --purge
 
   if has "flatpak"; then
-    sudo -u "$USER" flatpak update -y
+    sudo -u "$user" flatpak update -y
   fi
 
   if has "snap"; then
@@ -205,7 +207,7 @@ function update () {
   fi
 
   if has "pipx"; then
-    sudo -u "$USER" pipx upgrade-all --include-injected
+    sudo -u "$user" pipx upgrade-all --include-injected
   fi
 }
 
