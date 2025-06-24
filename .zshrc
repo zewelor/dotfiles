@@ -59,7 +59,7 @@ DISABLE_AUTO_TITLE="true"
 
 export VISUAL=vim
 export EDITOR=$VISUAL
-export DEFAULT_USER=`whoami`
+export DEFAULT_USER=$(whoami)
 
 # export DIRENV_LOG_FORMAT=
 # make it more responsive
