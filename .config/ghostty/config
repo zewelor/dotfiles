@@ -45,4 +45,5 @@ theme = Builtin Solarized Light
 # fullscreen = true # Too much fullscreen
 maximize = true
 font-family = "MesloLGS NF"
-font-size = 16
+font-size = 12
+window-save-state = never
