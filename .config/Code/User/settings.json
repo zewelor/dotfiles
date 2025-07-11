@@ -104,54 +104,6 @@
     "chat.agent.enabled": true,
     "github.copilot.chat.agent.thinkingTool": true,
     "chat.editing.confirmEditRequestRetry": false,
-    "mcp": {
-        "servers": {
-            "brave": {
-                "command": "docker",
-                "args": [
-                    "run",
-                    "-i",
-                    "--rm",
-                    "-e",
-                    "BRAVE_API_KEY",
-                    "mcp/brave-search"
-                ]
-            },
-            "perplexity-ask": {
-                "command": "docker",
-                "args": [
-                    "run",
-                    "-i",
-                    "--rm",
-                    "-e",
-                    "PERPLEXITY_API_KEY",
-                    "mcp/perplexity-ask"
-                ]
-            },
-            "github": {
-                "command": "docker",
-                "args": [
-                    "run",
-                    "-i",
-                    "--rm",
-                    "-e",
-                    "GITHUB_PERSONAL_ACCESS_TOKEN",
-                    "ghcr.io/github/github-mcp-server"
-                ],
-                "env": {
-                    "GITHUB_PERSONAL_ACCESS_TOKEN": "${input:github_token}"
-                }
-            }
-        },
-        "inputs": [
-            {
-                "id": "github_token",
-                "type": "promptString",
-                "description": "GitHub Personal Access Token",
-                "password": true
-            }
-        ]
-    },
     "vs-kubernetes": {
         "vs-kubernetes.crd-code-completion": "disabled"
     },
