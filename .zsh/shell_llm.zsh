@@ -8,7 +8,7 @@ if has "llm"; then
   gsum() {
     # Function to generate commit message using the gemini model
     generate_commit_message() {
-      # export LLM_GEMINI_KEY=$GEMINI_API_KEY
+      export LLM_GEMINI_KEY=$GEMINI_API_KEY
       local model="gemini-2.5-flash"
       local diff_content=$(git --no-pager diff --cached)
 
