@@ -49,3 +49,4 @@ font-size = 12
 window-save-state = never
 window-inherit-working-directory = false
 working-directory = home
+window-decoration = server
