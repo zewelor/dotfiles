@@ -111,4 +111,5 @@
     "remote.autoForwardPorts": false,
     "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
     "docker.extension.enableComposeLanguageServer": false,
+    "esphome.dashboardUri": "https://esphome.8567153.xyz/",
 }
