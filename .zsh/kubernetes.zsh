@@ -97,6 +97,7 @@ if has "kubectl"; then
     helm_template_debug_with_deps() {
       local dir="${1:-.}"
       local output
+      helm dependency update "$dir"
       output=$(helm template --debug "$dir" 2>&1)
 
       if echo "$output" | grep -q 'You may need to run `helm dependency build`'; then
