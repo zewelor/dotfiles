@@ -132,6 +132,8 @@ zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or 
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
+zinit light-mode from"gh-r" as"program" for @zellij-org/zellij
+
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
