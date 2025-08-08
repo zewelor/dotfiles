@@ -155,8 +155,6 @@ zinit light-mode from"gh-r" as"program" \
   atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
   mv"gh_*/bin/gh -> gh" for @cli/cli
 
-# zinit light-mode src"asdf.sh" atclone'%atpull' atclone'ln -sf $PWD/asdf.sh $HOME/.asdf/' for @asdf-vm/asdf
-
 # mise
 zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
     pick'mise/bin/mise' \
