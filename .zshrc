@@ -378,7 +378,7 @@ export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
 export HISTSIZE=1000000
 export SAVEHIST=1000000
 # Ignore trivial commands in history
-export HISTORY_IGNORE="(ls|cd|pwd|exit|cd)*"
+export HISTORY_IGNORE="(ls|pwd|exit|cd)*"
 # Don't record commands that start with a space (zsh option)
 setopt HIST_IGNORE_SPACE
 # setopt  NO_NOMATCH
