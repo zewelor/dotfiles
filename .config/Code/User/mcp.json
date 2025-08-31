@@ -8,8 +8,11 @@
 				"--rm",
 				"-e",
 				"BRAVE_API_KEY",
+				"-e",
+				"BRAVE_MCP_TRANSPORT=stdio",
 				"mcp/brave-search"
-			]
+			],
+			"type": "stdio"
 		},
 		"perplexity-ask": {
 			"command": "docker",
