@@ -97,37 +97,70 @@ if has "docker"; then
 
   if [ ! -z "`docker compose version`" ]; then
 
-    # zpcompdef _docker-compose dkcrs="_docker-compose_services"
+    # Small helper: list docker compose service names in current project
+    function _docker_compose_service_names() {
+      docker compose config --services 2>/dev/null
+    }
 
     function dkcrs () {
       docker compose stop $1 && docker compose up --force-recreate "$@[2,-1]" $1
     }
 
-    # zpcompdef _docker-compose dkcrs="_docker-compose_services"
+    # Completion: service names for dkcrs
+    function _dkcrs() {
+      local -a services
+      services=(${(f)"$(_docker_compose_service_names)"})
+      compadd -a services
+    }
+    zpcompdef _dkcrs dkcrs
 
     function dkcrsd () {
       dkcrs $1 -d
     }
 
-    # zpcompdef _docker-compose dkcrsd="_docker-compose_services"
+    # Completion: service names for dkcrsd
+    function _dkcrsd() {
+      local -a services
+      services=(${(f)"$(_docker_compose_service_names)"})
+      compadd -a services
+    }
+    zpcompdef _dkcrsd dkcrsd
 
     function dkcrsdl () {
       dkcrsd $1 && docker compose logs -f $1
     }
 
-    # zpcompdef _docker-compose dkcrsdl="_docker-compose_services"
+    # Completion: service names for dkcrsdl
+    function _dkcrsdl() {
+      local -a services
+      services=(${(f)"$(_docker_compose_service_names)"})
+      compadd -a services
+    }
+    zpcompdef _dkcrsdl dkcrsdl
 
     function dkcupdate () {
       docker compose stop $1 && docker compose pull $1 && docker compose up -d $1 && sleep 5 && docker compose logs -f $1
     }
 
-    # zpcompdef _docker-compose dkcupdate="_docker-compose_services"
+    # Completion: service names for dkcupdate
+    function _dkcupdate() {
+      local -a services
+      services=(${(f)"$(_docker_compose_service_names)"})
+      compadd -a services
+    }
+    zpcompdef _dkcupdate dkcupdate
 
     function dkcupdated () {
       docker compose stop $1 && docker compose pull $1 && docker compose up -d $1
     }
 
-    # zpcompdef _docker-compose dkcupdated="_docker-compose_services"
+    # Completion: service names for dkcupdated
+    function _dkcupdated() {
+      local -a services
+      services=(${(f)"$(_docker_compose_service_names)"})
+      compadd -a services
+    }
+    zpcompdef _dkcupdated dkcupdated
 
     function docker_compose_run_or_exec() {
       local FLAGS
@@ -143,6 +176,18 @@ if has "docker"; then
         docker compose --progress quiet run --rm $FLAGS $1 "$@[2,-1]"
       fi
     }
+
+    # Completion: service name for docker_compose_run_or_exec (first arg only)
+    function _docker_compose_run_or_exec() {
+      if (( CURRENT == 2 )); then
+        local -a services
+        services=(${(f)"$(_docker_compose_service_names)"})
+        compadd -a services
+      else
+        return 1
+      fi
+    }
+    zpcompdef _docker_compose_run_or_exec docker_compose_run_or_exec
   fi
 
 fi
