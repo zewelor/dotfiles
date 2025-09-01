@@ -62,11 +62,38 @@ if has "docker"; then
     docker exec -it $1 sh
   }
 
+  # Small helper: list running container names (one per line)
+  function _docker_running_container_names() {
+    docker ps --format '{{.Names}}' 2>/dev/null
+  }
+
+  # Small helper: list local image references as repo:tag (non-dangling)
+  function _docker_local_image_tags() {
+    docker image ls --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | \
+      grep -v '^<none>:' | grep -v ':<none>$'
+  }
+
+  # Completion for dkEsh: list running containers
+  function _dkEsh() {
+    local -a containers
+    containers=(${(f)"$(_docker_running_container_names)"})
+    compadd -a containers
+  }
+
+  zpcompdef _dkEsh dkEsh
+
   function dkCRsh () {
     docker container run -it --rm --entrypoint "" $1 sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
   }
 
-  zpcompdef _docker dkEsh='_docker_complete_containers_names'
+  # Completion for dkCRsh: list local images (repo:tag)
+  function _dkCRsh() {
+    local -a images
+    images=(${(f)"$(_docker_local_image_tags)"})
+    compadd -a images
+  }
+
+  zpcompdef _dkCRsh dkCRsh
 
   if [ ! -z "`docker compose version`" ]; then
 
@@ -119,4 +146,3 @@ if has "docker"; then
   fi
 
 fi
-
