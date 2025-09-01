@@ -56,6 +56,8 @@ if has "docker"; then
   # https://github.com/docker/cli/issues/993
   zstyle ':completion:*:*:docker:*' option-stacking yes
 
+  # Use zpcompdef for binding completions (zinit/prezto)
+
   alias dkcl='docker compose logs'
 
   function dkEsh () {
@@ -99,7 +101,15 @@ if has "docker"; then
 
     # Small helper: list docker compose service names in current project
     function _docker_compose_service_names() {
-      docker compose config --services 2>/dev/null
+      local out status
+      out=$(docker compose config --services 2>/dev/null)
+      status=$?
+      if (( status != 0 )); then
+        echo "Docker Compose file not detected in this directory." >&2
+        echo "Run in a Compose project (compose.yaml/docker-compose.yml) or set COMPOSE_FILE." >&2
+        return $status
+      fi
+      print -r -- "$out"
     }
 
     function dkcrs () {
@@ -109,7 +119,11 @@ if has "docker"; then
     # Completion: service names for dkcrs
     function _dkcrs() {
       local -a services
-      services=(${(f)"$(_docker_compose_service_names)"})
+      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
+      if (( ${#services} == 0 )); then
+        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
+        return 1
+      fi
       compadd -a services
     }
     zpcompdef _dkcrs dkcrs
@@ -121,7 +135,11 @@ if has "docker"; then
     # Completion: service names for dkcrsd
     function _dkcrsd() {
       local -a services
-      services=(${(f)"$(_docker_compose_service_names)"})
+      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
+      if (( ${#services} == 0 )); then
+        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
+        return 1
+      fi
       compadd -a services
     }
     zpcompdef _dkcrsd dkcrsd
@@ -133,7 +151,11 @@ if has "docker"; then
     # Completion: service names for dkcrsdl
     function _dkcrsdl() {
       local -a services
-      services=(${(f)"$(_docker_compose_service_names)"})
+      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
+      if (( ${#services} == 0 )); then
+        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
+        return 1
+      fi
       compadd -a services
     }
     zpcompdef _dkcrsdl dkcrsdl
@@ -145,7 +167,11 @@ if has "docker"; then
     # Completion: service names for dkcupdate
     function _dkcupdate() {
       local -a services
-      services=(${(f)"$(_docker_compose_service_names)"})
+      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
+      if (( ${#services} == 0 )); then
+        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
+        return 1
+      fi
       compadd -a services
     }
     zpcompdef _dkcupdate dkcupdate
@@ -157,7 +183,11 @@ if has "docker"; then
     # Completion: service names for dkcupdated
     function _dkcupdated() {
       local -a services
-      services=(${(f)"$(_docker_compose_service_names)"})
+      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
+      if (( ${#services} == 0 )); then
+        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
+        return 1
+      fi
       compadd -a services
     }
     zpcompdef _dkcupdated dkcupdated
@@ -181,7 +211,11 @@ if has "docker"; then
     function _docker_compose_run_or_exec() {
       if (( CURRENT == 2 )); then
         local -a services
-        services=(${(f)"$(_docker_compose_service_names)"})
+        services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
+        if (( ${#services} == 0 )); then
+          _message 'No Compose file here (compose.yaml/docker-compose.yml).'
+          return 1
+        fi
         compadd -a services
       else
         return 1
