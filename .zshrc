@@ -280,6 +280,7 @@ alias -g J='| jq'
 alias -g JL='| jq -C | less -R'
 
 # Directory listing
+alias ls='ls --color=auto'
 alias l='ls -1A'         # Lists in one column, hidden files.
 alias ll='ls -lh'        # Lists human readable sizes.
 alias lr='ll -R'         # Lists human readable sizes, recursively.
@@ -300,6 +301,8 @@ alias rsync='noglob rsync'
 alias scp='noglob scp'
 alias sftp='noglob sftp'
 
+# Secure double check
+alias rm='rm -I'
 
 #
 # Cli improvements
