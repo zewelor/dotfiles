@@ -4,6 +4,32 @@
 #
 #
 
+# Lazy load Codex completions to improve shell startup time
+function _codex() {
+  # Remove the function to prevent recursion on subsequent calls
+  unfunction $0
+
+  # Ensure the completion system is initialized
+  if ! type compinit &>/dev/null; then
+    autoload -Uz compinit
+    compinit
+  fi
+
+  eval "$(codex completion zsh)"
+
+  # Re-run the completion function now that real completion is loaded
+  $0 "$@"
+}
+
+zpcompdef _codex codex
+cdx() {
+  if [[ "$1" == "update" ]]; then
+    npm install -g @openai/codex@latest
+  else
+    codex -m gpt-5 -c model_reasoning_effort="high" --search "$@"
+  fi
+}
+
 if has "llm"; then
   gsum() {
     # Function to generate commit message using the gemini model
