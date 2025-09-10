@@ -41,8 +41,12 @@ web2app() {
   local APP_URL="$2"
   local ICON_URL="$3"
   local ICON_DIR="$HOME/.local/share/applications/icons"
-  local DESKTOP_FILE="$HOME/.local/share/applications/${APP_NAME}.desktop"
-  local ICON_PATH="${ICON_DIR}/${APP_NAME}.png"
+
+  # Clean name for filename
+  local clean_name=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed 's/[^a-z0-9-]//g')
+
+  local DESKTOP_FILE="$HOME/.local/share/applications/${clean_name}.desktop"
+  local ICON_PATH="${ICON_DIR}/${clean_name}.png"
 
   mkdir -p -- "$ICON_DIR"
 
@@ -57,14 +61,19 @@ web2app() {
 Version=1.0
 Name=${APP_NAME}
 Comment=${APP_NAME}
-Exec=${(q)BROWSER} --new-window --ozone-platform=wayland --app=${(q)APP_URL} --name=${(q)APP_NAME} --class=${(q)APP_NAME}
+Exec=${(q)BROWSER} --new-window --ozone-platform=wayland --app=${(q)APP_URL} --name=${(q)APP_NAME} --class=${(q)clean_name}
 Terminal=false
 Type=Application
+Categories=Network;WebApp;
 Icon=${ICON_PATH}
+StartupWMClass=$clean_name
 StartupNotify=true
 EOF
 
   chmod +x -- "$DESKTOP_FILE"
+
+  echo "Created web app: $APP_NAME"
+  echo "Desktop file: $DESKTOP_FILE"
 }
 
 web2app-remove() {
@@ -78,8 +87,10 @@ web2app-remove() {
 
   local APP_NAME="$1"
   local ICON_DIR="$HOME/.local/share/applications/icons"
-  local DESKTOP_FILE="$HOME/.local/share/applications/${APP_NAME}.desktop"
-  local ICON_PATH="${ICON_DIR}/${APP_NAME}.png"
+  local clean_name=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | sed 's/[^a-z0-9-]//g')
+
+  local DESKTOP_FILE="$HOME/.local/share/applications/${clean_name}.desktop"
+  local ICON_PATH="${ICON_DIR}/${clean_name}.png"
 
   rm -f -- "$DESKTOP_FILE"
   rm -f -- "$ICON_PATH"
