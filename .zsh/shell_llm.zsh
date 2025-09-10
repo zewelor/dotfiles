@@ -22,12 +22,30 @@ function _codex() {
 }
 
 zpcompdef _codex codex
+
 cdx() {
   if [[ "$1" == "update" ]]; then
     npm install -g @openai/codex@latest
   else
     codex -m gpt-5 -c model_reasoning_effort="high" --search "$@"
   fi
+}
+
+cdxtmp() {
+  local tmpdir title_after
+  tmpdir="$(mktemp -d)" || return 1
+
+  # What to show after we're done (current dir name + host is a safe default)
+  title_after="${PWD##*/} — ${HOSTNAME:-host}"
+
+  # On exit: restore title and remove the temp dir
+  trap 'printf "\e]2;%s\a" "$title_after"; rm -rf "$tmpdir"' EXIT
+
+  # Set a nice, explicit title for the temp run
+  printf '\e]2;%s\a' "Codex tmp"
+
+  # Do the thing
+  cdx -C "$tmpdir"
 }
 
 if has "llm"; then
