@@ -70,8 +70,6 @@ StartupWMClass=$clean_name
 StartupNotify=true
 EOF
 
-  chmod +x -- "$DESKTOP_FILE"
-
   echo "Created web app: $APP_NAME"
   echo "Desktop file: $DESKTOP_FILE"
 }
