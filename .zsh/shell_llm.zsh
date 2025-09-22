@@ -24,11 +24,7 @@ function _codex() {
 zpcompdef _codex codex
 
 cdx() {
-  if [[ "$1" == "update" ]]; then
-    npm install -g @openai/codex@latest
-  else
-    codex -m gpt-5 -c model_reasoning_effort="high" --search "$@"
-  fi
+  codex -m gpt-5-codex --search "$@"
 }
 
 cdxtmp() {
@@ -42,7 +38,7 @@ cdxtmp() {
   trap 'printf "\e]2;%s\a" "$title_after"; rm -rf "$tmpdir"' EXIT
 
   # Set a nice, explicit title for the temp run
-  printf '\e]2;%s\a' "Codex tmp"
+  printf '\e]2;%s\a' "Codex tmp — ${tmpdir##*/}"
 
   # Do the thing
   cdx -C "$tmpdir"

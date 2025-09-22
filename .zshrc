@@ -163,6 +163,8 @@ zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
 
 zinit light-mode wait"1" lucid from"gh-r" as"program" pick"usage" for @jdx/usage
 
+zinit light-mode from"gh-r" as"program" mv"codex-x86_64-unknown-linux-* -> codex" for @openai/codex
+
 ##########################
 
 zinit wait lucid for \
