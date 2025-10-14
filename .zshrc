@@ -302,7 +302,6 @@ alias find='noglob find'
 alias ftp='noglob ftp'
 alias history='noglob history'
 alias locate='noglob locate'
-alias rsync='noglob rsync'
 alias scp='noglob scp'
 alias sftp='noglob sftp'
 
@@ -312,6 +311,11 @@ alias rm='rm -I'
 #
 # Cli improvements
 #
+if has "rsync"; then
+  alias rsync='noglob rsync'
+  alias cpx='rsync -avz --info=progress2 --human-readable'
+fi
+
 if has "bat"; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
