@@ -1,3 +1,18 @@
+## journal.zsh — quick journaling helper
+#
+# Purpose: Create/open daily Markdown entries and auto-commit/push.
+# Usage:
+#   jj              # today’s note
+#   jj y            # yesterday’s note
+#   jj YYYY-MM-DD   # specific date
+#   jj sync         # git pull + push
+# Paths (fixed):
+#   JROOT = $HOME/personal/journaling
+#   REPO  = git@github.com:zewelor/journaling.git
+# Behavior: auto-push after commit is enabled.
+# Requires: zsh, git, GNU date, $VISUAL or $EDITOR
+# Notes: Files live at $JROOT/YYYY/MM/YYYY-MM-DD.md; umask 077 keeps them private.
+
 
 jj() {
   local JJ_AUTOPUSH="1"
@@ -5,8 +20,8 @@ jj() {
   emulate -L zsh
   setopt err_return pipe_fail nounset
 
-  local JROOT="${JROOT:-$HOME/personal/journaling}"
-  local REPO="${REPO:-git@github.com:zewelor/journaling.git}"
+  local JROOT="$HOME/personal/journaling"
+  local REPO="git@github.com:zewelor/journaling.git"
   local arg="${1:-}"
   local d
 
@@ -73,4 +88,3 @@ jj() {
     [[ "${JJ_AUTOPUSH:-0}" == "1" ]] && git -C "$JROOT" remote get-url origin &>/dev/null && git -C "$JROOT" push || true
   fi
 }
-
