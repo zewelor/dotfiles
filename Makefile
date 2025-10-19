@@ -37,7 +37,7 @@ $(zinit_dir):
 	@echo "=========================="
 
 packages:
-	sudo apt-get install -y --no-install-recommends fontconfig vim silversearcher-ag autoconf tmux zsh fd-find ncdu curl jq stow
+	sudo apt-get install -y --no-install-recommends fontconfig vim silversearcher-ag autoconf tmux zsh fd-find ncdu curl jq stow lazygit
 
 zinit_update:
 	echo "Remember to update root also"
