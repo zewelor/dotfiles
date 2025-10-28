@@ -194,6 +194,7 @@ zinit wait lucid for \
 alias instaluj="\sudo apt install -y"
 alias szukaj="\sudo apt-cache search"
 alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs --no-run-if-empty \sudo dpkg --purge"
+
 # Pipx nees to be updated as user
 function update () {
   local user='#1000'
