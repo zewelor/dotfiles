@@ -115,13 +115,6 @@ zinit light-mode for \
   zdharma-continuum/z-a-submods \
   le0me55i/zsh-extract
 
-# ## Enhancd
-# zinit light b4b4r07/enhancd
-# # https://github.com/babarot/enhancd#configuration
-# export ENHANCD_ARG_DOUBLE_DOT="..."
-# export ENHANCD_ARG_HYPHEN="--"
-# export ENHANCD_FILTER="fzf --height 40%:fzy"
-
 #
 # Programs
 #
@@ -215,6 +208,8 @@ function update () {
   if has "pipx"; then
     sudo -u "$user" pipx upgrade-all --include-injected
   fi
+
+  su
 }
 
 # Git
@@ -345,10 +340,6 @@ function du_sorted () {
   du -h --max-depth=1 $ARGS | sort -h
 }
 
-if has "codium"; then
-  alias code='codium'
-fi
-
 if has "ledfx"; then
   # Start ledfx in while loop for auto restart
   function start-ledfx () {
@@ -360,6 +351,26 @@ if has "ledfx"; then
   }
 
   function start-ledfx-full-setup () {
+    function __ledfx_cleanup () {
+      trap - EXIT
+      trap '' INT TERM
+
+      echo "Enabling bluetooth"
+      sudo rfkill unblock bluetooth
+
+      echo "Turn on docker"
+      sudo systemctl start docker
+      sudo systemctl start docker.socket
+
+      trap - INT TERM
+      unset -f __ledfx_cleanup
+    }
+
+    # Ensure bluetooth and docker get restored even if interrupted.
+    trap '__ledfx_cleanup' EXIT
+    trap '__ledfx_cleanup; return 130' INT
+    trap '__ledfx_cleanup; return 143' TERM
+
     echo "Disabling bluetooth"
     sudo rfkill block bluetooth
 
@@ -369,13 +380,12 @@ if has "ledfx"; then
 
     echo "Starting ledfx"
     start-ledfx
+    local exit_code=$?
 
-    echo "Enabling bluetooth"
-    sudo rfkill unblock bluetooth
+    trap - EXIT INT TERM
+    __ledfx_cleanup
 
-    echo "Turn on docker"
-    sudo systemctl start docker
-    sudo systemctl start docker.socket
+    return $exit_code
   }
 fi
 
@@ -505,7 +515,7 @@ fi
 eval "$(mise activate zsh --shims)"
 
 if has "tmuxinator" ; then
-  zinit ice as"completion" mv"tmuxinator* -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
+  zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
 
   alias mux="tmuxinator"
 fi

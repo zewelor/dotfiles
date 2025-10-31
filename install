@@ -98,11 +98,9 @@ configure_git_conflict_style() {
 
 # Function to setup Atuin
 setup_atuin() {
-  if has "atuin"; then
-    print_banner "Setting up Atuin configuration..."
-    mkdir -p "$CONFIG_DIR/atuin/"
-    ln -sfn "$BASE_DIR/.config/atuin/config.toml" "$CONFIG_DIR/atuin/config.toml"
-  fi
+  print_banner "Setting up Atuin configuration..."
+  mkdir -p "$CONFIG_DIR/atuin/"
+  ln -sfn "$BASE_DIR/.config/atuin/config.toml" "$CONFIG_DIR/atuin/config.toml"
 }
 
 # Function to setup SSH configuration
@@ -113,21 +111,17 @@ setup_ssh() {
 
 # Function to setup Midnight Commander
 setup_mc() {
-  if has "mc"; then
-    print_banner "Setting up Midnight Commander..."
-    mkdir -p "$HOME_DIR/.mc/"
-    curl -fsSL "https://raw.githubusercontent.com/peel/mc/master/solarized.ini" -o "$HOME_DIR/.mc/solarized.ini"
-  fi
+  print_banner "Setting up Midnight Commander..."
+  mkdir -p "$HOME_DIR/.mc/"
+  curl -fsSL "https://raw.githubusercontent.com/peel/mc/master/solarized.ini" -o "$HOME_DIR/.mc/solarized.ini"
 }
 
 # Function to setup Vim
 setup_vim() {
-  if has "vim"; then
-    print_banner "Setting up Vim..."
-    mkdir -p "$HOME_DIR/.vim/"{autoload,undo,swapfiles,backupfiles}
-    curl -fsSLo "$HOME_DIR/.vim/autoload/plug.vim" --create-dirs "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
-    vim +PlugInstall +qall
-  fi
+  print_banner "Setting up Vim..."
+  mkdir -p "$HOME_DIR/.vim/"{autoload,undo,swapfiles,backupfiles}
+  curl -fsSLo "$HOME_DIR/.vim/autoload/plug.vim" --create-dirs "https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+  vim +PlugInstall +qall
 }
 
 # Install symlinks using stow
@@ -141,9 +135,15 @@ add_secret_envs_from_vault
 configure_git_conflict_style
 
 # Setup various tools
-setup_atuin
+if has "atuin"; then
+  setup_atuin
+fi
 setup_ssh
-setup_mc
-setup_vim
+if has "mc"; then
+  setup_mc
+fi
+if has "vim"; then
+  setup_vim
+fi
 
 print_banner "Installation completed successfully."
