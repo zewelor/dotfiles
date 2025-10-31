@@ -1,4 +1,4 @@
-.PHONY: setup packages $(zinit_dir) zinit_update
+.PHONY: all base install-fonts setup packages $(zinit_dir) zinit_update
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -7,10 +7,11 @@ ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
 zinit_dir = ~/.zinit
 
 # List of packages to install (one per line for readability)
-APT_PACKAGES = \
+APT_PACKAGES= \
 	fontconfig \
 	vim \
 	neovim \
+	luarocks \
 	autoconf \
 	tmux \
 	zsh \
