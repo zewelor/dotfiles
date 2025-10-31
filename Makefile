@@ -6,6 +6,21 @@ ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
 
 zinit_dir = ~/.zinit
 
+# List of packages to install (one per line for readability)
+APT_PACKAGES = \
+	fontconfig \
+	vim \
+	autoconf \
+	tmux \
+	zsh \
+	fd-find \
+	ncdu \
+	curl \
+	jq \
+	stow \
+	lazygit \
+	ripgrep
+
 all: base setup
 base: packages install-fonts | $(zinit_dir)
 
@@ -37,7 +52,7 @@ $(zinit_dir):
 	@echo "=========================="
 
 packages:
-	sudo apt-get install -y --no-install-recommends fontconfig vim silversearcher-ag autoconf tmux zsh fd-find ncdu curl jq stow lazygit
+	sudo apt-get install -y --no-install-recommends $(APT_PACKAGES)
 
 zinit_update:
 	echo "Remember to update root also"

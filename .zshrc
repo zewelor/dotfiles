@@ -133,10 +133,6 @@ zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
 zinit light-mode from"gh-r" as"program" mv"delta-*/delta -> delta" for @dandavison/delta
 # A more intuitive version of du written in rust.
 zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/dust
-# A simple, fast and user-friendly alternative to find
-zinit light-mode from"gh-r" as"program" mv"fd* -> fd" pick"fd/fd" for @sharkdp/fd
-# An extremely fast alternative to grep that respects your gitignore
-zinit light-mode from"gh-r" as"program" mv"ripgrep-*/rg -> rg" for @BurntSushi/ripgrep
 # Lucid - Turbo mode is verbose, so you need an option for quiet.
 zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
 
