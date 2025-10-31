@@ -209,7 +209,7 @@ function update () {
     sudo -u "$user" pipx upgrade-all --include-injected
   fi
 
-  su
+  sudo -u "$user" zinit update --all
 }
 
 # Git
