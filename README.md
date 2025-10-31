@@ -31,4 +31,19 @@ Try it:
 nvim
 ```
 
-This setup is intentionally bare (no plugins yet). We will add plugin specs next.
+### GitHub Copilot
+
+Copilot uses the official plugin `github/copilot.vim` configured in `~/.config/nvim/lua/plugins/copilot.lua`.
+
+- Requirements: Node.js >= 18
+- First run: open Neovim and run `:Lazy sync` if needed
+- Authorize: `:Copilot auth` and follow the browser flow
+- Keymaps: no custom mappings are set; defaults apply. See `:help copilot` for details.
+
+### Treesitter
+
+We use `nvim-treesitter` for fast, accurate syntax highlighting and indentation.
+- Plugin spec: `~/.config/nvim/lua/plugins/treesitter.lua`
+- Minimal config enables highlighting only. Install parsers as needed:
+  - Install parser(s): `:TSInstall lua python go` (example)
+  - Update parsers: `:TSUpdate`
