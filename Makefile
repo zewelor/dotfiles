@@ -10,6 +10,7 @@ zinit_dir = ~/.zinit
 APT_PACKAGES = \
 	fontconfig \
 	vim \
+	neovim \
 	autoconf \
 	tmux \
 	zsh \
