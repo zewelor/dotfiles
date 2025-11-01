@@ -1,0 +1,10 @@
+[general]
+# Themes from https://github.com/alacritty/alacritty-theme
+import = [
+    "~/.config/alacritty/solarized_light.toml"
+]
+
+[window]
+# Start Alacritty in fullscreen by default
+# Start Alacritty maximized (z paskiem tytułu)
+startup_mode = "Maximized"
