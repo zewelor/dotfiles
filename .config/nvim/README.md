@@ -17,6 +17,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │       ├── copilot.lua      # GitHub Copilot
 │       ├── mini-icons.lua   # Ikony plików
 │       ├── neotree.lua      # File explorer
+│       ├── telescope.lua    # Wyszukiwanie i fuzzy finder
 │       ├── solarized.lua    # Motyw kolorów
 │       └── which-key.lua    # Podpowiedzi skrótów
 └── lazy-lock.json       # Zablokowane wersje pluginów
@@ -66,6 +67,17 @@ Główne opcje edytora (z `lua/config/options.lua`):
   - `d` — Usuń
   - `r` — Zmień nazwę
   - `?` — Pomoc ze wszystkimi skrótami
+
+---
+
+### **telescope.nvim** — Fuzzy Finder
+
+- **Repo**: [nvim-telescope/telescope.nvim](https://github.com/nvim-telescope/telescope.nvim)
+- **Cel**: Błyskawiczne wyszukiwanie plików i treści z fuzzy matchingiem
+- **Keymaps**:
+  - `<Space>ff` — Szukaj plików przez Telescope (`find_files`)
+  - `<Space>fg` — Szukaj w treści z ripgrep (`live_grep`)
+- **Dodatkowe info**: Automatycznie używa `fd` jeśli dostępne oraz ładuje rozszerzenie `telescope-fzf-native` gdy dostępne `make`
 
 ---
 
@@ -121,15 +133,23 @@ Główne opcje edytora (z `lua/config/options.lua`):
 ### Z Leaderem (Leader = `<Space>`)
 
 #### File Explorer
+
 - `<Space>e` — Toggle Neo-tree (`:Neotree toggle`)
 - `<Space>o` — Focus Neo-tree (`:Neotree focus`)
 
+#### Wyszukiwanie (Telescope)
+
+- `<Space>ff` — Szukaj plików (Telescope `find_files`)
+- `<Space>fg` — Live grep w projekcie (Telescope `live_grep`)
+
 #### Zapisywanie i wychodzenie
+
 - `<Space>w` — Zapisz plik (`:w`)
 - `<Space>q` — Wyjdź (`:q`)
 - `<Space>Q` — Wyjdź ze wszystkich bez zapisywania (`:qa!`)
 
 #### Okna (splits)
+
 - `<Space>sv` — Podziel pionowo (`:vsplit`)
 - `<Space>sh` — Podziel poziomo (`:split`)
 - `<Space>sc` — Zamknij obecny split (`:close`)
@@ -139,6 +159,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 ### Bez Leadera
 
 #### Nawigacja między oknami
+
 - `<C-h>` — Do lewego okna
 - `<C-j>` — Do dolnego okna
 - `<C-k>` — Do górnego okna
@@ -147,12 +168,14 @@ Główne opcje edytora (z `lua/config/options.lua`):
 - `<S-Tab>` — Cyklicznie do poprzedniego okna
 
 #### Zmiana rozmiaru okien
+
 - `<C-Up>` — Zwiększ wysokość
 - `<C-Down>` — Zmniejsz wysokość
 - `<C-Left>` — Zmniejsz szerokość
 - `<C-Right>` — Zwiększ szerokość
 
 #### Wcięcia w Visual mode
+
 - `<` — Wcięcie w lewo (i zachowaj zaznaczenie)
 - `>` — Wcięcie w prawo (i zachowaj zaznaczenie)
 

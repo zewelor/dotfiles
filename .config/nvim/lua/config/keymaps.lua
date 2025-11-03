@@ -14,6 +14,14 @@ local opts = { noremap = true, silent = true }
 keymap("n", "<leader>e", ":Neotree toggle<CR>", { desc = "Toggle Neo-tree file explorer" })
 keymap("n", "<leader>o", ":Neotree focus<CR>", { desc = "Focus Neo-tree" })
 
+-- Wyszukiwanie: Telescope
+keymap("n", "<leader>ff", function()
+	require("telescope.builtin").find_files()
+end, { desc = "Find files (Telescope)" })
+keymap("n", "<leader>fg", function()
+	require("telescope.builtin").live_grep()
+end, { desc = "Live grep (Telescope)" })
+
 -- Szybkie zapisywanie i wychodzenie
 keymap("n", "<leader>w", ":w<CR>", { desc = "Save file" })
 keymap("n", "<leader>q", ":q<CR>", { desc = "Quit" })

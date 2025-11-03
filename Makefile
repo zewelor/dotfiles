@@ -10,8 +10,6 @@ zinit_dir = ~/.zinit
 APT_PACKAGES= \
 	fontconfig \
 	vim \
-	neovim \
-	luarocks \
 	autoconf \
 	tmux \
 	zsh \
@@ -21,7 +19,8 @@ APT_PACKAGES= \
 	jq \
 	stow \
 	lazygit \
-	ripgrep
+	ripgrep \
+	fd-find
 
 all: base setup
 base: packages install-fonts | $(zinit_dir)
@@ -55,6 +54,7 @@ $(zinit_dir):
 
 packages:
 	sudo apt-get install -y --no-install-recommends $(APT_PACKAGES)
+	sudo snap install nvim --classic
 
 zinit_update:
 	echo "Remember to update root also"
