@@ -15,6 +15,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   └── plugins/         # Każdy plugin = osobny plik
 │       ├── blink.lua        # Autouzupełnianie
 │       ├── copilot.lua      # GitHub Copilot
+│       ├── gx.lua           # Otwieranie linków
 │       ├── mini-icons.lua   # Ikony plików
 │       ├── neotree.lua      # File explorer
 │       ├── telescope.lua    # Wyszukiwanie i fuzzy finder
@@ -89,6 +90,16 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 ---
 
+### **gx.nvim** — Otwieranie linków
+
+- **Repo**: [chrishrb/gx.nvim](https://github.com/chrishrb/gx.nvim)
+- **Cel**: Umożliwia otwieranie linków, repozytoriów i numerów zgłoszeń bez `netrw`
+- **Keymaps**:
+  - `gx` — Otwórz link lub zaznaczenie w domyślnej przeglądarce (`:Browse`)
+- **Dodatkowe info**: Automatycznie wyszukuje w sieci, gdy nie znajdzie bezpośredniego URL-a. Domyślnie używa `xdg-open`; jeśli brakuje, ustaw zmienną `BROWSER` lub doinstaluj `xdg-utils`.
+
+---
+
 ### **blink.cmp** — Autouzupełnianie
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
@@ -158,6 +169,11 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 ### Bez Leadera
 
+#### Otwieranie linków
+
+- `gx` — Otwórz link pod kursorem lub zaznaczenie (`:Browse`)
+- `<C-LeftMouse>` — Otwórz link pod kursorem myszy (`:Browse`) w plikach tekstowych/Markdown; w pozostałych zachowuje domyślne skakanie po tagach
+
 #### Nawigacja między oknami
 
 - `<C-h>` — Do lewego okna
@@ -196,6 +212,7 @@ nvim
 ```
 
 Przy pierwszym uruchomieniu:
+
 1. `lazy.nvim` zainstaluje się automatycznie
 2. Wszystkie pluginy zostaną zainstalowane
 3. Po zakończeniu instalacji zrestartuj Neovim
@@ -203,6 +220,7 @@ Przy pierwszym uruchomieniu:
 ## 📝 Dodawanie nowego pluginu
 
 1. **Stwórz nowy plik** w `lua/plugins/nazwa.lua`:
+
    ```lua
    -- nazwa-pluginu - krótki opis
    return {
@@ -226,20 +244,24 @@ Przy pierwszym uruchomieniu:
 ## 🔍 Troubleshooting
 
 ### Pluginy się nie instalują
+
 ```vim
 :Lazy sync
 ```
 
 ### Copilot nie działa
+
 ```vim
 :Copilot auth
 ```
 
 ### Brak ikon w Neo-tree
+
 - Zainstaluj [Nerd Font](https://www.nerdfonts.com/) (np. `JetBrainsMono Nerd Font`)
 - Ustaw w terminalu
 
 ### Sprawdź health
+
 ```vim
 :checkhealth
 ```
