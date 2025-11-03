@@ -34,13 +34,13 @@ install-fonts:
 	@echo "=========================="
 	@echo "Installing MesloLGS NF font"
 
-	mkdir -p ~/.fonts/
+	mkdir -p ~/.local/share/fonts/
 
 	for font in MesloLGS%20NF%20Regular.ttf MesloLGS%20NF%20Italic.ttf MesloLGS%20NF%20Bold.ttf MesloLGS%20NF%20Bold%20Italic.ttf; do \
-		curl -s -L https://github.com/romkatv/dotfiles-public/blob/master/.local/share/fonts/NerdFonts/$$font?raw=true > ~/.fonts/$$font; \
+		curl -s -L https://github.com/romkatv/dotfiles-public/blob/master/.local/share/fonts/NerdFonts/$$font?raw=true > ~/.local/share/fonts/$$font; \
 	done
 
-	fc-cache -vf ~/.fonts/
+	fc-cache -vf ~/.local/share/fonts/
 	@echo "=========================="
 
 $(zinit_dir):

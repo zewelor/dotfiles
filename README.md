@@ -9,6 +9,21 @@ Some examples here:
 make install
 ```
 
+### Fonts (Nerd Fonts)
+
+The setup automatically installs MesloLGS NF (with icon support) to `~/.local/share/fonts/` (modern XDG default):
+
+```bash
+make install-fonts  # Download and install MesloLGS NF
+```
+
+**Font locations**:
+
+- **Current user** (default): `~/.local/share/fonts/`
+- System-wide (requires sudo): `/usr/share/fonts/`
+
+After installation, set your terminal font to **MesloLGS NF Regular**.
+
 ## Local customizations
 
 Local customization can be done by putting files in the ~/.zshrc.d/ directory. These files will be sourced by the main .zshrc file.
@@ -21,34 +36,34 @@ zinit times
 
 ## Neovim config (lazy.nvim)
 
-Minimalistyczna, nowoczesna konfiguracja Neovim zoptymalizowana pod szybkie edycje w terminalu.
+Minimal, modern Neovim configuration optimized for fast terminal editing.
 
-### Instalacja
+### Neovim installation
 
 ```bash
-make install  # Używa stow do symlinkowania .config/nvim → ~/.config/nvim
-nvim          # Przy pierwszym uruchomieniu lazy.nvim zainstaluje się automatycznie
+make install  # Uses stow to symlink .config/nvim → ~/.config/nvim
+nvim          # On the first launch, lazy.nvim installs automatically
 ```
 
-Po pierwszym uruchomieniu:
+After the first launch:
 
-1. Lazy.nvim pobierze wszystkie pluginy automatycznie
-2. Blink.cmp skompiluje binarne komponenty (Rust)
-3. Autoryzuj Copilot: `:Copilot auth` → otwórz link w przeglądarce
+1. Lazy.nvim automatically installs all plugins
+2. Blink.cmp compiles native components (Rust)
+3. Authorize Copilot: `:Copilot auth` → open the link in your browser
 
-### Struktura konfiguracji
+### Configuration structure
 
 ```text
 .config/nvim/
-├── init.lua                    # Entry point (ładuje lazy + options)
+├── init.lua                    # Entry point (loads lazy + options)
 ├── lua/
 │   ├── config/
-│   │   ├── lazy.lua           # Bootstrap lazy.nvim, ustawienie leader keys
-│   │   └── options.lua        # Wszystkie vim.opt ustawienia
-│   └── plugins/               # Pluginy (auto-importowane przez lazy.nvim)
+│   │   ├── lazy.lua           # Bootstrap lazy.nvim, leader keys
+│   │   └── options.lua        # All vim.opt settings
+│   └── plugins/               # Plugins (auto-imported by lazy.nvim)
 │       ├── blink.lua          # Completion engine
 │       ├── copilot.lua        # GitHub Copilot (AI-assisted coding)
-│       ├── mini-icons.lua     # Icons (lekka alternatywa dla nvim-web-devicons)
+│       ├── mini-icons.lua     # Icons (lightweight alternative to nvim-web-devicons)
 │       ├── neotree.lua        # File explorer (sidebar)
 │       ├── solarized.lua      # Colorscheme (light theme)
 │       └── which-key.lua      # Keybinding hints (popup menu)
@@ -56,164 +71,164 @@ Po pierwszym uruchomieniu:
 
 ---
 
-## 🔌 Pluginy i ich użycie
+## 🔌 Plugins and usage
 
 ### **lazy.nvim** — Plugin manager
 
 - **Repo**: [folke/lazy.nvim](https://github.com/folke/lazy.nvim)
-- **Cel**: Nowoczesny menedżer pluginów z lazy-loadingiem i automatycznym updatem
-- **Komendy**:
-  - `:Lazy` — otwórz dashboard z listą pluginów
-  - `:Lazy sync` — update wszystkich pluginów
-  - `:Lazy clean` — usuń nieużywane pluginy
+- **Purpose**: Modern plugin manager with lazy-loading and automatic updates
+- **Commands**:
+  - `:Lazy` — open the dashboard with the plugin list
+  - `:Lazy sync` — update all plugins
+  - `:Lazy clean` — remove unused plugins
 
-**Leader key**: `Space` (ustawiony w `lazy.lua`)
+**Leader key**: `Space` (set in `lazy.lua`)
 
 ---
 
 ### **blink.cmp** — Completion engine
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
-- **Cel**: Szybki, nowoczesny autocompletion (napisany w Rust + Lua)
-- **Źródła**: LSP, path, snippets, buffer, **Copilot**
+- **Purpose**: Fast, modern autocompletion (Rust + Lua)
+- **Sources**: LSP, path, snippets, buffer, **Copilot**
 - **Keymaps** (preset: `default`):
-  - `Ctrl-Space` — otwórz menu completion lub dokumentację
-  - `Ctrl-n` / `Ctrl-p` lub `↑` / `↓` — nawigacja po listach
-  - `Ctrl-y` — zaakceptuj wybrane completion
-  - `Ctrl-e` — zamknij menu
-  - `Tab` / `Shift-Tab` — nawigacja po snippetach (jeśli aktywne)
+  - `Ctrl-Space` — open completion menu or docs
+  - `Ctrl-n` / `Ctrl-p` or `↑` / `↓` — navigate items
+  - `Ctrl-y` — accept selected completion
+  - `Ctrl-e` — close menu
+  - `Tab` / `Shift-Tab` — navigate snippets (when active)
 
-**Fuzzy matching**: Rust implementation (fallback do Lua, jeśli Rust niedostępny)
+**Fuzzy matching**: Rust implementation (falls back to Lua if Rust is unavailable)
 
 ---
 
 ### **GitHub Copilot** — AI code suggestions
 
 - **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua) + [fang2hou/blink-copilot](https://github.com/fang2hou/blink-copilot)
-- **Cel**: AI-asystowane sugestie kodu bezpośrednio w completion menu
+- **Purpose**: AI-assisted code suggestions directly in the completion menu
 - **Requirements**: Node.js >= 18
-- **Integracja**: Copilot suggestions pojawiają się jako opcje w blink.cmp (nie inline)
-- **Autoryzacja**:
+- **Integration**: Copilot suggestions appear as options in blink.cmp (not inline)
+- **Authorization**:
 
   ```vim
   :Copilot auth
   ```
 
-  Otwórz link w przeglądarce i wklej kod.
+  Open the link in your browser and paste the code.
 
-**Użycie**:
+**Usage**:
 
-- Zacznij pisać → Copilot automatycznie sugeruje w menu completion
-- Wybierz sugestię używając `Ctrl-n/p` i zaakceptuj `Ctrl-y`
-- Copilot ma wyższy priorytet (`score_offset = 100`)
+- Start typing → Copilot suggests in the completion menu automatically
+- Select a suggestion with `Ctrl-n/p` and accept with `Ctrl-y`
+- Copilot has higher priority (`score_offset = 100`)
 
 ---
 
 ### **neo-tree.nvim** — File explorer
 
 - **Repo**: [nvim-neo-tree/neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim)
-- **Cel**: Nowoczesny file explorer z drzewem plików (następca NERDTree)
-- **Dependencies**: mini.icons (ikony plików i folderów)
-- **Keymaps** (domyślne neo-tree):
-  - `:Neotree` — otwórz sidebar
+- **Purpose**: Modern file explorer with a tree view (successor to NERDTree)
+- **Dependencies**: mini.icons (file/folder icons)
+- **Keymaps** (neo-tree defaults):
+  - `:Neotree` — open sidebar
   - `:Neotree toggle` — toggle sidebar
-  - W sidebar:
-    - `Enter` — otwórz plik/folder
-    - `a` — dodaj nowy plik
-    - `d` — usuń plik
-    - `r` — zmień nazwę
-    - `?` — help (pełna lista keymaps)
+  - In the sidebar:
+    - `Enter` — open file/folder
+    - `a` — add new file
+    - `d` — delete file
+    - `r` — rename
+    - `?` — help (full keymap list)
 
 ---
 
 ### **mini.icons** — Icon provider
 
 - **Repo**: [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)
-- **Cel**: Lekka alternatywa dla nvim-web-devicons (mniej dependencies, szybsze)
-- **Funkcje**:
-  - Ikony dla plików, folderów, LSP, diagnostics
-  - Mock dla nvim-web-devicons (kompatybilność wsteczna)
-  - Używany przez: neo-tree, which-key
-- **Wymagania**: Nerd Font w terminalu (np. JetBrainsMono Nerd Font)
+- **Purpose**: Lightweight alternative to nvim-web-devicons (fewer dependencies, faster)
+- **Features**:
+  - Icons for files, folders, LSP, diagnostics
+  - Mock for nvim-web-devicons (backward compatible)
+  - Used by: neo-tree, which-key
+- **Requirements**: Nerd Font in your terminal (e.g., JetBrainsMono Nerd Font)
 
 ---
 
 ### **which-key.nvim** — Keybinding hints
 
 - **Repo**: [folke/which-key.nvim](https://github.com/folke/which-key.nvim)
-- **Cel**: Pokazuje dostępne skróty klawiszowe w popup menu gdy zaczniesz wpisywać kombinację
-- **Użycie**:
-  - Naciśnij `Space` (leader) → poczekaj ~200ms → pojawi się menu z dostępnymi opcjami
-  - `<Space>?` — pokaż wszystkie keybindings dla obecnego bufora
+- **Purpose**: Shows available keybindings in a popup as you start a key sequence
+- **Usage**:
+  - Press `Space` (leader) → wait ~200ms → a menu appears with available options
+  - `<Space>?` — show all keybindings for the current buffer
 - **Preset**: `modern` (v3.x)
-- **Ikony**: ustawione na ASCII. Wyłączone ikony mapowań (`icons.mappings = false`), podmienione etykiety klawiszy (np. `Space` → `SPC`, `Tab` → `TAB`, strzałki → `Left/Right/Up/Down`) oraz proste separatory (breadcrumb `>`, separator `->`, group pusty). Dzięki temu nie pojawiają się brakujące glify nawet bez Nerd Font. Jeśli chcesz wrócić do pełnych ikon NF, usuń te nadpisania w `which-key.lua`.
+- **Icons**: set to ASCII. Mapping icons disabled (`icons.mappings = false`), labels adjusted (e.g., `Space` → `SPC`, `Tab` → `TAB`, arrows → `Left/Right/Up/Down`) and simple separators (breadcrumb `>`, separator `->`, group empty). This avoids missing glyphs even without a Nerd Font. If you want full NF icons back, remove these overrides in `which-key.lua`.
 
-**Jak to działa**: Gdy naciskasz leader key lub inny prefiks (np. `g`, `z`), which-key automatycznie pokazuje wszystkie dostępne kontynuacje z ich opisami. Nie musisz pamiętać wszystkich skrótów! 🎯
+**How it works**: When you press the leader key or another prefix (e.g., `g`, `z`), which-key shows all available continuations with descriptions. You don’t have to memorize every mapping! 🎯
 
 ---
 
-## ⌨️ Własne skróty klawiszowe (Keymaps)
+## ⌨️ Custom keymaps
 
-**Leader key**: `Space` (spacja)
+**Leader key**: `Space`
 
-💡 **Tip**: Naciśnij `Space` i poczekaj - **which-key** pokaże ci wszystkie dostępne opcje!
+💡 **Tip**: Press `Space` and wait — **which-key** will show everything available!
 
-### Leader mappings (Space + klawisz)
+### Leader mappings (Space + key)
 
-#### Pomoc & Keybindings
+#### Help & Keybindings
 
-- `<Space>?` — Pokaż wszystkie keybindings dla obecnego bufora (which-key)
+- `<Space>?` — Show all keybindings for the current buffer (which-key)
 
-#### File Explorer & Nawigacja
+#### File Explorer & Navigation
 
-- `<Space>e` — Toggle Neo-tree (otwórz/zamknij file explorer)
-- `<Space>o` — Focus Neo-tree (przeskocz do explorera)
+- `<Space>e` — Toggle Neo-tree (open/close file explorer)
+- `<Space>o` — Focus Neo-tree (jump to explorer)
 
-#### Zapisywanie & Wychodzenie
+#### Save & Quit
 
-- `<Space>w` — Zapisz plik (`:w`)
-- `<Space>q` — Wyjdź (`:q`)
-- `<Space>Q` — Wyjdź bez zapisywania (`:qa!`)
+- `<Space>w` — Save file (`:w`)
+- `<Space>q` — Quit (`:q`)
+- `<Space>Q` — Quit all without saving (`:qa!`)
 
-#### Okna (Splits)
+#### Windows (Splits)
 
-- `<Space>sv` — Split pionowy (`:vsplit`)
-- `<Space>sh` — Split poziomy (`:split`)
-- `<Space>sc` — Zamknij obecne okno (`:close`)
+- `<Space>sv` — Vertical split (`:vsplit`)
+- `<Space>sh` — Horizontal split (`:split`)
+- `<Space>sc` — Close current window (`:close`)
 
-### Skróty bez leadera
+### Non-leader mappings
 
-#### Nawigacja między oknami
+#### Window navigation
 
-- `Ctrl+h` — Przejdź do lewego okna
-- `Ctrl+j` — Przejdź do dolnego okna
-- `Ctrl+k` — Przejdź do górnego okna
-- `Ctrl+l` — Przejdź do prawego okna
+- `Ctrl+h` — Go to the left window
+- `Ctrl+j` — Go to the bottom window
+- `Ctrl+k` — Go to the top window
+- `Ctrl+l` — Go to the right window
 
-#### Zmiana rozmiaru okien
+#### Resize windows
 
-- `Ctrl+↑` — Zwiększ wysokość
-- `Ctrl+↓` — Zmniejsz wysokość
-- `Ctrl+←` — Zmniejsz szerokość
-- `Ctrl+→` — Zwiększ szerokość
+- `Ctrl+↑` — Increase height
+- `Ctrl+↓` — Decrease height
+- `Ctrl+←` — Decrease width
+- `Ctrl+→` — Increase width
 
-#### Wcięcia w trybie Visual
+#### Indent in Visual mode
 
-- `<` — Wcięcie w lewo (zachowuje zaznaczenie)
-- `>` — Wcięcie w prawo (zachowuje zaznaczenie)
+- `<` — Indent left (keeps selection)
+- `>` — Indent right (keeps selection)
 
-**Pełna lista**: zobacz `.config/nvim/lua/config/keymaps.lua`
+**Full list**: see `.config/nvim/lua/config/keymaps.lua`
 
 ---
 
 ### **solarized.nvim** — Colorscheme
 
 - **Repo**: [maxmx03/solarized.nvim](https://github.com/maxmx03/solarized.nvim)
-- **Cel**: Klasyczny motyw Solarized (wersja light)
-- **Ustawienia**:
+- **Purpose**: Classic Solarized theme (light variant)
+- **Settings**:
   - Background: `light`
-  - Truecolor: włączony (`termguicolors`)
-- **Przełączanie dark/light** (opcjonalnie):
+  - Truecolor: on (`termguicolors`)
+- **Toggle dark/light** (optional):
 
   ```vim
   :set background=dark
@@ -224,28 +239,28 @@ Po pierwszym uruchomieniu:
 
 ## ⚙️ Core Options (lua/config/options.lua)
 
-Najważniejsze ustawienia edytora:
+Key editor settings:
 
-| Opcja | Wartość | Opis |
+| Option | Value | Description |
 |-------|---------|------|
-| `number` | `true` | Numery linii (absolutne na bieżącej linii) |
-| `relativenumber` | `true` | Relative numbers (łatwiejsze skoki `5j`, `10k`) |
-| `clipboard` | `"unnamedplus"` | Współdzielony clipboard z systemem (wymaga `xclip` lub `wl-clipboard`) |
-| `expandtab` | `true` | Spacje zamiast tabów |
-| `shiftwidth` | `2` | Autoindent width (2 spacje) |
-| `ignorecase` + `smartcase` | `true` | Case-insensitive search (chyba że użyjesz wielkich liter) |
-| `undofile` | `true` | Persistent undo (historia edycji przetrwa restart) |
-| `splitright` / `splitbelow` | `true` | Nowe splity po prawej/na dole |
+| `number` | `true` | Line numbers (absolute on the current line) |
+| `relativenumber` | `true` | Relative numbers (easier jumps like `5j`, `10k`) |
+| `clipboard` | `"unnamedplus"` | Shared clipboard with the OS (requires `xclip` or `wl-clipboard`) |
+| `expandtab` | `true` | Use spaces instead of tabs |
+| `shiftwidth` | `2` | Autoindent width (2 spaces) |
+| `ignorecase` + `smartcase` | `true` | Case-insensitive search unless uppercase used |
+| `undofile` | `true` | Persistent undo (history survives restarts) |
+| `splitright` / `splitbelow` | `true` | New splits on the right/bottom |
 
-**Pełna lista**: zobacz `.config/nvim/lua/config/options.lua`
+**Full list**: see `.config/nvim/lua/config/options.lua`
 
 ---
 
 ## 🚀 Quick Start
 
-### Podstawowy workflow
+### Basic workflow
 
-1. **Otwórz plik**:
+1. **Open a file**:
 
    ```bash
    nvim file.txt
@@ -257,17 +272,17 @@ Najważniejsze ustawienia edytora:
    :Neotree toggle
    ```
 
-3. **Edycja z autocompletion**:
-   - Tryb INSERT → zacznij pisać
-   - `Ctrl-Space` → otwórz menu completion
-   - `Ctrl-n/p` → wybierz opcję
-   - `Ctrl-y` → zaakceptuj
+3. **Editing with autocompletion**:
+   - INSERT mode → start typing
+   - `Ctrl-Space` → open completion menu
+   - `Ctrl-n/p` → select an item
+   - `Ctrl-y` → accept
 
 4. **Copilot**:
-   - Suggestions automatycznie w menu completion
-   - Zaakceptuj jak zwykłe completion (`Ctrl-y`)
+   - Suggestions appear automatically in the completion menu
+   - Accept like a regular completion (`Ctrl-y`)
 
-5. **Update pluginów**:
+5. **Update plugins**:
 
    ```vim
    :Lazy sync
@@ -275,34 +290,34 @@ Najważniejsze ustawienia edytora:
 
 ---
 
-## 📦 Rozszerzanie konfiguracji
+## 📦 Extending the configuration
 
-### Dodawanie nowego pluginu
+### Adding a new plugin
 
-1. Stwórz nowy plik w `lua/plugins/`, np. `telescope.lua`:
+1. Create a new file in `lua/plugins/`, e.g., `telescope.lua`:
 
    ```lua
    return {
      'nvim-telescope/telescope.nvim',
      dependencies = { 'nvim-lua/plenary.nvim' },
      config = function()
-       -- Twoja konfiguracja
+       -- Your configuration
      end,
    }
    ```
 
-2. Restartuj Neovim → Lazy.nvim automatycznie zainstaluje plugin
+2. Restart Neovim → Lazy.nvim will automatically install the plugin
 
-### Dodawanie LSP (w przyszłości)
+### Adding LSP (later)
 
-Gdy będziesz potrzebować LSP dla konkretnych języków:
+When you need LSP for specific languages:
 
 ```bash
-# Dodaj do lua/plugins/lsp.lua
+# Add to lua/plugins/lsp.lua
 return {
   'neovim/nvim-lspconfig',
   dependencies = { 'williamboman/mason.nvim' },
-  -- ... konfiguracja
+  -- ... configuration
 }
 ```
 
@@ -310,23 +325,23 @@ return {
 
 ## 🐛 Troubleshooting
 
-### Copilot nie działa
+### Copilot not working
 
 ```vim
-:Copilot status       " Sprawdź status
-:Copilot auth         " Reautoryzuj
+:Copilot status       " Check status
+:Copilot auth         " Re-authenticate
 ```
 
-### Blink.cmp nie pokazuje suggestions
+### Blink.cmp doesn’t show suggestions
 
 ```vim
-:Lazy sync            " Update pluginów
-:checkhealth blink    " Sprawdź health
+:Lazy sync            " Update plugins
+:checkhealth blink    " Check health
 ```
 
 ---
 
-## 📚 Dalsze zasoby
+## 📚 Further resources
 
 - [lazy.nvim docs](https://github.com/folke/lazy.nvim)
 - [blink.cmp docs](https://github.com/saghen/blink.cmp)

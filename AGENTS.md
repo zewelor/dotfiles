@@ -8,6 +8,8 @@ Ten plik zawiera instrukcje i przypomnienia dla AI asystentów (GitHub Copilot, 
 
 **WAŻNE**: Przy każdej zmianie w konfiguracji Neovim, ZAWSZE aktualizuj `README.md`!
 
+README.md ma być po angielsku i zawierać
+
 #### Kiedy aktualizować README.md:
 
 1. **Dodanie/usunięcie pluginu** (`lua/plugins/*.lua`)
