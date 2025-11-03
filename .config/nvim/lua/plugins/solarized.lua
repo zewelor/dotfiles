@@ -1,3 +1,4 @@
+-- Solarized colorscheme with light background setup
 return {
   "maxmx03/solarized.nvim",
   lazy = false,
