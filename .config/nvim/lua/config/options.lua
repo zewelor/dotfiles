@@ -39,3 +39,26 @@ vim.opt.undolevels     = 10000     -- Generous undo levels per buffer
 vim.opt.splitright     = true      -- New vertical splits open to the right
 vim.opt.splitbelow     = true      -- New horizontal splits open below
 vim.opt.equalalways    = true      -- Keep windows evenly sized when opening/closing splits
+
+-- Faster feedback from LSP/diagnostics and mapped key sequences
+vim.opt.updatetime  = 200          -- affects CursorHold, diagnostics refresh
+vim.opt.timeoutlen  = 400          -- shorter wait for keymaps (tweak to taste)
+
+-- Scrolling ergonomics
+vim.opt.scrolloff     = 4          -- keep N lines of context above/below cursor
+vim.opt.sidescrolloff = 8          -- keep N columns of context left/right
+
+-- Safer writes + persistent undo files in XDG location
+local state = vim.fn.stdpath("state") -- e.g. ~/.local/state/nvim
+vim.opt.undodir     = state .. "/undo//"    -- '//' keeps full path to avoid name collisions
+vim.opt.undoreload  = 10000                 -- lines kept when reloading a buffer
+vim.opt.writebackup = true                  -- safe write: temp file -> atomic replace
+vim.opt.directory   = state .. "/swap//"    -- harmless with swapfile=false; ready if you enable it
+vim.opt.backupdir   = state .. "/backup//"  -- used only if you later set backup=true
+
+-- Better completion UX (for nvim-cmp)
+vim.opt.completeopt = { "menu", "menuone", "noselect" }
+
+-- Small QoL
+vim.opt.mouse   = "a"             -- quick resize/click when needed
+vim.opt.confirm = true            -- prompt to save when quitting modified buffers
