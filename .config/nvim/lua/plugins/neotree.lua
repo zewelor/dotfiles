@@ -4,8 +4,8 @@ return {
   branch = "v3.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
-    "nvim-tree/nvim-web-devicons",
     "MunifTanjim/nui.nvim",
+    "echasnovski/mini.icons", -- Ikony (zamiast nvim-web-devicons)
   },
   lazy = false, -- neo-tree will lazily load itself
 }

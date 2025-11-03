@@ -4,6 +4,12 @@ import = [
     "~/.config/alacritty/solarized_light.toml"
 ]
 
+[font]
+size = 12
+
+[font.normal]
+family = "MesloLGS NF"
+
 [window]
 # Start Alacritty in fullscreen by default
 # Start Alacritty maximized (z paskiem tytułu)

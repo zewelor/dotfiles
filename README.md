@@ -48,8 +48,10 @@ Po pierwszym uruchomieniu:
 │   └── plugins/               # Pluginy (auto-importowane przez lazy.nvim)
 │       ├── blink.lua          # Completion engine
 │       ├── copilot.lua        # GitHub Copilot (AI-assisted coding)
+│       ├── mini-icons.lua     # Icons (lekka alternatywa dla nvim-web-devicons)
 │       ├── neotree.lua        # File explorer (sidebar)
-│       └── solarized.lua      # Colorscheme (light theme)
+│       ├── solarized.lua      # Colorscheme (light theme)
+│       └── which-key.lua      # Keybinding hints (popup menu)
 ```
 
 ---
@@ -111,6 +113,7 @@ Po pierwszym uruchomieniu:
 
 - **Repo**: [nvim-neo-tree/neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim)
 - **Cel**: Nowoczesny file explorer z drzewem plików (następca NERDTree)
+- **Dependencies**: mini.icons (ikony plików i folderów)
 - **Keymaps** (domyślne neo-tree):
   - `:Neotree` — otwórz sidebar
   - `:Neotree toggle` — toggle sidebar
@@ -121,11 +124,85 @@ Po pierwszym uruchomieniu:
     - `r` — zmień nazwę
     - `?` — help (pełna lista keymaps)
 
-**Tip**: Możesz dodać custom keymap w `init.lua`, np:
+---
 
-```lua
-vim.keymap.set('n', '<leader>e', ':Neotree toggle<CR>', { desc = 'Toggle file explorer' })
-```
+### **mini.icons** — Icon provider
+
+- **Repo**: [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)
+- **Cel**: Lekka alternatywa dla nvim-web-devicons (mniej dependencies, szybsze)
+- **Funkcje**:
+  - Ikony dla plików, folderów, LSP, diagnostics
+  - Mock dla nvim-web-devicons (kompatybilność wsteczna)
+  - Używany przez: neo-tree, which-key
+- **Wymagania**: Nerd Font w terminalu (np. JetBrainsMono Nerd Font)
+
+---
+
+### **which-key.nvim** — Keybinding hints
+
+- **Repo**: [folke/which-key.nvim](https://github.com/folke/which-key.nvim)
+- **Cel**: Pokazuje dostępne skróty klawiszowe w popup menu gdy zaczniesz wpisywać kombinację
+- **Użycie**:
+  - Naciśnij `Space` (leader) → poczekaj ~200ms → pojawi się menu z dostępnymi opcjami
+  - `<Space>?` — pokaż wszystkie keybindings dla obecnego bufora
+- **Preset**: `modern` (v3.x)
+- **Ikony**: ustawione na ASCII. Wyłączone ikony mapowań (`icons.mappings = false`), podmienione etykiety klawiszy (np. `Space` → `SPC`, `Tab` → `TAB`, strzałki → `Left/Right/Up/Down`) oraz proste separatory (breadcrumb `>`, separator `->`, group pusty). Dzięki temu nie pojawiają się brakujące glify nawet bez Nerd Font. Jeśli chcesz wrócić do pełnych ikon NF, usuń te nadpisania w `which-key.lua`.
+
+**Jak to działa**: Gdy naciskasz leader key lub inny prefiks (np. `g`, `z`), which-key automatycznie pokazuje wszystkie dostępne kontynuacje z ich opisami. Nie musisz pamiętać wszystkich skrótów! 🎯
+
+---
+
+## ⌨️ Własne skróty klawiszowe (Keymaps)
+
+**Leader key**: `Space` (spacja)
+
+💡 **Tip**: Naciśnij `Space` i poczekaj - **which-key** pokaże ci wszystkie dostępne opcje!
+
+### Leader mappings (Space + klawisz)
+
+#### Pomoc & Keybindings
+
+- `<Space>?` — Pokaż wszystkie keybindings dla obecnego bufora (which-key)
+
+#### File Explorer & Nawigacja
+
+- `<Space>e` — Toggle Neo-tree (otwórz/zamknij file explorer)
+- `<Space>o` — Focus Neo-tree (przeskocz do explorera)
+
+#### Zapisywanie & Wychodzenie
+
+- `<Space>w` — Zapisz plik (`:w`)
+- `<Space>q` — Wyjdź (`:q`)
+- `<Space>Q` — Wyjdź bez zapisywania (`:qa!`)
+
+#### Okna (Splits)
+
+- `<Space>sv` — Split pionowy (`:vsplit`)
+- `<Space>sh` — Split poziomy (`:split`)
+- `<Space>sc` — Zamknij obecne okno (`:close`)
+
+### Skróty bez leadera
+
+#### Nawigacja między oknami
+
+- `Ctrl+h` — Przejdź do lewego okna
+- `Ctrl+j` — Przejdź do dolnego okna
+- `Ctrl+k` — Przejdź do górnego okna
+- `Ctrl+l` — Przejdź do prawego okna
+
+#### Zmiana rozmiaru okien
+
+- `Ctrl+↑` — Zwiększ wysokość
+- `Ctrl+↓` — Zmniejsz wysokość
+- `Ctrl+←` — Zmniejsz szerokość
+- `Ctrl+→` — Zwiększ szerokość
+
+#### Wcięcia w trybie Visual
+
+- `<` — Wcięcie w lewo (zachowuje zaznaczenie)
+- `>` — Wcięcie w prawo (zachowuje zaznaczenie)
+
+**Pełna lista**: zobacz `.config/nvim/lua/config/keymaps.lua`
 
 ---
 
@@ -247,10 +324,6 @@ return {
 :checkhealth blink    " Sprawdź health
 ```
 
-### Neo-tree błędy ikon
-
-Zainstaluj Nerd Font w terminalu (np. `JetBrainsMono Nerd Font`)
-
 ---
 
 ## 📚 Dalsze zasoby
@@ -259,3 +332,5 @@ Zainstaluj Nerd Font w terminalu (np. `JetBrainsMono Nerd Font`)
 - [blink.cmp docs](https://github.com/saghen/blink.cmp)
 - [neo-tree wiki](https://github.com/nvim-neo-tree/neo-tree.nvim/wiki)
 - [Copilot.lua](https://github.com/zbirenbaum/copilot.lua)
+- [mini.icons](https://github.com/echasnovski/mini.icons)
+- [Nerd Fonts](https://www.nerdfonts.com/)

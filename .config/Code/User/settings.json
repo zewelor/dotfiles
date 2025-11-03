@@ -142,6 +142,7 @@
     "chat.tools.terminal.autoApprove": {
         "bundle": true,
         "start-k8s-work": true,
-        "clear": true
+        "clear": true,
+        "nvim --headless": true,
     },
 }

@@ -6,4 +6,7 @@ require("config.lazy")
 -- Core Neovim options (moved to a dedicated module)
 require("config.options")
 
+-- Keymaps (custom keyboard shortcuts)
+require("config.keymaps")
+
 

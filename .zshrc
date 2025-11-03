@@ -57,8 +57,6 @@ fi
 
 DISABLE_AUTO_TITLE="true"
 
-export VISUAL=vim
-export EDITOR=$VISUAL
 export DEFAULT_USER=$(whoami)
 
 # export DIRENV_LOG_FORMAT=
@@ -299,6 +297,15 @@ alias sftp='noglob sftp'
 
 # Secure double check
 alias rm='rm -I'
+
+# Use Neovim if available, fallback to Vim
+if has "nvim"; then
+  alias vim='nvim'
+  export VISUAL=nvim
+else
+  export VISUAL=vim
+fi
+export EDITOR=$VISUAL
 
 #
 # Cli improvements
