@@ -24,7 +24,7 @@ function _codex() {
 zpcompdef _codex codex
 
 cdx() {
-  codex -m gpt-5-codex --search "$@"
+  codex -m gpt-5-codex --enable web_search_request "$@"
 }
 
 cdxtmp() {
