@@ -1,6 +1,8 @@
 # Disable Powerlevel10k configuration wizard
 export POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
 
+source "$HOME/.zsh/terminal_title.zsh"
+
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -495,6 +497,7 @@ export_on_demand_env() {
 
 # Includes, it needs to be here to prevent some fuckups with atuin ctrl + r
 for file in $HOME/.zsh/*.zsh; do
+  [[ "$file" == "$HOME/.zsh/terminal_title.zsh" ]] && continue
   source $file
   # echo "Sourced $file"
   # echo "Bindkey `bindkey |grep 'R'`"
@@ -524,3 +527,5 @@ if has "tmuxinator" ; then
 fi
 
 (( ! ${+functions[p10k]} )) || p10k finalize
+
+_title_terminal_pwd

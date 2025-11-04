@@ -1,6 +1,6 @@
 # Notatki dla AI Agents
 
-Ten plik zawiera instrukcje i przypomnienia dla AI asystentów (GitHub Copilot, Cline, itp.) pracujących nad tym repozytorium dotfiles.
+Ten plik zawiera instrukcje i przypomnienia dla AI asystentów (GitHub Copilot, Cline, itp.) pracujących nad tym repozytorium dotfiles. Wszystkie komentarze w innych plikach dodawaj po angielsku. Tylko AGENTS.md trzymamy po polsku, aby ułatwić zrozumienie lokalnym współpracownikom.
 
 ## 📝 Zasady aktualizacji dokumentacji
 

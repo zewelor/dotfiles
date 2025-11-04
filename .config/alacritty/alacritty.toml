@@ -14,3 +14,14 @@ family = "MesloLGS NF"
 # Start Alacritty in fullscreen by default
 # Start Alacritty maximized (z paskiem tytułu)
 startup_mode = "Maximized"
+dynamic_title = true
+
+[env]
+# Why TERM = "xterm-256color"?
+# - Many remote hosts don’t ship the "alacritty" terminfo, causing broken colors/attributes
+#   or warnings. "xterm-256color" is widely available and safe for SSH.
+# - Truecolor inside tmux is still enabled by tmux (terminal-overrides: RGB/Tc),
+#   so even with a 256‑color TERM outside, Neovim in tmux gets full 24‑bit colors.
+# - Best practice: don’t set $TERM in your shell (e.g., .zshrc). Configure it in your
+#   terminal emulator (here) so remote shells inherit a sensible default.
+TERM = "xterm-256color"
