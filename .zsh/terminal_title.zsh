@@ -7,10 +7,10 @@ __terminal_title_escape () {
   [[ -z "${title}" ]] && return 1
   [[ -t 1 ]] || return 1
 
-  print -Pn -- "\e]0;${title}\a"
+  printf '\e]0;%s\a' "${title}"
 }
 
-if [[ -n "${KONSOLE_DBUS_SERVICE}" && -n "${KONSOLE_DBUS_SESSION}" ]]; then
+if [[ -n "${KONSOLE_DBUS_SERVICE}" && -n "${KONSOLE_DBUS_SESSION}" ]] && (( $+commands[qdbus] )); then
   set-konsole-tab-title-type () {
     emulate -L zsh
     local _title="$1"
