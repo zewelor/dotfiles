@@ -5,12 +5,24 @@
 
 autoload -Uz add-zsh-hook
 
+# Minimal: always send OSC 2; limit to 40 chars
+typeset -g ZSH_TITLE_MAX=${ZSH_TITLE_MAX-40}
+
 _title_terminal() {
   emulate -L zsh
   [[ -t 1 ]] || return 0
-  # Send both OSC 0 (icon+title) and OSC 2 (title) for compatibility
-  print -Pn -- "\e]0;$1\a"
-  print -Pn -- "\e]2;$1\a"
+  local input="$1"
+  # Expand prompt escapes (e.g. %~)
+  local expanded
+  expanded=$(print -P -- "$input")
+  # Truncate to max length with ascii ellipsis
+  local max=$ZSH_TITLE_MAX
+  if (( max > 0 && ${#expanded} > max )); then
+    local cut=$(( max > 3 ? max-3 : max ))
+    expanded="${expanded[1,$cut]}..."
+  fi
+  # Emit OSC 2 only
+  printf '\033]2;%s\007' "$expanded"
 }
 
 _title_terminal_pwd() {
@@ -26,7 +38,7 @@ _title_terminal_cmd() {
 # Set the title to show the running command only for selected TUI/interactive tools.
 # The list below was built from your last ~6 months of usage.
 typeset -ga ZSH_TITLE_CMD_WHITELIST=(
-  vim nvim vi btop htop man mc fzf lazygit iotop
+  vim nvim vi btop htop man mc fzf lazygit tmux iotop
 )
 
 _title_preexec() {
