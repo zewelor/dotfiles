@@ -32,13 +32,12 @@ _title_terminal_pwd() {
 _title_terminal_cmd() {
   emulate -L zsh
   local cmd="${1//\%/%%}"
-  _title_terminal "%~: ${cmd}"
+  _title_terminal "${cmd}"
 }
 
 # Set the title to show the running command only for selected TUI/interactive tools.
-# The list below was built from your last ~6 months of usage.
 typeset -ga ZSH_TITLE_CMD_WHITELIST=(
-  vim nvim vi btop htop man mc fzf lazygit tmux iotop
+  vim nvim vi btop htop man mc fzf lazygit iotop
 )
 
 _title_preexec() {
@@ -46,23 +45,9 @@ _title_preexec() {
   local line="$1"
   [[ -z "$line" ]] && return 0
 
-  # Strip common prefixes that aren't the real command
-  local raw="$line"
-  for pfx in "sudo " "doas " "command " "nocorrect " "noglob "; do
-    if [[ "$raw" == ${~pfx}* ]]; then
-      raw="${raw#${~pfx}}"
-    fi
-  done
-
-  # Extract first non-option token, skipping env assignments and sudo options
-  local first
-  first="${raw%% *}"
-  while [[ -n "$first" && ( "$first" == *=* || "$first" == -* ) ]]; do
-    raw="${raw#* }"
-    first="${raw%% *}"
-  done
-  local cmd="$first"
-  [[ -z "$cmd" ]] && return 0
+  local -a words=("${(z)line}")
+  [[ ${#words[@]} -eq 0 ]] && return 0
+  local cmd="${words[1]}"
 
   # Check whitelist (case-insensitive match)
   local c

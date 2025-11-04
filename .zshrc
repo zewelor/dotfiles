@@ -57,8 +57,6 @@ if [ -f /etc/profile.d/apps-bin-path.sh ]; then
   source /etc/profile.d/apps-bin-path.sh
 fi
 
-DISABLE_AUTO_TITLE="true"
-
 export DEFAULT_USER=$(whoami)
 
 # export DIRENV_LOG_FORMAT=

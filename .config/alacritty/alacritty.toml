@@ -15,3 +15,6 @@ family = "MesloLGS NF"
 # Start Alacritty maximized (z paskiem tytułu)
 startup_mode = "Maximized"
 dynamic_title = true
+
+[mouse]
+hide_when_typing = true
