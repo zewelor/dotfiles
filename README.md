@@ -217,6 +217,11 @@ After the first launch:
 - `<` — Indent left (keeps selection)
 - `>` — Indent right (keeps selection)
 
+#### Toggles & saving
+
+- `Ctrl+N` twice — Cycle line numbers: off → absolute → relative
+- `Ctrl+S` — Save file in Normal and Insert mode (`:w`)
+
 **Full list**: see `.config/nvim/lua/config/keymaps.lua`
 
 ---

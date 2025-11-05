@@ -1,15 +1,4 @@
-# Disable Powerlevel10k configuration wizard
-export POWERLEVEL9K_DISABLE_CONFIGURATION_WIZARD=true
-
 source "$HOME/.zsh/terminal_title.zsh"
-
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block; everything else may go below.
-#
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
 
 if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
   zcompile $HOME/.zshrc
@@ -90,12 +79,12 @@ zle -N bracketed-paste bracketed-paste-url-magic
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
 
+# Prompt
 #
-# Themes
-#
-
-# Powerlevel10k
-zinit light-mode lucid nocd depth='1' for @romkatv/powerlevel10k
+zinit ice as"command" from"gh-r" \
+          atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
+          atpull"%atclone" src"init.zsh"
+zinit light starship/starship
 
 #
 # Completions
@@ -524,6 +513,9 @@ if has "tmuxinator" ; then
   alias mux="tmuxinator"
 fi
 
-(( ! ${+functions[p10k]} )) || p10k finalize
+## Initialize Starship prompt at the very end
+if command -v starship >/dev/null 2>&1; then
+  eval "$(starship init zsh)"
+fi
 
 _title_terminal_pwd

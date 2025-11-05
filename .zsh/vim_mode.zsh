@@ -7,6 +7,6 @@ zinit light-mode for \
   "\
   jeffreytse/zsh-vi-mode
 
-ZVM_LAZY_KEYBINDINGS=false  
+ZVM_LAZY_KEYBINDINGS=false
 ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
 ZVM_INSERT_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BEAM

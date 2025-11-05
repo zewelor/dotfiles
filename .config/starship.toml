@@ -1,0 +1,76 @@
+# https://starship.rs/config/
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+palette = "p10k"
+format = "$username$directory$git_branch$git_status$git_state[](fg:bg) "
+right_format = "$character$cmd_duration$jobs"
+
+[palettes.p10k]
+bg  = "236" # dark
+dir = "31"  # dark blue
+anc = "39"  # light blue
+vcs = "76"
+mod = "178"
+err = "196"
+unt = "39"
+gry = "248"
+jobs = "37"
+
+[username]
+show_always = false
+format      = "[#]($style)[ ](bg:bg bold)"
+style_root  = "fg:mod bg:bg bold"
+
+[directory]
+format                    = '[ $path]($style)[ $read_only]($read_only_style)[ ](bg:bg)'
+read_only                 = ""
+read_only_style           = "fg:anc bg:bg bold"
+fish_style_pwd_dir_length = 1
+style                     = "bg:bg fg:anc bold"
+before_repo_root_style    = "bg:bg fg:dir"
+repo_root_style           = "fg:anc bg:bg bold"
+repo_root_format          = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
+
+[git_branch]
+symbol = " "
+format = "[$symbol$branch ](fg:vcs bg:bg)"
+truncation_length = 32
+truncation_symbol = "…"
+
+[git_status]
+format = """[\
+[$staged](fg:mod bg:bg bold)\
+[$deleted$conflicted](fg:err bg:bg)\
+[$modified$typechanged$renamed](fg:mod bg:bg)\
+[$untracked](fg:unt bg:bg)\
+[$stashed](fg:vcs bg:bg)\
+[$ahead_behind](fg:vcs bg:bg)\
+](bg:bg)"""
+staged     = "+$count "
+modified   = "!$count "
+renamed    = ">$count "
+deleted    = "-$count "
+conflicted = "~$count "
+untracked  = "?$count "
+stashed    = "*$count "
+ahead      = "↑$count"
+behind     = "↓$count"
+diverged   = "↕$ahead_count/$behind_count"
+
+[git_state]
+format = "[$state($progress_current/$progress_total) ](fg:mod bg:bg)"
+
+[cmd_duration]
+min_time = 3000
+format = "[ $duration ](fg:gry bg:bg)"
+
+[jobs]
+format = "[ $number ](fg:jobs bg:bg)"
+
+[character]
+format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
+success_symbol  = "[✔](fg:70 bg:bg)"
+error_symbol    = "[✘](fg:160 bg:bg)"
+vimcmd_symbol   = "[NORMAL](fg:106 bg:bg)"
