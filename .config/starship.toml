@@ -23,18 +23,18 @@ format      = "[#]($style)[ ](bg:bg bold)"
 style_root  = "fg:mod bg:bg bold"
 
 [directory]
-format                    = '[ $path]($style)[ $read_only]($read_only_style)'
+format                    = '[ ](bg:bg)[$path]($style)[$read_only]($read_only_style)'
 read_only                 = ""
 read_only_style           = "fg:anc bg:bg bold"
-fish_style_pwd_dir_length = 1
 style                     = "bg:bg fg:anc bold"
-before_repo_root_style    = "bg:bg fg:dir"
-repo_root_style           = "fg:anc bg:bg bold"
-repo_root_format          = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
+fish_style_pwd_dir_length = 1
+# before_repo_root_style    = "bg:bg fg:dir"
+# repo_root_style           = "fg:anc bg:bg bold"
+# repo_root_format          = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
 
 [git_branch]
 symbol = " "
-format = "[$symbol$branch ](fg:vcs bg:bg)"
+format = "[ $symbol$branch ](fg:vcs bg:bg)"
 truncation_length = 32
 truncation_symbol = "…"
 
