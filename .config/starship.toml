@@ -5,7 +5,7 @@
 add_newline = false
 palette = "p10k"
 format = "$username$directory$git_branch$git_status$git_state[](fg:bg) "
-right_format = "$character$cmd_duration$jobs"
+right_format = "$character$cmd_duration$python$kubernetes"
 
 [palettes.p10k]
 bg  = "236" # dark
@@ -16,7 +16,6 @@ mod = "178"
 err = "196"
 unt = "39"
 gry = "248"
-jobs = "37"
 
 [username]
 show_always = false
@@ -66,11 +65,19 @@ format = "[$state($progress_current/$progress_total) ](fg:mod bg:bg)"
 min_time = 3000
 format = "[ $duration ](fg:gry bg:bg)"
 
-[jobs]
-format = "[ $number ](fg:jobs bg:bg)"
-
 [character]
 format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
 success_symbol  = "[✔](fg:70 bg:bg)"
 error_symbol    = "[✘](fg:160 bg:bg)"
 vimcmd_symbol   = "[NORMAL](fg:106 bg:bg)"
+
+[python]
+format = '[${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
+style = "fg:37 bg:bg bold"
+detect_files = ['.python-version', 'Pipfile', '__init__.py', 'requirements.txt', 'setup.py', 'tox.ini']
+
+[kubernetes]
+disabled = false
+detect_env_vars = ["KUBECONFIG", "KUBE_CONTEXT"]
+format = '[⎈ $context( \($namespace\))]($style) '
+style = "fg:134 bg:bg bold"
