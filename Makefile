@@ -19,8 +19,7 @@ APT_PACKAGES= \
 	jq \
 	stow \
 	lazygit \
-	ripgrep \
-	fd-find
+	ripgrep
 
 all: base setup
 base: packages install-fonts | $(zinit_dir)
