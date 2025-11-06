@@ -1,5 +1,3 @@
-source "$HOME/.zsh/terminal_title.zsh"
-
 if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
   zcompile $HOME/.zshrc
 fi
@@ -68,7 +66,11 @@ zsnippet() { zinit snippet                        "${@}"; }
 has()      { type "${1:?too few arguments}" &>/dev/null   }
 
 ### Added by zinit's installer
-source "${HOME}/.zinit/bin/zinit.zsh"
+# Global zinit paths for current user
+ZINIT_SCRIPT_REL=".zinit/bin/zinit.zsh"
+ZINIT_SCRIPT="${HOME}/${ZINIT_SCRIPT_REL}"
+
+source "${ZINIT_SCRIPT}"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
 ### End of zinit's installer chunk
@@ -173,26 +175,77 @@ alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | 
 
 # Pipx nees to be updated as user
 function update () {
-  local user='#1000'
+  # Determine target non-root user for user-scoped updates
+  # Prefer the invoking sudo user, otherwise fall back to UID 1000 or current user
+  local target_user
+  if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
+    target_user="${SUDO_USER}"
+  else
+    target_user="$(id -nu 1000 2>/dev/null)"
+    [[ -z "${target_user}" ]] && target_user="${USER}"
+  fi
 
-  sudo apt autoremove -y --purge &&
-  sudo apt update &&
-  sudo apt full-upgrade -y &&
-  sudo apt autoremove -y --purge
+  # Resolve target user's home directory
+  local target_home
+  target_home="$(getent passwd "${target_user}" 2>/dev/null | cut -d: -f6)"
+  [[ -z "${target_home}" ]] && target_home="$HOME"
+
+  echo "[apt] Running system package maintenance"
+  if sudo apt autoremove -y --purge &&
+     sudo apt update &&
+     sudo apt full-upgrade -y &&
+     sudo apt autoremove -y --purge; then
+    echo "[apt] System package maintenance complete"
+  else
+    echo "[apt] System package maintenance failed"
+  fi
 
   if has "flatpak"; then
-    sudo -u "$user" flatpak update -y
+    echo
+    echo "[flatpak] Updating flatpak apps"
+    if sudo -H -u "${target_user}" flatpak update -y; then
+      echo "[flatpak] Update complete"
+    else
+      echo "[flatpak] Update failed"
+    fi
   fi
 
   if has "snap"; then
-    snap refresh
+    echo
+    echo "[snap] Refreshing snaps"
+    if snap refresh; then
+      echo "[snap] Refresh complete"
+    else
+      echo "[snap] Refresh failed"
+    fi
   fi
 
   if has "pipx"; then
-    sudo -u "$user" pipx upgrade-all --include-injected
+    echo
+    echo "[pipx] Upgrading pipx packages"
+    if sudo -H -u "${target_user}" pipx upgrade-all --include-injected; then
+      echo "[pipx] Upgrade complete"
+    else
+      echo "[pipx] Upgrade failed"
+    fi
   fi
 
-  sudo -u "$user" zinit update --all
+  # Update zinit-managed plugins for the target user with concise messaging
+  local zinit_script="${target_home}/${ZINIT_SCRIPT_REL}"
+  if [[ -f "${zinit_script}" ]]; then
+    echo
+    echo "[zinit] Updating plugins"
+    sudo -H -u "${target_user}" zsh -lc "source \"${zinit_script}\"; zinit update -q --all" >/dev/null 2>&1
+    local _ec=$?
+    if (( _ec == 0 )); then
+      echo "[zinit] Update complete"
+    else
+      echo "[zinit] Update failed (exit ${_ec})"
+    fi
+  else
+    echo
+    echo "[zinit] Skipping zinit update: '${zinit_script}' not found for user '${target_user}'."
+  fi
 }
 
 # Git
@@ -484,7 +537,6 @@ export_on_demand_env() {
 
 # Includes, it needs to be here to prevent some fuckups with atuin ctrl + r
 for file in $HOME/.zsh/*.zsh; do
-  [[ "$file" == "$HOME/.zsh/terminal_title.zsh" ]] && continue
   source $file
   # echo "Sourced $file"
   # echo "Bindkey `bindkey |grep 'R'`"
