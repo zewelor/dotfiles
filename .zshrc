@@ -233,14 +233,15 @@ function update () {
   # Update zinit-managed plugins for the target user with concise messaging
   local zinit_script="${target_home}/${ZINIT_SCRIPT_REL}"
   if [[ -f "${zinit_script}" ]]; then
+    local zinit_command="source \"${zinit_script}\"; zinit update -q --all"
     echo
     echo "[zinit] Updating plugins"
-    sudo -H -u "${target_user}" zsh -lc "source \"${zinit_script}\"; zinit update -q --all" >/dev/null 2>&1
+    sudo -H -u "${target_user}" zsh -lc "${zinit_command}" >/dev/null 2>&1
     local _ec=$?
     if (( _ec == 0 )); then
       echo "[zinit] Update complete"
     else
-      echo "[zinit] Update failed (exit ${_ec})"
+      echo "[zinit] Update failed (exit ${_ec}) try running: 'sudo -H -u ${target_user} zsh -lc \"${zinit_command}\"' to see details."
     fi
   else
     echo

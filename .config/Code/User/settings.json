@@ -143,4 +143,5 @@
         "clear": true,
         "nvim --headless": true,
     },
+    "chat.mcp.gallery.enabled": true,
 }
