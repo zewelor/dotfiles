@@ -3,6 +3,7 @@
     "explorer.confirmDelete": false,
     "editor.tabSize": 2,
     "window.zoomLevel": 1,
+    "terminal.integrated.fontSize": 14,
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono'",
     "vim.normalModeKeyBindingsNonRecursive": [

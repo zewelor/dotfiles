@@ -5,7 +5,7 @@ import = [
 ]
 
 [font]
-size = 12
+size = 13
 
 [font.normal]
 family = "JetBrainsMono Nerd Font Mono"
@@ -25,3 +25,19 @@ hide_when_typing = true
 key = "Slash"
 mods = "Control"
 chars = "\u001f"
+
+# Convenient font size controls (Alacritty actions)
+[[keyboard.bindings]]
+key = "Equals"
+mods = "Control|Shift"
+action = "IncreaseFontSize"
+
+[[keyboard.bindings]]
+key = "Minus"
+mods = "Control"
+action = "DecreaseFontSize"
+
+[[keyboard.bindings]]
+key = "Key0"
+mods = "Control"
+action = "ResetFontSize"
