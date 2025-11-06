@@ -60,5 +60,5 @@ vim.opt.backupdir   = state .. "/backup//"  -- used only if you later set backup
 vim.opt.completeopt = { "menu", "menuone", "noselect" }
 
 -- Small QoL
-vim.opt.mouse   = "a"             -- quick resize/click when needed
+vim.opt.mouse   = ""              -- disable mouse; keyboard-driven workflow
 vim.opt.confirm = true            -- prompt to save when quitting modified buffers

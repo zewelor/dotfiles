@@ -3,17 +3,18 @@ return {
   "folke/which-key.nvim",
   event = "VeryLazy", -- ładuj leniwie dla szybszego startu
   opts = {
-    -- your configuration comes here
-    -- or leave it empty to use the default settings
-    -- refer to the configuration section below
+    delay = function(ctx)
+      -- no delay for built‑in plugins; 500 ms otherwise
+      return ctx.plugin and 0 or 500
+    end,
   },
   keys = {
     {
       "<leader>?",
       function()
-        require("which-key").show({ global = false })
+        require("which-key").show({ global = true })
       end,
-      desc = "Buffer Local Keymaps (which-key)",
+      desc = "Global Keymaps (which-key)",
     },
   },
   config = function(_, opts)

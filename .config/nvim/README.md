@@ -15,7 +15,6 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   └── plugins/         # Każdy plugin = osobny plik
 │       ├── blink.lua        # Autouzupełnianie
 │       ├── copilot.lua      # GitHub Copilot
-│       ├── gx.lua           # Otwieranie linków
 │       ├── mini-icons.lua   # Ikony plików
 │       ├── neotree.lua      # File explorer
 │       ├── telescope.lua    # Wyszukiwanie i fuzzy finder
@@ -42,6 +41,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 | `termguicolors` | true | True color support |
 | `clipboard` | "unnamedplus" | Współdzielony clipboard z systemem |
 | `undofile` | true | Trwałe undo (po zamknięciu pliku) |
+| `mouse` | "" | Wyłączona obsługa myszy |
 
 ## 🔌 Pluginy i ich użycie
 
@@ -87,16 +87,6 @@ Główne opcje edytora (z `lua/config/options.lua`):
 - **Repo**: [folke/which-key.nvim](https://github.com/folke/which-key.nvim)
 - **Cel**: Wyświetla popup z dostępnymi skrótami po wciśnięciu `<Space>`
 - **Użycie**: Wciśnij `<Space>` i poczekaj ~300ms → zobaczysz listę dostępnych komend
-
----
-
-### **gx.nvim** — Otwieranie linków
-
-- **Repo**: [chrishrb/gx.nvim](https://github.com/chrishrb/gx.nvim)
-- **Cel**: Umożliwia otwieranie linków, repozytoriów i numerów zgłoszeń bez `netrw`
-- **Keymaps**:
-  - `gx` — Otwórz link lub zaznaczenie w domyślnej przeglądarce (`:Browse`)
-- **Dodatkowe info**: Automatycznie wyszukuje w sieci, gdy nie znajdzie bezpośredniego URL-a. Domyślnie używa `xdg-open`; jeśli brakuje, ustaw zmienną `BROWSER` lub doinstaluj `xdg-utils`.
 
 ---
 
@@ -194,6 +184,10 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - `<` — Wcięcie w lewo (i zachowaj zaznaczenie)
 - `>` — Wcięcie w prawo (i zachowaj zaznaczenie)
+
+#### Komentowanie
+
+- `Ctrl+/` — Przełącz komentarz wiersza/zaznaczenia (Neovim 0.10+; terminal wysyła to jako `<C-_>`)
 
 ---
 

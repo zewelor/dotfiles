@@ -18,3 +18,10 @@ dynamic_title = true
 
 [mouse]
 hide_when_typing = true
+
+# Send Ctrl+/ as ASCII Unit Separator (0x1F), which Neovim reads as <C-_>
+# This enables Ctrl+/ to toggle comments via our <C-_> mapping in Neovim 0.10+
+[[keyboard.bindings]]
+key = "Slash"
+mods = "Control"
+chars = "\u001f"
