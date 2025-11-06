@@ -69,7 +69,7 @@ format = "[ $duration ](fg:gry bg:bg)"
 format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
 success_symbol  = "[󰄬](fg:70 bg:bg bold)"
 error_symbol    = "[󰅖](fg:160 bg:bg bold)"
-vimcmd_symbol   = "[](fg:106 bg:bg bold)"
+vimcmd_symbol   = "[NORMAL](fg:106 bg:bg bold)"
 
 [python]
 format = '[${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
