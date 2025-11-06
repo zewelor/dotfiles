@@ -4,7 +4,7 @@
     "editor.tabSize": 2,
     "window.zoomLevel": 1,
     "workbench.colorTheme": "Solarized Light",
-    "terminal.integrated.fontFamily": "'MesloLGS NF'",
+    "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono'",
     "vim.normalModeKeyBindingsNonRecursive": [
         {
             "before": [
@@ -36,7 +36,7 @@
     "redhat.telemetry.enabled": false,
     "http.proxySupport": "off",
     "editor.fontSize": 16,
-    "editor.fontFamily": "\"MesloLGS NF\"",
+    "editor.fontFamily": "'JetBrainsMono Nerd Font Mono'",
     "update.mode": "none",
     "editor.renderWhitespace": "trailing",
     "editor.guides.indentation": false,

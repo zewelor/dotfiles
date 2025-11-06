@@ -106,17 +106,17 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua)
 - **Cel**: Integracja z GitHub Copilot AI
-- **Setup**: Wymaga zalogowania przez `:Copilot auth`
-- **Keymaps**: Sugestie pojawiają się automatycznie (szary tekst)
-  - `<Tab>` — Zaakceptuj sugestię (w Insert mode)
+- **Setup**: Zaloguj przez `:Copilot auth`
+- **Jak działa z blink.cmp**: Inline podpowiedzi są wyłączone, Copilot jest wpięty jako źródło w menu autouzupełniania (przez `blink-copilot`).
+  - Akceptujesz je tak samo jak inne pozycje w menu — `<CR>` (Enter).
 
 ---
 
 ### **mini.icons** — Ikony Plików
 
 - **Repo**: [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)
-- **Cel**: Wyświetla ikony plików w Neo-tree i innych pluginach
-- **Uwaga**: Wymaga Nerd Font (czcionka z ikonami)
+- **Cel**: Ikony plików dla Neo-tree i pluginów (mock `nvim-web-devicons`)
+- **Uwaga**: To nie zastępuje czcionki w terminalu. Aby uniknąć "kwadratów" także w menu autouzupełniania i innych miejscach, ustaw w terminalu czcionkę z ikonami (np. „JetBrainsMono Nerd Font”).
 
 ---
 
@@ -249,10 +249,11 @@ Przy pierwszym uruchomieniu:
 :Copilot auth
 ```
 
-### Brak ikon w Neo-tree
+### Kwadraty / brak ikon (Neo-tree, menu autouzupełniania)
 
-- Zainstaluj [Nerd Font](https://www.nerdfonts.com/) (np. `JetBrainsMono Nerd Font`)
-- Ustaw w terminalu
+- Zainstaluj [Nerd Font](https://www.nerdfonts.com/) (np. „JetBrainsMono Nerd Font”).
+- Ustaw tę czcionkę w ustawieniach terminala i zrestartuj terminal.
+- Uwaga: `mini.icons` zapewnia mapowania ikon dla pluginów, ale nie dostarcza glifów — te musi mieć czcionka terminala.
 
 ### Sprawdź health
 
