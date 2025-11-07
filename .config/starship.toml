@@ -79,5 +79,5 @@ detect_files = ['.python-version', 'Pipfile', '__init__.py', 'requirements.txt',
 [kubernetes]
 disabled = false
 detect_env_vars = ["KUBECONFIG", "KUBE_CONTEXT"]
-format = '[⎈ $context( \($namespace\))]($style) '
+format = '[⎈ $context( \($namespace\))]($style)'
 style = "fg:134 bg:bg bold"

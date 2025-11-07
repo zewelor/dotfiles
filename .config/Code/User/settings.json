@@ -1,11 +1,117 @@
 {
+    "[dockercompose]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "advanced",
+        "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+        },
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[github-actions-workflow]": {
+        "editor.defaultFormatter": "redhat.vscode-yaml"
+    },
+    "[ruby]": {
+        "editor.defaultFormatter": "Shopify.ruby-lsp"
+    },
+    "[yaml]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.autoIndent": "keep",
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.defaultColorDecorators": "never",
+        "editor.quickSuggestions": {
+            "strings": true,
+            "other": true,
+            "comments": false
+        }
+    },
+    "chat.agent.enabled": true,
+    "chat.editing.confirmEditRequestRetry": false,
+    "chat.mcp.gallery.enabled": true,
+    "chat.tools.terminal.autoApprove": {
+        "clear": true,
+        "nvim --headless": true
+    },
+    "dev.containers.defaultExtensions": [
+        "GitHub.copilot"
+    ],
+    "dev.containers.dockerComposePath": "docker compose",
+    "diffEditor.experimental.showMoves": true,
+    "docker.extension.enableComposeLanguageServer": false,
     "editor.accessibilitySupport": "off",
-    "explorer.confirmDelete": false,
+    "editor.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', monospace",
+    "editor.fontLigatures": true,
+    "editor.fontSize": 16,
+    "editor.formatOnPaste": true,
+    "editor.guides.indentation": false,
+    "editor.inlineSuggest.enabled": true,
+    "editor.minimap.enabled": false,
+    "editor.renderControlCharacters": false,
+    "editor.renderWhitespace": "trailing",
     "editor.tabSize": 2,
-    "window.zoomLevel": 1,
+    "explorer.confirmDelete": false,
+    "explorer.confirmDragAndDrop": false,
+    "files.associations": {
+        ".bash_history": "plaintext"
+    },
+    "files.insertFinalNewline": true,
+    "files.trimTrailingWhitespace": true,
+    "git.autofetch": true,
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "git.ignoreMissingGitWarning": true,
+    "git.ignoreRebaseWarning": true,
+    "git.openRepositoryInParentFolders": "never",
+    "github.copilot.advanced": {},
+    "github.copilot.chat.agent.thinkingTool": true,
+    "github.copilot.chat.codesearch.enabled": true,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": false,
+        "yaml": true
+    },
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "github.copilot.selectedCompletionModel": "",
+    "http.proxySupport": "off",
+    "redhat.telemetry.enabled": false,
+    "remote.autoForwardPorts": false,
+    "remote.autoForwardPortsSource": "hybrid",
+    "rubyLsp.enabledFeatures": {
+        "codeActions": true,
+        "diagnostics": true,
+        "documentHighlights": true,
+        "documentLink": true,
+        "documentSymbols": true,
+        "foldingRanges": true,
+        "formatting": true,
+        "hover": true,
+        "inlayHint": true,
+        "onTypeFormatting": true,
+        "selectionRanges": true,
+        "semanticHighlighting": true,
+        "completion": true
+    },
+    "rubyLsp.featureFlags": {
+        "all": true
+    },
+    "rubyLsp.rubyExecutablePath": "/home/omen/.local/share/mise/shims/ruby",
+    "rubyLsp.rubyVersionManager": {
+        "identifier": "auto"
+    },
+    "settingsSync.ignoredSettings": [
+        "editor.fontSize"
+    ],
+    "telemetry.telemetryLevel": "off",
+    "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', monospace",
     "terminal.integrated.fontSize": 14,
-    "workbench.colorTheme": "Solarized Light",
-    "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono'",
+    "terminal.integrated.suggest.enabled": true,
+    "update.mode": "none",
+    "vim.easymotion": true,
     "vim.normalModeKeyBindingsNonRecursive": [
         {
             "before": [
@@ -32,118 +138,6 @@
             ]
         }
     ],
-    "editor.renderControlCharacters": false,
-    "explorer.confirmDragAndDrop": false,
-    "redhat.telemetry.enabled": false,
-    "http.proxySupport": "off",
-    "editor.fontSize": 16,
-    "editor.fontFamily": "'FiraCode Nerd Font Mono'",
-    "update.mode": "none",
-    "editor.renderWhitespace": "trailing",
-    "editor.guides.indentation": false,
-    "editor.minimap.enabled": false,
-    "telemetry.telemetryLevel": "off",
-    "files.insertFinalNewline": true,
-    "dev.containers.dockerComposePath": "docker compose",
-    "vim.easymotion": true,
-    "settingsSync.ignoredSettings": [
-        "editor.fontSize",
-    ],
-    "editor.inlineSuggest.enabled": true,
-    "git.ignoreMissingGitWarning": true,
-    "git.enableSmartCommit": true,
-    "github.copilot.enable": {
-        "*": true,
-        "plaintext": true,
-        "markdown": true,
-        "scminput": false,
-        "yaml": true
-    },
-    "git.confirmSync": false,
-    "git.openRepositoryInParentFolders": "never",
-    "[ruby]": {
-        "editor.defaultFormatter": "Shopify.ruby-lsp"
-    },
-    "rubyLsp.enabledFeatures": {
-        "codeActions": true,
-        "diagnostics": true,
-        "documentHighlights": true,
-        "documentLink": true,
-        "documentSymbols": true,
-        "foldingRanges": true,
-        "formatting": true,
-        "hover": true,
-        "inlayHint": true,
-        "onTypeFormatting": true,
-        "selectionRanges": true,
-        "semanticHighlighting": true,
-        "completion": true
-    },
-    "rubyLsp.rubyVersionManager": {
-        "identifier": "auto"
-    },
-    "github.copilot.advanced": {},
-    "dev.containers.defaultExtensions": [
-        "GitHub.copilot"
-    ],
-    "git.autofetch": true,
-    "files.trimTrailingWhitespace": true,
-    "rubyLsp.rubyExecutablePath": "/home/omen/.local/share/mise/shims/ruby",
-    "git.ignoreRebaseWarning": true,
-    "editor.formatOnPaste": true,
-    "files.associations": {
-        ".bash_history": "plaintext"
-    },
-    "rubyLsp.featureFlags": {
-        "all": true
-    },
-    "github.copilot.nextEditSuggestions.enabled": true,
-    "github.copilot.selectedCompletionModel": "",
-    "github.copilot.chat.codesearch.enabled": true,
-    "terminal.integrated.suggest.enabled": true,
-    "ansible.lightspeed.enabled": false,
-    "chat.agent.enabled": true,
-    "github.copilot.chat.agent.thinkingTool": true,
-    "chat.editing.confirmEditRequestRetry": false,
-    "vs-kubernetes": {
-        "vs-kubernetes.crd-code-completion": "disabled"
-    },
-    "remote.autoForwardPortsSource": "hybrid",
-    "remote.autoForwardPorts": false,
-    "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
-    "docker.extension.enableComposeLanguageServer": false,
-    "esphome.dashboardUri": "https://esphome.8567153.xyz/",
-    "[yaml]": {
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.autoIndent": "keep",
-        "diffEditor.ignoreTrimWhitespace": false,
-        "editor.defaultColorDecorators": "never",
-        "editor.quickSuggestions": {
-            "strings": true,
-            "other": true,
-            "comments": false
-        }
-    },
-    "diffEditor.experimental.showMoves": true,
-    "[dockercompose]": {
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.autoIndent": "advanced",
-        "editor.quickSuggestions": {
-            "other": true,
-            "comments": false,
-            "strings": true
-        },
-        "editor.defaultFormatter": "redhat.vscode-yaml"
-    },
-    "[github-actions-workflow]": {
-        "editor.defaultFormatter": "redhat.vscode-yaml"
-    },
-    "chat.tools.terminal.autoApprove": {
-        "clear": true,
-        "nvim --headless": true,
-    },
-    "chat.mcp.gallery.enabled": true,
-    "editor.fontLigatures": true,
+    "window.zoomLevel": 1,
+    "workbench.colorTheme": "Solarized Light"
 }
