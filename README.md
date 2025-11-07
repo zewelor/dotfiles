@@ -9,20 +9,9 @@ Some examples here:
 make install
 ```
 
-### Fonts (Nerd Fonts)
-
-The setup automatically installs MesloLGS NF (with icon support) to `~/.local/share/fonts/` (modern XDG default):
-
-```bash
-make install-fonts  # Download and install MesloLGS NF
-```
-
 **Font locations**:
 
 - **Current user** (default): `~/.local/share/fonts/`
-- System-wide (requires sudo): `/usr/share/fonts/`
-
-After installation, set your terminal font to **MesloLGS NF Regular**.
 
 ## Local customizations
 

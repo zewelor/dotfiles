@@ -4,6 +4,9 @@ import = [
     "~/.config/alacritty/solarized_light.toml"
 ]
 
+# Always start new windows in $HOME so SpawnNewInstance lands there too
+working_directory = "/home/omen"
+
 [font]
 size = 13
 
@@ -41,3 +44,9 @@ action = "DecreaseFontSize"
 key = "Key0"
 mods = "Control"
 action = "ResetFontSize"
+
+# Spawn a fresh Alacritty window, mirroring KDE Konsole's Ctrl+Shift+N
+[[keyboard.bindings]]
+key = "N"
+mods = "Control|Shift"
+action = "SpawnNewInstance"
