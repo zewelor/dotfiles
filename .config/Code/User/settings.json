@@ -5,7 +5,7 @@
     "window.zoomLevel": 1,
     "terminal.integrated.fontSize": 14,
     "workbench.colorTheme": "Solarized Light",
-    "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono'",
+    "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono'",
     "vim.normalModeKeyBindingsNonRecursive": [
         {
             "before": [
@@ -37,7 +37,7 @@
     "redhat.telemetry.enabled": false,
     "http.proxySupport": "off",
     "editor.fontSize": 16,
-    "editor.fontFamily": "'JetBrainsMono Nerd Font Mono'",
+    "editor.fontFamily": "'FiraCode Nerd Font Mono'",
     "update.mode": "none",
     "editor.renderWhitespace": "trailing",
     "editor.guides.indentation": false,
@@ -145,4 +145,5 @@
         "nvim --headless": true,
     },
     "chat.mcp.gallery.enabled": true,
+    "editor.fontLigatures": true,
 }

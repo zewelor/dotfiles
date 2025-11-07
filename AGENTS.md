@@ -139,6 +139,11 @@ Gdy użytkownik prosi o:
 - Which-key.nvim: <https://github.com/folke/which-key.nvim>
 - Neovim docs: `:help` w Neovim
 
+## 🛠️ Narzędzia CLI
+
+- `rg` (ripgrep): pamiętaj, że `-n` to flaga numeru linii. Nie powtarzaj jej między wzorcami (`rg -n "foo" -n "bar"`), bo każdy kolejny `-n` jest traktowany jako oddzielne polecenie/plik i kończy się błędem "No such file". Do wielu wzorców używaj `rg -n -e "foo" -e "bar"` albo pojedynczego wyrażenia `rg -n "foo|bar"`.
+- `rg --hidden --glob '!.git/**' ...` pozwala objąć ukryte katalogi (np. `.config/...`) bez wchodzenia w `.git`. Jeśli trzeba przeszukać inne ignorowane katalogi, dodaj kolejne `--glob '!.path/**'`.
+
 ---
 
 **Pamiętaj**: README.md to źródło prawdy dla użytkownika. Kod może się zmienić, ale dokumentacja musi być aktualna!

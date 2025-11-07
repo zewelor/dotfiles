@@ -5,7 +5,7 @@
 add_newline = false
 palette = "p10k"
 format = "$username$directory$git_branch$git_status$git_state[](fg:bg) "
-right_format = "$character$cmd_duration$python$kubernetes"
+right_format = "$character$cmd_duration$python$kubernetes[ ](bg:bg)"
 
 [palettes.p10k]
 bg  = "236" # dark
@@ -63,7 +63,7 @@ format = "[$state($progress_current/$progress_total) ](fg:mod bg:bg)"
 
 [cmd_duration]
 min_time = 3000
-format = "[ $duration ](fg:gry bg:bg)"
+format = "[$duration](fg:gry bg:bg)"
 
 [character]
 format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"

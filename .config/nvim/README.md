@@ -116,7 +116,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - **Repo**: [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)
 - **Cel**: Ikony plików dla Neo-tree i pluginów (mock `nvim-web-devicons`)
-- **Uwaga**: To nie zastępuje czcionki w terminalu. Aby uniknąć "kwadratów" także w menu autouzupełniania i innych miejscach, ustaw w terminalu czcionkę z ikonami (np. „JetBrainsMono Nerd Font”).
+- **Uwaga**: To nie zastępuje czcionki w terminalu. Aby uniknąć "kwadratów" także w menu autouzupełniania i innych miejscach, ustaw w terminalu czcionkę z ikonami
 
 ---
 
@@ -251,7 +251,7 @@ Przy pierwszym uruchomieniu:
 
 ### Kwadraty / brak ikon (Neo-tree, menu autouzupełniania)
 
-- Zainstaluj [Nerd Font](https://www.nerdfonts.com/) (np. „JetBrainsMono Nerd Font”).
+- Zainstaluj [Nerd Font](https://www.nerdfonts.com/)
 - Ustaw tę czcionkę w ustawieniach terminala i zrestartuj terminal.
 - Uwaga: `mini.icons` zapewnia mapowania ikon dla pluginów, ale nie dostarcza glifów — te musi mieć czcionka terminala.
 
