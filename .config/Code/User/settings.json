@@ -42,7 +42,7 @@
     "diffEditor.experimental.showMoves": true,
     "docker.extension.enableComposeLanguageServer": false,
     "editor.accessibilitySupport": "off",
-    "editor.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', monospace",
+    "editor.fontFamily": "'FiraCode Nerd Font Mono', monospace",
     "editor.fontLigatures": true,
     "editor.fontSize": 16,
     "editor.formatOnPaste": true,
@@ -107,7 +107,6 @@
         "editor.fontSize"
     ],
     "telemetry.telemetryLevel": "off",
-    "terminal.integrated.fontFamily": "'FiraCode Nerd Font Mono', 'FiraCode Nerd Font', monospace",
     "terminal.integrated.fontSize": 14,
     "terminal.integrated.suggest.enabled": true,
     "update.mode": "none",
@@ -139,5 +138,7 @@
         }
     ],
     "window.zoomLevel": 1,
-    "workbench.colorTheme": "Solarized Light"
+    "workbench.colorTheme": "Solarized Light",
+    "terminal.integrated.customGlyphs": false,
+    "terminal.integrated.enableImages": true
 }

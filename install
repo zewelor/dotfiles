@@ -1,40 +1,38 @@
 #!/bin/zsh
 
 # Exit immediately if a command exits with a non-zero status,
-# if using an undefined variable, or if any command in a pipeline fails
+# if using an undefined variable, or if any command in a pipeline fails.
 set -euo pipefail
 
-# Determine the directory where the script is located
+# Determine the directory where the script is located.
 SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
 BASE_DIR="$SCRIPT_DIR"
-
-# Common paths and URLs
 HOME_DIR="$HOME"
 CONFIG_DIR="$HOME_DIR/.config"
-VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
-VAULT_KEYS=("envs.zsh") # Add more keys as needed
 
-# Function to check if a command exists
+# Optional font installer executable that mirrors the Nerd Font helper.
+FONT_INSTALLER="$BASE_DIR/install-font"
+
+# Common paths and URLs.
+VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
+VAULT_KEYS=("envs.zsh")
+
+# Function to check if a command exists.
 has() { command -v "${1:-}" >/dev/null 2>&1; }
 
-# Function to print banners
-print_banner() {
-    printf "\n#\n%s\n#\n" "$1"
-}
+# Function to print banners for major steps.
+print_banner() { printf "\n#\n%s\n#\n" "$1"; }
 
-# Function to install symlinks using stow
+# Function to install symlinks using stow.
 install_with_stow() {
   local stow_opts=("$@")
 
   echo "Running stow with: ${stow_opts[*]}"
-
-  # Perform a dry run first
   if ! stow -v "${stow_opts[@]}" -n; then
     echo "Error: Stow dry run failed with options: ${stow_opts[*]}" >&2
     exit 1
   fi
 
-  # Prompt the user to apply changes
   read -r "response?Do you want to apply the changes? [y/N] "
   case "$response" in
     [Yy]*)
@@ -47,20 +45,17 @@ install_with_stow() {
   esac
 }
 
-# Function to add secret environment variables from Vault
+# Function to add secret environment variables from Vault.
 add_secret_envs_from_vault() {
   read -r "response?Would you like to add secret envs from Vault? [y/N] "
   if [[ "$response" =~ ^[Yy]$ ]]; then
     read -rs "VAULT_TOKEN?Please provide your Vault token: "
     echo
 
-    # Ensure the target directory exists
     mkdir -p "$HOME_DIR/.zshrc.d"
 
     for key in "${VAULT_KEYS[@]}"; do
       echo "Fetching data for key: $key"
-
-      # Use a subshell with a localized IFS to safely handle JSON parsing
       (
         IFS=$'\n\t'
         local response
@@ -70,7 +65,6 @@ add_secret_envs_from_vault() {
         }
 
         echo "# Generated with install script from dotfiles" > "$HOME_DIR/.zshrc.d/$key"
-        # Process and save environment variables
         echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' >> "$HOME_DIR/.zshrc.d/$key"
       )
 
@@ -81,8 +75,7 @@ add_secret_envs_from_vault() {
   fi
 }
 
-
-# Function to configure Git conflict style
+# Function to configure Git conflict style if git version is old.
 configure_git_conflict_style() {
   local required_git_version="2.35.0"
   local current_version
@@ -96,27 +89,27 @@ configure_git_conflict_style() {
   fi
 }
 
-# Function to setup Atuin
+# Function to setup Atuin configuration.
 setup_atuin() {
   print_banner "Setting up Atuin configuration..."
   mkdir -p "$CONFIG_DIR/atuin/"
   ln -sfn "$BASE_DIR/.config/atuin/config.toml" "$CONFIG_DIR/atuin/config.toml"
 }
 
-# Function to setup SSH configuration
+# Function to ensure SSH directories exist.
 setup_ssh() {
   print_banner "Ensuring SSH configuration directory exists..."
   mkdir -p "$HOME_DIR/.ssh/config.d/"
 }
 
-# Function to setup Midnight Commander
+# Function to setup Midnight Commander configuration.
 setup_mc() {
   print_banner "Setting up Midnight Commander..."
   mkdir -p "$HOME_DIR/.mc/"
   curl -fsSL "https://raw.githubusercontent.com/peel/mc/master/solarized.ini" -o "$HOME_DIR/.mc/solarized.ini"
 }
 
-# Function to setup Vim
+# Function to setup Vim autoload directories and plugins.
 setup_vim() {
   print_banner "Setting up Vim..."
   mkdir -p "$HOME_DIR/.vim/"{autoload,undo,swapfiles,backupfiles}
@@ -124,26 +117,72 @@ setup_vim() {
   vim +PlugInstall +qall
 }
 
-# Install symlinks using stow
-install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" "."
-install_with_stow -t "$HOME_DIR" -d "prv" "."
+# Function to install Neovim plugins via lazy.nvim while Neovim is available.
+setup_nvim_plugins() {
+  local nvim_log
+  nvim_log=$(mktemp -t install-nvim-sync.XXXXXX)
 
-# Add secret environment variables from Vault
-add_secret_envs_from_vault
+  print_banner "Installing Neovim plugins via lazy.nvim..."
+  if nvim --headless -c 'Lazy! sync' -c 'qa' >"$nvim_log" 2>&1; then
+    rm -f "$nvim_log"
+    return
+  fi
 
-# Configure Git conflict style
-configure_git_conflict_style
+  echo "Neovim lazy sync failed; output follows:" >&2
+  cat "$nvim_log" >&2
+  rm -f "$nvim_log"
+  return 1
+}
 
-# Setup various tools
-if has "atuin"; then
-  setup_atuin
-fi
-setup_ssh
-if has "mc"; then
-  setup_mc
-fi
-if has "vim"; then
-  setup_vim
-fi
+# Prompt the user for an optional Nerd Font installation.
+prompt_nerd_font_install() {
+  if [[ ! -x "$FONT_INSTALLER" ]]; then
+    return
+  fi
 
-print_banner "Installation completed successfully."
+  read -r "response?Install a Nerd Font using $FONT_INSTALLER? [y/N] "
+  if [[ ! "$response" =~ ^[Yy]$ ]]; then
+    echo "Nerd Font installation skipped."
+    return
+  fi
+
+  read -r "font_name?Provide the Nerd Font name (case sensitive): "
+  if [[ -z "$font_name" ]]; then
+    echo "No font name provided, skipping Nerd Font installation."
+    return
+  fi
+
+  "$FONT_INSTALLER" "$font_name"
+}
+
+# Main installation routine that coordinates all tasks.
+run_installation() {
+  install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" "."
+  install_with_stow -t "$HOME_DIR" -d "prv" "."
+  add_secret_envs_from_vault
+  configure_git_conflict_style
+
+  if has "atuin"; then
+    setup_atuin
+  fi
+
+  setup_ssh
+
+  if has "mc"; then
+    setup_mc
+  fi
+
+  if has "vim"; then
+    setup_vim
+  fi
+
+  if has "nvim"; then
+    setup_nvim_plugins
+  fi
+
+  prompt_nerd_font_install
+
+  print_banner "Installation completed successfully."
+}
+
+run_installation

@@ -2,6 +2,11 @@
 
 Ten plik zawiera instrukcje i przypomnienia dla AI asystentów (GitHub Copilot, Cline, itp.) pracujących nad tym repozytorium dotfiles. Wszystkie komentarze w innych plikach dodawaj po angielsku. Tylko AGENTS.md trzymamy po polsku, aby ułatwić zrozumienie lokalnym współpracownikom.
 
+## Zasady ogólne
+
+- Jezeli kod mial komentarze, zachowaj je.
+  - Używaj angielskiego do komentarzy w kodzie / configach.
+
 ## 📝 Zasady aktualizacji dokumentacji
 
 ### Neovim (`.config/nvim/`)
@@ -99,6 +104,7 @@ return {
 ## 🚀 Workflow dodawania nowego pluginu
 
 1. **Stwórz plik** `lua/plugins/nazwa.lua`:
+
    ```lua
    -- nazwa - opis
    return {
