@@ -4,9 +4,6 @@ import = [
     "~/.config/alacritty/solarized_light.toml"
 ]
 
-# Always start new windows in $HOME so SpawnNewInstance lands there too
-working_directory = "/home/omen"
-
 [font]
 size = 13
 
@@ -22,31 +19,13 @@ dynamic_title = true
 [mouse]
 hide_when_typing = true
 
-# Send Ctrl+/ as ASCII Unit Separator (0x1F), which Neovim reads as <C-_>
-# This enables Ctrl+/ to toggle comments via our <C-_> mapping in Neovim 0.10+
-[[keyboard.bindings]]
-key = "Slash"
-mods = "Control"
-chars = "\u001f"
+[keyboard]
+bindings = [
+    # Send Ctrl+/ as ASCII Unit Separator (0x1F), which Neovim reads as <C-_>
+    # This enables Ctrl+/ to toggle comments via our <C-_> mapping in Neovim 0.10+
+    { key = "Slash", mods = "Control", chars = "\u001f" },
 
-# Convenient font size controls (Alacritty actions)
-[[keyboard.bindings]]
-key = "Equals"
-mods = "Control|Shift"
-action = "IncreaseFontSize"
-
-[[keyboard.bindings]]
-key = "Minus"
-mods = "Control"
-action = "DecreaseFontSize"
-
-[[keyboard.bindings]]
-key = "Key0"
-mods = "Control"
-action = "ResetFontSize"
-
-# Spawn a fresh Alacritty window, mirroring KDE Konsole's Ctrl+Shift+N
-[[keyboard.bindings]]
-key = "N"
-mods = "Control|Shift"
-action = "SpawnNewInstance"
+    # Spawn a fresh Alacritty window rooted in $HOME without hardcoding a user path
+    { key = "N", mods = "Control|Shift", command = { program = "zsh", args = ["-lc", "cd \"$HOME\" && setsid -f alacritty >/dev/null 2>&1"] } },
+    # { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
+]
