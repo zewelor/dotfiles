@@ -54,9 +54,9 @@ deleted    = "-$count "
 conflicted = "~$count "
 untracked  = "?$count "
 stashed    = "*$count "
-ahead      = "↑$count"
-behind     = "↓$count"
-diverged   = "↕$ahead_count/$behind_count"
+ahead      = "↑$count "
+behind     = "↓$count "
+diverged   = "↕$ahead_count/$behind_count "
 
 [git_state]
 format = "[$state($progress_current/$progress_total) ](fg:mod bg:bg)"
