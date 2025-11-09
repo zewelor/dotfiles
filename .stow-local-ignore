@@ -5,3 +5,4 @@ bin
 .gitmodules
 Makefile
 .*\.md
+.local

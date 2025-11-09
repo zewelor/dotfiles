@@ -138,7 +138,7 @@ After the first launch:
   - Icons for files, folders, LSP, diagnostics
   - Mock for nvim-web-devicons (backward compatible)
   - Used by: neo-tree, which-key
-- **Requirements**: Nerd Font in your terminal (e.g., FiraCode Nerd Font)
+- **Requirements**: Nerd Font in your terminal
 
 ---
 

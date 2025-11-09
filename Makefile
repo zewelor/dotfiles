@@ -1,8 +1,13 @@
-.PHONY: all base install-fonts setup packages $(zinit_dir) zinit_update
+.PHONY: all base install-fonts dotfiles-fonts setup packages $(zinit_dir) zinit_update
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
+
+FONT_INSTALLER=$(BASE)/install-font
+DOTFILES_FONTS_DIR=$(BASE)/.local/share/fonts
+JETBRAINS_FONT_PACKAGE=JetBrainsMono
+JETBRAINS_FONT_SUBFAMILY=NerdFontMono
 
 zinit_dir = ~/.zinit
 
@@ -29,27 +34,21 @@ setup:
 	-git submodule update --init
 	./install
 
-install-fonts:
+dotfiles-fonts:
 	@echo "=========================="
-	@echo "Installing official Nerd Fonts (FiraCode + Symbols)"
+	@echo "Syncing JetBrainsMono Nerd Font (Mono) into dotfiles repo"
 	@set -euo pipefail; \
-	  NF_BASE="https://github.com/ryanoasis/nerd-fonts/releases/latest/download"; \
-	  DEST="$$HOME/.local/share/fonts/NerdFonts"; \
+	  DEST="$(DOTFILES_FONTS_DIR)"; \
 	  mkdir -p "$$DEST"; \
-	  command -v curl >/dev/null || { echo "curl required" >&2; exit 1; }; \
-	  command -v unzip >/dev/null || { echo "unzip required" >&2; exit 1; }; \
-	  command -v fc-cache >/dev/null || { echo "fontconfig (fc-cache) required" >&2; exit 1; }; \
-	  echo "[fonts] Downloading FiraCode.zip …"; \
-	  curl -fsSLo "$$DEST/FiraCode.zip" "$$NF_BASE/FiraCode.zip"; \
-	  echo "[fonts] Downloading NerdFontsSymbolsOnly.zip …"; \
-	  curl -fsSLo "$$DEST/Symbols.zip" "$$NF_BASE/NerdFontsSymbolsOnly.zip"; \
-	  echo "[fonts] Extracting …"; \
-	  unzip -oq "$$DEST/FiraCode.zip" -d "$$DEST"; \
-	  unzip -oq "$$DEST/Symbols.zip" -d "$$DEST"; \
-	  rm -f "$$DEST/FiraCode.zip" "$$DEST/Symbols.zip"; \
-	  echo "[fonts] Refreshing font cache …"; \
-	  fc-cache -f "$$HOME/.local/share/fonts" >/dev/null || fc-cache -f; \
-	  echo "[fonts] Done. Restart terminal and apps to apply."
+	  USER_FONTS_DIR="$$DEST" FONT_CACHE_DIR="$$HOME/.local/share/fonts" \
+	    "$(FONT_INSTALLER)" "$(JETBRAINS_FONT_PACKAGE)" "$(JETBRAINS_FONT_SUBFAMILY)"; \
+	  if [ ! -e "$$HOME/.local/share/fonts" ]; then \
+	    echo "[fonts] Tip: run ./install to stow $$DEST into $$HOME/.local/share/fonts"; \
+	  elif [ "$(readlink -f "$$HOME/.local/share/fonts" 2>/dev/null)" != "$$DEST" ]; then \
+	    echo "[fonts] Warning: $$HOME/.local/share/fonts isn't pointing at $$DEST yet (run ./install)."; \
+	  else \
+	    echo "[fonts] Verified: $$HOME/.local/share/fonts is managed by dotfiles."; \
+	  fi
 	@echo "=========================="
 
 $(zinit_dir):

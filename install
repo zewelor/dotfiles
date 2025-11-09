@@ -134,30 +134,13 @@ setup_nvim_plugins() {
   return 1
 }
 
-# Prompt the user for an optional Nerd Font installation.
-prompt_nerd_font_install() {
-  if [[ ! -x "$FONT_INSTALLER" ]]; then
-    return
-  fi
-
-  read -r "response?Install a Nerd Font using $FONT_INSTALLER? [y/N] "
-  if [[ ! "$response" =~ ^[Yy]$ ]]; then
-    echo "Nerd Font installation skipped."
-    return
-  fi
-
-  read -r "font_name?Provide the Nerd Font name (case sensitive): "
-  if [[ -z "$font_name" ]]; then
-    echo "No font name provided, skipping Nerd Font installation."
-    return
-  fi
-
-  "$FONT_INSTALLER" "$font_name"
-}
-
 # Main installation routine that coordinates all tasks.
 run_installation() {
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" "."
+  if [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
+    mkdir -p "$HOME_DIR/.local/share"
+    install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
+  fi
   install_with_stow -t "$HOME_DIR" -d "prv" "."
   add_secret_envs_from_vault
   configure_git_conflict_style
@@ -179,8 +162,6 @@ run_installation() {
   if has "nvim"; then
     setup_nvim_plugins
   fi
-
-  prompt_nerd_font_install
 
   print_banner "Installation completed successfully."
 }

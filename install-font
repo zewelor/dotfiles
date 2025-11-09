@@ -6,7 +6,8 @@ setopt nullglob
 
 REQUIRED_DEPS=(fc-list fc-cache curl unzip)
 FONT_NAME="${1:-}"
-USER_FONTS_DIR="$HOME/.local/share/fonts"
+FONT_SUBFAMILY_FILTER="${2:-}"
+USER_FONTS_DIR="${USER_FONTS_DIR:-$HOME/.local/share/fonts}"
 
 has() { command -v "${1:-}" >/dev/null 2>&1; }
 
@@ -27,8 +28,8 @@ check_dependencies() {
 
 ensure_font_name() {
   if [[ -z "$FONT_NAME" ]]; then
-    echo "Usage: install-font <Nerd Font Name>"
-    echo "E.g.: install-font 'Hack'"
+    echo "Usage: install-font <Nerd Font Name> [subfamily filter]"
+    echo "E.g.: install-font 'Hack' Mono"
     exit 1
   fi
 }
@@ -47,21 +48,56 @@ show_similar_fonts() {
 download_and_install_font() {
   local temp_dir
   temp_dir=$(mktemp -d)
-  trap 'rm -rf "$temp_dir"' EXIT
+  trap '[[ -n "${temp_dir:-}" ]] && rm -rf "$temp_dir"' EXIT
 
   local download_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${FONT_NAME}.zip"
+  local archive="$temp_dir/font.zip"
   echo "<--- Downloading $FONT_NAME ... --->"
-  curl -L -o "$temp_dir/font.zip" "$download_url"
-  unzip -q "$temp_dir/font.zip" -d "$temp_dir"
+  if ! curl -fL -o "$archive" "$download_url"; then
+    echo "Failed to download $FONT_NAME — check that the release exists."
+    exit 1
+  fi
+
+  unzip -q "$archive" -d "$temp_dir"
 
   mkdir -p "$USER_FONTS_DIR"
+  local installed=0
+  local filter_lower="${FONT_SUBFAMILY_FILTER:l}"
+
   for candidate in "$temp_dir"/*.{otf,ttf,woff,woff2,eot,svg}; do
     [[ -e "$candidate" ]] || continue
+    if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
+      local base="${candidate##*/}"
+      local base_lower="${base:l}"
+      if [[ "$base_lower" != *"$filter_lower"* ]]; then
+        continue
+      fi
+    fi
+
     mv "$candidate" "$USER_FONTS_DIR/"
+    installed=$((installed + 1))
   done
 
-  fc-cache -fv "$USER_FONTS_DIR"
-  echo "<--- $FONT_NAME installed to $USER_FONTS_DIR --->"
+  if (( installed == 0 )); then
+    if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
+      echo "No files matching \"$FONT_SUBFAMILY_FILTER\" were found in the $FONT_NAME release."
+    else
+      echo "No font files were extracted from the $FONT_NAME release."
+    fi
+    exit 1
+  fi
+
+  local cache_target="${FONT_CACHE_DIR:-$USER_FONTS_DIR}"
+  if [[ ! -d "$cache_target" ]]; then
+    cache_target="$USER_FONTS_DIR"
+  fi
+
+  fc-cache -fv "$cache_target"
+  if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
+    echo "<--- Installed $installed $FONT_NAME font(s) matching \"$FONT_SUBFAMILY_FILTER\" to $USER_FONTS_DIR --->"
+  else
+    echo "<--- $FONT_NAME installed to $USER_FONTS_DIR --->"
+  fi
 }
 
 main() {
