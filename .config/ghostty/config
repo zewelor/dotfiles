@@ -44,7 +44,7 @@
 theme = Builtin Solarized Light
 # fullscreen = true # Too much fullscreen
 maximize = true
-font-family = "JetBrainsMono Nerd Font Mono"
+font-family = "JetBrainsMonoNL Nerd Font Mono"
 font-size = 13
 window-save-state = never
 window-inherit-working-directory = false

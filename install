@@ -21,7 +21,11 @@ VAULT_KEYS=("envs.zsh")
 has() { command -v "${1:-}" >/dev/null 2>&1; }
 
 # Function to print banners for major steps.
-print_banner() { printf "\n#\n%s\n#\n" "$1"; }
+print_banner() {
+  local title="$1"
+  local line="========================================"
+  printf "\n%s\n%s\n%s\n" "$line" "$title" "$line"
+}
 
 # Function to install symlinks using stow.
 install_with_stow() {
@@ -43,6 +47,24 @@ install_with_stow() {
       echo "Changes were not applied."
       ;;
   esac
+}
+
+# Function to force-refresh the font cache when fonts are (re)linked.
+refresh_font_cache() {
+  local font_dir="$HOME_DIR/.local/share/fonts"
+
+  if ! has "fc-cache"; then
+    echo "fc-cache not available; cannot refresh font cache." >&2
+    exit 1
+  fi
+
+  if [[ ! -d "$font_dir" ]]; then
+    echo "Font directory $font_dir not found; cannot refresh font cache." >&2
+    exit 1
+  fi
+
+  print_banner "Refreshing font cache..."
+  fc-cache -f "$font_dir"
 }
 
 # Function to add secret environment variables from Vault.
@@ -136,13 +158,23 @@ setup_nvim_plugins() {
 
 # Main installation routine that coordinates all tasks.
 run_installation() {
+  print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" "."
+
   if [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
     mkdir -p "$HOME_DIR/.local/share"
+    print_banner "Stowing repository fonts into $HOME_DIR/.local/share"
     install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
+    refresh_font_cache
   fi
+
+  print_banner "Stowing private overrides from prv/"
   install_with_stow -t "$HOME_DIR" -d "prv" "."
+
+  print_banner "Secret environment variables from Vault (optional)"
   add_secret_envs_from_vault
+
+  print_banner "Checking Git conflict style"
   configure_git_conflict_style
 
   if has "atuin"; then

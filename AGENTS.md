@@ -6,6 +6,7 @@ Ten plik zawiera instrukcje i przypomnienia dla AI asystentów (GitHub Copilot, 
 
 - Jezeli kod mial komentarze, zachowaj je.
   - Używaj angielskiego do komentarzy w kodzie / configach.
+- Skrypt `install` musi mieć czytelny output: przed każdym większym krokiem (np. stow, font cache, Vault) wywołuj `print_banner("Opis kroku")`, tak żeby w logach widać było wyraźne sekcje.
 
 ## 📝 Zasady aktualizacji dokumentacji
 

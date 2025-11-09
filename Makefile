@@ -7,7 +7,7 @@ ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
 FONT_INSTALLER=$(BASE)/install-font
 DOTFILES_FONTS_DIR=$(BASE)/.local/share/fonts
 JETBRAINS_FONT_PACKAGE=JetBrainsMono
-JETBRAINS_FONT_SUBFAMILY=NerdFontMono
+JETBRAINS_FONT_SUBFAMILY=JetBrainsMonoNLNerdFontMono
 
 zinit_dir = ~/.zinit
 
@@ -36,19 +36,12 @@ setup:
 
 dotfiles-fonts:
 	@echo "=========================="
-	@echo "Syncing JetBrainsMono Nerd Font (Mono) into dotfiles repo"
+	@echo "Syncing JetBrainsMonoNL Nerd Font (Mono) into dotfiles repo"
 	@set -euo pipefail; \
 	  DEST="$(DOTFILES_FONTS_DIR)"; \
 	  mkdir -p "$$DEST"; \
-	  USER_FONTS_DIR="$$DEST" FONT_CACHE_DIR="$$HOME/.local/share/fonts" \
-	    "$(FONT_INSTALLER)" "$(JETBRAINS_FONT_PACKAGE)" "$(JETBRAINS_FONT_SUBFAMILY)"; \
-	  if [ ! -e "$$HOME/.local/share/fonts" ]; then \
-	    echo "[fonts] Tip: run ./install to stow $$DEST into $$HOME/.local/share/fonts"; \
-	  elif [ "$(readlink -f "$$HOME/.local/share/fonts" 2>/dev/null)" != "$$DEST" ]; then \
-	    echo "[fonts] Warning: $$HOME/.local/share/fonts isn't pointing at $$DEST yet (run ./install)."; \
-	  else \
-	    echo "[fonts] Verified: $$HOME/.local/share/fonts is managed by dotfiles."; \
-	  fi
+	  USER_FONTS_DIR="$$DEST" FONT_CACHE_DIR="$$HOME/.local/share/fonts" FONT_CACHE_QUIET=1 \
+	    "$(FONT_INSTALLER)" "$(JETBRAINS_FONT_PACKAGE)" "$(JETBRAINS_FONT_SUBFAMILY)";
 	@echo "=========================="
 
 $(zinit_dir):

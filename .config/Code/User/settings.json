@@ -42,7 +42,7 @@
     "diffEditor.experimental.showMoves": true,
     "docker.extension.enableComposeLanguageServer": false,
     "editor.accessibilitySupport": "off",
-    "editor.fontFamily": "'JetBrainsMono Nerd Font Mono'",
+    "editor.fontFamily": "'JetBrainsMonoNL Nerd Font Mono'",
     "editor.fontLigatures": true,
     "editor.fontSize": 16,
     "editor.formatOnPaste": true,
@@ -140,5 +140,36 @@
     "window.zoomLevel": 1,
     "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.customGlyphs": false,
-    "terminal.integrated.enableImages": true
+    "terminal.integrated.enableImages": true,
+    "editor.tokenColorCustomizations": {
+        "textMateRules": [
+            {
+                // Make comments not italic by default
+                "scope": "comment",
+                "settings": {
+                    "fontStyle": ""
+                }
+            }
+        ],
+        "[*Light*]": {
+            "textMateRules": [
+                {
+                    "scope": "ref.matchtext",
+                    "settings": {
+                        "foreground": "#000"
+                    },
+                }
+            ]
+        },
+        "[*Dark*]": {
+            "textMateRules": [
+                {
+                    "scope": "ref.matchtext",
+                    "settings": {
+                        "foreground": "#fff"
+                    }
+                }
+            ]
+        }
+    }
 }

@@ -34,17 +34,6 @@ ensure_font_name() {
   fi
 }
 
-show_similar_fonts() {
-  local similar
-  similar=$(fc-list : family | sort -u | grep -F "$FONT_NAME" || true)
-  if [[ -n "$similar" ]]; then
-    echo "<--- Fonts similar to \"$FONT_NAME\" already installed: --->"
-    echo "$similar"
-    return 0
-  fi
-  return 1
-}
-
 download_and_install_font() {
   local temp_dir
   temp_dir=$(mktemp -d)
@@ -92,7 +81,11 @@ download_and_install_font() {
     cache_target="$USER_FONTS_DIR"
   fi
 
-  fc-cache -fv "$cache_target"
+  if [[ "${FONT_CACHE_QUIET:-0}" == 1 ]]; then
+    fc-cache -fv "$cache_target" >/dev/null 2>&1 || fc-cache -fv >/dev/null 2>&1
+  else
+    fc-cache -fv "$cache_target" || fc-cache -fv
+  fi
   if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
     echo "<--- Installed $installed $FONT_NAME font(s) matching \"$FONT_SUBFAMILY_FILTER\" to $USER_FONTS_DIR --->"
   else
@@ -103,15 +96,6 @@ download_and_install_font() {
 main() {
   check_dependencies
   ensure_font_name
-
-  if show_similar_fonts; then
-    read -r "response?Install $FONT_NAME anyway? [y/N] "
-    if [[ ! "$response" =~ ^[Yy]$ ]]; then
-      echo "<--- Installation of $FONT_NAME cancelled --->"
-      exit 0
-    fi
-  fi
-
   download_and_install_font
 }
 

@@ -8,7 +8,7 @@ import = [
 size = 13
 
 [font.normal]
-family = "JetBrainsMono Nerd Font Mono"
+family = "JetBrainsMonoNL Nerd Font Mono"
 
 [window]
 # Start Alacritty in fullscreen by default
@@ -26,6 +26,6 @@ bindings = [
     { key = "Slash", mods = "Control", chars = "\u001f" },
 
     # Spawn a fresh Alacritty window rooted in $HOME without hardcoding a user path
-    { key = "N", mods = "Control|Shift", command = { program = "zsh", args = ["-lc", "cd \"$HOME\" && setsid -f alacritty >/dev/null 2>&1"] } },
+    { key = "N", mods = "Control|Shift", command = { program = "zsh", args = ["-lc", "setsid -f alacritty --working-directory \"$HOME\" >/dev/null 2>&1"] } },
     # { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
 ]
