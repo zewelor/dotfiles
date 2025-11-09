@@ -1,156 +1,116 @@
-# Notatki dla AI Agents
+# Notatki dla AI Agents (skrót)
 
-Ten plik zawiera instrukcje i przypomnienia dla AI asystentów (GitHub Copilot, Cline, itp.) pracujących nad tym repozytorium dotfiles. Wszystkie komentarze w innych plikach dodawaj po angielsku. Tylko AGENTS.md trzymamy po polsku, aby ułatwić zrozumienie lokalnym współpracownikom.
+Ten plik definiuje minimalne, jednoznaczne zasady pracy w repo dotfiles.
+Komentarze w kodzie/configach: po angielsku. Ten plik: po polsku.
 
-## Zasady ogólne
+## Zasady ogólne (MUST)
 
-- Jezeli kod mial komentarze, zachowaj je.
-  - Używaj angielskiego do komentarzy w kodzie / configach.
-- Skrypt `install` musi mieć czytelny output: przed każdym większym krokiem (np. stow, font cache, Vault) wywołuj `print_banner("Opis kroku")`, tak żeby w logach widać było wyraźne sekcje.
+- Zachowuj istniejące komentarze; nowe komentarze w kodzie pisz po angielsku.
+- Skrypt `install` musi mieć czytelny output: przed każdym większym krokiem
+  wywołuj `print_banner('Opis kroku')`.
+- Stosuj minimalne, celowe zmiany i trzymaj styl istniejącego kodu.
 
-## 📝 Zasady aktualizacji dokumentacji
+## Neovim: kiedy aktualizować README (MUST)
 
-### Neovim (`.config/nvim/`)
+Zawsze aktualizuj `~/.config/nvim/README.md`, gdy:
 
-**WAŻNE**: Przy każdej zmianie w konfiguracji Neovim, ZAWSZE aktualizuj `README.md`!
+- Dodajesz/usuwasz plugin (`lua/plugins/*.lua`) — dopisz/usuń sekcję w
+  “🔌 Pluginy i ich użycie”.
+- Zmieniasz keymapy (`lua/config/keymaps.lua`) — zaktualizuj “⌨️ Własne
+  skróty klawiszowe”.
+- Zmieniasz opcje (`lua/config/options.lua`) — zaktualizuj “⚙️ Core Options”
+  (dodaj wyjaśnienie, jeśli nietypowe).
+- Zmieniasz strukturę — zaktualizuj diagram i opisz nowe pliki.
 
-README.md ma być po angielsku i zawierać
+### Struktura i organizacja nvim (MUST)
 
-#### Kiedy aktualizować README.md:
-
-1. **Dodanie/usunięcie pluginu** (`lua/plugins/*.lua`)
-   - Dodaj/usuń sekcję w "🔌 Pluginy i ich użycie"
-   - Opisz cel pluginu, repo, podstawowe komendy
-
-2. **Zmiana keybindingów** (`lua/config/keymaps.lua`)
-   - Aktualizuj sekcję "⌨️ Własne skróty klawiszowe"
-   - Uporządkuj według kategorii (Leader / bez Leadera)
-   - Zachowaj podział na podsekcje
-
-3. **Zmiana opcji edytora** (`lua/config/options.lua`)
-   - Zaktualizuj tabelę w "⚙️ Core Options"
-   - Dodaj wyjaśnienie jeśli opcja jest nietypowa
-
-4. **Zmiana struktury plików** (dodanie nowych modułów)
-   - Zaktualizuj diagram struktury w "### Struktura konfiguracji"
-   - Dodaj komentarz co robi nowy plik
-
-#### Format dokumentacji pluginów w README.md:
-
-```markdown
-### **nazwa-pluginu** — Krótki opis
-
-- **Repo**: [autor/nazwa](https://github.com/autor/nazwa)
-- **Cel**: Szczegółowy opis do czego służy
-- **Keymaps** (jeśli są):
-  - `<leader>x` — opis akcji
-  - `:Komenda` — opis komendy
-- **Dodatkowe info**: Requirements, setup, tips
-
----
-```
-
-#### Format keybindingów w README.md:
-
-```markdown
-#### Nazwa kategorii
-
-- `<Space>x` — Opis akcji (`:vim-command`)
-- `Ctrl+h` — Opis akcji
-```
-
-## 🔧 Struktura projektu
-
-### Neovim config (`~/.config/nvim/`)
-
-```
+```text
 .config/nvim/
-├── init.lua              # Entry point
-├── lua/
-│   ├── config/
-│   │   ├── lazy.lua     # Plugin manager setup
-│   │   ├── options.lua  # vim.opt ustawienia
-│   │   └── keymaps.lua  # Wszystkie keybindings
-│   └── plugins/         # Każdy plugin = osobny plik
-│       ├── *.lua        # Auto-importowane przez lazy.nvim
+├── init.lua
+└── lua/
+    ├── config/
+    │   ├── lazy.lua
+    │   ├── options.lua
+    │   └── keymaps.lua
+    └── plugins/
+        └── *.lua   # jeden plugin = jeden plik
 ```
 
-### Zasady organizacji
+- Wszystkie keymaps trzymaj w `lua/config/keymaps.lua`.
+- Opcje edytora trzymaj w `lua/config/options.lua`.
 
-1. **Jeden plugin = jeden plik** w `lua/plugins/`
-2. **Wszystkie keymaps w jednym miejscu**: `lua/config/keymaps.lua`
-3. **Opcje edytora oddzielnie**: `lua/config/options.lua`
-4. **README.md zawsze aktualny** z listą pluginów i keymaps
+### Styl Lua (SHOULD)
 
-## 🎨 Styl kodu Lua
+- Komentarze nad kodem, zwięzłe i „dlaczego”, nie „co”.
+- Używaj `require('which-key')` (spójnie z resztą).
+- Zawsze dodawaj `desc` przy keymapach (for which-key).
+- Plugin specs poprzedzaj krótkim komentarzem: `-- nazwa-pluginu — krótki opis`.
 
-```lua
--- Komentarze nad kodem, nie z boku
-local variable = "value"
+### Workflow nowego pluginu (MUST)
 
--- Używaj require("which-key") zamiast require "which-key"
-local wk = require("which-key")
-
--- Keymaps z opisami:
-vim.keymap.set("n", "<leader>x", ":Command<CR>", { desc = "Human readable description" })
-
--- Plugin specs zawsze z komentarzem na początku:
--- nazwa-pluginu - krótki opis do czego służy
-return {
-  "author/plugin-name",
-  -- ...
-}
-```
-
-## 🚀 Workflow dodawania nowego pluginu
-
-1. **Stwórz plik** `lua/plugins/nazwa.lua`:
+1. Utwórz `lua/plugins/nazwa.lua`:
 
    ```lua
-   -- nazwa - opis
+   -- nazwa - krótki opis
    return {
-     "author/plugin",
+     'author/plugin',
      opts = {},
      config = function() end,
    }
+
    ```
 
-2. **Jeśli plugin ma keymaps**, dodaj je do `lua/config/keymaps.lua`
+2. Jeśli plugin ma keymaps — dodaj je w `lua/config/keymaps.lua` (z `desc`).
+3. Zaktualizuj README: sekcja pluginu (+ keymaps, jeśli nowe).
+4. Przetestuj: `:Lazy sync`, restart Neovim.
 
-3. **Zaktualizuj README.md**:
-   - Dodaj sekcję w "🔌 Pluginy"
-   - Zaktualizuj "⌨️ Własne skróty klawiszowe" jeśli są nowe
+### Szablony do README (SHOULD)
 
-4. **Testuj**: `:Lazy sync` i sprawdź czy działa
+Minimalne, spójne formaty:
 
-## 📋 Checklist przed commitem zmian w Neovim
+- Plugin:
 
-- [ ] Kod działa (`:Lazy sync`, restart Neovim)
-- [ ] README.md zaktualizowany (pluginy + keymaps)
-- [ ] Komentarze w kodzie opisują "dlaczego", nie "co"
-- [ ] Keymaps mają `desc` property dla which-key
-- [ ] Struktura w README.md zgadza się z rzeczywistością
+  ```markdown
+  ### nazwa-pluginu — Krótki opis
+  - Repo: https://github.com/autor/nazwa
+  - Cel: do czego służy
+  - Keymaps (jeśli są):
+    - <leader>x — opis
+    - :Komenda — opis
+  - Dodatkowe: wymagania/tips
+  ---
+  ```
 
-## 🤖 Dla AI Agents: Szybki checklist
+- Keybindings:
 
-Gdy użytkownik prosi o:
+  ```markdown
+  #### Nazwa kategorii
+  - <Space>x — Opis akcji (:vim-command)
+  - Ctrl+h — Opis akcji
+  ```
 
-- **"dodaj plugin X"** → stwórz `lua/plugins/x.lua` + aktualizuj README.md (sekcja pluginy)
-- **"dodaj keybinding Y"** → edytuj `keymaps.lua` + aktualizuj README.md (sekcja keymaps)
-- **"zmień opcję Z"** → edytuj `options.lua` + aktualizuj README.md (sekcja options, jeśli istotne)
-- **"jak używać X?"** → sprawdź README.md najpierw, potem kod
+### Checklist przed commitem zmian w Neovim
 
-## 📚 Źródła
+- [ ] Działa: `:Lazy sync`, restart Neovim.
+- [ ] README zaktualizowany (pluginy + keymaps + options/struktura).
+- [ ] Komentarze wyjaśniają „dlaczego”.
+- [ ] Keymaps mają `desc`.
+- [ ] Struktura repo = zgodna z README.
 
-- Lazy.nvim docs: <https://lazy.folke.io/>
-- Which-key.nvim: <https://github.com/folke/which-key.nvim>
-- Neovim docs: `:help` w Neovim
+### Szybki mapping zadań (dla AI)
 
-## 🛠️ Narzędzia CLI
+- „dodaj plugin X” → `lua/plugins/x.lua` + README (pluginy)
+- „dodaj keybinding Y” → `keymaps.lua` + README (keymaps)
+- „zmień opcję Z” → `options.lua` + README (options, jeśli istotne)
+- „jak używać X?” → najpierw README, potem kod
 
-- `rg` (ripgrep): pamiętaj, że `-n` to flaga numeru linii. Nie powtarzaj jej między wzorcami (`rg -n "foo" -n "bar"`), bo każdy kolejny `-n` jest traktowany jako oddzielne polecenie/plik i kończy się błędem "No such file". Do wielu wzorców używaj `rg -n -e "foo" -e "bar"` albo pojedynczego wyrażenia `rg -n "foo|bar"`.
-- `rg --hidden --glob '!.git/**' ...` pozwala objąć ukryte katalogi (np. `.config/...`) bez wchodzenia w `.git`. Jeśli trzeba przeszukać inne ignorowane katalogi, dodaj kolejne `--glob '!.path/**'`.
+### Źródła
 
----
+- [Lazy.nvim](https://lazy.folke.io/)
+- [which-key.nvim](https://github.com/folke/which-key.nvim)
+- Neovim docs: `:help`
 
-**Pamiętaj**: README.md to źródło prawdy dla użytkownika. Kod może się zmienić, ale dokumentacja musi być aktualna!
+## Narzędzia CLI (tipy)
+
+- Ripgrep wieloma wzorcami: `rg -n -e 'foo' -e 'bar'` lub `rg -n 'foo|bar'`.
+- Ukryte pliki bez `.git`: `rg --hidden --glob '!.git/**' ...`.
