@@ -23,7 +23,7 @@ format      = "[#]($style)[ ](bg:bg bold)"
 style_root  = "fg:mod bg:bg bold"
 
 [directory]
-format                    = '[ ](bg:bg)[$path]($style)[$read_only]($read_only_style)'
+format                    = '[ ](bg:bg)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
 read_only                 = "󰌾"
 read_only_style           = "fg:anc bg:bg bold"
 style                     = "bg:bg fg:anc bold"
@@ -34,7 +34,7 @@ fish_style_pwd_dir_length = 1
 
 [git_branch]
 symbol = " "
-format = "[ $symbol$branch ](fg:vcs bg:bg)"
+format = "[$symbol$branch ](fg:vcs bg:bg)"
 truncation_length = 32
 truncation_symbol = "…"
 
