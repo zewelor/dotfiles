@@ -21,6 +21,7 @@ _title_terminal() {
     local cut=$(( max > 3 ? max-3 : max ))
     expanded="${expanded[1,$cut]}..."
   fi
+  [[ $EUID -eq 0 ]] && expanded="# ${expanded}"
   # Emit OSC 2 only
   printf '\033]2;%s\007' "$expanded"
 }
