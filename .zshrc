@@ -165,7 +165,6 @@ zinit wait lucid for \
 #
 # Aliases
 #
-#
 
 # Apt
 # Use sudo without aliases
@@ -433,6 +432,10 @@ if has "ledfx"; then
 
     return $exit_code
   }
+fi
+
+if has "code"; then
+  alias codenw="code -n -w ."
 fi
 
 #
