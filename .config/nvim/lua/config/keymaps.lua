@@ -64,7 +64,7 @@ keymap("n", "<C-Right>", ":vertical resize +2<CR>", opts)
 keymap("v", "<", "<gv", { desc = "Indent left and reselect" })
 keymap("v", ">", ">gv", { desc = "Indent right and reselect" })
 
--- Cycle line numbers with Ctrl+N (double press): off → absolute → relative
+-- Keep sign column hidden whenever line numbers are disabled to remove the gutter.
 keymap("n", "<C-n><C-n>", function()
 	local number = vim.wo.number
 	local relativenumber = vim.wo.relativenumber
@@ -73,16 +73,19 @@ keymap("n", "<C-n><C-n>", function()
 		-- currently off → switch to absolute
 		vim.wo.number = true
 		vim.wo.relativenumber = false
+		vim.wo.signcolumn = "yes"
 		if vim.notify then vim.notify("Line numbers: absolute", vim.log.levels.INFO, { title = "Numbers" }) end
 	elseif number and not relativenumber then
 		-- absolute → switch to relative
 		vim.wo.number = true
 		vim.wo.relativenumber = true
+		vim.wo.signcolumn = "yes"
 		if vim.notify then vim.notify("Line numbers: relative", vim.log.levels.INFO, { title = "Numbers" }) end
 	else
 		-- relative (or any other state) → turn off
 		vim.wo.number = false
 		vim.wo.relativenumber = false
+		vim.wo.signcolumn = "no"
 		if vim.notify then vim.notify("Line numbers: off", vim.log.levels.INFO, { title = "Numbers" }) end
 	end
 end, { desc = "Cycle line numbers (off → abs → rel)" })

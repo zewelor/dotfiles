@@ -138,7 +138,6 @@
         }
     ],
     "window.zoomLevel": 1,
-    "workbench.colorTheme": "Solarized Light",
     "terminal.integrated.customGlyphs": false,
     "terminal.integrated.enableImages": true,
     "editor.tokenColorCustomizations": {
@@ -174,5 +173,6 @@
     },
     "vs-kubernetes": {
         "vs-kubernetes.crd-code-completion": "disabled"
-    }
+    },
+    "workbench.colorTheme": "Solarized Light"
 }

@@ -180,6 +180,10 @@ Główne opcje edytora (z `lua/config/options.lua`):
 - `<C-Left>` — Zmniejsz szerokość
 - `<C-Right>` — Zwiększ szerokość
 
+#### Numery linii
+
+- `Ctrl+n Ctrl+n` — Cyklicznie przełącz numerację: wył. (chowa też signcolumn) → absolutna → relatywna
+
 #### Wcięcia w Visual mode
 
 - `<` — Wcięcie w lewo (i zachowaj zaznaczenie)
