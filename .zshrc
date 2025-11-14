@@ -81,7 +81,7 @@ zle -N bracketed-paste bracketed-paste-url-magic
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
 
-# Prompt
+# Prompt download / initialization
 #
 zinit ice as"command" from"gh-r" \
           atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
@@ -569,9 +569,5 @@ if has "tmuxinator" ; then
   alias mux="tmuxinator"
 fi
 
-## Initialize Starship prompt at the very end
-if command -v starship >/dev/null 2>&1; then
-  eval "$(starship init zsh)"
-fi
-
+# Starship is already initialized via zinit above; avoid double init to prevent recursive zle wrappers.
 _title_terminal_pwd
