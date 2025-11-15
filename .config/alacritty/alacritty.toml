@@ -31,4 +31,7 @@ bindings = [
     # Spawn a fresh Alacritty window rooted in $HOME without hardcoding a user path
     { key = "N", mods = "Control|Shift", command = { program = "zsh", args = ["-lc", "setsid -f alacritty --working-directory \"$HOME\" >/dev/null 2>&1"] } },
     # { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
+
+    # Shift+Insert should paste from the regular clipboard, not PRIMARY selection
+    { key = "Insert", mods = "Shift", action = "Paste" },
 ]
