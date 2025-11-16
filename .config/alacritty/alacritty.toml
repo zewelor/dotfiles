@@ -34,4 +34,8 @@ bindings = [
 
     # Shift+Insert should paste from the regular clipboard, not PRIMARY selection
     { key = "Insert", mods = "Shift", action = "Paste" },
+
+    # Keep scrolling shortcuts aligned with common terminal defaults and focus history navigation
+    { key = "PageUp", mods = "Control", action = "ScrollPageUp" },
+    { key = "PageDown", mods = "Control", action = "ScrollPageDown" },
 ]
