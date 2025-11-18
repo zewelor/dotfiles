@@ -4,6 +4,10 @@
 #
 #
 
+if ! is_desktop; then
+  return
+fi
+
 # Lazy load Codex completions to improve shell startup time
 function _codex() {
   # Remove the function to prevent recursion on subsequent calls

@@ -12,10 +12,9 @@ JETBRAINS_FONT_SUBFAMILY=JetBrainsMonoNLNerdFontMono
 zinit_dir = ~/.zinit
 
 # List of packages to install (one per line for readability)
-APT_PACKAGES= \
+APT_PACKAGES_CORE= \
 	fontconfig \
 	unzip \
-	neovim \
 	autoconf \
 	tmux \
 	zsh \
@@ -23,7 +22,9 @@ APT_PACKAGES= \
 	ncdu \
 	curl \
 	jq \
-	stow \
+	stow
+
+APT_PACKAGES_OPTIONAL= \
 	lazygit \
 	ripgrep
 
@@ -47,7 +48,6 @@ dotfiles-fonts:
 $(zinit_dir):
 	@echo "=========================="
 	@echo "Installing zinit"
-
 	mkdir -p $(zinit_dir)
 	chmod g-rwX $(zinit_dir)
 	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
@@ -55,7 +55,20 @@ $(zinit_dir):
 	@echo "=========================="
 
 packages:
-	sudo apt-get install -y --no-install-recommends $(APT_PACKAGES)
+	sudo apt-get install -y --no-install-recommends $(APT_PACKAGES_CORE)
+	-sudo apt-get install -y --no-install-recommends $(APT_PACKAGES_OPTIONAL)
+	@echo "Checking available Neovim version..."
+	@CANDIDATE=$$(LC_ALL=C apt-cache policy neovim | grep Candidate | awk '{print $$2}'); \
+	if [ -z "$$CANDIDATE" ] || [ "$$CANDIDATE" = "(none)" ]; then \
+		echo "Neovim not found in apt. Installing Vim..."; \
+		sudo apt-get install -y --no-install-recommends vim; \
+	elif dpkg --compare-versions "$$CANDIDATE" lt "0.8"; then \
+		echo "Neovim version $$CANDIDATE is too old (< 0.8). Installing Vim..."; \
+		sudo apt-get install -y --no-install-recommends vim; \
+	else \
+		echo "Neovim version $$CANDIDATE is sufficient (>= 0.8). Installing Neovim..."; \
+		sudo apt-get install -y --no-install-recommends neovim; \
+	fi
 
 zinit_update:
 	echo "Remember to update root also"

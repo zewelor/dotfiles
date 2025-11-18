@@ -1,3 +1,7 @@
+if ! is_desktop; then
+  return
+fi
+
 ghcs() {
 	FUNCNAME="$funcstack[1]"
 	TARGET="shell"
