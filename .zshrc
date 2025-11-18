@@ -295,7 +295,7 @@ if has "git"; then
 fi
 
 # Bonus
-alias update_bonus="ssh bonuswww@94.23.226.99 -t 'cd ~/www ; git pull origin'"
+alias update_bonus="ssh bonus -t 'cd ~/bonus_docker ; git pull origin'"
 
 #
 # Utils

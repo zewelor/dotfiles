@@ -49,7 +49,7 @@ if has "llm"; then
     # Function to generate commit message using the gemini model
     generate_commit_message() {
       export LLM_GEMINI_KEY=$GEMINI_API_KEY
-      local model="gemini-2.5-flash"
+      local model="gemini-flash-latest"
       local diff_content=$(git --no-pager diff --cached)
 
       if [ -z "$diff_content" ]; then

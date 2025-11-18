@@ -33,7 +33,10 @@
     "chat.mcp.gallery.enabled": true,
     "chat.tools.terminal.autoApprove": {
         "clear": true,
-        "nvim --headless": true
+        "nvim --headless": true,
+        "rg": true,
+        "git clone": true,
+        "/bin/ls": true
     },
     "dev.containers.defaultExtensions": [
         "GitHub.copilot"
