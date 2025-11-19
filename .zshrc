@@ -194,6 +194,10 @@ alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | 
 
 # Pipx nees to be updated as user
 function update () {
+  sudo sh -c 'apt autoremove -y --purge && apt update && apt full-upgrade -y && apt autoremove -y --purge'
+}
+
+function update-all () {
   # Determine target non-root user for user-scoped updates
   # Prefer the invoking sudo user, otherwise fall back to UID 1000 or current user
   local target_user
@@ -210,10 +214,7 @@ function update () {
   [[ -z "${target_home}" ]] && target_home="$HOME"
 
   echo "[apt] Running system package maintenance"
-  if sudo apt autoremove -y --purge &&
-     sudo apt update &&
-     sudo apt full-upgrade -y &&
-     sudo apt autoremove -y --purge; then
+  if update; then
     echo "[apt] System package maintenance complete"
   else
     echo "[apt] System package maintenance failed"
