@@ -5,7 +5,7 @@
 add_newline = false
 palette = "p10k"
 format = "$username$hostname$directory$git_branch$git_status$git_state[](fg:bg) "
-right_format = "$character$cmd_duration$python$kubernetes"
+right_format = "$character$cmd_duration$kubernetes"
 
 [palettes.p10k]
 bg  = "236" # dark gray (tło)
@@ -17,7 +17,6 @@ err = "196" # red (błędy, usunięte pliki, root)
 unt = "39"  # light blue (nieśledzone pliki)
 gry = "248" # grey (czas trwania komendy)
 hst = "242" # dark grey (hostname - subtelny)
-pyt = "37"  # teal (python)
 k8s = "134" # purple (kubernetes)
 suc = "70"  # green (sukces komendy)
 fail = "160" # red (błąd komendy)
@@ -86,11 +85,6 @@ format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
 success_symbol  = "[󰄬](fg:suc bg:bg bold)"
 error_symbol    = "[󰅖](fg:fail bg:bg bold)"
 vimcmd_symbol   = "[NORMAL](fg:vim bg:bg bold)"
-
-[python]
-format = '[${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-style = "fg:pyt bg:bg bold"
-detect_files = ['.python-version', 'Pipfile', '__init__.py', 'requirements.txt', 'setup.py', 'tox.ini']
 
 [kubernetes]
 disabled = false
