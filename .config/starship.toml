@@ -52,7 +52,9 @@ format = "[$symbol$branch ](fg:vcs bg:bg)"
 truncation_length = 32
 truncation_symbol = "…"
 
+# https://starship.rs/config/#git-status
 [git_status]
+# A conditional format string wrapped in ( and ) will not render if all variables inside are empty.
 format = """([\
 [\\[](fg:vcs bg:bg)[$staged](fg:mod bg:bg bold)\
 [$deleted$conflicted](fg:err bg:bg)\
