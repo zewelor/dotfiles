@@ -119,17 +119,17 @@ add_secret_envs_from_vault() {
   fi
 }
 
-# Function to configure Git conflict style if git version is old.
+# Function to configure Git conflict style based on git version.
 configure_git_conflict_style() {
   local required_git_version="2.35.0"
   local current_version
   current_version=$(git --version | awk '{print $3}')
 
   autoload -Uz is-at-least
-  if ! is-at-least "$required_git_version" "$current_version"; then
-    echo "Your Git version ($current_version) is older than $required_git_version."
-    git config --file "$HOME_DIR/.gitconfig.local" merge.conflictstyle "diff3"
-    echo "Set 'merge.conflictstyle' to 'diff3' in $HOME_DIR/.gitconfig.local."
+  if is-at-least "$required_git_version" "$current_version"; then
+    echo "Git version ($current_version) supports zdiff3."
+    git config --file "$HOME_DIR/.gitconfig.local" merge.conflictstyle "zdiff3"
+    echo "Set 'merge.conflictstyle' to 'zdiff3' in $HOME_DIR/.gitconfig.local."
   fi
 }
 
