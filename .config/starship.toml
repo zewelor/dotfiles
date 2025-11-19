@@ -53,14 +53,14 @@ truncation_length = 32
 truncation_symbol = "…"
 
 [git_status]
-format = """[\
+format = """([\
 [\\[](fg:vcs bg:bg)[$staged](fg:mod bg:bg bold)\
 [$deleted$conflicted](fg:err bg:bg)\
 [$modified$typechanged$renamed](fg:mod bg:bg)\
 [$untracked](fg:unt bg:bg)\
 [$stashed](fg:vcs bg:bg)\
 [$ahead_behind](fg:vcs bg:bg)\
-[\\]](bg:bg fg:vcs)](bg:bg)"""
+[\\]](bg:bg fg:vcs)](bg:bg))"""
 staged     = "+"
 modified   = "!"
 renamed    = ">"
