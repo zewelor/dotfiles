@@ -8,23 +8,37 @@ format = "$username$hostname$directory$git_branch$git_status$git_state[](fg:b
 right_format = "$character$cmd_duration$python$kubernetes"
 
 [palettes.p10k]
-bg  = "236" # dark
-dir = "31"  # dark blue
-anc = "39"  # light blue
-vcs = "76"
-mod = "178"
-err = "196"
-unt = "39"
-gry = "248"
+bg  = "236" # dark gray (tło)
+dir = "31"  # deep blue (ścieżka katalogu)
+anc = "39"  # light blue (ikona kłódki, styl katalogu)
+vcs = "76"  # lime green (git branch)
+mod = "178" # gold (zmiany w git, zwykły użytkownik)
+err = "196" # red (błędy, usunięte pliki, root)
+unt = "39"  # light blue (nieśledzone pliki)
+gry = "248" # grey (czas trwania komendy)
+hst = "250" # silver (hostname)
+pyt = "37"  # teal (python)
+k8s = "134" # purple (kubernetes)
+suc = "70"  # green (sukces komendy)
+fail = "160" # red (błąd komendy)
+vim = "106" # green (tryb vim)
 
 [username]
-show_always = false
+show_always = true
 format      = "[$user]($style)"
-style_root  = "fg:mod bg:bg bold"
+style_root  = "fg:err bg:bg bold"
+style_user  = "fg:mod bg:bg bold"
+
+# https://starship.rs/config/#hostname
+[hostname]
+format = '[@$hostname]($style)'
+style = "bg:bg fg:hst bold"
+# Zrobilem tak bo inaczje trzebbay zmienia etc sudeors na kazdym host zeby zachowyal env ssh przy sudo, sporo roboty i pamietania, zawsz emoge wrocic
+ssh_only = false
 
 [directory]
 format                    = '[ ](bg:bg)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
-read_only                 = "󰌾"
+read_only                 = " 󰌾"
 read_only_style           = "fg:anc bg:bg bold"
 style                     = "bg:bg fg:anc bold"
 fish_style_pwd_dir_length = 1
@@ -40,22 +54,22 @@ truncation_symbol = "…"
 
 [git_status]
 format = """[\
-[$staged](fg:mod bg:bg bold)\
+[\\[](fg:vcs bg:bg)[$staged](fg:mod bg:bg bold)\
 [$deleted$conflicted](fg:err bg:bg)\
 [$modified$typechanged$renamed](fg:mod bg:bg)\
 [$untracked](fg:unt bg:bg)\
 [$stashed](fg:vcs bg:bg)\
 [$ahead_behind](fg:vcs bg:bg)\
-](bg:bg)"""
-staged     = "+$count "
-modified   = "!$count "
-renamed    = ">$count "
-deleted    = "-$count "
-conflicted = "~$count "
-untracked  = "?$count "
-stashed    = "*$count "
-ahead      = "↑$count "
-behind     = "↓$count "
+[\\]](bg:bg fg:vcs)](bg:bg)"""
+staged     = "+"
+modified   = "!"
+renamed    = ">"
+deleted    = "-"
+conflicted = "~"
+untracked  = "?"
+stashed    = "*"
+ahead      = "↑"
+behind     = "↓"
 diverged   = "↕$ahead_count/$behind_count "
 
 [git_state]
@@ -67,17 +81,17 @@ format = "[$duration ](fg:gry bg:bg)"
 
 [character]
 format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
-success_symbol  = "[󰄬](fg:70 bg:bg bold)"
-error_symbol    = "[󰅖](fg:160 bg:bg bold)"
-vimcmd_symbol   = "[NORMAL](fg:106 bg:bg bold)"
+success_symbol  = "[󰄬](fg:suc bg:bg bold)"
+error_symbol    = "[󰅖](fg:fail bg:bg bold)"
+vimcmd_symbol   = "[NORMAL](fg:vim bg:bg bold)"
 
 [python]
 format = '[${pyenv_prefix}(${version} )(\($virtualenv\) )]($style)'
-style = "fg:37 bg:bg bold"
+style = "fg:pyt bg:bg bold"
 detect_files = ['.python-version', 'Pipfile', '__init__.py', 'requirements.txt', 'setup.py', 'tox.ini']
 
 [kubernetes]
 disabled = false
 detect_env_vars = ["KUBECONFIG", "KUBE_CONTEXT"]
 format = '[⎈ $cluster( \($namespace\)) ]($style)'
-style = "fg:134 bg:bg bold"
+style = "fg:k8s bg:bg bold"
