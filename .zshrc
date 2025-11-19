@@ -16,6 +16,10 @@ is_desktop() {
   [[ "$profile" == "desktop" ]]
 }
 
+is_slow_fs() {
+  [[ "$PWD" == /mnt/nas* ]]
+}
+
 setopt globdots               # Include hidden files (those starting with a dot) in pathname expansion
 setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
@@ -336,7 +340,15 @@ alias -g J='| jq'
 alias -g JL='| jq -C | less -R'
 
 # Directory listing
-alias ls='ls --color=auto'
+# Directory listing
+# alias ls='ls --color=auto' # Disabled for custom function below
+function ls() {
+  if is_slow_fs; then
+    command ls "$@"
+  else
+    command ls --color=auto "$@"
+  fi
+}
 alias l='ls -1A'         # Lists in one column, hidden files.
 alias ll='ls -lh'        # Lists human readable sizes.
 alias lr='ll -R'         # Lists human readable sizes, recursively.
@@ -575,7 +587,29 @@ fi
 
 if has "mise"; then
   eval "$(mise activate zsh)"
+  # Override mise hook to disable it in /mnt/nas
+  _mise_hook() {
+    if is_slow_fs; then
+      return
+    fi
+    local previous_exit_status=$?;
+    trap -- '' SIGINT;
+    eval "$(mise export zsh)";
+    trap - SIGINT;
+    return $previous_exit_status;
+  }
 fi
+
+# Switch Starship config based on directory
+function _starship_config_switch() {
+  if is_slow_fs; then
+    export STARSHIP_CONFIG="$HOME/.config/starship-lite.toml"
+  else
+    unset STARSHIP_CONFIG
+  fi
+}
+add-zsh-hook chpwd _starship_config_switch
+_starship_config_switch # Run once on init
 
 if has "tmuxinator" ; then
   zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
