@@ -4,7 +4,7 @@
 
 add_newline = false
 palette = "p10k"
-format = "$username$directory$git_branch$git_status$git_state[](fg:bg) "
+format = "$username$hostname$directory$git_branch$git_status$git_state[](fg:bg) "
 right_format = "$character$cmd_duration$python$kubernetes"
 
 [palettes.p10k]
@@ -19,7 +19,7 @@ gry = "248"
 
 [username]
 show_always = false
-format      = "[#]($style)[ ](bg:bg bold)"
+format      = "[$user]($style)"
 style_root  = "fg:mod bg:bg bold"
 
 [directory]

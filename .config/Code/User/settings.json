@@ -178,5 +178,6 @@
         "vs-kubernetes.crd-code-completion": "disabled"
     },
     "workbench.colorTheme": "Solarized Light",
-    "vim.smartRelativeLine": true
+    "vim.smartRelativeLine": true,
+    "remote.SSH.enableDynamicForwarding": false
 }
