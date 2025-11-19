@@ -176,20 +176,30 @@ configure_profile() {
   local profile_file="$HOME_DIR/.zshrc.d/profile.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"
 
-  # Check if DOTFILES_PROFILE is passed via environment (non-interactive mode)
+  # Check if DOTFILES_PROFILE is passed via environment
   if [[ -n "${DOTFILES_PROFILE:-}" ]]; then
+    # Validate the environment variable
+    if [[ "$DOTFILES_PROFILE" != "desktop" && "$DOTFILES_PROFILE" != "server" ]]; then
+      echo "Error: Invalid DOTFILES_PROFILE '$DOTFILES_PROFILE'. Must be 'desktop' or 'server'." >&2
+      exit 1
+    fi
+
     # Check if the value in the file matches the environment variable to avoid redundant writes
     local current_file_profile=""
     if [[ -f "$profile_file" ]]; then
-      current_file_profile=$(source "$profile_file" >/dev/null 2>&1 && echo "$DOTFILES_PROFILE")
+      # Run in a subshell, unset the env var first to ensure we read what is actually in the file.
+      # Without unset, the subshell inherits the exported DOTFILES_PROFILE, masking the file content.
+      current_file_profile=$(unset DOTFILES_PROFILE; source "$profile_file" >/dev/null 2>&1 && echo "${DOTFILES_PROFILE:-}")
     fi
 
     if [[ "$DOTFILES_PROFILE" != "$current_file_profile" ]]; then
       echo "DOTFILES_PROFILE detected in environment: $DOTFILES_PROFILE"
       echo "Saving profile to $profile_file..."
       printf 'export DOTFILES_PROFILE="%s"\n' "$DOTFILES_PROFILE" > "$profile_file"
-      return
+    else
+      echo "Using provided DOTFILES_PROFILE: $DOTFILES_PROFILE (matches existing configuration)"
     fi
+    return
   fi
 
   # Load existing profile if available
