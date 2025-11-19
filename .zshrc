@@ -574,7 +574,7 @@ if [[ -d "$HOME/.zshrc.d" ]]; then
 fi
 
 if has "mise"; then
-  eval "$(mise activate zsh --shims)"
+  eval "$(mise activate zsh)"
 fi
 
 if has "tmuxinator" ; then
