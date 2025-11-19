@@ -8,7 +8,12 @@ if [ -f "$HOME/.zshrc.d/profile.zsh" ]; then
 fi
 
 is_desktop() {
-  [[ "${DOTFILES_PROFILE:-server}" == "desktop" ]]
+  local profile="${DOTFILES_PROFILE:-server}"
+  if [[ "$profile" != "desktop" && "$profile" != "server" ]]; then
+    echo "zshrc: Invalid DOTFILES_PROFILE '$profile'. Assuming 'server'." >&2
+    return 1
+  fi
+  [[ "$profile" == "desktop" ]]
 }
 
 setopt globdots               # Include hidden files (those starting with a dot) in pathname expansion

@@ -25,6 +25,11 @@ is_desktop() {
   [[ "${DOTFILES_PROFILE:-server}" == "desktop" ]]
 }
 
+# Function to check if the shell is interactive.
+is_interactive() {
+  [[ -t 0 ]]
+}
+
 # Function to print banners for major steps.
 print_banner() {
   local title="$1"
@@ -40,6 +45,13 @@ install_with_stow() {
   if ! stow -v "${stow_opts[@]}" -n; then
     echo "Error: Stow dry run failed with options: ${stow_opts[*]}" >&2
     exit 1
+  fi
+
+  # Auto-apply in non-interactive mode
+  if ! is_interactive; then
+    echo "Non-interactive mode detected. Applying changes automatically..."
+    stow -v "${stow_opts[@]}"
+    return
   fi
 
   read -r "response?Do you want to apply the changes? [y/N] "
@@ -74,6 +86,11 @@ refresh_font_cache() {
 
 # Function to add secret environment variables from Vault.
 add_secret_envs_from_vault() {
+  if ! is_interactive; then
+    echo "Skipping secret envs setup in non-interactive mode."
+    return
+  fi
+
   read -r "response?Would you like to add secret envs from Vault? [y/N] "
   if [[ "$response" =~ ^[Yy]$ ]]; then
     read -rs "VAULT_TOKEN?Please provide your Vault token: "
@@ -159,9 +176,37 @@ configure_profile() {
   local profile_file="$HOME_DIR/.zshrc.d/profile.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"
 
+  # Check if DOTFILES_PROFILE is passed via environment (non-interactive mode)
+  if [[ -n "${DOTFILES_PROFILE:-}" ]]; then
+    # Check if the value in the file matches the environment variable to avoid redundant writes
+    local current_file_profile=""
+    if [[ -f "$profile_file" ]]; then
+      current_file_profile=$(source "$profile_file" >/dev/null 2>&1 && echo "$DOTFILES_PROFILE")
+    fi
+
+    if [[ "$DOTFILES_PROFILE" != "$current_file_profile" ]]; then
+      echo "DOTFILES_PROFILE detected in environment: $DOTFILES_PROFILE"
+      echo "Saving profile to $profile_file..."
+      printf 'export DOTFILES_PROFILE="%s"\n' "$DOTFILES_PROFILE" > "$profile_file"
+      return
+    fi
+  fi
+
   # Load existing profile if available
   if [[ -f "$profile_file" ]]; then
     source "$profile_file"
+  fi
+
+  # Check for non-interactive shell
+  if ! is_interactive; then
+    if [[ -z "${DOTFILES_PROFILE:-}" ]]; then
+      echo "Non-interactive shell: No profile set. Defaulting to 'server'."
+      export DOTFILES_PROFILE="server"
+      echo 'export DOTFILES_PROFILE="server"' > "$profile_file"
+    else
+      echo "Non-interactive shell: Using existing profile '$DOTFILES_PROFILE'."
+    fi
+    return
   fi
 
   if [[ -n "${DOTFILES_PROFILE:-}" ]]; then

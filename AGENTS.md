@@ -9,6 +9,7 @@ Komentarze w kodzie/configach: po angielsku. Ten plik: po polsku.
 - Skrypt `install` musi mieć czytelny output: przed każdym większym krokiem
   wywołuj `print_banner('Opis kroku')`.
 - Stosuj minimalne, celowe zmiany i trzymaj styl istniejącego kodu.
+- Jeśli używasz jakiegoś warunku (np. `[[ ! -t 0 ]]`) więcej niż raz, wydziel go do funkcji pomocniczej (np. `is_interactive`).
 
 ## Neovim: kiedy aktualizować README (MUST)
 
