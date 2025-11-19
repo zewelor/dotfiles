@@ -127,10 +127,13 @@ export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
+
 # A viewer for git and diff output
 zinit light-mode from"gh-r" as"program" mv"delta-*/delta -> delta" for @dandavison/delta
+
 # A more intuitive version of du written in rust.
 zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/dust
+
 # Lucid - Turbo mode is verbose, so you need an option for quiet.
 zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
 
@@ -142,16 +145,11 @@ if is_desktop; then
   zinit light-mode from"gh-r" as"program" \
     atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
     mv"gh_*/bin/gh -> gh" for @cli/cli
-fi
 
-if is_desktop; then
   zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
       pick'mise/bin/mise' \
       atclone'./mise/bin/mise complete zsh >_mise' atpull'%atclone' \
       @jdx/mise
-
-  # Usage is a tool for defining CLI arguments, likely not used directly here but was installed.
-  # zinit light-mode wait"1" lucid from"gh-r" as"program" pick"usage" for @jdx/usage
 
   zinit light-mode from"gh-r" as"program" \
     bpick"codex-x86_64-unknown-linux-musl.tar.gz" \
@@ -570,7 +568,9 @@ if [[ -d "$HOME/.zshrc.d" ]]; then
   done
 fi
 
-eval "$(mise activate zsh --shims)"
+if has "mise"; then
+  eval "$(mise activate zsh --shims)"
+fi
 
 if has "tmuxinator" ; then
   zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
