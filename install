@@ -264,10 +264,10 @@ run_installation() {
     print_banner "Stowing repository fonts into $HOME_DIR/.local/share"
     install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
     refresh_font_cache
-  fi
 
-  print_banner "Stowing private overrides from prv/"
-  install_with_stow -t "$HOME_DIR" -d "prv" "."
+    print_banner "Stowing private overrides from prv/"
+    install_with_stow -t "$HOME_DIR" -d "prv" "."
+  fi
 
   print_banner "Secret environment variables from Vault (optional)"
   add_secret_envs_from_vault
