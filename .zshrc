@@ -16,6 +16,10 @@ is_desktop() {
   [[ "$profile" == "desktop" ]]
 }
 
+is_interactive() {
+  [[ -t 0 ]]
+}
+
 is_slow_fs() {
   [[ "$PWD" == /mnt/nas* ]]
 }
@@ -382,7 +386,8 @@ if has "rsync"; then
   alias cpx='rsync -avz --info=progress2 --human-readable'
 fi
 
-if has "bat"; then
+
+if has "bat" && is_interactive; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 

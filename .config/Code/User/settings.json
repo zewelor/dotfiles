@@ -36,7 +36,12 @@
         "nvim --headless": true,
         "rg": true,
         "git clone": true,
-        "/bin/ls": true
+        "/bin/ls": true,
+        "/^mkdir -p temp && helm template victoria-metrics-k8s-stack charts/system-monitoring/victoria-metrics-k8s-stack > temp/after\\.yaml$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "diff": true
     },
     "dev.containers.defaultExtensions": [
         "GitHub.copilot"
@@ -179,5 +184,8 @@
     },
     "workbench.colorTheme": "Solarized Light",
     "vim.smartRelativeLine": true,
-    "remote.SSH.enableDynamicForwarding": false
+    "remote.SSH.enableDynamicForwarding": false,
+    "chat.tools.terminal.terminalProfile.linux": {
+
+    }
 }
