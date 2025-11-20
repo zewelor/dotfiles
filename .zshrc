@@ -387,7 +387,7 @@ if has "rsync"; then
 fi
 
 
-if has "bat" && is_interactive; then
+if has "bat" && is_interactive && [[ "$TERM_PROGRAM" != "vscode" ]] ; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 
