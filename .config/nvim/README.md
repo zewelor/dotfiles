@@ -12,14 +12,17 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── lazy.lua     # Setup lazy.nvim
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   └── keymaps.lua  # Wszystkie keybindings
-│   └── plugins/         # Każdy plugin = osobny plik
-│       ├── blink.lua        # Autouzupełnianie
-│       ├── copilot.lua      # GitHub Copilot
-│       ├── mini-icons.lua   # Ikony plików
-│       ├── neotree.lua      # File explorer
-│       ├── telescope.lua    # Wyszukiwanie i fuzzy finder
-│       ├── solarized.lua    # Motyw kolorów
-│       └── which-key.lua    # Podpowiedzi skrótów
+│   ├── plugins/         # Każdy plugin = osobny plik
+│   │   ├── blink.lua        # Autouzupełnianie
+│   │   ├── copilot.lua      # GitHub Copilot
+│   │   ├── mini-icons.lua   # Ikony plików
+│   │   ├── neotree.lua      # File explorer
+│   │   ├── telescope.lua    # Wyszukiwanie i fuzzy finder
+│   │   ├── solarized.lua    # Motyw kolorów
+│   │   └── which-key.lua    # Podpowiedzi skrótów
+│   └── after/
+│       └── ftplugin/
+│           └── markdown.lua  # Nadpisy dla Markdown (2 spacje + wrap)
 └── lazy-lock.json       # Zablokowane wersje pluginów
 ```
 

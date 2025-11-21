@@ -25,6 +25,54 @@ is_desktop() {
   [[ "${DOTFILES_PROFILE:-server}" == "desktop" ]]
 }
 
+# Resolve a suitable browser command, mirroring .zsh/webapps.zsh logic.
+resolve_browser_cmd() {
+  local detected="${BROWSER:-}"
+
+  if [[ -z "$detected" ]]; then
+    local default_desktop
+    default_desktop=$(xdg-settings get default-web-browser 2>/dev/null || true)
+
+    local desktop_path=""
+    if [[ -n "$default_desktop" ]]; then
+      if [[ -f "/usr/share/applications/$default_desktop" ]]; then
+        desktop_path="/usr/share/applications/$default_desktop"
+      elif [[ -f "$HOME_DIR/.local/share/applications/$default_desktop" ]]; then
+        desktop_path="$HOME_DIR/.local/share/applications/$default_desktop"
+      fi
+    fi
+
+    if [[ -n "$desktop_path" ]]; then
+      local exec_line
+      exec_line=$(grep -m1 '^Exec=' "$desktop_path" || true)
+      if [[ -n "$exec_line" ]]; then
+        detected=$(print -r -- "${exec_line#Exec=}" | sed -E 's/ ?%[a-zA-Z]//g')
+      fi
+    fi
+
+    if [[ -z "$detected" ]]; then
+      local browser_candidates=("brave-browser-stable" "brave-browser" "google-chrome-stable" "google-chrome" "chromium" "chromium-browser" "brave" "chromium" "firefox")
+      for candidate in "${browser_candidates[@]}"; do
+        if has "$candidate"; then
+          detected="$candidate"
+          break
+        fi
+      done
+    fi
+
+    detected="${detected:-xdg-open}"
+  fi
+
+  # Validate command availability (first word only to allow flags/paths)
+  local first_word="${detected%% *}"
+  if ! has "$first_word"; then
+    echo ""
+    return
+  fi
+
+  echo "$detected"
+}
+
 # Function to check if the shell is interactive.
 is_interactive() {
   [[ -t 0 ]]
@@ -137,13 +185,167 @@ configure_git_conflict_style() {
 setup_atuin() {
   print_banner "Setting up Atuin configuration..."
   mkdir -p "$CONFIG_DIR/atuin/"
-  ln -sfn "$BASE_DIR/.config/atuin/config.toml" "$CONFIG_DIR/atuin/config.toml"
+  local src="$BASE_DIR/.config/atuin/config.toml"
+  local dst="$CONFIG_DIR/atuin/config.toml"
+
+  # Avoid failing when src and dst already resolve to the same path (e.g., stowed .config).
+  if [[ -e "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
+    echo "Atuin config already linked; skipping."
+    return
+  fi
+
+  ln -sfn "$src" "$dst"
 }
 
 # Function to ensure SSH directories exist.
 setup_ssh() {
   print_banner "Ensuring SSH configuration directory exists..."
   mkdir -p "$HOME_DIR/.ssh/config.d/"
+}
+
+# Function to install custom desktop entries defined in webapps/apps.tsv.
+setup_desktop_entries() {
+  set -euo pipefail
+
+  if ! is_desktop; then
+    echo "Skipping desktop entry installation on non-desktop profile."
+    return
+  fi
+
+  local config="$BASE_DIR/webapps/apps.tsv"
+  if [[ ! -f "$config" ]]; then
+    echo "No desktop entry config found at $config; skipping."
+    return
+  fi
+
+  local applications_dir="${XDG_DATA_HOME:-$HOME_DIR/.local/share}/applications"
+  local icon_dir="$applications_dir/icons"
+  mkdir -p "$applications_dir" "$icon_dir"
+
+  local desktop_installer=""
+  if has "desktop-file-install"; then
+    desktop_installer="desktop-file-install"
+  else
+    echo "desktop-file-install not found; will write .desktop files directly."
+  fi
+
+  local browser_cmd
+  browser_cmd=$(resolve_browser_cmd)
+
+  if [[ -z "$browser_cmd" ]]; then
+    echo "No supported browser found (set BROWSER or install Brave/Chrome/Chromium); skipping desktop entries."
+    return
+  fi
+
+  print_banner "Installing desktop entries"
+  [[ -o xtrace ]] && echo "DEBUG xtrace before loop"
+
+  local global_flags="${DOTFILES_BROWSER_FLAGS:-}"
+  local enable_wayland="${DOTFILES_CHROMIUM_WAYLAND:-1}"
+  local desired_slugs=()
+
+  while IFS='|' read -r name slug app_url icon_filename extra_flags _; do
+    # Skip comments/empty lines
+    if [[ -z "${name// }" ]] || [[ "${name:0:1}" == "#" ]]; then
+      continue
+    fi
+
+    if [[ -z "$slug" || -z "$app_url" ]]; then
+      echo "Skipping entry with missing slug or app_url: $name"
+      continue
+    fi
+
+    desired_slugs+=("$slug")
+
+    local icon_name="dotfiles-$slug"
+    local desktop_file="$applications_dir/dotfiles-$slug.desktop"
+    local tmpdir tmpfile
+    tmpdir=$(mktemp -d -t "dotfiles-$slug.XXXXXX")
+    tmpfile="$tmpdir/dotfiles-$slug.desktop"
+
+    local exec_cmd="$browser_cmd --new-window --app=$app_url --name=${name// /\\ } --class=$slug"
+    if [[ "$enable_wayland" == "1" ]]; then
+      exec_cmd+=" --ozone-platform=wayland"
+    fi
+    if [[ -n "$global_flags" ]]; then
+      exec_cmd+=" $global_flags"
+    fi
+    if [[ -n "$extra_flags" ]]; then
+      exec_cmd+=" $extra_flags"
+    fi
+
+    if [[ -z "$icon_filename" ]]; then
+      echo "Missing icon filename for $slug (column 4 in $config)."
+      return 1
+    fi
+
+    local repo_icon="$BASE_DIR/webapps/icons/$icon_filename"
+    local installed_icon="$icon_dir/${icon_name}.png"
+    if [[ ! -f "$repo_icon" ]]; then
+      echo "Icon file '$icon_filename' not found in webapps/icons for $slug."
+      return 1
+    fi
+
+    install -m 0644 "$repo_icon" "$installed_icon"
+
+    cat > "$tmpfile" <<EOF
+[Desktop Entry]
+Version=1.0
+Name=$name
+Comment=$name (PWA)
+Exec=$exec_cmd
+Terminal=false
+Type=Application
+Categories=Network;
+Icon=$icon_name
+StartupWMClass=$slug
+StartupNotify=true
+EOF
+
+    if [[ -n "$desktop_installer" ]]; then
+      "$desktop_installer" --dir "$applications_dir" --mode 0644 "$tmpfile"
+    else
+      install -m 0644 "$tmpfile" "$desktop_file"
+    fi
+    rm -rf "$tmpdir"
+
+    echo "Installed dotfiles-$slug.desktop using browser: $browser_cmd"
+  done < "$config"
+
+  print_banner "Checking stale desktop entries"
+  setopt localoptions null_glob
+  local to_remove=()
+  for file in "$applications_dir"/dotfiles-*.desktop; do
+    local slug
+    slug=${file##*/dotfiles-}
+    slug=${slug%.desktop}
+    local found=false
+    for desired in "${desired_slugs[@]}"; do
+      if [[ "$slug" == "$desired" ]]; then
+        found=true
+        break
+      fi
+    done
+    if [[ "$found" == false ]]; then
+      to_remove+=("$file")
+    fi
+  done
+
+  if (( ${#to_remove[@]} )); then
+    echo "Found stale dotfiles desktop entries:"
+    printf ' - %s\n' "${to_remove[@]}"
+    if is_interactive; then
+      read -r "response?Remove them now? [y/N] "
+      if [[ "$response" =~ ^[Yy]$ ]]; then
+        rm -f "${to_remove[@]}"
+        echo "Removed stale entries."
+      else
+        echo "Leaving stale entries in place."
+      fi
+    else
+      echo "Non-interactive mode: not removing stale entries."
+    fi
+  fi
 }
 
 # Function to setup Vim autoload directories and plugins.
@@ -277,6 +479,8 @@ run_installation() {
 
   if is_desktop; then
     setup_atuin
+    # Nie dziala idelanie , poki co koomentuje
+    # setup_desktop_entries
   fi
 
   setup_ssh

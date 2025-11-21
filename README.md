@@ -17,6 +17,16 @@ make install
 
 Local customization can be done by putting files in the ~/.zshrc.d/ directory. These files will be sourced by the main .zshrc file.
 
+## Web app launchers
+
+- Config file: `webapps/apps.tsv` (`name|slug|app_url|icon_filename|extra_flags`); directory is excluded from `stow`, installers handle generation.
+- Add entry: drop a 256x256 PNG into `webapps/icons/` (any filename), put that filename in column 4 of `apps.tsv`; the installer errors if the file is missing.
+- Generated files live in `~/.local/share/applications/dotfiles-<slug>.desktop` with icons at `~/.local/share/icons/hicolor/256x256/apps/dotfiles-<slug>.png`.
+- Prefix `dotfiles-` avoids clashes with distro/system entries.
+- Browser selection: `$BROWSER` (validated) or auto-detected Brave/Chrome/Chromium. Global flags: `DOTFILES_BROWSER_FLAGS`; Wayland toggle: `DOTFILES_CHROMIUM_WAYLAND=1|0`.
+- Icons: installer copies `webapps/icons/<icon_filename>` per row into `~/.local/share/applications/icons/` (no resizing, so use a size that looks good in your DE).
+- Stale entries check: installer lists `dotfiles-*` entries not declared in `apps.tsv` and offers to remove them (non-interactive: only warns).
+
 ## Benchmarking / Profiling
 
 ```zsh

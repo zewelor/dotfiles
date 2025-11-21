@@ -47,6 +47,11 @@ Zawsze aktualizuj `~/.config/nvim/README.md`, gdy:
 - Zawsze dodawaj `desc` przy keymapach (for which-key).
 - Plugin specs poprzedzaj krótkim komentarzem: `-- nazwa-pluginu — krótki opis`.
 
+## Neovim: nadpisy per filetype (MUST)
+
+- Preferuj `after/ftplugin/<filetype>.lua` dla per‑filetype opcji (np. zmiana `shiftwidth` w Markdown), zamiast autocmd w `options.lua`, chyba że istnieją powody techniczne, by tego nie robić (np. konflikt z pluginem wymagającym innego miejsca).
+- Jeśli nadpisujesz zachowanie ftpluginów wbudowanych (np. Markdown: 2 spacje, `wrap/linebreak/breakindent`), dokumentuj to w `~/.config/nvim/README.md` i trzymaj logikę w `after/ftplugin/<filetype>.lua`.
+
 ### Workflow nowego pluginu (MUST)
 
 1. Utwórz `lua/plugins/nazwa.lua`:

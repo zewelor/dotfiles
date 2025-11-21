@@ -72,6 +72,8 @@ EOF
 
   echo "Created web app: $APP_NAME"
   echo "Desktop file: $DESKTOP_FILE"
+  echo "Tip: add to dotfiles sync via webapps/apps.tsv:"
+  echo "  ${APP_NAME}|${clean_name}|${APP_URL}|${ICON_URL}|"
 }
 
 web2app-remove() {

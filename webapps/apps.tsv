@@ -1,0 +1,7 @@
+# name|slug|app_url|icon_filename|extra_flags
+# extra_flags are appended to the browser command (optional).
+Google Calendar|google-calendar|https://calendar.google.com/|google-calendar.png|
+Google Tasks|google-tasks|https://tasks.google.com/|google-tasks.png|
+WhatsApp|whatsapp|https://web.whatsapp.com/|whatsapp.png|
+ChatGPT|chatgpt|https://chatgpt.com/|chatgpt.png|
+Perplexity|perplexity|https://www.perplexity.ai/|perplexity.png|
