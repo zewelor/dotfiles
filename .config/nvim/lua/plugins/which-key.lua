@@ -3,8 +3,10 @@ return {
   "folke/which-key.nvim",
   event = "VeryLazy", -- ładuj leniwie dla szybszego startu
   opts = {
+    -- auto-expand groups with a single mapping (e.g. <leader>g)
+    expand = 1,
     delay = function(ctx)
-      -- no delay for built‑in plugins; 500 ms otherwise
+      -- no delay for built‑in plugins; 500 ms otherwise
       return ctx.plugin and 0 or 500
     end,
   },
