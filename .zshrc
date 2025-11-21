@@ -164,6 +164,11 @@ if is_desktop; then
       atclone'./mise/bin/mise complete zsh >_mise' atpull'%atclone' \
       @jdx/mise
 
+  # Fixes:
+  # Error: usage CLI not found. This is required for completions to work in mise.
+  # See https://usage.jdx.dev for more information.
+  zinit light-mode wait"1" lucid from"gh-r" as"program" pick"usage" for @jdx/usage
+
   zinit light-mode from"gh-r" as"program" \
     bpick"codex-x86_64-unknown-linux-musl.tar.gz" \
     mv"codex-x86_64-unknown-linux-musl -> codex" \
