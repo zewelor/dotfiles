@@ -130,7 +130,19 @@ zinit light-mode for \
 #
 ##########################
 
-zinit light-mode as"program" pick"bin/tat" for @thoughtbot/dotfiles # Attach or create tmux session named the same as current directory.
+if has "tmux"; then
+  # Attach or create tmux session named after current directory.
+  tat() {
+    local session="${PWD##*/}"
+
+    if [[ -n "$TMUX" ]]; then
+      tmux has-session -t "$session" 2>/dev/null || tmux new-session -ds "$session"
+      tmux switch-client -t "$session"
+    else
+      tmux attach -t "$session" 2>/dev/null || tmux new -s "$session"
+    fi
+  }
+fi
 
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
