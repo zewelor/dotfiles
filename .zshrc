@@ -311,7 +311,7 @@ if has "git"; then
   }
 
   function grhco () {
-    grh $1 && gco $1
+    git reset HEAD $1 && git checkout -- $1
   }
 
   function gcb () {
