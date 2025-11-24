@@ -486,9 +486,12 @@ if has "code"; then
 
 
   code_pod() {
-    local app="$1" folder="$2"
-    if [[ -z $app || -z $folder ]]; then
-      echo "usage: code_pod <app-name> <path>"
+    local input="$1"
+    local app folder
+    app="${input%%/*}"
+    folder="${input#*/}"
+    if [[ -z $input || $app == "$input" || -z $folder ]]; then
+      echo "usage: code_pod <app-name>/<path>"
       return 1
     fi
 
