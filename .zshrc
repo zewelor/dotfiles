@@ -483,6 +483,42 @@ fi
 
 if has "code"; then
   alias codenw="code -n -w ."
+
+
+  code_pod() {
+    local app="$1" folder="$2"
+    if [[ -z $app || -z $folder ]]; then
+      echo "usage: code_pod <app-name> <path>"
+      return 1
+    fi
+
+    local kubectl_bin
+    kubectl_bin=$(command -v kubectl) || {
+      echo "kubectl not found in PATH"
+      return 1
+    }
+
+    local line ns pod
+    line=$("$kubectl_bin" get pods -A -l app.kubernetes.io/name="$app" \
+      -o jsonpath='{range .items[?(@.status.phase=="Running")]}{.metadata.namespace} {.metadata.name}{"\n"}{end}' \
+      | head -n1)
+
+    ns=${line%% *}
+    pod=${line#* }
+
+    if [[ -z $pod || -z $ns || $pod == "$line" ]]; then
+      echo "no running pod found for app=$app"
+      return 1
+    fi
+
+    local ctx json hex path_esc
+    ctx=$("$kubectl_bin" config current-context 2>/dev/null || printf "default")
+    json=$(printf '{"context":"%s","podname":"%s","namespace":"%s","name":"codeserver"}' "$ctx" "$pod" "$ns")
+    hex=$(printf '%s' "$json" | xxd -p -c 999 | tr -d '\n')
+    path_esc=${folder// /%20}
+
+    code --folder-uri="vscode-remote://k8s-container%2B${hex}/${path_esc}"
+  }
 fi
 
 #
