@@ -24,6 +24,10 @@ is_slow_fs() {
   [[ "$PWD" == /mnt/nas* ]]
 }
 
+is_vscode_terminal() {
+  [[ "${TERM_PROGRAM:-}" == "vscode" ]]
+}
+
 setopt globdots               # Include hidden files (those starting with a dot) in pathname expansion
 setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
@@ -104,10 +108,12 @@ zle -N self-insert url-quote-magic
 
 # Prompt download / initialization
 #
-zinit ice as"command" from"gh-r" \
-          atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
-          atpull"%atclone" src"init.zsh"
-zinit light starship/starship
+if ! is_vscode_terminal; then
+  zinit ice as"command" from"gh-r" \
+            atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
+            atpull"%atclone" src"init.zsh"
+  zinit light starship/starship
+fi
 
 #
 # Completions
@@ -404,7 +410,7 @@ if has "rsync"; then
 fi
 
 
-if has "bat" && is_interactive && [[ "$TERM_PROGRAM" != "vscode" ]] ; then
+if has "bat" && is_interactive && ! is_vscode_terminal ; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 

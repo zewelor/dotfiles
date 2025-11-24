@@ -41,7 +41,11 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "diff": true
+        "diff": true,
+        "docker compose": true,
+        "awk": true,
+        "rsvg-convert": true,
+        "tee": true
     },
     "dev.containers.defaultExtensions": [
         "GitHub.copilot"
@@ -185,7 +189,4 @@
     "workbench.colorTheme": "Solarized Light",
     "vim.smartRelativeLine": true,
     "remote.SSH.enableDynamicForwarding": false,
-    "chat.tools.terminal.terminalProfile.linux": {
-
-    }
 }
