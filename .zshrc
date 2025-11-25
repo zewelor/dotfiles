@@ -1,3 +1,7 @@
+# Skip all customizations if ZSHRC_SKIP_CUSTOMIZATIONS is set
+# Useful for AI agents (VS Code Copilot, etc.) that need a minimal shell
+[[ -n "${ZSHRC_SKIP_CUSTOMIZATIONS:-}" ]] && return
+
 if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
   zcompile $HOME/.zshrc
 fi

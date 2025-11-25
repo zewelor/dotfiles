@@ -189,4 +189,10 @@
     "workbench.colorTheme": "Solarized Light",
     "vim.smartRelativeLine": true,
     "remote.SSH.enableDynamicForwarding": false,
+    "chat.tools.terminal.terminalProfile.linux": {
+        "path": "/usr/bin/zsh",
+        "env": {
+            "ZSHRC_SKIP_CUSTOMIZATIONS": "1"
+        }
+    },
 }
