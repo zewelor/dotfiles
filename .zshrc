@@ -113,12 +113,10 @@ zle -N self-insert url-quote-magic
 
 # Prompt download / initialization
 #
-if ! is_vscode_terminal; then
   zinit ice as"command" from"gh-r" \
             atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
             atpull"%atclone" src"init.zsh"
   zinit light starship/starship
-fi
 
 #
 # Completions
@@ -424,7 +422,7 @@ if has "rsync"; then
 fi
 
 
-if has "bat" && is_interactive && ! is_vscode_terminal ; then
+if has "bat" && is_interactive ; then
   alias cat='bat --theme="Solarized (light)" -p'
 fi
 
