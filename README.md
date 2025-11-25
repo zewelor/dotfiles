@@ -33,6 +33,82 @@ Local customization can be done by putting files in the ~/.zshrc.d/ directory. T
 zinit times
 ```
 
+## Shell Tools
+
+### eza — Modern ls replacement
+
+- **Repo**: [eza-community/eza](https://github.com/eza-community/eza)
+- **Purpose**: A modern replacement for `ls` with icons, colors, and git integration
+- **Installation**: Automatic via zinit (downloaded from GitHub releases)
+- **Theme**: Solarized Light (`.config/eza/theme.yml`)
+
+**Aliases**:
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `ls` | `eza --icons --group-directories-first` | Default listing with icons |
+| `l` | `eza -1a --icons ...` | One file per line, including hidden |
+| `ll` | `eza -lh --icons ...` | Long format with human-readable sizes |
+| `la` | `eza -lah --icons ...` | Long format including hidden files |
+| `lt` | `eza -T --icons ...` | Tree view |
+| `lr` | `ll -R` | Recursive listing |
+| `lk` | `ll -Sr` | Sorted by size (largest last) |
+
+**Useful flags** (can be combined with aliases):
+
+```bash
+ll --git          # Show git status for each file
+ll -s modified    # Sort by modification time
+ll -s size        # Sort by file size
+lt -L 2           # Tree view, 2 levels deep
+ls --no-icons     # Disable icons (faster on slow terminals)
+```
+
+**Note**: On slow filesystems (`/mnt/nas*`), the `ls` function falls back to plain `ls --color=auto` for performance.
+
+---
+
+### zoxide — Smarter cd with frecency
+
+- **Repo**: [ajeetdsouza/zoxide](https://github.com/ajeetdsouza/zoxide)
+- **Purpose**: A smarter `cd` command that learns your most-used directories
+- **Installation**: Automatic via zinit (downloaded from GitHub releases)
+
+**How it works**: zoxide tracks the directories you visit and ranks them by "frecency" (frequency + recency). When you type `z foo`, it jumps to the most likely directory matching "foo".
+
+**Commands**:
+
+| Command | Description |
+|---------|-------------|
+| `z foo` | Jump to the best match for "foo" |
+| `z foo bar` | Jump to directory matching both "foo" and "bar" |
+| `z -` | Jump to the previous directory |
+| `zi foo` | Interactive selection (requires fzf) |
+| `zoxide query foo` | Show what zoxide would match |
+| `zoxide query -l` | List all tracked directories |
+
+**Examples**:
+
+```bash
+# After visiting ~/projects/my-awesome-app a few times:
+z awesome        # Jumps to ~/projects/my-awesome-app
+z my app         # Also works (multiple keywords)
+z proj           # Jumps to most frecent directory containing "proj"
+
+# Interactive mode (with fzf)
+zi               # Browse all tracked directories
+zi proj          # Browse directories matching "proj"
+```
+
+**Tips**:
+
+- `cd` is aliased to `z`, so your muscle memory works
+- zoxide learns as you navigate; it gets better over time
+- Use `zi` when you're not sure which directory you want
+- Database stored at `~/.local/share/zoxide/db.zo`
+
+---
+
 ## Neovim config (lazy.nvim)
 
 Minimal, modern Neovim configuration optimized for fast terminal editing.

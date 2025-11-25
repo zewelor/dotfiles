@@ -116,8 +116,8 @@ if has "docker"; then
       docker compose stop $1 && docker compose up --force-recreate "$@[2,-1]" $1
     }
 
-    # Completion: service names for dkcrs
-    function _dkcrs() {
+    # Reusable completion for compose service names
+    function _complete_compose_services() {
       local -a services
       services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
       if (( ${#services} == 0 )); then
@@ -126,71 +126,23 @@ if has "docker"; then
       fi
       compadd -a services
     }
-    zpcompdef _dkcrs dkcrs
+    zpcompdef _complete_compose_services dkcrs dkcrsd dkcrsdl dkcupdate dkcupdated
 
     function dkcrsd () {
       dkcrs $1 -d
     }
 
-    # Completion: service names for dkcrsd
-    function _dkcrsd() {
-      local -a services
-      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
-      if (( ${#services} == 0 )); then
-        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
-        return 1
-      fi
-      compadd -a services
-    }
-    zpcompdef _dkcrsd dkcrsd
-
     function dkcrsdl () {
       dkcrsd $1 && docker compose logs -f $1
     }
-
-    # Completion: service names for dkcrsdl
-    function _dkcrsdl() {
-      local -a services
-      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
-      if (( ${#services} == 0 )); then
-        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
-        return 1
-      fi
-      compadd -a services
-    }
-    zpcompdef _dkcrsdl dkcrsdl
 
     function dkcupdate () {
       docker compose stop $1 && docker compose pull $1 && docker compose up -d $1 && sleep 5 && docker compose logs -f $1
     }
 
-    # Completion: service names for dkcupdate
-    function _dkcupdate() {
-      local -a services
-      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
-      if (( ${#services} == 0 )); then
-        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
-        return 1
-      fi
-      compadd -a services
-    }
-    zpcompdef _dkcupdate dkcupdate
-
     function dkcupdated () {
       docker compose stop $1 && docker compose pull $1 && docker compose up -d $1
     }
-
-    # Completion: service names for dkcupdated
-    function _dkcupdated() {
-      local -a services
-      services=(${(f)"$(_docker_compose_service_names 2>/dev/null)"})
-      if (( ${#services} == 0 )); then
-        _message 'No Compose file here (compose.yaml/docker-compose.yml).'
-        return 1
-      fi
-      compadd -a services
-    }
-    zpcompdef _dkcupdated dkcupdated
 
     function docker_compose_run_or_exec() {
       local FLAGS

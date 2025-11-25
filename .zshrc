@@ -98,6 +98,7 @@ ZINIT_SCRIPT="${HOME}/${ZINIT_SCRIPT_REL}"
 source "${ZINIT_SCRIPT}"
 autoload -Uz _zinit
 (( ${+_comps} )) && _comps[zinit]=_zinit
+unalias zi 2>/dev/null  # Remove zinit's zi alias to preserve zoxide's zi
 ### End of zinit's installer chunk
 
 # Url quotes magic
@@ -164,6 +165,20 @@ zinit light-mode from"gh-r" as"program" mv"delta-*/delta -> delta" for @dandavis
 
 # A more intuitive version of du written in rust.
 zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/dust
+
+# eza - modern ls replacement with icons and git integration
+zinit light-mode from"gh-r" as"program" mv"eza -> eza" for @eza-community/eza
+alias ls='eza --icons --group-directories-first'
+alias l='eza -1a --icons --group-directories-first'
+alias ll='eza -lh --icons --group-directories-first'
+alias la='eza -lah --icons --group-directories-first'
+alias lt='eza -T --icons --group-directories-first'  # tree view
+
+# zoxide - smarter cd with frecency
+zinit light-mode from"gh-r" as"program" \
+  atclone"./zoxide init zsh > init.zsh" atpull"%atclone" src"init.zsh" \
+  for @ajeetdsouza/zoxide
+alias cd='z'
 
 # Lucid - Turbo mode is verbose, so you need an option for quiet.
 zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
@@ -367,25 +382,20 @@ alias -g X='| xargs'
 alias -g J='| jq'
 alias -g JL='| jq -C | less -R'
 
-# Directory listing
-# Directory listing
-# alias ls='ls --color=auto' # Disabled for custom function below
+# Directory listing (eza with slow fs fallback)
 function ls() {
   if is_slow_fs; then
-    command ls "$@"
-  else
     command ls --color=auto "$@"
+  else
+    command eza --icons --group-directories-first "$@"
   fi
 }
-alias l='ls -1A'         # Lists in one column, hidden files.
-alias ll='ls -lh'        # Lists human readable sizes.
+# eza aliases are defined above with zinit; these are kept for slow fs fallback reference
 alias lr='ll -R'         # Lists human readable sizes, recursively.
-alias la='ll -A'         # Lists human readable sizes, hidden files.
 alias lm='la | "$PAGER"' # Lists human readable sizes, hidden files through pager.
 alias lk='ll -Sr'        # Lists sorted by size, largest last.
-alias lt='ll -tr'        # Lists sorted by date, most recent last.
-alias lc='lt -c'         # Lists sorted by date, most recent last, shows change time.
-alias lu='lt -u'         # Lists sorted by date, most recent last, shows access time.
+alias lc='ll -tr -c'     # Lists sorted by date, most recent last, shows change time.
+alias lu='ll -tr -u'     # Lists sorted by date, most recent last, shows access time.
 
 # Disable globbing.
 alias fc='noglob fc'
@@ -654,18 +664,23 @@ if [[ -d "$HOME/.zshrc.d" ]]; then
 fi
 
 if has "mise"; then
-  eval "$(mise activate zsh)"
-  # Override mise hook to disable it in /mnt/nas
-  _mise_hook() {
-    if is_slow_fs; then
-      return
-    fi
-    local previous_exit_status=$?;
-    trap -- '' SIGINT;
-    eval "$(mise export zsh)";
-    trap - SIGINT;
-    return $previous_exit_status;
+  # Lazy-load mise activation for faster startup
+  _mise_lazy_init() {
+    unfunction _mise_lazy_init
+    eval "$(mise activate zsh)"
+    # Override mise hook to disable it in /mnt/nas
+    _mise_hook() {
+      if is_slow_fs; then
+        return
+      fi
+      local previous_exit_status=$?;
+      trap -- '' SIGINT;
+      eval "$(mise export zsh)";
+      trap - SIGINT;
+      return $previous_exit_status;
+    }
   }
+  add-zsh-hook precmd _mise_lazy_init
 fi
 
 # Switch Starship config based on directory
