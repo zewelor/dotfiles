@@ -1,7 +1,7 @@
 # https://github.com/jeffreytse/zsh-vi-mode
 
 # https://github.com/BilderLoong/dotfiles/blob/e75daa3234b8b8a2bd4008d71f5d9de104ed6c58/zsh/zsh/custom/zinit.sh#L28
-zinit light-mode for \
+zinit light-mode wait lucid for \
   atinit"
     ZVM_INIT_MODE=sourcing
   "\

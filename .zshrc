@@ -130,7 +130,7 @@ zle -N self-insert url-quote-magic
 
 # Local snippets
 
-zinit light-mode for \
+zinit light-mode wait lucid for \
   zdharma-continuum/zinit-annex-bin-gem-node \
   zdharma-continuum/zinit-annex-link-man \
   zdharma-continuum/zinit-annex-patch-dl \
