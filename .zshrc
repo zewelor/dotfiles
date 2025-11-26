@@ -47,6 +47,10 @@ if [ -d "$HOME/.local/bin" ]; then
   path+=("$HOME/.local/bin")
 fi
 
+if [ -d "$HOME/.local/share/mise/shims" ]; then
+  path+=("$HOME/.local/share/mise/shims")
+fi
+
 if [ -d "$HOME/.krew/bin" ]; then
   path+=("$HOME/.krew/bin")
 fi
