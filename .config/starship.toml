@@ -30,7 +30,8 @@ style_user  = "fg:mod bg:bg bold"
 
 # https://starship.rs/config/#hostname
 [hostname]
-format = '[@$hostname]($style)'
+ssh_symbol = " 🌐"
+format = '[@$hostname$ssh_symbol]($style)'
 style = "bg:bg fg:hst bold"
 # Zrobilem tak bo inaczje trzebbay zmienia etc sudeors na kazdym host zeby zachowyal env ssh przy sudo, sporo roboty i pamietania, zawsz emoge wrocic
 ssh_only = false
