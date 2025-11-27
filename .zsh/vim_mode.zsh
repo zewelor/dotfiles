@@ -12,12 +12,22 @@ ZVM_LINE_INIT_MODE=$ZVM_MODE_INSERT
 ZVM_INSERT_MODE_CURSOR=$ZVM_CURSOR_BLINKING_BEAM
 
 function zvm_after_init() {
-  # Re-bind atuin keys as zsh-vi-mode overrides them
-  if zle -l atuin-search; then
-    bindkey -M viins '^r' atuin-search-viins
-    bindkey -M vicmd '^r' atuin-search-vicmd
-    bindkey -M viins '^[[A' atuin-up-search-viins
-    bindkey -M vicmd '^[[A' atuin-up-search-vicmd
-    bindkey -M vicmd 'k' atuin-up-search-vicmd
-  fi
+  # Only run if Atuin's vi widgets exist (atuin >= 18)
+  (( $+widgets[atuin-search-viins] && $+widgets[atuin-search-vicmd] )) || return
+
+  # Use zsh-vi-mode helper (plays nicer with its init/lazy keybinding behavior)
+  zvm_bindkey viins '^R' atuin-search-viins
+  zvm_bindkey vicmd '^R' atuin-search-vicmd
+
+  # Up arrow (terminfo first, then common fallbacks)
+  local up="${terminfo[kcuu1]}"
+  [[ -n "$up" ]] && {
+    zvm_bindkey viins "$up" atuin-up-search-viins
+    zvm_bindkey vicmd "$up" atuin-up-search-vicmd
+  }
+
+  zvm_bindkey viins '^[[A' atuin-up-search-viins
+  zvm_bindkey viins '^[OA'  atuin-up-search-viins
+  zvm_bindkey vicmd '^[[A' atuin-up-search-vicmd
+  zvm_bindkey vicmd '^[OA'  atuin-up-search-vicmd
 }
