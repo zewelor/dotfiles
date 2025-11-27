@@ -174,11 +174,10 @@ zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/du
 
 # eza - modern ls replacement with icons and git integration
 zinit light-mode from"gh-r" as"program" mv"eza -> eza" for @eza-community/eza
-alias ls='eza --icons --group-directories-first'
-alias l='eza -1a --icons --group-directories-first'
-alias ll='eza -lh --icons --group-directories-first'
-alias la='eza -lah --icons --group-directories-first'
-alias lt='eza -T --icons --group-directories-first'  # tree view
+alias l='ls -1a'
+alias ll='ls -lh'
+alias la='ls -lah'
+alias lt='ls -T'  # tree view
 
 # zoxide - smarter cd with frecency
 zinit light-mode from"gh-r" as"program" \
@@ -389,6 +388,8 @@ alias -g J='| jq'
 alias -g JL='| jq -C | less -R'
 
 # Directory listing (eza with slow fs fallback)
+unalias ls 2>/dev/null
+
 function ls() {
   if is_slow_fs; then
     command ls --color=auto "$@"

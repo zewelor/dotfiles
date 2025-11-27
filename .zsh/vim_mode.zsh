@@ -20,14 +20,14 @@ function zvm_after_init() {
   zvm_bindkey vicmd '^R' atuin-search-vicmd
 
   # Up arrow (terminfo first, then common fallbacks)
-  local up="${terminfo[kcuu1]}"
-  [[ -n "$up" ]] && {
-    zvm_bindkey viins "$up" atuin-up-search-viins
-    zvm_bindkey vicmd "$up" atuin-up-search-vicmd
-  }
+  # local up="${terminfo[kcuu1]}"
+  # [[ -n "$up" ]] && {
+  #   zvm_bindkey viins "$up" atuin-up-search-viins
+  #   zvm_bindkey vicmd "$up" atuin-up-search-vicmd
+  # }
 
-  zvm_bindkey viins '^[[A' atuin-up-search-viins
-  zvm_bindkey viins '^[OA'  atuin-up-search-viins
-  zvm_bindkey vicmd '^[[A' atuin-up-search-vicmd
-  zvm_bindkey vicmd '^[OA'  atuin-up-search-vicmd
+  # zvm_bindkey viins '^[[A' atuin-up-search-viins
+  # zvm_bindkey viins '^[OA'  atuin-up-search-viins
+  # zvm_bindkey vicmd '^[[A' atuin-up-search-vicmd
+  # zvm_bindkey vicmd '^[OA'  atuin-up-search-vicmd
 }
