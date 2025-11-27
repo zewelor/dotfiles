@@ -218,7 +218,7 @@ After the first launch:
 
 ### **mini.icons** — Icon provider
 
-- **Repo**: [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)
+- **Repo**: [nvim-mini/mini.icons](https://github.com/nvim-mini/mini.icons)
 - **Purpose**: Lightweight alternative to nvim-web-devicons (fewer dependencies, faster)
 - **Features**:
   - Icons for files, folders, LSP, diagnostics
@@ -427,5 +427,5 @@ return {
 - [blink.cmp docs](https://github.com/saghen/blink.cmp)
 - [neo-tree wiki](https://github.com/nvim-neo-tree/neo-tree.nvim/wiki)
 - [Copilot.lua](https://github.com/zbirenbaum/copilot.lua)
-- [mini.icons](https://github.com/echasnovski/mini.icons)
+- [mini.icons](https://github.com/nvim-mini/mini.icons)
 - [Nerd Fonts](https://www.nerdfonts.com/)

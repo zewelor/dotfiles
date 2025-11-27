@@ -44,6 +44,17 @@ keymap("n", "<leader>sc", ":close<CR>", { desc = "Close current split" })
 -- OTHER USEFUL MAPPINGS (non-leader)
 -- ============================================================================
 
+-- Align text (mini.align) – keep mappings here to follow repo rule
+keymap("n", "ga", function()
+	-- Use operatorfunc so the next motion selects the region to align
+	vim.o.operatorfunc = "v:lua.MiniAlign.align_user"
+	return "g@"
+end, { expr = true, desc = "Align (mini.align)" })
+keymap("x", "ga", function()
+	local mode = ({ v = "char", V = "line", ["\22"] = "block" })[vim.fn.mode(1)]
+	require("mini.align").align_user(mode)
+end, { desc = "Align selection (mini.align)" })
+
 -- Better window navigation
 keymap("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
 keymap("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })

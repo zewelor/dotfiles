@@ -5,7 +5,7 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "MunifTanjim/nui.nvim",
-    "echasnovski/mini.icons", -- Ikony (zamiast nvim-web-devicons)
+    "nvim-mini/mini.icons", -- Ikony (zamiast nvim-web-devicons)
   },
   lazy = false, -- neo-tree will lazily load itself
 }

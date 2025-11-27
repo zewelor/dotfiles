@@ -1,7 +1,7 @@
 -- mini.icons - lekka alternatywa dla nvim-web-devicons
 -- Dostarcza ikony dla plików, folderów, LSP, diagnostics itp.
 return {
-  "echasnovski/mini.icons",
+  "nvim-mini/mini.icons",
   lazy = true,
   opts = {},
   init = function()

@@ -15,6 +15,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua        # Autouzupełnianie
 │   │   ├── copilot.lua      # GitHub Copilot
+│   │   ├── mini-align.lua   # Wyrównywanie tekstu
 │   │   ├── mini-icons.lua   # Ikony plików
 │   │   ├── neotree.lua      # File explorer
 │   │   ├── telescope.lua    # Wyszukiwanie i fuzzy finder
@@ -115,9 +116,19 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 ---
 
+### **mini.align** — Interaktywne wyrównywanie
+
+- **Repo**: [nvim-mini/mini.align](https://github.com/nvim-mini/mini.align)
+- **Cel**: Szybkie wyrównywanie kolumn/tekstów z opcją podglądu na żywo
+- **Keymaps**:
+  - `ga` — Wyrównaj zakres (Normal: po ruchu/operatorze, Visual: na zaznaczeniu)
+- **Dodatkowe**: Podczas wyrównywania możesz użyć wbudowanych modyfikatorów, np. `s` (wzorzec split), `j` (justowanie), `m` (delimiter), `t` (trim). Podgląd na żywo (`gA` w pluginie) został pominięty, żeby unikać zależności od wewnętrznych API.
+
+---
+
 ### **mini.icons** — Ikony Plików
 
-- **Repo**: [echasnovski/mini.icons](https://github.com/echasnovski/mini.icons)
+- **Repo**: [nvim-mini/mini.icons](https://github.com/nvim-mini/mini.icons)
 - **Cel**: Ikony plików dla Neo-tree i pluginów (mock `nvim-web-devicons`)
 - **Uwaga**: To nie zastępuje czcionki w terminalu. Aby uniknąć "kwadratów" także w menu autouzupełniania i innych miejscach, ustaw w terminalu czcionkę z ikonami
 
@@ -166,6 +177,10 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - `gx` — Otwórz link pod kursorem lub zaznaczenie (`:Browse`)
 - `<C-LeftMouse>` — Otwórz link pod kursorem myszy (`:Browse`) w plikach tekstowych/Markdown; w pozostałych zachowuje domyślne skakanie po tagach
+
+#### Wyrównywanie (mini.align)
+
+- `ga` — Wyrównaj tekst (Normal: po ruchu/operatorze, Visual: na zaznaczeniu)
 
 #### Nawigacja między oknami
 
