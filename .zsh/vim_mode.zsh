@@ -23,17 +23,18 @@ function zvm_after_init() {
   zvm_bindkey viins '^R' atuin-search-viins
   zvm_bindkey vicmd '^R' atuin-search-vicmd
 
-  local up="${terminfo[kcuu1]}"
-  [[ -n "$up" ]] && {
-    zvm_bindkey viins "$up" atuin-up-search-viins
-    zvm_bindkey vicmd "$up" atuin-up-search-vicmd
-  }
-
-  zvm_bindkey viins '^[[A' atuin-up-search-viins
-  zvm_bindkey viins '^[OA'  atuin-up-search-viins
-  zvm_bindkey vicmd '^[[A' atuin-up-search-vicmd
-  zvm_bindkey vicmd '^[OA'  atuin-up-search-vicmd
-  
-  # Bind 'k' in normal mode to Atuin up-search (matches Atuin defaults)
-  zvm_bindkey vicmd 'k' atuin-up-search-vicmd
+  # Obsluga up arrow
+  # local up="${terminfo[kcuu1]}"
+  # [[ -n "$up" ]] && {
+  #   zvm_bindkey viins "$up" atuin-up-search-viins
+  #   zvm_bindkey vicmd "$up" atuin-up-search-vicmd
+  # }
+  #
+  # zvm_bindkey viins '^[[A' atuin-up-search-viins
+  # zvm_bindkey viins '^[OA'  atuin-up-search-viins
+  # zvm_bindkey vicmd '^[[A' atuin-up-search-vicmd
+  # zvm_bindkey vicmd '^[OA'  atuin-up-search-vicmd
+  #
+  # # Bind 'k' in normal mode to Atuin up-search (matches Atuin defaults)
+  # zvm_bindkey vicmd 'k' atuin-up-search-vicmd
 }
