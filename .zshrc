@@ -701,6 +701,20 @@ function _starship_config_switch() {
 add-zsh-hook chpwd _starship_config_switch
 _starship_config_switch # Run once on init
 
+# Lazy-load complist only when you press TAB the first time
+_lazy_tab_complete() {
+  zmodload -i zsh/complist
+  bindkey -M menuselect '^[ ' send-break 2>/dev/null   # (ignore; see next line)
+  bindkey -M menuselect '^[' send-break                # ESC closes the menu
+
+  # After first run, replace TAB back to normal (so this runs only once)
+  bindkey '^I' expand-or-complete
+
+  zle .expand-or-complete
+}
+zle -N _lazy_tab_complete
+bindkey '^I' _lazy_tab_complete
+
 if has "tmuxinator" ; then
   zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
 
