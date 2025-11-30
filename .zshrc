@@ -344,8 +344,7 @@ if has "git"; then
   alias git-fixup="ga . && git fixup -c --rebase && gpf"
 
   function git_main_branch () {
-    git symbolic-ref --quiet refs/remotes/origin/HEAD 2>/dev/null \
-      | sed 's@^refs/remotes/origin/@@'
+    git ls-remote --symref origin HEAD | sed -n 's#^ref: refs/heads/\(.*\)\s\+HEAD#\1#p'
   }
 
   function grhco () {
