@@ -45,7 +45,10 @@
         "docker compose": true,
         "awk": true,
         "rsvg-convert": true,
-        "tee": true
+        "tee": true,
+        "uniq": true,
+        "time": true,
+        "git checkout": true
     },
     "dev.containers.defaultExtensions": [
         "GitHub.copilot"
@@ -195,4 +198,5 @@
             "ZSHRC_SKIP_CUSTOMIZATIONS": "1"
         }
     },
+    "claudeCode.selectedModel": "default",
 }
