@@ -61,7 +61,7 @@ if has "llm"; then
 
       local prompt="Below is a diff of all staged changes, coming from `git diff --cached`. Please generate a concise, git commit message for these changes. In the first line, write a short summary of the changes, do it in single file. In the following lines, provide more detailed context if necessary. Write it directly, without any markdown quotes."
 
-      echo "$diff_content" | gemini -m "gemini-2.5-flash-light" "$prompt" 2>/dev/null
+      echo "$diff_content" | gemini -m "gemini-2.5-flash-lite" "$prompt" 2>/dev/null
     }
 
     # Function to read user input compatibly with both Bash and Zsh
