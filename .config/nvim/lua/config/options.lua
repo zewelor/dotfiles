@@ -11,7 +11,7 @@ vim.opt.termguicolors  = true      -- Enable 24-bit colors (truecolor) in termin
 vim.opt.cursorline     = true      -- Highlight the current line
 
 -- System clipboard
-vim.opt.clipboard      = "unnamedplus" -- Use the system clipboard for all yanks/pastes
+vim.opt.clipboard      = "unnamed" -- Use the system clipboard for all yanks/pastes
 -- Linux tip: install xclip (X11) or wl-clipboard (Wayland)
 
 -- Indentation & tabs (project defaults; override per filetype in after/ftplugin)
