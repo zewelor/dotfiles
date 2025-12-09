@@ -52,8 +52,6 @@ if has "llm"; then
   gsum() {
     # Function to generate commit message using the gemini model
     generate_commit_message() {
-      export LLM_GEMINI_KEY=$GEMINI_API_KEY
-      local model="gemini-flash-latest"
       local diff_content=$(git --no-pager diff --cached)
 
       if [ -z "$diff_content" ]; then
@@ -61,7 +59,7 @@ if has "llm"; then
         return 1
       fi
 
-      echo "$diff_content" | llm -m "$model" <<EOF
+      read -r -d '' prompt << 'EOF'
 Below is a diff of all staged changes, coming from:
 
 ```
@@ -70,6 +68,8 @@ git diff --cached
 
 Please generate a concise, git commit message for these changes. In the first line, write a short summary of the changes, do it in single file. In the following lines, provide more detailed context if necessary. Write it directly, without any markdown quotes.
 EOF
+
+      echo "$diff_content" | gemini "$prompt" 2>/dev/null
     }
 
     # Function to read user input compatibly with both Bash and Zsh
