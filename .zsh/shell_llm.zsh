@@ -59,15 +59,7 @@ if has "llm"; then
         return 1
       fi
 
-      read -r -d '' prompt << 'EOF'
-Below is a diff of all staged changes, coming from:
-
-```
-git diff --cached
-```
-
-Please generate a concise, git commit message for these changes. In the first line, write a short summary of the changes, do it in single file. In the following lines, provide more detailed context if necessary. Write it directly, without any markdown quotes.
-EOF
+      local prompt="Below is a diff of all staged changes, coming from `git diff --cached`. Please generate a concise, git commit message for these changes. In the first line, write a short summary of the changes, do it in single file. In the following lines, provide more detailed context if necessary. Write it directly, without any markdown quotes."
 
       echo "$diff_content" | gemini "$prompt" 2>/dev/null
     }
