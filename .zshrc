@@ -354,6 +354,9 @@ if has "git"; then
     local base=${2:-$(git_main_branch)} # Default to main branch from origin if missing
     local dir="$PWD"
     local root=""
+    local new_wt_path=""
+    # Define files to link from main worktree
+    local files_to_link=( ".env" )
 
     if [[ -z "$branch" ]]; then
       echo "Usage: gwta <branch-name> [base]"
@@ -376,12 +379,39 @@ if has "git"; then
 
     if [[ -n "$root" ]]; then
       echo "Found .bare root at: $root"
-      git -C "$root/.bare" worktree add -b "$branch" "$root/$branch" "$base"
+      new_wt_path="$root/$branch"
+      git -C "$root/.bare" worktree add -b "$branch" "$new_wt_path" "$base"
     else
       # Fallback for standard repositories (sibling folder strategy)
       echo "No .bare found, assuming standard repo."
+      new_wt_path="${PWD:h}/$branch"
       git worktree add -b "$branch" "../$branch" "$base"
     fi
+
+    local ret=$?
+    if [[ $ret -eq 0 ]]; then
+      local main_branch_name
+      main_branch_name=$(git_main_branch 2>/dev/null)
+
+      if [[ -n "$main_branch_name" ]]; then
+         local main_wt_path
+         if [[ -n "$root" ]]; then
+            main_wt_path=$(git -C "$root/.bare" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+         else
+            main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+         fi
+
+         if [[ -n "$main_wt_path" ]]; then
+           for file in "${files_to_link[@]}"; do
+             if [[ -f "$main_wt_path/$file" ]]; then
+               echo "Linking $file from $main_wt_path to $new_wt_path"
+               ln -s "$main_wt_path/$file" "$new_wt_path/$file"
+             fi
+           done
+         fi
+      fi
+    fi
+    return $ret
   }
 
   function git_main_branch () {
