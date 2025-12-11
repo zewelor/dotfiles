@@ -343,6 +343,47 @@ if has "git"; then
   alias glp="git log -p"
   alias git-fixup="ga . && git fixup -c --rebase && gpf"
 
+  # Worktree
+  alias gwt='git worktree'
+  alias gwtl='git worktree list'
+  alias gwtr='git worktree remove'
+  alias gwtp='git worktree prune'
+
+  function gwta() {
+    local branch=$1
+    local base=${2:-$(git_main_branch)} # Default to main branch from origin if missing
+    local dir="$PWD"
+    local root=""
+
+    if [[ -z "$branch" ]]; then
+      echo "Usage: gwta <branch-name> [base]"
+      return 1
+    fi
+
+    if [[ "$branch" =~ "/" ]]; then
+      echo "Error: Branch name cannot contain '/' to prevent accidental subdirectory creation."
+      return 1
+    fi
+
+    # Walk up the directory tree to find .bare
+    while [[ "$dir" != "/" ]]; do
+      if [[ -d "$dir/.bare" ]]; then
+        root="$dir"
+        break
+      fi
+      dir=$(dirname "$dir")
+    done
+
+    if [[ -n "$root" ]]; then
+      echo "Found .bare root at: $root"
+      git -C "$root/.bare" worktree add -b "$branch" "$root/$branch" "$base"
+    else
+      # Fallback for standard repositories (sibling folder strategy)
+      echo "No .bare found, assuming standard repo."
+      git worktree add -b "$branch" "../$branch" "$base"
+    fi
+  }
+
   function git_main_branch () {
     git ls-remote --symref origin HEAD | sed -n 's#^ref: refs/heads/\(.*\)\s\+HEAD#\1#p'
   }
