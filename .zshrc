@@ -183,7 +183,16 @@ alias lt='ls -T'  # tree view
 zinit light-mode from"gh-r" as"program" \
   atclone"./zoxide init zsh > init.zsh" atpull"%atclone" src"init.zsh" \
   for @ajeetdsouza/zoxide
-alias cd='z'
+
+# Override cd to use zoxide when available, fallback to builtin otherwise
+# This prevents errors in non-interactive shells (e.g., Claude Code)
+function cd() {
+  if (( $+functions[__zoxide_z] )); then
+    __zoxide_z "$@"
+  else
+    builtin cd "$@"
+  fi
+}
 
 # Lucid - Turbo mode is verbose, so you need an option for quiet.
 zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
