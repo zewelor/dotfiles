@@ -87,7 +87,7 @@ if has "llm"; then
 
     # Main script
     force_accept="false"
-    if [ "$1" = "-y" ]; then
+    if [[ "$1" = -[yY] ]]; then
       force_accept="true"
       shift
     fi
