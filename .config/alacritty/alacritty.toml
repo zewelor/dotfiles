@@ -28,6 +28,10 @@ bindings = [
     # This enables Ctrl+/ to toggle comments via our <C-_> mapping in Neovim 0.10+
     { key = "Slash", mods = "Control", chars = "\u001f" },
 
+    # Shift+Enter to send a literal newline character
+    # For LLMS and REPLs that interpret Enter as "submit"
+    { key = "Return", mods = "Shift", chars = "\n" },
+
     # Spawn a fresh Alacritty window rooted in $HOME without hardcoding a user path
     { key = "N", mods = "Control|Shift", command = { program = "zsh", args = ["-lc", "setsid -f alacritty --working-directory \"$HOME\" >/dev/null 2>&1"] } },
     # { key = "N", mods = "Control|Shift", action = "CreateNewWindow" },
