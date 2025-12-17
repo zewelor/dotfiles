@@ -804,3 +804,24 @@ fi
 
 # Starship is already initialized via zinit above; avoid double init to prevent recursive zle wrappers.
 _title_terminal_pwd
+
+# SSH agent management
+SSH_ENV="$HOME/.ssh/agent-environment"
+
+function _start_agent {
+    echo "Starting new SSH agent..."
+    ssh-agent | sed 's/^echo/#echo/' > "$SSH_ENV"
+    chmod 600 "$SSH_ENV"
+    . "$SSH_ENV" > /dev/null
+}
+
+# Check if agent is already running
+if [[ -f "$SSH_ENV" ]]; then
+    . "$SSH_ENV" > /dev/null
+    # Check if the agent is actually running
+    if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+        _start_agent
+    fi
+else
+    _start_agent
+fi
