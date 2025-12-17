@@ -231,6 +231,8 @@ zinit wait lucid for \
     # https://github.com/zdharma-continuum/fast-syntax-highlighting/blob/cf318e06a9b7c9f2219d78f41b46fa6e06011fd9/CHANGELOG.md?plain=1#L104
     typeset -gA FAST_BLIST_PATTERNS; FAST_BLIST_PATTERNS[/mnt/*]=1
     ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay
+    # Use zoxide completion for cd function (after compinit)
+    compdef cd=z
   " \
     zdharma-continuum/fast-syntax-highlighting \
   light-mode atinit"ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE=80" atload"_zsh_autosuggest_start" \
