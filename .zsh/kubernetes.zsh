@@ -94,6 +94,11 @@ if has "kubectl"; then
     zinit light-mode from"gh-r" as"program" for @derailed/k9s
     zinit light-mode from"gh-r" as"program" mv"krew-* -> kubectl-krew" for @kubernetes-sigs/krew
 
+    # cnpg plugin completion
+    if kubectl cnpg version &>/dev/null; then
+      source <(kubectl cnpg completion zsh)
+    fi
+
     helm_template_debug_with_deps() {
       local dir="${1:-.}"
       local output
