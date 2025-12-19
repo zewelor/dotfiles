@@ -4,7 +4,9 @@
       "Bash(zoxide init zsh)",
       "Bash(zsh -i -c 'echo \"\"ZSH loaded successfully\"\"; type cd; whence -v __zoxide_z_complete')",
       "Bash(zsh -i -c 'sleep 1; echo \"\"Completions for cd:\"\"; print -l ${\\(k\\)_comps[\\(I\\)cd]}')",
-      "Bash(zsh:*)"
+      "Bash(zsh:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)"
     ]
   }
 }
