@@ -30,7 +30,9 @@ bindings = [
 
     # Shift+Enter to send a literal newline character
     # For LLMS and REPLs that interpret Enter as "submit"
-    { key = "Return", mods = "Shift", chars = "\n" },
+    # { key = "Return", mods = "Shift", chars = "\n" },
+    # This chars are added by claude code terminal setup
+    { key = "Return", mods = "Shift", chars = "\u001B\r" },
 
     # Spawn a fresh Alacritty window rooted in $HOME without hardcoding a user path
     { key = "N", mods = "Control|Shift", command = { program = "zsh", args = ["-lc", "setsid -f alacritty --working-directory \"$HOME\" >/dev/null 2>&1"] } },
