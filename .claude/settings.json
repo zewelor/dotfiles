@@ -1,0 +1,16 @@
+{
+  "enabledPlugins": {
+    "example-skills@anthropic-agent-skills": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "perplexity@perplexity-mcp-server": true,
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "alwaysThinkingEnabled": true,
+  "model": "opus",
+  "statusLine": {
+    "type": "command",
+    "command": "~/.claude/status-line.sh"
+  }
+}

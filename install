@@ -348,6 +348,37 @@ EOF
   fi
 }
 
+# Function to setup Claude Code configuration (manual symlinks, stow ignores .claude).
+setup_claude() {
+  print_banner "Setting up Claude Code configuration..."
+  local claude_dir="$HOME_DIR/.claude"
+  local dotfiles_claude="$BASE_DIR/.claude"
+
+  mkdir -p "$claude_dir"
+
+  # Symlink settings.json and status-line.sh
+  for file in settings.json status-line.sh; do
+    local src="$dotfiles_claude/$file"
+    local dst="$claude_dir/$file"
+
+    if [[ ! -f "$src" ]]; then
+      echo "Skipping $file (not found in dotfiles)"
+      continue
+    fi
+
+    if [[ -L "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
+      echo "$file already linked; skipping."
+      continue
+    fi
+
+    # Remove existing file/symlink if present
+    [[ -e "$dst" || -L "$dst" ]] && rm -f "$dst"
+
+    ln -s "$src" "$dst"
+    echo "Linked $file -> $src"
+  done
+}
+
 # Function to setup Vim autoload directories and plugins.
 setup_vim() {
   print_banner "Setting up Vim..."
@@ -484,6 +515,7 @@ run_installation() {
   fi
 
   setup_ssh
+  setup_claude
 
   local editor_config_file="$HOME_DIR/.zshrc.d/editor.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"

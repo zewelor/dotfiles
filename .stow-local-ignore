@@ -7,3 +7,4 @@ webapps
 Makefile
 .*\.md
 .local
+.claude  # manual symlinks for settings.json and status-line.sh
