@@ -6,7 +6,8 @@
       "Bash(zsh -i -c 'sleep 1; echo \"\"Completions for cd:\"\"; print -l ${\\(k\\)_comps[\\(I\\)cd]}')",
       "Bash(zsh:*)",
       "Bash(ls:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git check-ignore:*)"
     ]
   }
 }
