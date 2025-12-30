@@ -1,16 +1,19 @@
 {
-  "enabledPlugins": {
-    "example-skills@anthropic-agent-skills": true,
-    "frontend-design@claude-plugins-official": true,
-    "context7@claude-plugins-official": true,
-    "security-guidance@claude-plugins-official": true,
-    "perplexity@perplexity-mcp-server": true,
-    "pyright-lsp@claude-plugins-official": true
-  },
-  "alwaysThinkingEnabled": true,
   "model": "opus",
+  "env": {
+    "SHELL": "/bin/bash"
+  },
   "statusLine": {
     "type": "command",
     "command": "~/.claude/status-line.sh"
-  }
+  },
+  "enabledPlugins": {
+    "example-skills@anthropic-agent-skills": false,
+    "frontend-design@claude-plugins-official": false,
+    "context7@claude-plugins-official": false,
+    "security-guidance@claude-plugins-official": false,
+    "perplexity@perplexity-mcp-server": false,
+    "pyright-lsp@claude-plugins-official": false
+  },
+  "alwaysThinkingEnabled": true
 }
