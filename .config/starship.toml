@@ -89,6 +89,6 @@ vimcmd_symbol   = "[NORMAL](fg:vim bg:bg bold)"
 
 [kubernetes]
 disabled = false
-detect_env_vars = ["KUBECONFIG", "KUBE_CONTEXT"]
+detect_env_vars = ["KUBECONFIG"]
 format = '[⎈ $cluster( \($namespace\)) ]($style)'
 style = "fg:k8s bg:bg bold"

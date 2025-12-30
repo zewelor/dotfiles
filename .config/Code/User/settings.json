@@ -187,7 +187,11 @@
         }
     },
     "vs-kubernetes": {
-        "vs-kubernetes.crd-code-completion": "disabled"
+        "vs-kubernetes.crd-code-completion": "disabled",
+        "vs-kubernetes.knownKubeconfigs": [
+            "/home/omen/.kube/config"
+        ],
+        "vs-kubernetes.kubeconfig": "/home/omen/.kube/config"
     },
     "workbench.colorTheme": "Solarized Light",
     "vim.smartRelativeLine": true,
@@ -198,5 +202,5 @@
             "ZSHRC_SKIP_CUSTOMIZATIONS": "1"
         }
     },
-    "claudeCode.selectedModel": "default",
+    "claudeCode.selectedModel": "default"
 }
