@@ -202,5 +202,6 @@
             "ZSHRC_SKIP_CUSTOMIZATIONS": "1"
         }
     },
-    "claudeCode.selectedModel": "default"
+    "claudeCode.selectedModel": "default",
+    "claudeCode.preferredLocation": "panel"
 }

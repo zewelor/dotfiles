@@ -348,6 +348,17 @@ EOF
   fi
 }
 
+# Function to install desktop-specific tools via mise.
+setup_mise_desktop_tools() {
+  if ! has "mise"; then
+    echo "mise not found; skipping mise desktop tools."
+    return
+  fi
+
+  print_banner "Installing desktop tools via mise..."
+  mise use -g gem:tmuxinator
+}
+
 # Function to setup Claude Code configuration (manual symlinks, stow ignores .claude).
 setup_claude() {
   print_banner "Setting up Claude Code configuration..."
@@ -510,6 +521,7 @@ run_installation() {
 
   if is_desktop; then
     setup_atuin
+    setup_mise_desktop_tools
     # Nie dziala idelanie , poki co koomentuje
     # setup_desktop_entries
   fi

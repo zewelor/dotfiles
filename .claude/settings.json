@@ -1,8 +1,8 @@
 {
-  "model": "opus",
   "env": {
     "SHELL": "/bin/bash"
   },
+  "model": "opus",
   "statusLine": {
     "type": "command",
     "command": "~/.claude/status-line.sh"
@@ -13,7 +13,7 @@
     "context7@claude-plugins-official": false,
     "security-guidance@claude-plugins-official": false,
     "perplexity@perplexity-mcp-server": false,
-    "pyright-lsp@claude-plugins-official": false
+    "pyright-lsp@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true
 }
