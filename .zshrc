@@ -589,7 +589,7 @@ fi
 if has "code"; then
   alias codenw="code -n -w ."
 
-
+  # Connect VS Code to a pod's codeserver container
   code_pod() {
     local input="$1"
     local app folder
@@ -626,6 +626,169 @@ if has "code"; then
     path_esc=${folder// /%20}
 
     code --folder-uri="vscode-remote://k8s-container%2B${hex}/${path_esc}"
+  }
+
+  code_pod_cleanup() {
+    local kubectl_bin
+    kubectl_bin=$(command -v kubectl) || {
+      echo "kubectl not found in PATH"
+      return 1
+    }
+
+    if [[ "$1" == "--all" || "$1" == "-a" ]]; then
+      echo "Cleaning up all debug pods..."
+      "$kubectl_bin" delete pods -A -l code-pod.debug=true
+      return $?
+    fi
+
+    if [[ -z "$1" ]]; then
+      echo "usage: code_pod_cleanup <app-name> | --all"
+      echo ""
+      echo "Active debug pods:"
+      "$kubectl_bin" get pods -A -l code-pod.debug=true -o wide 2>/dev/null || echo "  (none)"
+      return 1
+    fi
+
+    local app="$1"
+    local debug_pod="${app}-debug-pod"
+
+    # Find namespace
+    local ns
+    ns=$("$kubectl_bin" get pods -A -l "code-pod.debug=true,app.kubernetes.io/name=$app" \
+      -o jsonpath='{.items[0].metadata.namespace}' 2>/dev/null)
+
+    if [[ -z "$ns" ]]; then
+      echo "No debug pod found for app: $app"
+      return 1
+    fi
+
+    echo "Deleting debug pod: $debug_pod (namespace: $ns)"
+    "$kubectl_bin" delete pod "$debug_pod" -n "$ns"
+  }
+
+  # Specialized function for Home Assistant development
+  # Usage: code_hass <instance>
+  code_hass() {
+    local kubectl_bin
+    kubectl_bin=$(command -v kubectl) || { echo "kubectl not found"; return 1; }
+    command -v jq &>/dev/null || { echo "jq required"; return 1; }
+
+    # List available instances if no argument
+    if [[ -z "$1" ]]; then
+      echo "Usage: code_hass <instance>"
+      echo ""
+      echo "Available instances:"
+      "$kubectl_bin" get pods -n iot -l app.kubernetes.io/name -o json 2>/dev/null | \
+        jq -r '.items[].metadata.labels["app.kubernetes.io/name"] // empty' | \
+        grep '^homeassistant-' | sed 's/homeassistant-/  /' | sort -u
+      return 0
+    fi
+
+    local instance="$1"
+    local app="homeassistant-${instance}"
+    local ns="iot"
+    local debug_pod="${app}-debug-pod"
+
+    # Check if debug pod exists and is actually running (not terminating)
+    local pod_info existing_phase is_terminating
+    pod_info=$("$kubectl_bin" get pod "$debug_pod" -n "$ns" --ignore-not-found \
+      -o jsonpath='{.status.phase} {.metadata.deletionTimestamp}' 2>/dev/null)
+    existing_phase="${pod_info%% *}"
+    is_terminating="${pod_info#* }"
+
+    if [[ "$existing_phase" == "Running" && -z "$is_terminating" ]]; then
+      echo "Reusing existing debug pod: $debug_pod" >&2
+    else
+      # Find source pod
+      local src_pod
+      src_pod=$("$kubectl_bin" get pods -n "$ns" -l "app.kubernetes.io/name=$app" \
+        -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | awk '{print $1}')
+
+      [[ -z "$src_pod" ]] && { echo "No running pod for $app"; return 1; }
+
+      # Cleanup old pod if exists (including Terminating state)
+      if [[ -n "$existing_phase" ]]; then
+        local status_msg="$existing_phase"
+        [[ -n "$is_terminating" ]] && status_msg="Terminating"
+        echo "Cleaning up old pod ($status_msg)..." >&2
+        "$kubectl_bin" delete pod "$debug_pod" -n "$ns" --force --grace-period=0 >/dev/null 2>&1
+        # Wait for pod to be gone
+        while "$kubectl_bin" get pod "$debug_pod" -n "$ns" >/dev/null 2>&1; do
+          sleep 1
+        done
+      fi
+
+      # Get pod spec components
+      local node volume_spec tolerations_json env_json labels_json
+      node=$("$kubectl_bin" get pod "$src_pod" -n "$ns" -o jsonpath='{.spec.nodeName}')
+      volume_spec=$("$kubectl_bin" get pod "$src_pod" -n "$ns" -o json | \
+        jq -c '.spec.volumes[] | select(.name=="config")')
+      tolerations_json=$("$kubectl_bin" get pod "$src_pod" -n "$ns" -o json | jq -c '.spec.tolerations // []')
+      # Copy labels from original pod (for NetworkPolicy), but change controller to avoid service selector match
+      labels_json=$("$kubectl_bin" get pod "$src_pod" -n "$ns" -o json | \
+        jq -c '.metadata.labels | del(.["pod-template-hash"]) | .["code-pod.debug"] = "true" | .["app.kubernetes.io/controller"] = "debug"')
+
+      # Get env vars, fix localhost -> external IP (NetworkPolicy allows 192.168.x.x)
+      local svc_ip
+      svc_ip=$("$kubectl_bin" get svc "${app}-app" -n "$ns" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null)
+      [[ -z "$svc_ip" ]] && svc_ip=$("$kubectl_bin" get svc "${app}-app" -n "$ns" -o jsonpath='{.spec.clusterIP}')
+      env_json=$("$kubectl_bin" get pod "$src_pod" -n "$ns" -o json | \
+        jq -c --arg svc "$svc_ip" '
+          .spec.containers[] | select(.name=="codeserver") | .env // [] |
+          map(if .value then .value |= gsub("localhost"; $svc) | . else . end)
+        ')
+
+      echo "Creating debug pod: $debug_pod (node: $node)" >&2
+
+      # Create debug pod
+      jq -n \
+        --arg name "$debug_pod" \
+        --arg node "$node" \
+        --argjson labels "$labels_json" \
+        --argjson tolerations "$tolerations_json" \
+        --argjson volspec "$volume_spec" \
+        --argjson env "$env_json" \
+        '{
+          apiVersion: "v1",
+          kind: "Pod",
+          metadata: {
+            name: $name,
+            labels: $labels
+          },
+          spec: {
+            activeDeadlineSeconds: 21600,
+            hostNetwork: true,
+            dnsPolicy: "ClusterFirstWithHostNet",
+            nodeSelector: { "kubernetes.io/hostname": $node },
+            tolerations: $tolerations,
+            restartPolicy: "Never",
+            containers: [{
+              name: "debug",
+              image: "ubuntu:24.04",
+              command: ["sleep", "infinity"],
+              env: ($env + [{ name: "VSCODE_AGENT_FOLDER", value: "/config/.vscode-server" }]),
+              volumeMounts: [{ name: "config", mountPath: "/config" }],
+              resources: { requests: { memory: "256Mi", cpu: "100m" }, limits: { memory: "4Gi", cpu: "2" } }
+            }],
+            volumes: [$volspec]
+          }
+        }' | "$kubectl_bin" apply -n "$ns" -f - >&2
+
+      echo "Waiting for pod..." >&2
+      "$kubectl_bin" wait pod "$debug_pod" -n "$ns" --for=condition=Ready --timeout=120s >&2 || return 1
+    fi
+
+    echo "" >&2
+    echo "HASS debug pod ready! (auto-shutdown 6h)" >&2
+    echo "Cleanup: code_pod_cleanup $app" >&2
+    echo "" >&2
+
+    # Connect VS Code
+    local ctx json hex
+    ctx=$("$kubectl_bin" config current-context 2>/dev/null || printf "default")
+    json=$(printf '{"context":"%s","podname":"%s","namespace":"%s","name":"debug"}' "$ctx" "$debug_pod" "$ns")
+    hex=$(printf '%s' "$json" | xxd -p -c 999 | tr -d '\n')
+    code --folder-uri="vscode-remote://k8s-container%2B${hex}/config"
   }
 fi
 

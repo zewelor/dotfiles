@@ -80,7 +80,6 @@
     "git.ignoreMissingGitWarning": true,
     "git.ignoreRebaseWarning": true,
     "git.openRepositoryInParentFolders": "never",
-    "github.copilot.advanced": {},
     "github.copilot.chat.agent.thinkingTool": true,
     "github.copilot.chat.codesearch.enabled": true,
     "github.copilot.enable": {

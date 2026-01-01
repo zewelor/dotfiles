@@ -11,9 +11,8 @@
     "example-skills@anthropic-agent-skills": false,
     "frontend-design@claude-plugins-official": false,
     "context7@claude-plugins-official": false,
-    "security-guidance@claude-plugins-official": false,
     "perplexity@perplexity-mcp-server": false,
-    "pyright-lsp@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": false
   },
   "alwaysThinkingEnabled": true
 }
