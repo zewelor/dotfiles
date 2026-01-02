@@ -14,7 +14,8 @@
     "pyright-lsp@claude-plugins-official": false,
     "code-review@claude-plugins-official": false,
     "commit-commands@claude-plugins-official": false,
-    "security-guidance@claude-plugins-official": false
+    "security-guidance@claude-plugins-official": false,
+    "github@claude-plugins-official": true
   },
   "alwaysThinkingEnabled": true
 }

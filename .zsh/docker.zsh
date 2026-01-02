@@ -2,33 +2,35 @@ if has "docker"; then
   export DOCKER_BUILDKIT=1
   export COMPOSE_DOCKER_CLI_BUILD=1
 
-  # Aliases
+  # Aliases (these expand for completion - subcommands work via docker completion)
   # source: https://github.com/sorin-ionescu/prezto/blob/master/modules/docker/alias.zsh
   alias dkC='docker container'
-  alias dkCrm='docker container rm'
   alias dkCls='docker container ls'
 
   ## Image (I)
   alias dkI='docker image'
-  alias dkIin='docker image inspect'
   alias dkIls='docker image ls'
   alias dkIpr='docker image prune'
   alias dkIpl='docker image pull'
-  alias dkIrm='docker image rm'
 
   ## Volume (V)
   alias dkV='docker volume'
-  alias dkVin='docker volume inspect'
   alias dkVls='docker volume ls'
   alias dkVpr='docker volume prune'
-  alias dkVrm='docker volume rm'
 
   ## Network (N)
   alias dkN='docker network'
-  alias dkNin='docker network inspect'
   alias dkNls='docker network ls'
   alias dkNpr='docker network prune'
-  alias dkNrm='docker network rm'
+
+  # Functions (not expanded - use custom completion for image/container/volume/network names)
+  dkCrm() { docker container rm "$@"; }
+  dkIin() { docker image inspect "$@"; }
+  dkIrm() { docker image rm "$@"; }
+  dkVin() { docker volume inspect "$@"; }
+  dkVrm() { docker volume rm "$@"; }
+  dkNin() { docker network inspect "$@"; }
+  dkNrm() { docker network rm "$@"; }
 
   ## Compose (c)
   alias dkc='docker compose'
@@ -56,46 +58,67 @@ if has "docker"; then
   # https://github.com/docker/cli/issues/993
   zstyle ':completion:*:*:docker:*' option-stacking yes
 
-  # Use zpcompdef for binding completions (zinit/prezto)
-
   alias dkcl='docker compose logs'
 
   function dkEsh () {
     docker exec -it $1 sh
   }
 
-  # Small helper: list running container names (one per line)
-  function _docker_running_container_names() {
-    docker ps --format '{{.Names}}' 2>/dev/null
-  }
-
-  # Small helper: list local image references as repo:tag (non-dangling)
-  function _docker_local_image_tags() {
-    docker image ls --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | \
-      grep -v '^<none>:' | grep -v ':<none>$'
-  }
-
-  # Completion for dkEsh: list running containers
-  function _dkEsh() {
-    local -a containers
-    containers=(${(f)"$(_docker_running_container_names)"})
-    compadd -a containers
-  }
-
-  zpcompdef _dkEsh dkEsh
-
   function dkCRsh () {
     docker container run -it --rm --entrypoint "" $1 sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
   }
 
-  # Completion for dkCRsh: list local images (repo:tag)
-  function _dkCRsh() {
-    local -a images
-    images=(${(f)"$(_docker_local_image_tags)"})
-    compadd -a images
+  # Completion functions for docker aliases (with aligned descriptions)
+  # -V keeps original order (newest first from docker), -l shows as list
+  _dkEsh() {
+    local -a names descriptions
+    names=(${(f)"$(docker ps --format '{{.Names}}' 2>/dev/null)"})
+    descriptions=(${(f)"$(docker ps --format '{{.Names}}|{{.Image}}|{{.Status}}' 2>/dev/null | awk -F'|' '{printf "%-30s -- %-30s (%s)\n", $1, $2, $3}')"})
+    compadd -V unsorted -l -d descriptions -a names
   }
+  _dkCRsh() {
+    local -a names descriptions
+    names=(${(f)"$(docker image ls --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep -v '<none>')"})
+    descriptions=(${(f)"$(docker image ls --format '{{.Repository}}:{{.Tag}}|{{.Size}}|{{.CreatedSince}}' 2>/dev/null | grep -v '<none>' | awk -F'|' '{
+      size = $2
+      if (size ~ /GB/) { gsub(/GB/, "", size); size = int(size * 1024) "MB" }
+      else if (size ~ /MB/) { gsub(/[^0-9.]/, "", size); size = int(size) "MB" }
+      else if (size ~ /KB/) { gsub(/KB/, "", size); size = int(size / 1024) "MB" }
+      match($3, /([0-9]+) ([a-z]+)/, arr)
+      printf "%-45s -- %6s, %3s %-10s\n", $1, size, arr[1], arr[2]
+    }')"})
+    compadd -V unsorted -l -d descriptions -a names
+  }
+  _dkIin() { _dkCRsh; }
+  _dkIrm() { _dkCRsh; }
+  _dkCrm() {
+    local -a names descriptions
+    names=(${(f)"$(docker ps -a --format '{{.Names}}' 2>/dev/null)"})
+    descriptions=(${(f)"$(docker ps -a --format '{{.Names}}|{{.Image}}|{{.Status}}' 2>/dev/null | awk -F'|' '{printf "%-30s -- %-30s (%s)\n", $1, $2, $3}')"})
+    compadd -V unsorted -l -d descriptions -a names
+  }
+  _dkVin() {
+    local -a names descriptions
+    names=(${(f)"$(docker volume ls --format '{{.Name}}' 2>/dev/null)"})
+    descriptions=(${(f)"$(docker volume ls --format '{{.Name}}|{{.Driver}}|{{.Scope}}' 2>/dev/null | awk -F'|' '{printf "%-40s -- %s, %s\n", $1, $2, $3}')"})
+    compadd -V unsorted -l -d descriptions -a names
+  }
+  _dkVrm() { _dkVin; }
+  _dkNin() {
+    local -a names descriptions
+    names=(${(f)"$(docker network ls --format '{{.Name}}' 2>/dev/null)"})
+    descriptions=(${(f)"$(docker network ls --format '{{.Name}}|{{.Driver}}|{{.Scope}}' 2>/dev/null | awk -F'|' '{printf "%-30s -- %s, %s\n", $1, $2, $3}')"})
+    compadd -V unsorted -l -d descriptions -a names
+  }
+  _dkNrm() { _dkNin; }
 
-  zpcompdef _dkCRsh dkCRsh
+  # Register completions via zinit's zicdreplay mechanism
+  # This queues compdef calls until compinit runs
+  ZINIT_COMPDEF_REPLAY+=("_dkIin dkIin" "_dkIrm dkIrm" "_dkCRsh dkCRsh")
+  ZINIT_COMPDEF_REPLAY+=("_dkCrm dkCrm")
+  ZINIT_COMPDEF_REPLAY+=("_dkVin dkVin" "_dkVrm dkVrm")
+  ZINIT_COMPDEF_REPLAY+=("_dkNin dkNin" "_dkNrm dkNrm")
+  ZINIT_COMPDEF_REPLAY+=("_dkEsh dkEsh")
 
   if [ ! -z "`docker compose version`" ]; then
 
@@ -126,7 +149,6 @@ if has "docker"; then
       fi
       compadd -a services
     }
-    zpcompdef _complete_compose_services dkcrs dkcrsd dkcrsdl dkcupdate dkcupdated
 
     function dkcrsd () {
       dkcrs $1 -d
@@ -173,7 +195,14 @@ if has "docker"; then
         return 1
       fi
     }
-    zpcompdef _docker_compose_run_or_exec docker_compose_run_or_exec
+
+    # Register compose completions
+    ZINIT_COMPDEF_REPLAY+=("_complete_compose_services dkcrs")
+    ZINIT_COMPDEF_REPLAY+=("_complete_compose_services dkcrsd")
+    ZINIT_COMPDEF_REPLAY+=("_complete_compose_services dkcrsdl")
+    ZINIT_COMPDEF_REPLAY+=("_complete_compose_services dkcupdate")
+    ZINIT_COMPDEF_REPLAY+=("_complete_compose_services dkcupdated")
+    ZINIT_COMPDEF_REPLAY+=("_docker_compose_run_or_exec docker_compose_run_or_exec")
   fi
 
 fi
