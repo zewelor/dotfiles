@@ -367,15 +367,15 @@ setup_claude() {
 
   mkdir -p "$claude_dir"
 
-  # Symlink settings.json and status-line.sh
-  for file in settings.json status-line.sh; do
-    local src="$dotfiles_claude/$file"
-    local dst="$claude_dir/$file"
+  # Symlink all files except settings.local.json (machine-specific)
+  for src in "$dotfiles_claude"/*; do
+    local file
+    file=$(basename "$src")
 
-    if [[ ! -f "$src" ]]; then
-      echo "Skipping $file (not found in dotfiles)"
-      continue
-    fi
+    # Skip local settings (machine-specific)
+    [[ "$file" == "settings.local.json" ]] && continue
+
+    local dst="$claude_dir/$file"
 
     if [[ -L "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
       echo "$file already linked; skipping."
@@ -501,7 +501,7 @@ run_installation() {
   configure_profile
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
-  install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" "."
+  install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."
 
   if is_desktop && [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
     mkdir -p "$HOME_DIR/.local/share"

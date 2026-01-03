@@ -9,7 +9,11 @@
       "Bash(cat:*)",
       "Bash(git check-ignore:*)",
       "Bash(docker image ls:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(stow:*)",
+      "Bash(source:*)",
+      "Bash(setup_claude)",
+      "WebFetch(domain:docs.anthropic.com)"
     ]
   }
 }

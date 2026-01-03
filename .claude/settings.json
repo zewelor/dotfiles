@@ -15,7 +15,30 @@
     "code-review@claude-plugins-official": false,
     "commit-commands@claude-plugins-official": false,
     "security-guidance@claude-plugins-official": false,
-    "github@claude-plugins-official": true
+    "github@claude-plugins-official": false
   },
-  "alwaysThinkingEnabled": true
+  "alwaysThinkingEnabled": true,
+  "hooks": {
+    "Notification": [
+      {
+        "matcher": "(permission|idle)_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/claude-code-notifier.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/claude-code-notifier.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
