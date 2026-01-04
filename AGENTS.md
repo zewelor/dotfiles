@@ -126,3 +126,10 @@ Minimalne, spójne formaty:
 - Narzędzia k8s są lazy-loadowane przez funkcję `start-k8s-work()` w `.zsh/kubernetes.zsh`.
 - Wywołanie `start-k8s-work` ładuje: aliasy (`k`, `kmurder`), funkcje (`kexec`, `kcRsh`, `kcEsh`), k9s, krew, completions (w tym `kubectl cnpg`).
 - Dodając nowe narzędzia/completions k8s, umieszczaj je wewnątrz `start-k8s-work()`, nie w głównym `.zshrc`.
+
+## Preferencje środowiskowe
+
+- **NIE używaj direnv** - nie lubię hooków na zmianę katalogu. Per-project env rozwiązuję przez:
+  - tmuxinator (sesje per projekt)
+  - Docker/compose (izolacja środowiska)
+- Unikaj dodawania nowych hooków do shell prompt/cd.

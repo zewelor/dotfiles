@@ -13,7 +13,10 @@
       "Bash(stow:*)",
       "Bash(source:*)",
       "Bash(setup_claude)",
-      "WebFetch(domain:docs.anthropic.com)"
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(make:*)"
     ]
   }
 }

@@ -1,30 +1,6 @@
-# Resolve $BROWSER if not provided
+# Resolve $BROWSER if not provided (uses resolve_browser_cmd from helpers.zsh)
 if [[ -z "$BROWSER" ]]; then
-  DEFAULT_BROWSER_DESKTOP=$(xdg-settings get default-web-browser 2>/dev/null)
-
-  if [[ -n "$DEFAULT_BROWSER_DESKTOP" ]]; then
-    # Extract the Exec line from the .desktop file
-    if [[ -f "/usr/share/applications/$DEFAULT_BROWSER_DESKTOP" ]]; then
-      BROWSER_EXEC=$(grep -m1 '^Exec=' "/usr/share/applications/$DEFAULT_BROWSER_DESKTOP")
-    elif [[ -f "$HOME/.local/share/applications/$DEFAULT_BROWSER_DESKTOP" ]]; then
-      BROWSER_EXEC=$(grep -m1 '^Exec=' "$HOME/.local/share/applications/$DEFAULT_BROWSER_DESKTOP")
-    fi
-
-    # Clean up the Exec command (strip placeholders like %u, %U)
-    if [[ -n "$BROWSER_EXEC" ]]; then
-      BROWSER=$(print -r -- "$BROWSER_EXEC" | sed -E 's/^Exec=//' | sed -E 's/ ?%[a-zA-Z]//g')
-    fi
-  fi
-
-  # If we couldn't detect it from .desktop, try common fallbacks
-  for candidate in brave chromium google-chrome firefox; do
-    if command -v "$candidate" >/dev/null 2>&1 && [[ -z "$BROWSER" ]]; then
-      BROWSER="$candidate"
-    fi
-  done
-
-  # Final fallback
-  export BROWSER="${BROWSER:-xdg-open}"
+  export BROWSER="$(resolve_browser_cmd)"
 fi
 
 # Create a desktop launcher for a web app

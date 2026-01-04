@@ -2,6 +2,7 @@ prv
 install.*
 bin
 webapps
+docs
 .git
 .gitmodules
 Makefile

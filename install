@@ -10,6 +10,9 @@ BASE_DIR="$SCRIPT_DIR"
 HOME_DIR="$HOME"
 CONFIG_DIR="$HOME_DIR/.config"
 
+# Source shared helper functions (has, resolve_browser_cmd, etc.)
+source "$BASE_DIR/.zsh/helpers.zsh"
+
 # Optional font installer executable that mirrors the Nerd Font helper.
 FONT_INSTALLER="$BASE_DIR/install-font"
 
@@ -17,60 +20,11 @@ FONT_INSTALLER="$BASE_DIR/install-font"
 VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
 VAULT_KEYS=("envs.zsh")
 
-# Function to check if a command exists.
-has() { command -v "${1:-}" >/dev/null 2>&1; }
+# Note: has() and resolve_browser_cmd() are now in .zsh/helpers.zsh
 
 # Function to check if the profile is desktop.
 is_desktop() {
   [[ "${DOTFILES_PROFILE:-server}" == "desktop" ]]
-}
-
-# Resolve a suitable browser command, mirroring .zsh/webapps.zsh logic.
-resolve_browser_cmd() {
-  local detected="${BROWSER:-}"
-
-  if [[ -z "$detected" ]]; then
-    local default_desktop
-    default_desktop=$(xdg-settings get default-web-browser 2>/dev/null || true)
-
-    local desktop_path=""
-    if [[ -n "$default_desktop" ]]; then
-      if [[ -f "/usr/share/applications/$default_desktop" ]]; then
-        desktop_path="/usr/share/applications/$default_desktop"
-      elif [[ -f "$HOME_DIR/.local/share/applications/$default_desktop" ]]; then
-        desktop_path="$HOME_DIR/.local/share/applications/$default_desktop"
-      fi
-    fi
-
-    if [[ -n "$desktop_path" ]]; then
-      local exec_line
-      exec_line=$(grep -m1 '^Exec=' "$desktop_path" || true)
-      if [[ -n "$exec_line" ]]; then
-        detected=$(print -r -- "${exec_line#Exec=}" | sed -E 's/ ?%[a-zA-Z]//g')
-      fi
-    fi
-
-    if [[ -z "$detected" ]]; then
-      local browser_candidates=("brave-browser-stable" "brave-browser" "google-chrome-stable" "google-chrome" "chromium" "chromium-browser" "brave" "chromium" "firefox")
-      for candidate in "${browser_candidates[@]}"; do
-        if has "$candidate"; then
-          detected="$candidate"
-          break
-        fi
-      done
-    fi
-
-    detected="${detected:-xdg-open}"
-  fi
-
-  # Validate command availability (first word only to allow flags/paths)
-  local first_word="${detected%% *}"
-  if ! has "$first_word"; then
-    echo ""
-    return
-  fi
-
-  echo "$detected"
 }
 
 # Function to check if the shell is interactive.
@@ -150,7 +104,9 @@ add_secret_envs_from_vault() {
   echo
   export VAULT_TOKEN
 
-  mkdir -p "$HOME_DIR/.zshrc.d"
+  # Ensure restrictive permissions for secrets directory
+  (umask 077 && mkdir -p "$HOME_DIR/.zshrc.d")
+  chmod 700 "$HOME_DIR/.zshrc.d"
 
   for key in "${VAULT_KEYS[@]}"; do
     echo "Fetching data for key: $key"
@@ -161,10 +117,13 @@ add_secret_envs_from_vault() {
       continue
     }
 
-    echo "# Generated with install script from dotfiles" > "$HOME_DIR/.zshrc.d/$key"
-    echo "$vault_response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' >> "$HOME_DIR/.zshrc.d/$key"
+    local target_file="$HOME_DIR/.zshrc.d/$key"
+    echo "# Generated with install script from dotfiles" > "$target_file"
+    # Use @sh for safe quoting to prevent injection from special characters
+    echo "$vault_response" | jq -r '.data.data | to_entries[] | "export " + .key + "=" + (.value | @sh)' >> "$target_file"
+    chmod 600 "$target_file"
 
-    echo "Environment variables for $key have been saved to $HOME_DIR/.zshrc.d/$key"
+    echo "Environment variables for $key have been saved to $target_file"
   done
 }
 

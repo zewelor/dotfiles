@@ -109,3 +109,28 @@ keymap("i", "<C-s>", "<Esc>:w<CR>", { desc = "Save file" })
 -- Note: terminals send Ctrl+/ as <C-_>
 keymap("n", "<C-_>", "gcc", { remap = true, silent = true, desc = "Toggle comment line" })
 keymap("x", "<C-_>", "gc",  { remap = true, silent = true, desc = "Toggle comment selection" })
+
+-- ============================================================================
+-- LSP KEYMAPS (active when LSP attaches to buffer)
+-- ============================================================================
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("UserLspConfig", {}),
+  callback = function(ev)
+    local bufopts = { buffer = ev.buf }
+    -- Navigation
+    keymap("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", bufopts, { desc = "Go to definition" }))
+    keymap("n", "gD", vim.lsp.buf.declaration, vim.tbl_extend("force", bufopts, { desc = "Go to declaration" }))
+    keymap("n", "gr", vim.lsp.buf.references, vim.tbl_extend("force", bufopts, { desc = "Find references" }))
+    keymap("n", "gi", vim.lsp.buf.implementation, vim.tbl_extend("force", bufopts, { desc = "Go to implementation" }))
+    -- Documentation
+    keymap("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", bufopts, { desc = "Hover documentation" }))
+    keymap("n", "<C-k>", vim.lsp.buf.signature_help, vim.tbl_extend("force", bufopts, { desc = "Signature help" }))
+    -- Actions
+    keymap("n", "<leader>rn", vim.lsp.buf.rename, vim.tbl_extend("force", bufopts, { desc = "Rename symbol" }))
+    keymap({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, vim.tbl_extend("force", bufopts, { desc = "Code action" }))
+    -- Diagnostics
+    keymap("n", "[d", vim.diagnostic.goto_prev, vim.tbl_extend("force", bufopts, { desc = "Previous diagnostic" }))
+    keymap("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", bufopts, { desc = "Next diagnostic" }))
+  end,
+})

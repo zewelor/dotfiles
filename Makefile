@@ -1,4 +1,4 @@
-.PHONY: all base install-fonts dotfiles-fonts setup packages $(zinit_dir) zinit_update
+.PHONY: all base install-fonts dotfiles-fonts setup packages $(zinit_dir) zinit_update doctor
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -73,3 +73,26 @@ packages:
 zinit_update:
 	echo "Remember to update root also"
 	zinit update
+
+doctor:
+	@echo "========================================"
+	@echo "Dotfiles Health Check"
+	@echo "========================================"
+	@echo ""
+	@echo "-> Checking shell script syntax..."
+	@zsh -n install install-font .zshrc .zsh/*.zsh && echo "  OK: All scripts pass syntax check" || echo "  ERROR: Syntax errors found"
+	@echo ""
+	@echo "-> Checking stow dry-run..."
+	@TMPDIR=$$(mktemp -d) && stow -n -t "$$TMPDIR" . 2>&1 | head -20; rmdir "$$TMPDIR" 2>/dev/null || true
+	@echo "  (dry-run to temp target)"
+	@echo ""
+	@echo "-> Checking tool versions..."
+	@printf "  git:   "; git --version 2>/dev/null | cut -d' ' -f3 || echo "not found"
+	@printf "  zsh:   "; zsh --version 2>/dev/null | cut -d' ' -f2 || echo "not found"
+	@printf "  nvim:  "; nvim --version 2>/dev/null | head -1 | grep -oE 'v[0-9.]+' || echo "not found"
+	@printf "  stow:  "; stow --version 2>/dev/null | head -1 | grep -oE '[0-9.]+' || echo "not found"
+	@printf "  tmux:  "; tmux -V 2>/dev/null | cut -d' ' -f2 || echo "not found"
+	@echo ""
+	@echo "========================================"
+	@echo "Done"
+	@echo "========================================"

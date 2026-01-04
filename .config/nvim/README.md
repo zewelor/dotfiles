@@ -15,10 +15,12 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua        # Autouzupełnianie
 │   │   ├── copilot.lua      # GitHub Copilot
+│   │   ├── lsp.lua          # LSP + mason (language servers)
 │   │   ├── mini-align.lua   # Wyrównywanie tekstu
 │   │   ├── mini-icons.lua   # Ikony plików
 │   │   ├── neotree.lua      # File explorer
 │   │   ├── telescope.lua    # Wyszukiwanie i fuzzy finder
+│   │   ├── treesitter.lua   # Lepszy syntax highlighting
 │   │   ├── solarized.lua    # Motyw kolorów
 │   │   └── which-key.lua    # Podpowiedzi skrótów
 │   └── after/
@@ -143,6 +145,51 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 ---
 
+### **nvim-treesitter** — Lepszy Syntax Highlighting
+
+- **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
+- **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
+- **Zainstalowane parsery**: lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git
+- **Komendy**:
+  - `:TSUpdate` — Zaktualizuj wszystkie parsery
+  - `:TSInstall <lang>` — Zainstaluj parser dla języka
+
+---
+
+### **LSP** — Language Server Protocol
+
+Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
+
+- **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — Menedżer serwerów LSP
+- **mason-lspconfig.nvim**: [williamboman/mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) — Bridge mason ↔ lspconfig
+- **nvim-lspconfig**: [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) — Konfiguracja LSP
+
+**Zainstalowane serwery**:
+- `lua_ls` — Lua (konfiguracja Neovim)
+- `bashls` — Bash/Zsh
+- `yamlls` — YAML (K8s, docker-compose)
+- `jsonls` — JSON
+- `helm_ls` — Helm charts
+- `basedpyright` — Python
+
+**Komendy**:
+- `:Mason` — UI menedżera serwerów
+- `:MasonInstall <server>` — Zainstaluj serwer
+- `:LspInfo` — Info o aktywnych serwerach
+
+**Keymaps** (aktywne gdy LSP jest podłączony):
+- `gd` — Go to definition
+- `gD` — Go to declaration
+- `gr` — Find references
+- `gi` — Go to implementation
+- `K` — Hover documentation
+- `<C-k>` — Signature help
+- `<Space>rn` — Rename symbol
+- `<Space>ca` — Code action
+- `[d` / `]d` — Previous/next diagnostic
+
+---
+
 ## ⌨️ Własne skróty klawiszowe
 
 ### Z Leaderem (Leader = `<Space>`)
@@ -169,9 +216,27 @@ Główne opcje edytora (z `lua/config/options.lua`):
 - `<Space>sh` — Podziel poziomo (`:split`)
 - `<Space>sc` — Zamknij obecny split (`:close`)
 
+#### LSP (aktywne gdy serwer LSP jest podłączony)
+
+- `<Space>rn` — Rename symbol
+- `<Space>ca` — Code action
+
 ---
 
 ### Bez Leadera
+
+#### LSP (aktywne gdy serwer LSP jest podłączony)
+
+- `gd` — Go to definition
+- `gD` — Go to declaration
+- `gr` — Find references
+- `gi` — Go to implementation
+- `K` — Hover documentation
+- `<C-k>` — Signature help
+- `[d` — Previous diagnostic
+- `]d` — Next diagnostic
+
+---
 
 #### Otwieranie linków
 
