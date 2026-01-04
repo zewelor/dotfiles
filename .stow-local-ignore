@@ -8,3 +8,4 @@ Makefile
 .*\.md
 .local
 .claude  # manual symlinks for settings.json and status-line.sh
+.config/rclone  # generated from template by install script

@@ -1,0 +1,6 @@
+[nas]
+type = webdav
+url = http://nas.x1.lan:5000
+vendor = other
+user = omen
+pass = {{nas_pass}}

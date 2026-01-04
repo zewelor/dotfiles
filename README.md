@@ -17,6 +17,69 @@ make install
 
 Local customization can be done by putting files in the ~/.zshrc.d/ directory. These files will be sourced by the main .zshrc file.
 
+## rclone NAS mount (desktop only)
+
+The install script can configure rclone to mount a NAS via WebDAV with local caching. This is useful for remote access over VPN where NFS/SMB performance suffers from latency.
+
+### Setup
+
+During `./install`, answer **Y** to "Would you like to setup rclone with password from Vault?"
+
+The password is fetched from Vault at `secret/configs/rclone` (key: `nas_pass`).
+
+**Requirements**: Mount point `/mnt/nas` must exist. The install script will offer to create it with sudo, or you can create it manually:
+
+```bash
+sudo mkdir -p /mnt/nas && sudo chown $USER:$USER /mnt/nas
+```
+
+Also ensure `user_allow_other` is enabled in `/etc/fuse.conf` for the `--allow-other` mount option.
+
+### Files
+
+| File | Description |
+|------|-------------|
+| `.config/rclone/rclone.conf.template` | Template in git (without password) |
+| `.config/systemd/user/rclone-nas.service` | Systemd service (stow symlinks it) |
+| `~/.config/rclone/rclone.conf` | Generated config (with password, not in git) |
+
+### Testing
+
+```bash
+# List NAS root
+rclone lsd nas:/
+
+# List specific folder
+rclone ls nas:/Multimedia/Music
+
+# Check mount status
+systemctl --user status rclone-nas.service
+
+# Manual mount (if service not running)
+rclone mount nas:/ /mnt/nas --vfs-cache-mode full --vfs-cache-max-size 5G
+```
+
+### Systemd service
+
+The service auto-starts on login and mounts NAS to `/mnt/nas`:
+
+```bash
+# Enable (done by install script)
+systemctl --user enable --now rclone-nas.service
+
+# Restart after config changes
+systemctl --user restart rclone-nas.service
+
+# View logs
+journalctl --user -u rclone-nas.service -f
+```
+
+### Vault secret
+
+Password is stored in Vault at `secret/configs/rclone` (key: `nas_pass`, obscured format).
+
+Generate obscured password: `rclone obscure "your_plaintext_password"`
+
 ## Web app launchers
 
 - Config file: `webapps/apps.tsv` (`name|slug|app_url|icon_filename|extra_flags`); directory is excluded from `stow`, installers handle generation.

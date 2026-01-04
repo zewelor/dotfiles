@@ -133,6 +133,7 @@ refresh_font_cache() {
 }
 
 # Function to add secret environment variables from Vault.
+# Sets VAULT_TOKEN globally for reuse by other functions (e.g., setup_rclone).
 add_secret_envs_from_vault() {
   if ! is_interactive; then
     echo "Skipping secret envs setup in non-interactive mode."
@@ -140,31 +141,31 @@ add_secret_envs_from_vault() {
   fi
 
   read -r "response?Would you like to add secret envs from Vault? [y/N] "
-  if [[ "$response" =~ ^[Yy]$ ]]; then
-    read -rs "VAULT_TOKEN?Please provide your Vault token: "
-    echo
-
-    mkdir -p "$HOME_DIR/.zshrc.d"
-
-    for key in "${VAULT_KEYS[@]}"; do
-      echo "Fetching data for key: $key"
-      (
-        IFS=$'\n\t'
-        local response
-        response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL/$key") || {
-          echo "Failed to fetch data for $key from Vault." >&2
-          exit 1
-        }
-
-        echo "# Generated with install script from dotfiles" > "$HOME_DIR/.zshrc.d/$key"
-        echo "$response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' >> "$HOME_DIR/.zshrc.d/$key"
-      )
-
-      echo "Environment variables for $key have been saved to $HOME_DIR/.zshrc.d/$key"
-    done
-  else
+  if [[ ! "$response" =~ ^[Yy]$ ]]; then
     echo "Skipped adding secret environment variables from Vault."
+    return
   fi
+
+  read -rs "VAULT_TOKEN?Please provide your Vault token: "
+  echo
+  export VAULT_TOKEN
+
+  mkdir -p "$HOME_DIR/.zshrc.d"
+
+  for key in "${VAULT_KEYS[@]}"; do
+    echo "Fetching data for key: $key"
+
+    local vault_response
+    vault_response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL/$key") || {
+      echo "Failed to fetch data for $key from Vault." >&2
+      continue
+    }
+
+    echo "# Generated with install script from dotfiles" > "$HOME_DIR/.zshrc.d/$key"
+    echo "$vault_response" | jq -r '.data.data | to_entries[] | "export \(.key)=\(.value)"' >> "$HOME_DIR/.zshrc.d/$key"
+
+    echo "Environment variables for $key have been saved to $HOME_DIR/.zshrc.d/$key"
+  done
 }
 
 # Function to configure Git conflict style based on git version.
@@ -188,9 +189,8 @@ setup_atuin() {
   local src="$BASE_DIR/.config/atuin/config.toml"
   local dst="$CONFIG_DIR/atuin/config.toml"
 
-  # Avoid failing when src and dst already resolve to the same path (e.g., stowed .config).
+  # Skip if already correctly linked
   if [[ -e "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
-    echo "Atuin config already linked; skipping."
     return
   fi
 
@@ -359,6 +359,63 @@ setup_mise_desktop_tools() {
   mise use -g gem:tmuxinator
 }
 
+# Function to setup rclone configuration from Vault (desktop only).
+setup_rclone() {
+  if ! is_desktop; then
+    return
+  fi
+
+  if ! is_interactive; then
+    echo "Skipping rclone setup in non-interactive mode."
+    return
+  fi
+
+  local template="$BASE_DIR/.config/rclone/rclone.conf.template"
+  if [[ ! -f "$template" ]]; then
+    return
+  fi
+
+  read -r "response?Would you like to setup rclone with password from Vault? [y/N] "
+  if [[ ! "$response" =~ ^[Yy]$ ]]; then
+    echo "Skipping rclone setup."
+    return
+  fi
+
+  print_banner "Setting up rclone configuration..."
+
+  local rclone_dir="$CONFIG_DIR/rclone"
+  local target="$rclone_dir/rclone.conf"
+  mkdir -p "$rclone_dir"
+
+  # Use existing VAULT_TOKEN or prompt for one
+  if [[ -z "${VAULT_TOKEN:-}" ]]; then
+    read -rs "VAULT_TOKEN?Please provide your Vault token: "
+    echo
+  fi
+
+  # Fetch rclone password from Vault (stored in secret/configs/rclone)
+  local vault_url_base="${VAULT_URL%/shell_envs/data}"
+  local vault_response
+  vault_response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$vault_url_base/secret/data/configs/rclone") || {
+    echo "Failed to fetch rclone secrets from Vault." >&2
+    return 1
+  }
+
+  local nas_pass
+  nas_pass=$(echo "$vault_response" | jq -r '.data.data.nas_pass')
+
+  if [[ -z "$nas_pass" || "$nas_pass" == "null" ]]; then
+    echo "nas_pass not found in Vault at secret/configs/rclone." >&2
+    return 1
+  fi
+
+  # Generate config from template
+  sed "s|{{nas_pass}}|$nas_pass|g" "$template" > "$target"
+  chmod 600 "$target"
+
+  echo "rclone config generated at $target"
+}
+
 # Function to setup Claude Code configuration (manual symlinks, stow ignores .claude).
 setup_claude() {
   print_banner "Setting up Claude Code configuration..."
@@ -369,16 +426,15 @@ setup_claude() {
 
   # Symlink all files except settings.local.json (machine-specific)
   for src in "$dotfiles_claude"/*; do
-    local file
-    file=$(basename "$src")
+    local file=$(basename "$src")
 
     # Skip local settings (machine-specific)
     [[ "$file" == "settings.local.json" ]] && continue
 
     local dst="$claude_dir/$file"
 
+    # Skip if already correctly linked
     if [[ -L "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
-      echo "$file already linked; skipping."
       continue
     fi
 
@@ -503,18 +559,34 @@ run_installation() {
   print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."
 
-  if is_desktop && [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
-    mkdir -p "$HOME_DIR/.local/share"
-    print_banner "Stowing repository fonts into $HOME_DIR/.local/share"
-    install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
-    refresh_font_cache
-
-    print_banner "Stowing private overrides from prv/"
-    install_with_stow -t "$HOME_DIR" -d "prv" "."
-  fi
-
+  # Interactive prompts first (before long-running tasks like font cache)
   print_banner "Secret environment variables from Vault (optional)"
   add_secret_envs_from_vault
+
+  setup_rclone
+
+  # Enable rclone systemd service (after stow linked it and rclone.conf exists)
+  if is_desktop && [[ -f "$CONFIG_DIR/systemd/user/rclone-nas.service" ]] && [[ -f "$CONFIG_DIR/rclone/rclone.conf" ]]; then
+    if [[ ! -d /mnt/nas ]]; then
+      echo "Note: /mnt/nas missing. See README.md for first-time setup."
+    fi
+    echo "Enabling rclone-nas.service..."
+    systemctl --user daemon-reload
+    systemctl --user enable rclone-nas.service 2>/dev/null || true
+  fi
+
+  # Private overrides and fonts after all Y/N prompts (font cache takes time)
+  if is_desktop; then
+    print_banner "Stowing private overrides from prv/"
+    install_with_stow -t "$HOME_DIR" -d "prv" "."
+
+    if [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
+      mkdir -p "$HOME_DIR/.local/share"
+      print_banner "Stowing repository fonts into $HOME_DIR/.local/share"
+      install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
+      refresh_font_cache
+    fi
+  fi
 
   print_banner "Checking Git conflict style"
   configure_git_conflict_style
