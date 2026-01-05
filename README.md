@@ -127,7 +127,6 @@ lt -L 2           # Tree view, 2 levels deep
 ls --no-icons     # Disable icons (faster on slow terminals)
 ```
 
-**Note**: On slow filesystems (`/mnt/nas*`), the `ls` function falls back to plain `ls --color=auto` for performance.
 
 ---
 

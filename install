@@ -336,7 +336,7 @@ setup_rclone() {
 
   read -r "response?Would you like to setup rclone with password from Vault? [y/N] "
   if [[ ! "$response" =~ ^[Yy]$ ]]; then
-    echo "Skipping rclone setup."
+    echo "Skipping rclone config setup."
     return
   fi
 
@@ -529,15 +529,23 @@ run_installation() {
     if [[ ! -d /mnt/nas ]]; then
       echo "Note: /mnt/nas missing. See README.md for first-time setup."
     fi
-    echo "Enabling rclone-nas.service..."
+    echo "Enabling rclone services..."
     systemctl --user daemon-reload
     systemctl --user enable rclone-nas.service 2>/dev/null || true
+    systemctl --user enable rclone-sleep-handler.service 2>/dev/null || true
   fi
 
   # Private overrides and fonts after all Y/N prompts (font cache takes time)
   if is_desktop; then
     print_banner "Stowing private overrides from prv/"
     install_with_stow -t "$HOME_DIR" -d "prv" "."
+
+    # Stow user scripts from .local/bin
+    if [[ -d "$BASE_DIR/.local/bin" ]]; then
+      mkdir -p "$HOME_DIR/.local/bin"
+      print_banner "Stowing scripts into $HOME_DIR/.local/bin"
+      install_with_stow -t "$HOME_DIR/.local/bin" -d "$BASE_DIR/.local/bin" "."
+    fi
 
     if [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
       mkdir -p "$HOME_DIR/.local/share"

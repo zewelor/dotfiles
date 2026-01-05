@@ -1,0 +1,12 @@
+[Unit]
+Description=Handle rclone mount around sleep
+After=rclone-nas.service
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/rclone-sleep-handler
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

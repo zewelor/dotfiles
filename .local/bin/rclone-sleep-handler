@@ -1,0 +1,24 @@
+#!/bin/bash
+# rclone-sleep-handler - handle rclone mount around sleep
+# Listens to systemd-logind PrepareForSleep signal via dbus
+#
+# PrepareForSleep(true)  = system going to sleep
+# PrepareForSleep(false) = system waking up
+#
+# Network delay: 3s wait + rclone-nas.service has Restart=on-failure
+# so it will retry if network isn't ready yet.
+
+gdbus monitor --system \
+    --dest org.freedesktop.login1 \
+    --object-path /org/freedesktop/login1 | \
+while read -r line; do
+    case "$line" in
+        *PrepareForSleep*true*)
+            systemctl --user stop rclone-nas.service
+            ;;
+        *PrepareForSleep*false*)
+            sleep 3
+            systemctl --user start rclone-nas.service
+            ;;
+    esac
+done

@@ -24,10 +24,6 @@ is_interactive() {
   [[ -t 0 ]]
 }
 
-is_slow_fs() {
-  [[ "$PWD" == /mnt/nas* ]]
-}
-
 is_vscode_terminal() {
   [[ "${TERM_PROGRAM:-}" == "vscode" ]]
 }
@@ -469,17 +465,9 @@ alias -g X='| xargs'
 alias -g J='| jq'
 alias -g JL='| jq -C | less -R'
 
-# Directory listing (eza with slow fs fallback)
+# Directory listing
 unalias ls 2>/dev/null
-
-function ls() {
-  if is_slow_fs; then
-    command ls --color=auto "$@"
-  else
-    command eza --icons --group-directories-first "$@"
-  fi
-}
-# eza aliases are defined above with zinit; these are kept for slow fs fallback reference
+alias ls='eza --icons --group-directories-first'
 alias lr='ll -R'         # Lists human readable sizes, recursively.
 alias lm='la | "$PAGER"' # Lists human readable sizes, hidden files through pager.
 alias lk='ll -Sr'        # Lists sorted by size, largest last.
@@ -920,31 +908,9 @@ if has "mise"; then
   _mise_lazy_init() {
     unfunction _mise_lazy_init
     eval "$(mise activate zsh)"
-    # Override mise hook to disable it in /mnt/nas
-    _mise_hook() {
-      if is_slow_fs; then
-        return
-      fi
-      local previous_exit_status=$?;
-      trap -- '' SIGINT;
-      eval "$(mise export zsh)";
-      trap - SIGINT;
-      return $previous_exit_status;
-    }
   }
   add-zsh-hook precmd _mise_lazy_init
 fi
-
-# Switch Starship config based on directory
-function _starship_config_switch() {
-  if is_slow_fs; then
-    export STARSHIP_CONFIG="$HOME/.config/starship-lite.toml"
-  else
-    unset STARSHIP_CONFIG
-  fi
-}
-add-zsh-hook chpwd _starship_config_switch
-_starship_config_switch # Run once on init
 
 # Lazy-load complist only when you press TAB the first time
 _lazy_tab_complete() {
