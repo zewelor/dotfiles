@@ -352,10 +352,9 @@ if has "git"; then
   alias git-fixup="ga . && git fixup -c --rebase && gpf"
 
   # Worktree
-  alias gwt='git worktree'
-  alias gwtl='git worktree list'
-  alias gwtr='git worktree remove'
-  alias gwtp='git worktree prune'
+  alias gwtls='git worktree list'
+  alias gwtrm='git worktree remove'
+  alias gwtpr='git worktree prune'
 
   function gwta() {
     local branch=$1
