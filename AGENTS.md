@@ -10,6 +10,7 @@ Komentarze w kodzie/configach: po angielsku. Ten plik: po polsku.
   wywołuj `print_banner('Opis kroku')`.
 - Stosuj minimalne, celowe zmiany i trzymaj styl istniejącego kodu.
 - Jeśli używasz jakiegoś warunku (np. `[[ ! -t 0 ]]`) więcej niż raz, wydziel go do funkcji pomocniczej (np. `is_interactive`).
+- **Domyślnie używaj stow** do linkowania plików/katalogów, chyba że znajdziesz breaking case (np. katalog do którego aplikacja pisze runtime data).
 
 ## Neovim: kiedy aktualizować README (MUST)
 
@@ -126,6 +127,25 @@ Minimalne, spójne formaty:
 - Narzędzia k8s są lazy-loadowane przez funkcję `start-k8s-work()` w `.zsh/kubernetes.zsh`.
 - Wywołanie `start-k8s-work` ładuje: aliasy (`k`, `kmurder`), funkcje (`kexec`, `kcRsh`, `kcEsh`), k9s, krew, completions (w tym `kubectl cnpg`).
 - Dodając nowe narzędzia/completions k8s, umieszczaj je wewnątrz `start-k8s-work()`, nie w głównym `.zshrc`.
+
+## Claude Code (`.claude/`)
+
+Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignore`), ale `setup_claude()` używa **osobnego wywołania stow** do linkowania jego zawartości.
+
+**Dlaczego osobne wywołanie?** Claude Code zapisuje w `~/.claude/` swoje dane runtime (history, plans, todos, projects, credentials). Główny stow linkowałby cały `~/.claude` jako symlink — wtedy Claude pisałby do repo git. Osobne wywołanie `stow -t ~/.claude .claude` tworzy `~/.claude/` jako prawdziwy katalog i linkuje tylko wybrane elementy.
+
+**Co linkujemy do `~/.claude/`:**
+- `settings.json` — globalne ustawienia
+- `status-line.sh`, `claude-code-notifier.sh` — skrypty pomocnicze
+- `skills/` — custom skille (cały katalog jako symlink)
+
+**Co NIE linkujemy:**
+- `settings.local.json` — to jest plik **per-project** dla tego repo dotfiles! Zawiera permissions które Claude Code używa gdy pracuje w tym katalogu. NIE kopiować do `~/.claude/`.
+
+**Dodając nowy skill:**
+1. Utwórz katalog w `.claude/skills/<nazwa>/`
+2. Dodaj `SKILL.md` (wymagany przez Claude Code)
+3. Uruchom `./install` — stow automatycznie zlinkuje nowy skill
 
 ## Preferencje środowiskowe
 

@@ -375,34 +375,18 @@ setup_rclone() {
   echo "rclone config generated at $target"
 }
 
-# Function to setup Claude Code configuration (manual symlinks, stow ignores .claude).
+# Function to setup Claude Code configuration via stow.
+# Uses stow to link .claude contents (skills/, settings.json, scripts) into ~/.claude/.
+# settings.local.json is ignored (per-project file for this dotfiles repo).
 setup_claude() {
   print_banner "Setting up Claude Code configuration..."
   local claude_dir="$HOME_DIR/.claude"
-  local dotfiles_claude="$BASE_DIR/.claude"
 
   mkdir -p "$claude_dir"
 
-  # Symlink all files except settings.local.json (machine-specific)
-  for src in "$dotfiles_claude"/*; do
-    local file=$(basename "$src")
-
-    # Skip local settings (machine-specific)
-    [[ "$file" == "settings.local.json" ]] && continue
-
-    local dst="$claude_dir/$file"
-
-    # Skip if already correctly linked
-    if [[ -L "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
-      continue
-    fi
-
-    # Remove existing file/symlink if present
-    [[ -e "$dst" || -L "$dst" ]] && rm -f "$dst"
-
-    ln -s "$src" "$dst"
-    echo "Linked $file -> $src"
-  done
+  # Use stow to link .claude package contents into ~/.claude
+  # --ignore: skip settings.local.json (per-project, not for ~/.claude)
+  install_with_stow -d "$BASE_DIR" -t "$claude_dir" --ignore='settings\.local\.json' .claude
 }
 
 # Function to setup Vim autoload directories and plugins.
@@ -561,12 +545,12 @@ run_installation() {
   if is_desktop; then
     setup_atuin
     setup_mise_desktop_tools
+    setup_claude
     # Nie dziala idelanie , poki co koomentuje
     # setup_desktop_entries
   fi
 
   setup_ssh
-  setup_claude
 
   local editor_config_file="$HOME_DIR/.zshrc.d/editor.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"
