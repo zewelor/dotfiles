@@ -190,6 +190,30 @@ function cd() {
   fi
 }
 
+# Interactive directory selection with fzf and zoxide
+# Securely change to a directory chosen from zoxide's database
+function cdls() {
+  if ! has "fzf"; then
+    echo "cdls: fzf is not installed" >&2
+    return 1
+  fi
+
+  if ! has "zoxide"; then
+    echo "cdls: zoxide is not installed" >&2
+    return 1
+  fi
+
+  local dir
+  dir=$(zoxide query --list | fzf --header "Choose directory:") || return $?
+
+  if [[ -z "$dir" ]]; then
+    echo "cdls: no directory selected" >&2
+    return 1
+  fi
+
+  cd -- "$dir"
+}
+
 # Lucid - Turbo mode is verbose, so you need an option for quiet.
 zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
 
