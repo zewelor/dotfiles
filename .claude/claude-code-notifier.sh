@@ -34,3 +34,6 @@ if command -v notify-send >/dev/null 2>&1; then
 else
   echo "Claude Code: $message"
 fi
+
+# Send terminal bell to highlight tmux tab
+printf '\a' > /dev/tty 2>/dev/null || true
