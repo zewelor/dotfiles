@@ -1,4 +1,4 @@
-.PHONY: all base install-fonts dotfiles-fonts setup packages $(zinit_dir) zinit_update doctor
+.PHONY: all install base update-fonts setup packages zinit_update doctor
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -9,10 +9,12 @@ DOTFILES_FONTS_DIR=$(BASE)/.local/share/fonts
 JETBRAINS_FONT_PACKAGE=JetBrainsMono
 JETBRAINS_FONT_SUBFAMILY=JetBrainsMonoNLNerdFontMono
 
-zinit_dir = ~/.zinit
+zinit_dir = $(HOME)/.zinit
+zinit_script = $(zinit_dir)/bin/zinit.zsh
 
 # List of packages to install (one per line for readability)
 APT_PACKAGES_CORE= \
+	git \
 	fontconfig \
 	unzip \
 	autoconf \
@@ -30,13 +32,15 @@ APT_PACKAGES_OPTIONAL= \
 	ripgrep
 
 all: base setup
-base: packages install-fonts | $(zinit_dir)
+
+install: all
+base: packages | $(zinit_script)
 
 setup:
 	-git submodule update --init
 	./install
 
-dotfiles-fonts:
+update-fonts:
 	@echo "=========================="
 	@echo "Syncing JetBrainsMonoNL Nerd Font (Mono) into dotfiles repo"
 	@set -euo pipefail; \
@@ -46,12 +50,18 @@ dotfiles-fonts:
 	    "$(FONT_INSTALLER)" "$(JETBRAINS_FONT_PACKAGE)" "$(JETBRAINS_FONT_SUBFAMILY)";
 	@echo "=========================="
 
-$(zinit_dir):
+$(zinit_script):
 	@echo "=========================="
 	@echo "Installing zinit"
 	mkdir -p $(zinit_dir)
 	chmod g-rwX $(zinit_dir)
-	git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin
+	@if [ -e "$(zinit_dir)/bin" ] && [ ! -d "$(zinit_dir)/bin/.git" ]; then \
+		echo "Error: $(zinit_dir)/bin exists but is not a git repo; please remove it and re-run."; \
+		exit 1; \
+	fi
+	@if [ ! -d "$(zinit_dir)/bin/.git" ]; then \
+		git clone https://github.com/zdharma-continuum/zinit.git $(zinit_dir)/bin; \
+	fi
 	cd $(zinit_dir)/bin ; git reset --hard $(ZINIT_COMMIT_SHA)
 	@echo "=========================="
 
