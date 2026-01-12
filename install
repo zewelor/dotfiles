@@ -32,10 +32,9 @@ is_interactive() {
   [[ -t 0 ]]
 }
 
-# Function to check if the user's default login shell is zsh.
-is_default_shell_zsh() {
-  local shell_path="${SHELL:-}"
-  [[ -n "$shell_path" ]] && [[ "${shell_path##*/}" == "zsh" ]]
+# Function to check if stdout is a TTY (for colored output).
+is_tty_stdout() {
+  [[ -t 1 ]]
 }
 
 # Function to print banners for major steps.
@@ -45,27 +44,75 @@ print_banner() {
   printf "\n%s\n%s\n%s\n" "$line" "$title" "$line"
 }
 
-# Function to warn when user's login shell isn't zsh (dotfiles are zsh-first).
-warn_if_default_shell_not_zsh() {
-  if is_default_shell_zsh; then
+# Initialize ANSI colors (if supported). Respect NO_COLOR.
+init_colors() {
+  if ! is_tty_stdout; then
+    return
+  fi
+  if [[ -n "${NO_COLOR:-}" ]]; then
     return
   fi
 
-  print_banner "WARNING: Your default shell is not zsh"
-  echo "Detected SHELL=${SHELL:-<unset>}"
+  COLOR_RED=$'\033[31m'
+  COLOR_YELLOW=$'\033[33m'
+  COLOR_BOLD=$'\033[1m'
+  COLOR_RESET=$'\033[0m'
+}
+
+# Determine the user's login shell from the passwd database (preferred).
+# Falls back to $SHELL if lookup isn't available.
+get_login_shell() {
+  local user="${USER:-}"
+  local shell=""
+
+  if [[ -n "$user" ]] && has "getent"; then
+    shell=$(getent passwd "$user" | awk -F: '{print $7}')
+  elif [[ -n "$user" ]] && [[ -r /etc/passwd ]]; then
+    shell=$(awk -F: -v u="$user" '$1==u{print $7}' /etc/passwd)
+  fi
+
+  if [[ -z "$shell" ]]; then
+    shell="${SHELL:-}"
+  fi
+
+  echo "$shell"
+}
+
+# Enforce zsh as the user's login shell unless explicitly overridden.
+# This avoids "installation succeeded but nothing changed" when the user stays in bash.
+require_zsh_login_shell() {
+  if [[ "${DOTFILES_ALLOW_NON_ZSH_SHELL:-0}" == "1" ]]; then
+    return
+  fi
+
+  local login_shell
+  login_shell=$(get_login_shell)
+
+  if [[ -n "$login_shell" ]] && [[ "${login_shell##*/}" == "zsh" ]]; then
+    return
+  fi
+
+  print_banner "ERROR: Login shell is not zsh"
+  printf "%s%s%s\n" "${COLOR_RED:-}" "!!! Aborting install to avoid confusion !!!" "${COLOR_RESET:-}"
+  echo ""
+  echo "Detected login shell: ${login_shell:-<unknown>}"
   echo ""
   echo "These dotfiles are primarily configured for zsh."
   echo "If you keep using bash, you may not see any changes after installation."
   echo ""
-  echo "To switch your login shell to zsh:"
-  echo "  chsh -s \"$(command -v zsh)\""
-  echo "Then log out and log back in (or reboot)."
+  echo "Fix (recommended):"
+  printf "  %schsh -s \"%s\"%s\n" "${COLOR_BOLD:-}" "$(command -v zsh)" "${COLOR_RESET:-}"
+  echo "  Then log out and log back in (or reboot)."
   echo ""
   echo "On some systems (e.g. Raspberry Pi OS), you may need:"
-  echo "  sudo chsh -s \"$(command -v zsh)\" \"$USER\""
+  printf "  %ssudo chsh -s \"%s\" \"%s\"%s\n" "${COLOR_BOLD:-}" "$(command -v zsh)" "$USER" "${COLOR_RESET:-}"
   echo ""
   echo "Temporary (current session only):"
-  echo "  exec zsh -l"
+  printf "  %sexec zsh -l%s\n" "${COLOR_BOLD:-}" "${COLOR_RESET:-}"
+  echo ""
+  printf "%sOverride (not recommended):%s\n" "${COLOR_YELLOW:-}" "${COLOR_RESET:-}"
+  echo "  DOTFILES_ALLOW_NON_ZSH_SHELL=1 ./install"
+  exit 1
 }
 
 # Function to install symlinks using stow.
@@ -528,7 +575,8 @@ configure_profile() {
 run_installation() {
   configure_profile
 
-  warn_if_default_shell_not_zsh
+  init_colors
+  require_zsh_login_shell
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."

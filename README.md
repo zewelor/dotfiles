@@ -6,7 +6,25 @@ Some examples here:
 ## Installation
 
 ```bash
-make install
+git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
+```
+
+### Shell requirement (zsh)
+
+The `./install` script aborts if your **login shell** is not `zsh` to avoid the common “installed but nothing changed” confusion when the user stays in `bash` (e.g. on Raspberry Pi OS).
+
+Switch your login shell to zsh:
+
+```bash
+chsh -s "$(command -v zsh)"
+```
+
+Then log out and log back in (or reboot).
+
+**Override (not recommended):**
+
+```bash
+DOTFILES_ALLOW_NON_ZSH_SHELL=1 ./install
 ```
 
 **Font locations**:
