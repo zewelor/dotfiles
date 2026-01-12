@@ -240,6 +240,47 @@ if is_desktop; then
     bpick"codex-x86_64-unknown-linux-musl.tar.gz" \
     mv"codex-x86_64-unknown-linux-musl -> codex" \
     for @openai/codex
+
+  zinit light-mode from"gh-r" as"program" \
+    bpick"$(
+      emulate -L zsh
+
+      typeset os arch ext baseline_suffix musl_suffix
+      baseline_suffix=""
+      musl_suffix=""
+
+      case "$OSTYPE" in
+        linux*)  os="linux";  ext="tar.gz" ;;
+        darwin*) os="darwin"; ext="zip" ;;
+        *)       os="linux";  ext="tar.gz" ;;
+      esac
+
+      case "$(uname -m)" in
+        x86_64)        arch="x64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        *)             arch="x64" ;;
+      esac
+
+      if [[ "$arch" == "x64" ]]; then
+        if [[ "$os" == "linux" ]] && [[ -r /proc/cpuinfo ]]; then
+          grep -qi 'avx2' /proc/cpuinfo || baseline_suffix="-baseline"
+        elif [[ "$os" == "darwin" ]] && command -v sysctl >/dev/null 2>&1; then
+          [[ "$(sysctl -n hw.optional.avx2_0 2>/dev/null)" == "1" ]] || baseline_suffix="-baseline"
+        fi
+      fi
+
+      if [[ "$os" == "linux" ]]; then
+        if [[ -f /etc/alpine-release ]]; then
+          musl_suffix="-musl"
+        elif command -v ldd >/dev/null 2>&1 && ldd --version 2>/dev/null | grep -qi 'musl'; then
+          musl_suffix="-musl"
+        fi
+      fi
+
+      print -r -- "opencode-${os}-${arch}${baseline_suffix}${musl_suffix}.${ext}"
+    )" \
+    pick"opencode" \
+    for @anomalyco/opencode
 fi
 
 ##########################
