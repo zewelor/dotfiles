@@ -32,11 +32,40 @@ is_interactive() {
   [[ -t 0 ]]
 }
 
+# Function to check if the user's default login shell is zsh.
+is_default_shell_zsh() {
+  local shell_path="${SHELL:-}"
+  [[ -n "$shell_path" ]] && [[ "${shell_path##*/}" == "zsh" ]]
+}
+
 # Function to print banners for major steps.
 print_banner() {
   local title="$1"
   local line="========================================"
   printf "\n%s\n%s\n%s\n" "$line" "$title" "$line"
+}
+
+# Function to warn when user's login shell isn't zsh (dotfiles are zsh-first).
+warn_if_default_shell_not_zsh() {
+  if is_default_shell_zsh; then
+    return
+  fi
+
+  print_banner "WARNING: Your default shell is not zsh"
+  echo "Detected SHELL=${SHELL:-<unset>}"
+  echo ""
+  echo "These dotfiles are primarily configured for zsh."
+  echo "If you keep using bash, you may not see any changes after installation."
+  echo ""
+  echo "To switch your login shell to zsh:"
+  echo "  chsh -s \"$(command -v zsh)\""
+  echo "Then log out and log back in (or reboot)."
+  echo ""
+  echo "On some systems (e.g. Raspberry Pi OS), you may need:"
+  echo "  sudo chsh -s \"$(command -v zsh)\" \"$USER\""
+  echo ""
+  echo "Temporary (current session only):"
+  echo "  exec zsh -l"
 }
 
 # Function to install symlinks using stow.
@@ -498,6 +527,8 @@ configure_profile() {
 # Main installation routine that coordinates all tasks.
 run_installation() {
   configure_profile
+
+  warn_if_default_shell_not_zsh
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."
