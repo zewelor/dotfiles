@@ -465,6 +465,18 @@ setup_claude() {
   install_with_stow -d "$BASE_DIR" -t "$claude_dir" --ignore='settings\.local\.json' .claude
 }
 
+# Function to setup Codex configuration via stow.
+# Uses stow to link .codex contents (scripts) into ~/.codex/.
+setup_codex() {
+  print_banner "Setting up Codex configuration..."
+  local codex_dir="$HOME_DIR/.codex"
+
+  mkdir -p "$codex_dir"
+
+  # Use stow to link .codex package contents into ~/.codex
+  install_with_stow -d "$BASE_DIR" -t "$codex_dir" .codex
+}
+
 # Function to setup Vim autoload directories and plugins.
 setup_vim() {
   print_banner "Setting up Vim..."
@@ -625,6 +637,7 @@ run_installation() {
     setup_atuin
     setup_mise_desktop_tools
     setup_claude
+    setup_codex
     # Nie dziala idelanie , poki co koomentuje
     # setup_desktop_entries
   fi
