@@ -1,4 +1,6 @@
 -- lsp — Language Server Protocol for intelligent code features
+local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
+
 return {
   -- Mason: LSP server manager
   {
@@ -20,6 +22,9 @@ return {
         "basedpyright",  -- Python
       },
       automatic_installation = true,
+      -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
+      -- mason-lspconfig versions use that API for auto-enabling; keep it off on 0.10.
+      automatic_enable = has_nvim_011,
     },
   },
   -- LSP configuration
@@ -27,6 +32,10 @@ return {
     "neovim/nvim-lspconfig",
     dependencies = { "williamboman/mason-lspconfig.nvim" },
     config = function()
+      if vim.fn.exists(':LspInfo') == 0 then
+        vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
+      end
+
       local lspconfig = require("lspconfig")
       local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright" }
 

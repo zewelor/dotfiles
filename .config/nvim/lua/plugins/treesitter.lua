@@ -1,6 +1,7 @@
 -- nvim-treesitter — Better syntax highlighting and code understanding
 return {
   "nvim-treesitter/nvim-treesitter",
+  enabled = vim.g.dotfiles_has_nvim_011 == true,
   build = ":TSUpdate",
   event = { "BufReadPre", "BufNewFile" },
   opts = {

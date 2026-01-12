@@ -2,6 +2,7 @@
 -- Using copilot.lua (Lua-native implementation) for better integration with blink.cmp
 return {
   "zbirenbaum/copilot.lua",
+  enabled = vim.g.dotfiles_has_nvim_011 == true,
   cmd = "Copilot",
   event = "InsertEnter",
   config = function()

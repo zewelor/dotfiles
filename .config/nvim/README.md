@@ -100,6 +100,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
+- **Uwaga o kompatybilności**: Źródło Copilota w menu autouzupełniania jest aktywne tylko na Neovim 0.11+ (na starszych wersjach jest automatycznie wyłączone).
 - **Keymaps** (w menu autouzupełniania):
   - `<C-Space>` — Wymuś pokazanie menu
   - `<CR>` — Potwierdź wybór
@@ -112,6 +113,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua)
 - **Cel**: Integracja z GitHub Copilot AI
+- **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
 - **Setup**: Zaloguj przez `:Copilot auth`
 - **Jak działa z blink.cmp**: Inline podpowiedzi są wyłączone, Copilot jest wpięty jako źródło w menu autouzupełniania (przez `blink-copilot`).
   - Akceptujesz je tak samo jak inne pozycje w menu — `<CR>` (Enter).
@@ -149,6 +151,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
+- **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
 - **Zainstalowane parsery**: lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery

@@ -22,6 +22,16 @@ vim.opt.rtp:prepend(lazypath)
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
 
+-- Shared feature flags for plugin specs.
+-- Keep this before `lazy.setup()` so `lua/plugins/*.lua` can read it.
+vim.g.dotfiles_has_nvim_011 = vim.fn.has("nvim-0.11") == 1
+
+-- nvim-lspconfig started warning loudly on Neovim <0.11 via its runtime plugin file.
+-- The module still works fine for our usage, so skip the runtime plugin on older Neovim.
+if not vim.g.dotfiles_has_nvim_011 then
+  vim.g.lspconfig = 1
+end
+
 -- Setup lazy.nvim
 require("lazy").setup({
   -- import your plugins from lua/plugins
