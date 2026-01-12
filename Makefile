@@ -26,6 +26,7 @@ APT_PACKAGES_CORE= \
 
 APT_PACKAGES_OPTIONAL= \
 	lazygit \
+	duf \
 	ripgrep
 
 all: base setup

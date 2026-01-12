@@ -14,18 +14,6 @@
 			],
 			"type": "stdio"
 		},
-		"perplexity-ask": {
-			"command": "docker",
-			"args": [
-				"run",
-				"-i",
-				"--rm",
-				"-e",
-				"PERPLEXITY_API_KEY",
-				"mcp/perplexity-ask"
-			],
-			"type": "stdio"
-		},
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp",
