@@ -1006,7 +1006,7 @@ _title_terminal_pwd
 
 # Fix SSH agent forwarding for tmux (creates symlink that .tmux.conf expects)
 if [[ -n "$SSH_AUTH_SOCK" && "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock" ]]; then
-    ln -sf "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+  ln -sfn "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
 fi
 
 # SSH agent management
