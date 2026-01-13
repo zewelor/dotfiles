@@ -49,6 +49,20 @@ return {
               workspace = { checkThirdParty = false },
             },
           }
+        elseif server == "yamlls" then
+          -- ESPHome / HA-style YAML custom tags (avoid "Unresolved tag" diagnostics)
+          opts.settings = {
+            yaml = {
+              customTags = {
+                "!secret scalar",
+                "!lambda scalar",
+                "!include scalar",
+                "!include_dir_list scalar",
+                "!include_dir_merge_list scalar",
+                "!include_dir_merge_named scalar",
+              },
+            },
+          }
         end
         lspconfig[server].setup(opts)
       end

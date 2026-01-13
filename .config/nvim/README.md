@@ -170,7 +170,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 **Zainstalowane serwery**:
 - `lua_ls` — Lua (konfiguracja Neovim)
 - `bashls` — Bash/Zsh
-- `yamlls` — YAML (K8s, docker-compose)
+- `yamlls` — YAML (K8s, docker-compose; ESPHome: `!secret`, `!lambda`)
 - `jsonls` — JSON
 - `helm_ls` — Helm charts
 - `basedpyright` — Python
