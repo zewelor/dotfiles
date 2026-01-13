@@ -166,12 +166,13 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — Menedżer serwerów LSP
 - **mason-lspconfig.nvim**: [williamboman/mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) — Bridge mason ↔ lspconfig
 - **nvim-lspconfig**: [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) — Konfiguracja LSP
+- **SchemaStore.nvim**: [b0o/SchemaStore.nvim](https://github.com/b0o/SchemaStore.nvim) — Schematy JSON dla `jsonls` (podpowiedzi + walidacja; wspiera `$schema`)
 
 **Zainstalowane serwery**:
 - `lua_ls` — Lua (konfiguracja Neovim)
 - `bashls` — Bash/Zsh
 - `yamlls` — YAML (K8s, docker-compose; ESPHome: `!secret`, `!lambda`)
-- `jsonls` — JSON
+- `jsonls` — JSON (walidacja `$schema`)
 - `helm_ls` — Helm charts
 - `basedpyright` — Python
 

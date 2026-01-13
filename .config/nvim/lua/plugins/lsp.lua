@@ -27,10 +27,15 @@ return {
       automatic_enable = has_nvim_011,
     },
   },
+  -- JSON schemas for jsonls (SchemaStore)
+  {
+    "b0o/SchemaStore.nvim",
+    lazy = true,
+  },
   -- LSP configuration
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "williamboman/mason-lspconfig.nvim" },
+    dependencies = { "williamboman/mason-lspconfig.nvim", "b0o/SchemaStore.nvim" },
     config = function()
       if vim.fn.exists(':LspInfo') == 0 then
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
@@ -63,6 +68,17 @@ return {
               },
             },
           }
+        elseif server == "jsonls" then
+          opts.settings = {
+            json = {
+              validate = { enable = true },
+            },
+          }
+
+          local ok, schemastore = pcall(require, "schemastore")
+          if ok then
+            opts.settings.json.schemas = schemastore.json.schemas()
+          end
         end
         lspconfig[server].setup(opts)
       end
