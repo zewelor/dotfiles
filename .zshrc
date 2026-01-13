@@ -306,6 +306,11 @@ zinit wait lucid for \
 # Aliases
 #
 
+# AI tools
+if has "opencode"; then
+  alias oc="opencode"
+fi
+
 # Apt
 # Use sudo without aliases
 alias instaluj="\sudo apt install -y"
