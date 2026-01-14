@@ -62,3 +62,13 @@ vim.opt.completeopt = { "menu", "menuone", "noselect" }
 -- Small QoL
 vim.opt.mouse   = ""              -- disable mouse; keyboard-driven workflow
 vim.opt.confirm = true            -- prompt to save when quitting modified buffers
+
+-- Filetype detection
+-- Helm chart templates should use `helm` filetype so helm_ls can attach.
+vim.filetype.add({
+  pattern = {
+    [".*/templates/.*%.ya?ml"] = "helm",
+    [".*/templates/.*%.tpl"] = "helm",
+    [".*%.gotmpl"] = "helm",
+  },
+})

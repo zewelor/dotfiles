@@ -55,6 +55,45 @@ keymap("x", "ga", function()
 	require("mini.align").align_user(mode)
 end, { desc = "Align selection (mini.align)" })
 
+-- Surround (mini.surround) – keep mappings here to follow repo rule
+keymap("n", "gsa", function()
+	require("mini.surround")
+	MiniSurround.add()
+end, { desc = "Add surrounding (mini.surround)" })
+keymap("x", "gsa", function()
+	require("mini.surround")
+	MiniSurround.add("visual")
+end, { desc = "Add surrounding for selection (mini.surround)" })
+keymap("n", "gsd", function()
+	require("mini.surround")
+	MiniSurround.delete()
+end, { desc = "Delete surrounding (mini.surround)" })
+keymap("n", "gsr", function()
+	require("mini.surround")
+	MiniSurround.replace()
+end, { desc = "Replace surrounding (mini.surround)" })
+keymap("n", "gsf", function()
+	require("mini.surround")
+	MiniSurround.find()
+end, { desc = "Find surrounding (mini.surround)" })
+keymap("n", "gsh", function()
+	require("mini.surround")
+	MiniSurround.highlight()
+end, { desc = "Highlight surrounding (mini.surround)" })
+keymap("n", "gsn", function()
+	require("mini.surround")
+	MiniSurround.update_n_lines()
+end, { desc = "Update n_lines (mini.surround)" })
+
+-- Formatting (conform.nvim)
+keymap("n", "<leader>cf", function()
+	if vim.bo.filetype == "markdown" then
+		if vim.notify then vim.notify("Markdown autoformat is disabled", vim.log.levels.INFO, { title = "Conform" }) end
+		return
+	end
+	require("conform").format({ lsp_format = "fallback" })
+end, { desc = "Format buffer (conform)" })
+
 -- Better window navigation
 keymap("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
 keymap("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })

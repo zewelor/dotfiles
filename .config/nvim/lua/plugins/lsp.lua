@@ -20,6 +20,10 @@ return {
         "jsonls",        -- JSON
         "helm_ls",       -- Helm charts
         "basedpyright",  -- Python
+
+        "marksman",                      -- Markdown
+        "dockerls",                      -- Dockerfile
+        "docker_compose_language_service", -- docker-compose.yml
       },
       automatic_installation = true,
       -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
@@ -42,7 +46,7 @@ return {
       end
 
       local lspconfig = require("lspconfig")
-      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright" }
+      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service" }
 
       for _, server in ipairs(servers) do
         local opts = {}
@@ -68,6 +72,19 @@ return {
               },
             },
           }
+
+          local ok, schemastore = pcall(require, "schemastore")
+          if ok then
+            -- Use SchemaStore.nvim catalog (disable built-in schema store).
+            opts.settings.yaml.schemaStore = {
+              enable = false,
+              url = "",
+            }
+            opts.settings.yaml.schemas = schemastore.yaml.schemas()
+          end
+
+        elseif server == "helm_ls" then
+          opts.filetypes = { "helm" }
         elseif server == "jsonls" then
           opts.settings = {
             json = {

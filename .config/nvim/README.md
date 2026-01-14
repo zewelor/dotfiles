@@ -13,16 +13,20 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   └── keymaps.lua  # Wszystkie keybindings
 │   ├── plugins/         # Każdy plugin = osobny plik
-│   │   ├── blink.lua        # Autouzupełnianie
-│   │   ├── copilot.lua      # GitHub Copilot
-│   │   ├── lsp.lua          # LSP + mason (language servers)
-│   │   ├── mini-align.lua   # Wyrównywanie tekstu
-│   │   ├── mini-icons.lua   # Ikony plików
-│   │   ├── neotree.lua      # File explorer
-│   │   ├── telescope.lua    # Wyszukiwanie i fuzzy finder
-│   │   ├── treesitter.lua   # Lepszy syntax highlighting
-│   │   ├── solarized.lua    # Motyw kolorów
-│   │   └── which-key.lua    # Podpowiedzi skrótów
+│   │   ├── blink.lua                # Autouzupełnianie
+│   │   ├── conform.lua              # Autoformat (format-on-save)
+│   │   ├── copilot.lua              # GitHub Copilot
+│   │   ├── lsp.lua                  # LSP + mason (language servers)
+│   │   ├── mason-tool-installer.lua # Auto-installer narzędzi (formattery)
+│   │   ├── mini-align.lua           # Wyrównywanie tekstu
+│   │   ├── mini-icons.lua           # Ikony plików
+│   │   ├── mini-pairs.lua           # Autopairs
+│   │   ├── mini-surround.lua        # Surround (gsa/gsd/gsr)
+│   │   ├── neotree.lua              # File explorer
+│   │   ├── telescope.lua            # Wyszukiwanie i fuzzy finder
+│   │   ├── treesitter.lua           # Tree-sitter (Neovim 0.11+)
+│   │   ├── solarized.lua            # Motyw kolorów
+│   │   └── which-key.lua            # Podpowiedzi skrótów
 │   └── after/
 │       └── ftplugin/
 │           └── markdown.lua  # Nadpisy dla Markdown (2 spacje + wrap)
@@ -130,6 +134,45 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 ---
 
+### **mini.pairs** — Autopairs
+
+- **Repo**: [nvim-mini/mini.pairs](https://github.com/nvim-mini/mini.pairs)
+- **Cel**: Automatyczne domykanie par `()`, `[]`, `{}`, `""`, `''`
+- **Keymaps**: brak (działa w insert mode)
+
+---
+
+### **mini.surround** — Surround (gsa/gsd/gsr)
+
+- **Repo**: [nvim-mini/mini.surround](https://github.com/nvim-mini/mini.surround)
+- **Cel**: Szybkie dodawanie/usuwanie/zamiana "otoczek" (cudzysłowy, nawiasy, tagi)
+- **Keymaps**:
+  - `gsa` — Add surrounding (Normal/Visual)
+  - `gsd` — Delete surrounding
+  - `gsr` — Replace surrounding
+  - `gsf` — Find surrounding
+  - `gsh` — Highlight surrounding
+  - `gsn` — Update `n_lines` (zasięg szukania)
+
+---
+
+### **conform.nvim** — Autoformat (format-on-save)
+
+- **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
+- **Cel**: Formatowanie plików przez zewnętrzne narzędzia
+- **Autoformat on save**: `lua`, `sh`, `python`, `yaml`, `json` (Markdown wyłączony)
+- **Keymaps**:
+  - `<Space>cf` — Format buffer
+
+---
+
+### **mason-tool-installer.nvim** — Auto-instalacja narzędzi
+
+- **Repo**: [WhoIsSethDaniel/mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim)
+- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `ruff`, `prettier`) i np. `hadolint`
+
+---
+
 ### **mini.icons** — Ikony Plików
 
 - **Repo**: [nvim-mini/mini.icons](https://github.com/nvim-mini/mini.icons)
@@ -152,7 +195,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
 - **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
-- **Zainstalowane parsery**: lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git
+- **Parsery**: instalowane po upgrdzie (polecane: lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm)
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery
   - `:TSInstall <lang>` — Zainstaluj parser dla języka
@@ -166,7 +209,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — Menedżer serwerów LSP
 - **mason-lspconfig.nvim**: [williamboman/mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) — Bridge mason ↔ lspconfig
 - **nvim-lspconfig**: [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) — Konfiguracja LSP
-- **SchemaStore.nvim**: [b0o/SchemaStore.nvim](https://github.com/b0o/SchemaStore.nvim) — Schematy JSON dla `jsonls` (podpowiedzi + walidacja; wspiera `$schema`)
+- **SchemaStore.nvim**: [b0o/SchemaStore.nvim](https://github.com/b0o/SchemaStore.nvim) — Schematy JSON/YAML dla `jsonls` i `yamlls` (podpowiedzi + walidacja; wspiera `$schema`)
 
 **Zainstalowane serwery**:
 - `lua_ls` — Lua (konfiguracja Neovim)
@@ -175,6 +218,9 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `jsonls` — JSON (walidacja `$schema`)
 - `helm_ls` — Helm charts
 - `basedpyright` — Python
+- `marksman` — Markdown
+- `dockerls` — Dockerfile
+- `docker_compose_language_service` — docker-compose
 
 **Komendy**:
 - `:Mason` — UI menedżera serwerów
@@ -220,6 +266,10 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `<Space>sh` — Podziel poziomo (`:split`)
 - `<Space>sc` — Zamknij obecny split (`:close`)
 
+#### Formatowanie
+
+- `<Space>cf` — Formatuj plik (conform.nvim)
+
 #### LSP (aktywne gdy serwer LSP jest podłączony)
 
 - `<Space>rn` — Rename symbol
@@ -250,6 +300,15 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 #### Wyrównywanie (mini.align)
 
 - `ga` — Wyrównaj tekst (Normal: po ruchu/operatorze, Visual: na zaznaczeniu)
+
+#### Surround (mini.surround)
+
+- `gsa` — Dodaj otoczkę (Normal/Visual)
+- `gsd` — Usuń otoczkę
+- `gsr` — Zamień otoczkę
+- `gsf` — Znajdź otoczkę
+- `gsh` — Podświetl otoczkę
+- `gsn` — Zmień zasięg szukania (`n_lines`)
 
 #### Nawigacja między oknami
 
