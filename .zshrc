@@ -242,6 +242,7 @@ if is_desktop; then
     for @openai/codex
 
   zinit light-mode from"gh-r" as"program" \
+    atclone"./opencode completion > _opencode; echo 'compdef _opencode_yargs_completions oc' >> _opencode" atpull"%atclone" \
     bpick"$(
       emulate -L zsh
 
