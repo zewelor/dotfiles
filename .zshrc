@@ -1010,23 +1010,25 @@ if [[ -n "$SSH_AUTH_SOCK" && "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock" ]]; 
   ln -sfn "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
 fi
 
-# SSH agent management
-SSH_ENV="$HOME/.ssh/agent-environment"
+if is_desktop && is_interactive && [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
+  # SSH agent management (desktop only). Avoid overriding an existing agent/forwarded SSH_AUTH_SOCK.
+  SSH_ENV="$HOME/.ssh/agent-environment"
 
-function _start_agent {
-    echo "Starting new SSH agent..."
-    ssh-agent | sed 's/^echo/#echo/' > "$SSH_ENV"
-    chmod 600 "$SSH_ENV"
-    . "$SSH_ENV" > /dev/null
-}
+  function _start_agent {
+      echo "Starting new SSH agent..."
+      ssh-agent | sed 's/^echo/#echo/' > "$SSH_ENV"
+      chmod 600 "$SSH_ENV"
+      . "$SSH_ENV" > /dev/null
+  }
 
-# Check if agent is already running
-if [[ -f "$SSH_ENV" ]]; then
-    . "$SSH_ENV" > /dev/null
-    # Check if the agent is actually running
-    if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
-        _start_agent
-    fi
-else
-    _start_agent
+  # Check if agent is already running
+  if [[ -f "$SSH_ENV" ]]; then
+      . "$SSH_ENV" > /dev/null
+      # Check if the agent is actually running
+      if ! kill -0 "$SSH_AGENT_PID" 2>/dev/null; then
+          _start_agent
+      fi
+  else
+      _start_agent
+  fi
 fi
