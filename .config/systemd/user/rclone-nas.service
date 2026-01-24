@@ -11,9 +11,11 @@ ExecStart=/usr/bin/rclone mount nas:/ /mnt/nas \
   --vfs-cache-max-size 5G \
   --vfs-read-ahead 64M \
   --buffer-size 32M \
-  --dir-cache-time 1h \
+  --dir-cache-time 5m \
   --vfs-cache-max-age 12h \
   --allow-other
+# Flush VFS dir cache without full restart.
+ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/fusermount -uz /mnt/nas
 Restart=on-failure
 RestartSec=10
