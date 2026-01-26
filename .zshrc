@@ -376,6 +376,22 @@ function update-all () {
     fi
   fi
 
+  # Include mise shims so npm is discoverable when running via sudo
+  local npm_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/share/mise/bin:${target_home}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+
+  if sudo -H -u "${target_user}" env PATH="${npm_env_path}" sh -lc 'command -v npm >/dev/null 2>&1'; then
+    echo
+    echo "[npm] Updating global npm packages"
+    if sudo -H -u "${target_user}" env PATH="${npm_env_path}" NPM_CONFIG_LOGLEVEL=error npm update -g; then
+      echo "[npm] Update complete"
+    else
+      echo "[npm] Update failed"
+    fi
+  else
+    echo
+    echo "[npm] Skipping npm update: npm not found for user '${target_user}'."
+  fi
+
   # Update zinit-managed plugins for the target user with concise messaging
   local zinit_script="${target_home}/${ZINIT_SCRIPT_REL}"
   if [[ -f "${zinit_script}" ]]; then
