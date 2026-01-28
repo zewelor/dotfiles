@@ -111,13 +111,6 @@ zle -N bracketed-paste bracketed-paste-url-magic
 autoload -Uz url-quote-magic
 zle -N self-insert url-quote-magic
 
-# Prompt download / initialization
-#
-  zinit ice as"command" from"gh-r" \
-            atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
-            atpull"%atclone" src"init.zsh"
-  zinit light starship/starship
-
 #
 # Completions
 #
@@ -1018,7 +1011,16 @@ if has "tmuxinator" ; then
   alias mux="tmuxinator"
 fi
 
-# Starship is already initialized via zinit above; avoid double init to prevent recursive zle wrappers.
+# Initialize Starship prompt last to avoid recursive ZLE wrappers when using vi-mode/atuin.
+# We also use a guard to prevent multiple initializations if .zshrc is sourced again.
+if [[ -z "$STARSHIP_INITIALIZED" ]]; then
+  zinit ice as"command" from"gh-r" \
+            atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
+            atpull"%atclone" src"init.zsh"
+  zinit light starship/starship
+  STARSHIP_INITIALIZED=1
+fi
+
 _title_terminal_pwd
 
 # Fix SSH agent forwarding for tmux (creates symlink that .tmux.conf expects)
