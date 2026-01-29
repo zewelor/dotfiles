@@ -4,3 +4,13 @@ url = http://nas.x1.lan:5000
 vendor = other
 user = omen
 pass = {{nas_pass}}
+
+[sftp-k8s]
+type = sftp
+host = localhost
+user = sftpuser
+port = 1026
+key_use_agent = true
+shell_type = unix
+md5sum_command = none
+sha1sum_command = none
