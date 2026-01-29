@@ -1,4 +1,3 @@
-
 extract() {
 	local remove_archive
 	local success
@@ -63,7 +62,7 @@ extract() {
 				cd ..; rm *.tar.* debian-binary
 				cd ..
 			;;
-			(*.zst) unzstd "$1" ;;
+			(*.zst) unzstd "$1" ;; 
 			(*)
 				echo "extract: '$1' cannot be extracted" >&2
 				success=1
@@ -75,3 +74,14 @@ extract() {
 		shift
 	done
 }
+
+# Completion
+_extract_completion() {
+  setopt localoptions extendedglob
+  _arguments \
+    '(-r --remove)'{-r,--remove}'[Remove archive.]' \
+    "*:archive file:_files -g '(#i)*.(7z|Z|apk|aar|bz2|deb|gz|ipsw|jar|lzma|rar|rpm|sublime-package|tar|tar.bz2|tar.gz|tar.lz|tar.xz|tar.zma|tar.zst|tbz|tbz2|tgz|tlz|txz|tzst|war|whl|xpi|xz|zip|zst)(-.)'" \
+    && return 0
+}
+
+zpcompdef _extract_completion extract
