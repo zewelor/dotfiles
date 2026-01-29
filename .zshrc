@@ -33,8 +33,6 @@ setopt nullglob               # Allows filename patterns which match no files to
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
 setopt interactivecomments    # Enable the use of comments in interactive shells
 typeset -U path fpath
-# Add ~/.zsh to fpath for local completions (e.g. _extract)
-fpath=($HOME/.zsh $fpath)
 
 # Path manipulation
 if [ -d "$HOME/bin" ]; then
