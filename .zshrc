@@ -32,7 +32,9 @@ setopt globdots               # Include hidden files (those starting with a dot)
 setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
 setopt interactivecomments    # Enable the use of comments in interactive shells
-typeset -U path
+typeset -U path fpath
+# Add ~/.zsh to fpath for local completions (e.g. _extract)
+fpath=($HOME/.zsh $fpath)
 
 # Path manipulation
 if [ -d "$HOME/bin" ]; then
@@ -124,8 +126,7 @@ zinit light-mode wait lucid for \
   zdharma-continuum/zinit-annex-link-man \
   zdharma-continuum/zinit-annex-patch-dl \
   zdharma-continuum/zinit-annex-binary-symlink \
-  zdharma-continuum/z-a-submods \
-  le0me55i/zsh-extract
+  zdharma-continuum/z-a-submods
 
 #
 # Programs
@@ -522,6 +523,8 @@ fi
 if is_desktop; then
   # Bonus
   alias update_bonus="ssh bonus -t 'cd ~/bonus_docker ; git pull origin'"
+  # X cli
+  alias bird='SWEET_COOKIE_CHROME_SAFE_STORAGE_PASSWORD=$(kwallet-query --read-password "Brave Safe Storage" --folder "Brave Keys" kdewallet) bird --cookie-source chrome --chrome-profile-dir ~/.config/BraveSoftware/Brave-Browser/Default'
 fi
 
 #
@@ -1050,3 +1053,4 @@ if is_desktop && is_interactive && [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
       _start_agent
   fi
 fi
+
