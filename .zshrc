@@ -1012,6 +1012,14 @@ if has "tmuxinator" ; then
   alias mux="tmuxinator"
 fi
 
+# Auto-select starship config based on REMOTE_FS environment variable
+# REMOTE_FS=1 indicates a slow/network filesystem mount (e.g., SSHFS)
+if [[ -n "${REMOTE_FS:-}" ]]; then
+  export STARSHIP_CONFIG="${HOME}/.config/starship-network-fs.toml"
+else
+  export STARSHIP_CONFIG="${HOME}/.config/starship.toml"
+fi
+
 # Initialize Starship prompt last to avoid recursive ZLE wrappers when using vi-mode/atuin.
 # We also use a guard to prevent multiple initializations if .zshrc is sourced again.
 if [[ -z "$STARSHIP_INITIALIZED" ]]; then
@@ -1049,6 +1057,20 @@ if is_desktop && is_interactive && [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
       fi
   else
       _start_agent
+  fi
+fi
+
+# Disable git completion on remote filesystems to avoid lag
+# When REMOTE_FS is set (e.g., SSHFS mounts), use simple file completion instead
+if [[ -n "${REMOTE_FS:-}" ]]; then
+  # Override git completion with simple file completion to avoid I/O lag
+  # zcompdef is zinit's wrapper around compdef - we prefer it for consistency
+  # with other completions in this zshrc, but fall back to standard compdef
+  # if zinit hasn't loaded yet (e.g., in minimal/non-interactive shells)
+  if (( $+functions[zcompdef] )); then
+    zcompdef _files git
+  elif (( $+functions[compdef] )); then
+    compdef _files git
   fi
 fi
 

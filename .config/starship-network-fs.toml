@@ -1,0 +1,58 @@
+# https://starship.rs/config/
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = false
+palette = "p10k"
+format = "$username$hostname$directory[](fg:bg) "
+right_format = "$character$cmd_duration"
+
+[palettes.p10k]
+bg  = "236" # dark gray (tło)
+dir = "31"  # deep blue (ścieżka katalogu)
+anc = "39"  # light blue (ikona kłódki, styl katalogu)
+vcs = "76"  # lime green (git branch)
+mod = "178" # gold (zmiany w git, zwykły użytkownik)
+err = "196" # red (błędy, usunięte pliki, root)
+unt = "39"  # light blue (nieśledzone pliki)
+gry = "248" # grey (czas trwania komendy)
+hst = "242" # dark grey (hostname - subtelny)
+k8s = "134" # purple (kubernetes)
+suc = "70"  # green (sukces komendy)
+fail = "160" # red (błąd komendy)
+vim = "106" # green (tryb vim)
+
+[username]
+show_always = true
+format      = "[$user]($style)"
+style_root  = "fg:err bg:bg bold"
+style_user  = "fg:mod bg:bg bold"
+
+# https://starship.rs/config/#hostname
+[hostname]
+ssh_symbol = " 🌐"
+format = '[@$hostname$ssh_symbol]($style)'
+style = "bg:bg fg:hst bold"
+# Zrobilem tak bo inaczje trzebbay zmienia etc sudeors na kazdym host zeby zachowyal env ssh przy sudo, sporo roboty i pamietania, zawsz emoge wrocic
+ssh_only = false
+
+[directory]
+format                    = '[ ](bg:bg)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
+read_only                 = " 󰌾"
+read_only_style           = "fg:anc bg:bg bold"
+style                     = "bg:bg fg:anc bold"
+fish_style_pwd_dir_length = 1
+truncate_to_repo          = false
+# before_repo_root_style    = "bg:bg fg:dir"
+# repo_root_style           = "fg:anc bg:bg bold"
+# repo_root_format          = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
+
+[cmd_duration]
+min_time = 3000
+format = "[$duration ](fg:gry bg:bg)"
+
+[character]
+format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
+success_symbol  = "[󰄬](fg:suc bg:bg bold)"
+error_symbol    = "[󰅖](fg:fail bg:bg bold)"
+vimcmd_symbol   = "[NORMAL](fg:vim bg:bg bold)"
