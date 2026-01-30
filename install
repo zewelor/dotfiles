@@ -13,6 +13,9 @@ CONFIG_DIR="$HOME_DIR/.config"
 # Source shared helper functions (has, resolve_browser_cmd, etc.)
 source "$BASE_DIR/.zsh/helpers.zsh"
 
+# Source install modules
+source "$BASE_DIR/install.d/llm-setup.zsh"
+
 # Optional font installer executable that mirrors the Nerd Font helper.
 FONT_INSTALLER="$BASE_DIR/install-font"
 
@@ -461,8 +464,11 @@ setup_claude() {
   mkdir -p "$claude_dir"
 
   # Use stow to link .claude package contents into ~/.claude
-  # --ignore: skip settings.local.json (per-project, not for ~/.claude)
-  install_with_stow -d "$BASE_DIR" -t "$claude_dir" --ignore='settings\.local\.json' .claude
+  # --ignore: skip settings.local.json (per-project) and skills/ (managed separately via setup_llm_skills)
+  install_with_stow -d "$BASE_DIR" -t "$claude_dir" \
+    --ignore='settings\.local\.json' \
+    --ignore='^skills$' \
+    .claude
 }
 
 # Function to setup Codex configuration via stow.
@@ -638,6 +644,7 @@ run_installation() {
     setup_mise_desktop_tools
     setup_claude
     setup_codex
+    setup_llm_skills
     # Nie dziala idelanie , poki co koomentuje
     # setup_desktop_entries
   fi

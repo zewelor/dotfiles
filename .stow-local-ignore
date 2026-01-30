@@ -11,3 +11,5 @@ Makefile
 .claude  # manual symlinks for settings.json and status-line.sh
 .codex  # stowed separately into ~/.codex (Codex keeps runtime data there)
 .config/rclone  # generated from template by install script
+llms/  # LLM skills directory - symlinked manually by install script
+install.d/  # Install script modules - sourced by install

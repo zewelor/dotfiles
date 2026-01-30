@@ -1,4 +1,4 @@
-.PHONY: all install base update-fonts setup packages zinit_update doctor
+.PHONY: all install base update-fonts setup packages zinit_update doctor skills
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -107,3 +107,10 @@ doctor:
 	@echo "========================================"
 	@echo "Done"
 	@echo "========================================"
+
+# Refresh LLM skills & commands symlinks (for Claude Code, Codex CLI, OpenCode)
+skills:
+	@echo "========================================"
+	@echo "Refreshing LLM skills & commands..."
+	@echo "========================================"
+	@zsh -c 'source install.d/llm-setup.zsh && setup_llm_skills'
