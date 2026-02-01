@@ -27,21 +27,26 @@ function _codex() {
 
 zpcompdef _codex codex
 
+# Run LLM tool in temp dir and cleanup on exit
+_llm_tmp() {
+  local tool="$1" dir_flag="$2"
+  shift 2
+  local tmpdir="$(mktemp -d)" || return 1
+  trap 'rm -rf "$tmpdir"' EXIT
+
+  if [[ -n "$dir_flag" ]]; then
+    "$tool" "$dir_flag" "$tmpdir" "$@"
+  else
+    "$tool" "$tmpdir" "$@"
+  fi
+}
+
 cdxtmp() {
-  local tmpdir title_after
-  tmpdir="$(mktemp -d)" || return 1
+  _llm_tmp codex "-C" "$@"
+}
 
-  # What to show after we're done (current dir name + host is a safe default)
-  title_after="${PWD##*/} — ${HOSTNAME:-host}"
-
-  # On exit: restore title and remove the temp dir
-  trap 'printf "\e]2;%s\a" "$title_after"; rm -rf "$tmpdir"' EXIT
-
-  # Set a nice, explicit title for the temp run
-  printf '\e]2;%s\a' "Codex tmp — ${tmpdir##*/}"
-
-  # Do the thing
-  cdx -C "$tmpdir" $1
+octmp() {
+  _llm_tmp opencode "" "$@"
 }
 
 gsum() {
@@ -95,7 +100,7 @@ gsum() {
     return 1
   fi
 
-  if [ "$force_accept" = "true" ]; then
+  if [ "$force_accept" = "true" ]]; then
     do_commit "$commit_message"
     return $?
   fi
