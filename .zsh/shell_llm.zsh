@@ -100,7 +100,7 @@ gsum() {
     return 1
   fi
 
-  if [ "$force_accept" = "true" ]]; then
+  if [ "$force_accept" = "true" ]; then
     do_commit "$commit_message"
     return $?
   fi
