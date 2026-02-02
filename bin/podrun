@@ -1,0 +1,308 @@
+#!/usr/bin/env zsh
+# https://github.com/bjodah/bjodah-tools/blob/main/bin/podrun
+# -*- mode: shell-script-mode -*-
+
+show_help() {
+  echo "Launch an container using podman-run with some defaults:"
+  echo " - mounts current working directory with literal absolute path"
+  echo " - remove container after exit (ephemeral container)"
+  echo " - seccomp=unconfined (needed for e.g. clang's address sanitizer)"
+  echo " - detach key is set not to interfere with Ctrl-p which is often 'previous'"
+  echo " - TERM environment variable is set to xterm-256color"
+  echo ""
+  echo "also supports building & caching container images on-the-fly."
+  echo ""
+  echo "Usage:"
+  echo "--cont-img-dir       path to folder with ./Containerfile"
+  echo "--cont-img-basename  basename if basename of img-dir is not suitable"
+  echo "--image              name of image (overrides --cont-img-dir), e.g. ubuntu:jammy"
+  echo "--name               name of container, default is basename of image"
+  echo "--gui                set DISPLAY, mount X11 socket folder. Note, for X11 this automatically adds: --net=host"
+  echo "--gpu                mount /dev/dri, for OpenGL, test with e.g. glxgears from mesa-utils"
+  echo "--audio              mount /dev/snd, and e.g. pulseaudio socket"
+  echo "--no-mount-cwd       disable default mounting of current working directory"
+  echo "-v                   enable verbose mode (show all commands executed)"
+  # echo "--gpg-agent          passthrough of GPG-agent"
+  # echo "--ssh-agent          passthrough of SSH-agent"
+  echo ""
+  echo "Example:"
+  echo ' $ podrun -v ~/.ssh:/root/.ssh -v ~/.gnupg:/root/.gnupg --image alpine:latest'
+  echo ' $ podrun --gui --image docker.io/silex/emacs:master-alpine -- emacs ~/.bashrc '
+  echo ' $ podrun --gui --cont-img-dir ~/dotfiles/containers/gccemacs-doom/env -- ~/.emacs.d/bin/doom sync; emacs ~/.bashrc '
+  echo ''
+  echo 'Note that you can override both --image and --cont-img-dir with the environment variable PODRUN_IMAGE_OVERRIDE.'
+  echo 'Some env vars are preserved, set e.g. TERM=xterm-256color for colored terminal.'
+}
+
+CONT_IMG_BASENAME=""
+CONT_IMG_DIR=""
+DO_MOUNT_CWD=1
+IMAGE=""
+NAME=""
+VERBOSE=0
+WITH_AUDIO=0
+# WITH_GPG_AGENT=0
+WITH_GPU=0
+WITH_GUI=0
+WITH_MORE_ENV_VARS=0
+# WITH_SSH_AGENT=0
+
+# https://github.com/containers/toolbox/blob/31e01ac46b0e1caa0e72275148e5c364e9c08459/src/pkg/utils/utils.go#L69-L94
+preserved_vars=(COLORTERM
+  TERM
+  VTE_VERSION)
+
+# Parse cmd line args
+typeset -a PODMAN_RUN_ARGS
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+  --audio)
+    WITH_AUDIO=1
+    shift
+    ;;
+  --cont-img-dir)
+    shift
+    CONT_IMG_DIR=$1
+    shift
+    ;;
+  --cont-img-basename)
+    shift
+    CONT_IMG_BASENAME=$1
+    shift
+    ;;
+  # --gpg-agent)
+  #     shift
+  #     WITH_GPG_AGENT=1
+  #     ;;
+  --gpu)
+    WITH_GPU=1
+    shift
+    ;;
+  --gui | --x11)
+    WITH_GUI=1
+    shift
+    ;;
+  -h | --help | \?)
+    show_help
+    exit 0
+    ;;
+  -v)
+    VERBOSE=1
+    shift
+    ;;
+  --image)
+    shift
+    IMAGE=$1
+    shift
+    ;;
+  --name)
+    shift
+    NAME=$1
+    shift
+    ;;
+  --no-mount-cwd)
+    DO_MOUNT_CWD=0
+    shift
+    ;;
+  # --ssh-agent)
+  #     WITH_SSH_AGENT=1
+  #     shift
+  #     ;;
+  --with-more-env-vars)
+    WITH_MORE_ENV_VARS=1
+    shift
+    ;;
+  --)
+    shift
+    break
+    ;;
+  *)
+    PODMAN_RUN_ARGS+=("$1")
+    shift
+    ;;
+    # show_help
+    # exit 1
+    # ;;
+  esac
+done
+
+if [ $# -eq 0 ]; then
+  >&2 echo "No command to execute, exiting."
+  exit 1
+fi
+
+export TERM=${TERM:-xterm-256color}
+
+main() {
+  local -a podman_cmd
+  if [[ $WITH_MORE_ENV_VARS == 1 ]]; then
+    preserved_vars+=(DBUS_SESSION_BUS_ADDRESS
+      DBUS_SYSTEM_BUS_ADDRESS
+      DESKTOP_SESSION
+      LANG
+      SHELL
+      SSH_AUTH_SOCK
+      TOOLBOX_PATH
+      USER
+      XAUTHORITY
+      XDG_DATA_DIRS
+      XDG_MENU_PREFIX
+      XDG_RUNTIME_DIR
+      XDG_SEAT
+      XDG_VTNR)
+    if [[ $WITH_GUI == 1 ]]; then
+      preserved_vars+=(DISPLAY
+        WAYLAND_DISPLAY
+        XDG_SESSION_CLASS
+        XDG_SESSION_DESKTOP
+        XDG_SESSION_ID
+        XDG_SESSION_TYPE
+        XDG_CURRENT_DESKTOP)
+      PODMAN_RUN_ARGS+=("-v" "/tmp/.X11-unix:/tmp/.X11-unix:rw")
+    fi
+  fi
+  # if [[ $WITH_GPG_AGENT == 1 ]]; then
+  #     CUR_GPG_SOCK=`gpgconf --list-dir agent-ssh-socket`
+  #     PODMAN_RUN_ARGS+=("-v ${CUR_GPG_SOCK}:/root/.gnupg/S.gpg-agent.ssh")
+  # fi
+  # if [[ $WITH_SSH_AGENT == 1 ]]; then
+  #     echo >&2 "TODO: implement ssh-agent pass through"
+  #     exit 1
+  # fi
+  if [[ $WITH_GPU == 1 ]]; then
+    PODMAN_RUN_ARGS+=("--device" "/dev/dri:/dev/dri:rwm")
+  fi
+  if [[ $WITH_AUDIO == 1 ]]; then
+    PODMAN_RUN_ARGS+=("--device" "/dev/snd:/dev/snd")
+    PODMAN_RUN_ARGS+=("--group-add" "audio")
+    PULSE_SOCKET_DIR="/run/user/$(id -u)/pulse"
+    if [ ! -e "${PULSE_SOCKET_DIR}/native" ]; then
+
+      >&2 echo "Not implemented yet, using pipewire perhaps?, check output of 'pactl info | grep \"Server String\"'"
+      exit 1
+    fi
+    PULSE_SERVER_STRING="unix:${PULSE_SOCKET_DIR}/native"
+    PODMAN_RUN_ARGS+=("-v" "${PULSE_SOCKET_DIR}:${PULSE_SOCKET_DIR}")
+    PODMAN_RUN_ARGS+=("-e" "PULSE_SERVER=${PULSE_SERVER_STRING}")
+  fi
+  if [[ $WITH_GUI == 1 ]]; then
+    if [[ -e /mnt/wsl/ ]]; then
+      PODMAN_RUN_ARGS+=("-v" "/mnt/wsl/:/mnt/wsl/:rw")
+    fi
+    if [[ -e /mnt/wslg/ ]]; then
+      PODMAN_RUN_ARGS+=("-v" "/mnt/wslg/:/mnt/wslg/:rw")
+      PRE_CMD="ln -s /mnt/wslg/.X11-unix /tmp/.X11-unix;${PRE_CMD:-}"
+    fi
+    # if [[ ${XDG_SESSION_TYPE:-x11} == wayland ]]; then
+    PODMAN_RUN_ARGS+=("--net" "host")
+
+    if [[ ${WAYLAND_DISPLAY:-""} == wayland* ]]; then
+      #PODMAN_RUN_ARGS+=("--volume "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY":/tmp/$WAYLAND_DISPLAY --device /dev/dri --volume $XDG_RUNTIME_DIR/bus:/tmp/bus")
+      #PODMAN_RUN_ARGS+=("-e WAYLAND_DISPLAY=/tmp/$WAYLAND_DISPLAY")
+      #PODMAN_RUN_ARGS+=("-e DBUS_SESSION_BUS_ADDRESS=/tmp/bus")
+      PODMAN_RUN_ARGS+=("-e" "WAYLAND_DISPLAY")
+      PODMAN_RUN_ARGS+=("--volume" "$XDG_RUNTIME_DIR:$XDG_RUNTIME_DIR:rw")
+      PODMAN_RUN_ARGS+=("-e" "XDG_RUNTIME_DIR")
+      #PODMAN_RUN_ARGS+=("-e XDG_SESSTION_TYPE")
+    fi
+    display_value="${DISPLAY/localhost/127.0.0.1}"
+    PODMAN_RUN_ARGS+=("-e" "DISPLAY=${display_value}")
+    if [[ -z $XAUTHORITY ]]; then
+      if [[ -e $HOME/.Xauthority ]]; then
+        PODMAN_RUN_ARGS+=("-v" "$HOME/.Xauthority:/root/.Xauthority:rw")
+      else
+        >&2 echo "Warning, could not locate file: .Xauthority, opening GUI windows might not work."
+      fi
+    else
+      PODMAN_RUN_ARGS+=("-v" "$XAUTHORITY:$XAUTHORITY:rw")
+      PODMAN_RUN_ARGS+=("-e" "XAUTHORITY")
+    fi
+  fi
+  # # https://github.com/containers/podman/discussions/13040#discussioncomment-2071464
+  # PODMAN_RUN_ARGS+=("--uidmap $(id -u):0:1")
+  # PODMAN_RUN_ARGS+=("--gidmap $(id -g):0:1")
+  # PODMAN_RUN_ARGS+=("--gidmap 0:1:$(id -g)")
+  #
+  # The above doesn't really work, podman starts *copying* the whole filesystem
+  # with 'storage-chown-by-maps' consuming all CPU and disk read-write.
+  #
+  # Instead pass the following
+  #          --user $UID:$GID \
+  #	   -e LOGNAME \
+  #          --cap-add=SYS_PTRACE \
+  [[ "$VERBOSE" -eq 1 || "${PODRUN_VERBOSE:-0}" -eq 1 ]] && set -x
+
+  if command -v podman >/dev/null 2>&1; then
+    podman_cmd=(podman)
+  elif command -v docker >/dev/null 2>&1; then
+    if id -nG | grep -q '\<docker\>'; then
+      podman_cmd=(docker)
+    else
+      podman_cmd=(sudo docker)
+    fi
+  else
+    >&2 echo "Neither podman nor docker found on \$PATH"
+    exit 1
+  fi
+
+  if [[ ${PODRUN_IMAGE_OVERRIDE:-''} != "" ]]; then
+    IMAGE="${PODRUN_IMAGE_OVERRIDE}"
+  elif [[ -z "$IMAGE" && ! -z "$CONT_IMG_DIR" ]]; then
+    if [[ ! -d "$CONT_IMG_DIR" ]]; then
+      script_dir="${0:A:h}"
+      CANDIDATE_FOLDER="${script_dir}/../../containers/${CONT_IMG_DIR}/"
+      if [[ ! -d "$CANDIDATE_FOLDER" ]]; then
+        >&2 echo "Found no container folder, looked for: $CANDIDATE_FOLDER"
+        exit 1
+      else
+        CONT_IMG_DIR="$CANDIDATE_FOLDER"
+      fi
+    fi
+    ENV_HASH=$(find "$CONT_IMG_DIR" -type f -exec cat {} \; | openssl sha256 | cut -f2 -d' ')
+    if [[ -z "$CONT_IMG_BASENAME" ]]; then
+      CONT_IMG_BASENAME=$(basename "$(realpath "${CONT_IMG_DIR}")")
+    fi
+    CONT_IMG_ARGS_FILE="${CONT_IMG_DIR}/../podrun-args-${CONT_IMG_BASENAME}.sh"
+    if [[ -e $CONT_IMG_ARGS_FILE ]]; then
+      source "$CONT_IMG_ARGS_FILE"
+    fi
+    IMAGE="${CONT_IMG_BASENAME}:${ENV_HASH:0:8}" # localhost/
+    if ! "${podman_cmd[@]}" image ls | grep -q -- "$IMAGE"; then
+      "${podman_cmd[@]}" build -t "$IMAGE" "$CONT_IMG_DIR"
+    fi
+  fi
+  if [[ -z $NAME ]]; then
+    NAME=$(echo $IMAGE | cut -d: -f1 | sed 's#/#-#g')
+  fi
+  if (( DO_MOUNT_CWD != 0 )); then
+    PODMAN_RUN_ARGS+=("-v" "$PWD:$PWD")
+    PODMAN_RUN_ARGS+=("-w" "$PWD")
+  fi
+
+  for var in "${preserved_vars[@]}"; do
+    if [[ -n ${(P)var+set} ]]; then
+      PODMAN_RUN_ARGS+=("-e" "${var}=${(P)var}")
+    fi
+  done
+
+  # Try shells in order: bash -> ash -> sh
+  # Use sh as a wrapper to detect and exec the preferred shell
+  local cmd_to_exec
+  cmd_to_exec="${PRE_CMD:-}$*"
+
+  "${podman_cmd[@]}" run \
+    "${PODMAN_RUN_ARGS[@]}" \
+    --detach-keys=ctrl-\] \
+    --security-opt seccomp=unconfined \
+    --rm \
+    --name "$NAME" \
+    -it "$IMAGE" \
+    sh -c 'if command -v bash >/dev/null 2>&1; then exec bash -lc "$@"; elif command -v ash >/dev/null 2>&1; then exec ash -lc "$@"; else exec sh -lc "$@"; fi' _ "$cmd_to_exec"
+  exit
+}
+
+{
+  main "$@"
+  exit $?
+}
