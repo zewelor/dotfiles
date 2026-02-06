@@ -14,13 +14,24 @@
 			],
 			"type": "stdio"
 		},
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "CONTEXT7_API_KEY": "${input:context7-key}"
-      }
-    }
+		"context7": {
+			"type": "http",
+			"url": "https://mcp.context7.com/mcp",
+			"headers": {
+				"CONTEXT7_API_KEY": "${input:context7-key}"
+			}
+		},
+		"perplexity": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"@perplexity-ai/mcp-server"
+			],
+			"env": {
+				"PERPLEXITY_API_KEY": ""
+			}
+		}
 	},
 	"inputs": [
 		{
@@ -29,11 +40,11 @@
 			"description": "GitHub Personal Access Token",
 			"password": true
 		},
-    {
-      "id": "context7-key",
-      "type": "promptString",
-	  "description": "Context7 API Key",
-      "password": true
-    }
+		{
+			"id": "context7-key",
+			"type": "promptString",
+			"description": "Context7 API Key",
+			"password": true
+		}
 	]
 }

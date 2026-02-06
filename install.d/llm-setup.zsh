@@ -9,8 +9,14 @@
 setup_llm_skills() {
   # Determine directories
   local install_d_dir="$(dirname "${(%):-%x}")"
+  # Convert to absolute path in case script was sourced with relative path
+  install_d_dir="$(cd "$install_d_dir" && pwd)"
   local base_dir="$(dirname "$install_d_dir")"
   local llms_dir="$base_dir/llms"
+  # Check if llms is in prv/ subdirectory (privacy-sensitive configs)
+  if [[ ! -d "$llms_dir" && -d "$base_dir/prv/llms" ]]; then
+    llms_dir="$base_dir/prv/llms"
+  fi
   local home_dir="$HOME"
   
   # Colors
@@ -150,6 +156,14 @@ _symlink_skills_to_client() {
   
   mkdir -p "$target_dir"
   
+  # Clean up dead symlinks in target_dir
+  for link in "$target_dir"/*; do
+    if [[ -L "$link" ]] && [[ ! -e "$link" ]]; then
+      echo "  Czyszczenie martwego symlinku: $(basename "$link")"
+      rm "$link"
+    fi
+  done
+  
   # Common skills - all clients get these
   if [[ -d "$source_dir/common" ]]; then
     if [[ -n "$(find "$source_dir/common" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
@@ -235,6 +249,14 @@ _symlink_commands_to_client() {
   fi
 
   mkdir -p "$target_dir"
+
+  # Clean up dead symlinks in target_dir
+  for link in "$target_dir"/*; do
+    if [[ -L "$link" ]] && [[ ! -e "$link" ]]; then
+      echo "  Czyszczenie martwego symlinku: $(basename "$link")"
+      rm "$link"
+    fi
+  done
 
   # Common commands - all clients get these
   if [[ -d "$source_dir/common" ]]; then
