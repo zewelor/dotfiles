@@ -71,12 +71,7 @@ setup_llm_skills() {
   # Check OpenCode
   if has "opencode"; then
     has_opencode=true
-    if [[ "$has_claude" == true ]]; then
-      echo "OpenCode wykryty: skille będą dostępne przez .claude/skills/ (kompatybilność)"
-    else
-      echo "${color_yellow}WARNING: OpenCode wykryty ale brak ~/.claude/${color_reset}"
-      echo "OpenCode używa ścieżek Claude - uruchom najpierw: claude"
-    fi
+    echo "OpenCode wykryty: ~/.agents/skills/ (native) oraz ~/.config/opencode/ (commands)"
   fi
   
   # Setup for Claude
@@ -89,8 +84,11 @@ setup_llm_skills() {
     _setup_client_skills_and_commands "codex" "$llms_dir" "$home_dir"
   fi
   
-  # Setup for opencode (commands only, skills via Claude compatibility)
+  # Setup for opencode (native .agents skills and standard config commands)
   if [[ "$has_opencode" == true ]]; then
+    # Native OpenCode skills
+    _setup_client_skills_and_commands "agents" "$llms_dir" "$home_dir"
+    # OpenCode config commands
     _setup_client_commands "opencode" "$llms_dir" "$home_dir"
   fi
   
@@ -148,6 +146,8 @@ _symlink_skills_to_client() {
   local target_dir="$2"
   local client_name="$3"
   
+  setopt localoptions nullglob
+  
   # Handle migration: if target_dir is a symlink (old stow setup), remove it
   if [[ -L "$target_dir" ]]; then
     echo "  Migracja: usuwanie starego symlinku $target_dir"
@@ -189,13 +189,19 @@ _symlink_skills_to_client() {
   fi
 
   # Client-specific skills
-  if [[ -d "$source_dir/$client_name" ]]; then
-    if [[ -n "$(find "$source_dir/$client_name" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
-      echo "  Linkowanie skilli specyficznych dla $client_name..."
-      for skill_dir in "$source_dir/$client_name"/*/; do
+  # Special case: 'agents' (OpenCode) also gets 'claude' skills for compatibility
+  local skill_client_dir="$client_name"
+  if [[ "$client_name" == "agents" ]]; then
+    skill_client_dir="claude"
+  fi
+
+  if [[ -d "$source_dir/$skill_client_dir" ]]; then
+    if [[ -n "$(find "$source_dir/$skill_client_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
+      echo "  Linkowanie skilli specyficznych dla $skill_client_dir do $client_name..."
+      for skill_dir in "$source_dir/$skill_client_dir"/*/; do
         if [[ -d "$skill_dir" ]]; then
-          local skill_name=$(basename "$skill_dir")
-          local target_link="$target_dir/$skill_name"
+          skill_name=$(basename "$skill_dir")
+          target_link="$target_dir/$skill_name"
           
           if [[ -L "$target_link" ]]; then
             rm "$target_link"
@@ -206,16 +212,17 @@ _symlink_skills_to_client() {
           fi
           
           ln -sfn "$skill_dir" "$target_link"
-          echo "    + $skill_name ($client_name-specific)"
+          echo "    + $skill_name ($skill_client_dir-specific)"
         fi
       done
     fi
   fi
   
   # Special case: opencode skills go to claude directory (compatibility)
-  if [[ "$client_name" == "claude" && -d "$source_dir/opencode" ]]; then
+  # and agents directory (native)
+  if [[ ("$client_name" == "claude" || "$client_name" == "agents") && -d "$source_dir/opencode" ]]; then
     if [[ -n "$(find "$source_dir/opencode" -mindepth 1 -maxdepth 1 -type d 2>/dev/null)" ]]; then
-      echo "  Linkowanie skilli OpenCode (przez kompatybilność Claude)..."
+      echo "  Linkowanie skilli OpenCode ($client_name)..."
       for skill_dir in "$source_dir/opencode"/*/; do
         if [[ -d "$skill_dir" ]]; then
           local skill_name=$(basename "$skill_dir")
@@ -242,6 +249,8 @@ _symlink_commands_to_client() {
   local source_dir="$1"
   local target_dir="$2"
   local client_name="$3"
+
+  setopt localoptions nullglob
 
   if [[ -L "$target_dir" ]]; then
     echo "Migracja: usuwanie starego symlinku $target_dir"
@@ -298,3 +307,6 @@ _symlink_commands_to_client() {
     fi
   fi
 }
+
+
+

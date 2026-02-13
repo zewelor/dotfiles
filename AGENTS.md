@@ -149,6 +149,15 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 2. Dodaj `SKILL.md` (wymagany przez Claude Code)
 3. Uruchom `./install` — stow automatycznie zlinkuje nowy skill
 
+## Nowa konwencja wspolnego katalogu (`.agents/`)
+
+**Konwencja:**
+- Globalne skille: `~/.agents/skills/`
+
+**Jak to działa w dotfiles:**
+- `setup_llm_skills()` linkuje skille z `prv/llms/skills/` do `~/.agents/skills/` (globalnie).
+- Katalog `.agents` jest **ignorowany przez główny stow** (w `.stow-local-ignore`).
+
 ## Preferencje środowiskowe
 
 - **NIE używaj direnv** - nie lubię hooków na zmianę katalogu. Per-project env rozwiązuję przez:
