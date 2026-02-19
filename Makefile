@@ -108,9 +108,9 @@ doctor:
 	@echo "Done"
 	@echo "========================================"
 
-# Refresh LLM skills & commands symlinks (for Claude Code, Codex CLI, OpenCode)
+# Refresh private stow links (including prv/.agents -> ~/.agents)
 skills:
 	@echo "========================================"
-	@echo "Refreshing LLM skills & commands..."
+	@echo "Refreshing private stow links from prv/..."
 	@echo "========================================"
-	@zsh -c 'source install.d/llm-setup.zsh && setup_llm_skills'
+	@stow -v -d prv -t "$(HOME)" .

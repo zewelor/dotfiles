@@ -139,15 +139,15 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 **Co linkujemy do `~/.claude/`:**
 - `settings.json` — globalne ustawienia
 - `status-line.sh`, `claude-code-notifier.sh` — skrypty pomocnicze
-- `skills/` — custom skille (cały katalog jako symlink)
 
 **Co NIE linkujemy:**
 - `settings.local.json` — to jest plik **per-project** dla tego repo dotfiles! Zawiera permissions które Claude Code używa gdy pracuje w tym katalogu. NIE kopiować do `~/.claude/`.
+- `skills/` — skille trzymamy globalnie w `prv/.agents/skills` i linkujemy przez zwykły stow z `prv/`
 
 **Dodając nowy skill:**
-1. Utwórz katalog w `.claude/skills/<nazwa>/`
+1. Utwórz katalog w `prv/.agents/skills/<nazwa>/`
 2. Dodaj `SKILL.md` (wymagany przez Claude Code)
-3. Uruchom `./install` — stow automatycznie zlinkuje nowy skill
+3. Uruchom `./install` (lub `make skills`) — stow z `prv/` automatycznie odświeży linki
 
 ## Nowa konwencja wspolnego katalogu (`.agents/`)
 
@@ -155,8 +155,8 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 - Globalne skille: `~/.agents/skills/`
 
 **Jak to działa w dotfiles:**
-- `setup_llm_skills()` linkuje skille z `prv/llms/skills/` do `~/.agents/skills/` (globalnie).
-- Katalog `.agents` jest **ignorowany przez główny stow** (w `.stow-local-ignore`).
+- Źródło w repo: `prv/.agents/`
+- Główny stow z `prv/` linkuje to 1:1 do `~/.agents/`.
 
 ## Preferencje środowiskowe
 
