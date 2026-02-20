@@ -397,6 +397,7 @@ setup_mise_desktop_tools() {
     # The ubi backend is deprecated in mise docs.
     # Use github:owner/repo for GitHub Releases-based tools.
     "github:cli/cli@latest"
+    "github:bootandy/dust@latest"
     "github:openai/codex[asset_pattern=codex-x86_64-unknown-linux-musl.tar.gz,rename_exe=codex]@latest"
     "github:steipete/gogcli@latest"
     "github:yt-dlp/yt-dlp[asset_pattern=yt-dlp_linux.zip,rename_exe=yt-dlp]@latest"
