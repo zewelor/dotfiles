@@ -302,6 +302,7 @@ zinit wait lucid for \
 # AI tools
 if has "opencode"; then
   alias oc="opencode"
+  alias occ="opencode -c"
 fi
 
 # Apt

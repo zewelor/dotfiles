@@ -130,6 +130,14 @@ Minimalne, spójne formaty:
 - Wywołanie `start-k8s-work` ładuje: aliasy (`k`, `kmurder`), funkcje (`kexec`, `kcRsh`, `kcEsh`), k9s, krew, completions (w tym `kubectl cnpg`).
 - Dodając nowe narzędzia/completions k8s, umieszczaj je wewnątrz `start-k8s-work()`, nie w głównym `.zshrc`.
 
+## Zsh / AI aliasy
+
+- Aliasy dla tej samej aplikacji trzymaj obok siebie w jednej sekcji (np. `aa` i `aac` przy `app-cli` w `.zshrc`).
+- Skróty nazw:
+  - `aa` = `app-cli`
+  - `aac` = `app-cli -c`
+- Przy dodawaniu kolejnych aliasów do tej samej apki dopisz je w tym samym bloku, zamiast rozrzucać po plikach.
+
 ## Claude Code (`.claude/`)
 
 Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignore`), ale `setup_claude()` używa **osobnego wywołania stow** do linkowania jego zawartości.
