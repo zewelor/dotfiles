@@ -391,7 +391,21 @@ setup_mise_desktop_tools() {
   fi
 
   print_banner "Installing desktop tools via mise..."
-  mise use -g gem:tmuxinator
+  # Keep desktop-scoped tools in one place for predictable onboarding.
+  local mise_tools=(
+    "gem:tmuxinator"
+    # The ubi backend is deprecated in mise docs.
+    # Use github:owner/repo for GitHub Releases-based tools.
+    "github:cli/cli@latest"
+    "github:openai/codex[asset_pattern=codex-x86_64-unknown-linux-musl.tar.gz,rename_exe=codex]@latest"
+    "github:steipete/gogcli@latest"
+    "github:yt-dlp/yt-dlp[asset_pattern=yt-dlp_linux.zip,rename_exe=yt-dlp]@latest"
+  )
+
+  local tool=""
+  for tool in "${mise_tools[@]}"; do
+    mise use -g "$tool"
+  done
 }
 
 # Function to setup rclone configuration from Vault (desktop only).

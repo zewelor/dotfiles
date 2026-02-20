@@ -206,18 +206,11 @@ function cdls() {
   cd -- "$dir"
 }
 
-# Lucid - Turbo mode is verbose, so you need an option for quiet.
-zinit light-mode wait"2" lucid as"program" pick"git-fixup" for @keis/git-fixup
-
 zinit light-mode wait"2" lucid from"gh-r" as"program" \
   atclone"./just --completions zsh > _just" atpull"%atclone" \
   pick"just" for @casey/just
 
 if is_desktop; then
-  zinit light-mode from"gh-r" as"program" \
-    atclone"./gh completion -s zsh > _gh" atpull"%atclone" \
-    mv"gh_*/bin/gh -> gh" for @cli/cli
-
   zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
       pick'mise/bin/mise' \
       atclone'./mise/bin/mise complete zsh >_mise' atpull'%atclone' \
@@ -227,11 +220,6 @@ if is_desktop; then
   # Error: usage CLI not found. This is required for completions to work in mise.
   # See https://usage.jdx.dev for more information.
   zinit light-mode wait"1" lucid from"gh-r" as"program" pick"usage" for @jdx/usage
-
-  zinit light-mode from"gh-r" as"program" \
-    bpick"codex-x86_64-unknown-linux-musl.tar.gz" \
-    mv"codex-x86_64-unknown-linux-musl -> codex" \
-    for @openai/codex
 
   zinit light-mode from"gh-r" as"program" \
     atclone"./opencode completion > _opencode; echo 'compdef _opencode_yargs_completions oc' >> _opencode" atpull"%atclone" \
@@ -387,6 +375,22 @@ function update-all () {
     fi
   fi
 
+  # Update mise-managed tools for the target user.
+  local mise_command='mise upgrade'
+  echo
+  if sudo -H -u "${target_user}" zsh -lc 'command -v mise >/dev/null 2>&1'; then
+    echo "[mise] Upgrading mise tools"
+    sudo -H -u "${target_user}" zsh -lc "${mise_command}" >/dev/null 2>&1
+    local _mise_ec=$?
+    if (( _mise_ec == 0 )); then
+      echo "[mise] Update complete"
+    else
+      echo "[mise] Update failed (exit ${_mise_ec}) try running: 'sudo -H -u ${target_user} zsh -lc \"${mise_command}\"' to see details."
+    fi
+  else
+    echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
+  fi
+
   # Include mise shims so npm is discoverable when running via sudo
   local npm_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/share/mise/bin:${target_home}/.local/bin:/usr/local/bin:/usr/bin:/bin"
 
@@ -429,7 +433,38 @@ if has "git"; then
   alias git-undo-commit='git reset --soft HEAD~;'
   alias gripfp="gcmm 'awd' -a && grbi --autosquash && gpf";
   alias glp="git log -p"
-  alias git-fixup="ga . && git fixup -c --rebase && gpf"
+
+  # Native git-based replacement for external git-fixup tool.
+  # Usage:
+  #   git-fixup                # fixup against HEAD
+  #   git-fixup <commit-ish>   # fixup against selected commit
+  #   git-fixup <commit> <base-branch>  # custom base for autosquash rebase
+  function git-fixup () {
+    local target="${1:-HEAD}"
+    local base_branch="${2:-$(git_main_branch)}"
+    local rebase_base=""
+
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      echo "git-fixup: not inside a git repository" >&2
+      return 1
+    fi
+
+    if ! git rev-parse --verify "$target" >/dev/null 2>&1; then
+      echo "git-fixup: target commit '$target' not found" >&2
+      return 1
+    fi
+
+    ga .
+    git commit --fixup="$target" || return 1
+
+    rebase_base=$(git merge-base "$base_branch" HEAD 2>/dev/null) || {
+      echo "git-fixup: cannot resolve merge-base with '$base_branch'" >&2
+      return 1
+    }
+
+    git rebase -i --autosquash "$rebase_base" || return 1
+    gpf
+  }
 
   # Worktree
   alias gwtls='git worktree list'
@@ -586,14 +621,6 @@ if has "rg"; then
   alias rg='rg -i'
 fi
 
-if has yt-dlp; then
-  function youtube-extract-audio () {
-    yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(title)s.%(ext)s' "$@"
-  }
-  function youtube-mp3-playlist () {
-    yt-dlp --ignore-errors -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 -o '~/Music/youtube/%(playlist)s/%(playlist_index)s - %(title)s.%(ext)s' "$@"
-  }
-fi
 
 
 function du_sorted () {

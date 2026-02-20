@@ -15,7 +15,6 @@ if has "kubectl"; then
       kubectl exec -it "$1" -- sh -c '(bash > /dev/null 2>&1 || ash || sh)'
     }
 
-
     function kcRsh() {
       kubectl run $2 --image=$1 --attach -ti --restart=Never --rm --command -- sh -c "clear; (bash 2>&1 > /dev/null || ash || sh)"
     }
@@ -30,6 +29,41 @@ if has "kubectl"; then
       echo
     }
 
+    kvault() {
+      local ns="${VAULT_K8S_NAMESPACE:-kube-system}"
+      local pod
+      pod="$(kubectl get pod -n "$ns" -l app.kubernetes.io/name=vault,vault-active=true -o jsonpath='{.items[0].metadata.name}')"
+      [[ -z "$pod" ]] && pod="$(kubectl get pod -n "$ns" -l app.kubernetes.io/name=vault -o jsonpath='{.items[0].metadata.name}')"
+      [[ -z "$pod" ]] && {
+        echo "Vault pod not found in $ns" >&2
+        return 1
+      }
+      if [[ -n "${KVAULT_TOKEN:-}" ]]; then
+        if [[ -t 1 ]]; then
+          kubectl exec -n "$ns" -it "$pod" -- env VAULT_TOKEN="$KVAULT_TOKEN" vault "$@"
+        else
+          kubectl exec -n "$ns" -i "$pod" -- env VAULT_TOKEN="$KVAULT_TOKEN" vault "$@"
+        fi
+      else
+        if [[ -t 1 ]]; then
+          kubectl exec -n "$ns" -it "$pod" -- vault "$@"
+        else
+          kubectl exec -n "$ns" -i "$pod" -- vault "$@"
+        fi
+      fi
+    }
+    kvlogin() {
+      local t
+      read -rs "?Vault token (hidden): " t
+      echo
+      export KVAULT_TOKEN="$t"
+      unset t
+      kvault token lookup >/dev/null && echo "Vault login OK" || echo "Vault login failed"
+    }
+    kvlogout() {
+      unset KVAULT_TOKEN
+      echo "Vault token cleared from shell env"
+    }
     # Usage:
     #   k8ssecretgen [pwgen options]
     # Examples:
@@ -37,54 +71,52 @@ if has "kubectl"; then
     #   k8ssecretgen -s 50           # Overrides default length to 50
     #   k8ssecretgen -A -n 5         # Generates 5 passwords with additional options
     k8ssecretgen() {
-        # Define default options
-        local defaults=("-1" "-s" "30")
+      # Define default options
+      local defaults=("-1" "-s" "30")
 
-        # Initialize an array for final pwgen arguments
-        local args=()
+      # Initialize an array for final pwgen arguments
+      local args=()
 
-        # Flags to check if certain options are provided
-        local has_s=0
-        local has_n=0
+      # Flags to check if certain options are provided
+      local has_s=0
+      local has_n=0
 
-        # Iterate over the input arguments to detect if -s or -n/-1 are provided
-        for arg in "$@"; do
-            case "$arg" in
-                -s|--secure)
-                    has_s=1
-                    ;;
-                -n|--number)
-                    has_n=1
-                    ;;
-                -1)
-                    has_n=1
-                    ;;
-                *)
-                    ;;
-            esac
-        done
+      # Iterate over the input arguments to detect if -s or -n/-1 are provided
+      for arg in "$@"; do
+        case "$arg" in
+        -s | --secure)
+          has_s=1
+          ;;
+        -n | --number)
+          has_n=1
+          ;;
+        -1)
+          has_n=1
+          ;;
+        *) ;;
+        esac
+      done
 
-        # If -n or -1 is not provided, append default -1
-        if [[ $has_n -eq 0 ]]; then
-            args+=("-1")
-        fi
+      # If -n or -1 is not provided, append default -1
+      if [[ $has_n -eq 0 ]]; then
+        args+=("-1")
+      fi
 
-        # If -s is not provided, append default -s 30
-        if [[ $has_s -eq 0 ]]; then
-            args+=("-s" "30")
-        fi
+      # If -s is not provided, append default -s 30
+      if [[ $has_s -eq 0 ]]; then
+        args+=("-s" "30")
+      fi
 
-        # Append user-provided arguments
-        args+=("$@")
+      # Append user-provided arguments
+      args+=("$@")
 
-        echo "Generating password with the following arguments: ${args[@]}"
-        # Execute the pwgen command with the constructed arguments, remove newline, and encode in Base64
-        pwgen "${args[@]}" | tr -d '\n' | base64 -w 0
+      echo "Generating password with the following arguments: ${args[@]}"
+      # Execute the pwgen command with the constructed arguments, remove newline, and encode in Base64
+      pwgen "${args[@]}" | tr -d '\n' | base64 -w 0
 
-        # Add a newline for better readability
-        echo
+      # Add a newline for better readability
+      echo
     }
-
 
     zinit light-mode from"gh-r" as"program" for @derailed/k9s
     zinit light-mode from"gh-r" as"program" mv"krew-* -> kubectl-krew" for @kubernetes-sigs/krew

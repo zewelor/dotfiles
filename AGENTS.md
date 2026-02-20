@@ -172,3 +172,49 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
   - tmuxinator (sesje per projekt)
   - Docker/compose (izolacja środowiska)
 - Unikaj dodawania nowych hooków do shell prompt/cd.
+
+## Zsh / CLI managers (`zinit` vs `mise`)
+
+- `mise` backend `ubi:*` jest **deprecated**. Dla GitHub Releases używaj `github:owner/repo` zamiast `ubi:owner/repo`.
+- Źródła prawdy (sprawdzaj przed zmianą):
+  - https://mise.jdx.dev/
+  - https://mise.jdx.dev/dev-tools/backends/github.html
+  - https://mise.jdx.dev/dev-tools/backend_architecture.html
+  - https://mise.jdx.dev/dev-tools/backends/ubi.html
+  - `ubi` jest utrzymywane głównie dla kompatybilności; preferowany backend dla apek z GitHub Releases to `github`.
+- Jeśli dokumentacja `mise` zmieni rekomendacje/semantykę i ten plik jest nieaktualny:
+  - najpierw zaktualizuj instrukcje w `AGENTS.md`,
+  - dopiero potem wdrażaj zmianę w `.zshrc` / `install`,
+  - w opisie zmian dopisz co było outdated i jaka reguła została zaktualizowana.
+
+### Reguły decyzyjne (MUST)
+
+- **Nowe standalone CLI** dodawaj domyślnie przez `mise`.
+- `zinit` zostaw dla:
+  - pluginów shellowych (autosuggestions, syntax-highlighting, snippets),
+  - przypadków gdzie kluczowa jest integracja z frameworkiem `zinit` (np. specyficzne hooki `atclone/atpull/src`).
+- Wyjątki zaakceptowane: `atuin`, `starship`, `just` i `git-fixup` zostają w `zinit` (shell init/completions, brak kompatybilnego backendu lub świadoma decyzja maintainerska).
+- Przy każdej nowej binarce dopisz krótko w opisie zmiany: dlaczego `mise` albo dlaczego wyjątek i zostaje `zinit`.
+- Aktualizacje:
+  - `update-all` ma aktualizować zarówno `zinit`, jak i `mise` (okres przejściowy),
+  - docelowo ograniczamy binarki w `zinit` na rzecz `mise`.
+
+### Inwentaryzacja (stan obecny) i kierunek migracji
+
+- `@keis/git-fixup` (`git-fixup`) — zostaje w `zinit` (brak działającego źródła `mise github:*`; repo nie publikuje Releases pod `latest`).
+- `@casey/just` (`just`) — zostaje w `zinit` (intentional exception).
+- `@cli/cli` (`gh`) — fala 1 migracji do `mise` (standalone CLI).
+- `@jdx/mise` (`mise`) — może zostać w `zinit` jako bootstrap, ale rozważyć system package lub self-hosted install dla uproszczenia łańcucha zależności.
+- `@jdx/usage` (`usage`) — zależność completion dla `mise`; migrować razem z decyzją jak instalowany jest `mise`.
+- `@openai/codex` (`codex`) — fala 1 migracji do `mise` (standalone CLI).
+- `github:steipete/gogcli` (`gog`) — zarządzane przez `mise` (desktop toolset).
+- `@anomalyco/opencode` (`opencode`) — kandydat do `mise` (standalone CLI).
+- `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).
+- `starship/starship` (`starship`) — zostaje w `zinit` (intentional exception: shell init/completions).
+
+### Checklist migracji pojedynczego narzędzia
+
+- Potwierdź w docs `mise` aktualny backend/format wpisu.
+- Dodaj narzędzie przez `mise` (preferuj `github:owner/repo` dla GitHub Releases).
+- Usuń/ogranicz odpowiedni wpis `zinit` dopiero po weryfikacji działania completions/init.
+- Sprawdź `update-all` i potwierdź, że aktualizacja działa przez sekcję `[mise]`.
