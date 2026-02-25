@@ -290,6 +290,165 @@ if has "opencode"; then
   alias occ="opencode -c"
 fi
 
+# Guardrails for global package installs when mise is available.
+if is_interactive; then
+  is_using_mise() {
+    [[ -f "${HOME}/.config/mise/config.toml" ]] || has "mise"
+  }
+
+  mise_global_guard_enabled() {
+    is_using_mise && [[ "${MISE_ALLOW_GLOBAL_INSTALL:-0}" != "1" ]]
+  }
+
+  # Extract likely package names from npm install/add arguments.
+  _npm_guard_packages() {
+    local -a pkgs
+    local arg=""
+    local skip_next=0
+    local npm_subcommand="${1:-}"
+    shift || true
+
+    for arg in "$@"; do
+      if (( skip_next )); then
+        skip_next=0
+        continue
+      fi
+
+      case "$arg" in
+        # Common npm flags with a separate value.
+        -C|--prefix|--cache|--registry|--tag|--userconfig|--workspace|-w)
+          skip_next=1
+          continue
+          ;;
+        install|i|add)
+          # Ignore repeated subcommands in unusual invocations.
+          continue
+          ;;
+        -*)
+          continue
+          ;;
+      esac
+
+      pkgs+=("$arg")
+    done
+
+    printf '%s\n' "${pkgs[@]}"
+  }
+
+  # Normalize npm spec to a package name that can be used with @latest.
+  _npm_guard_pkg_name() {
+    local spec="$1"
+    local scope=""
+    local name_and_version=""
+
+    # Scoped package with version tag, e.g. @scope/pkg@1.2.3.
+    if [[ "$spec" == @*/*@* ]]; then
+      scope="${spec%%/*}"
+      name_and_version="${spec#*/}"
+      printf '%s/%s\n' "$scope" "${name_and_version%@*}"
+      return
+    fi
+
+    # Scoped package without explicit version, e.g. @scope/pkg.
+    if [[ "$spec" == @*/* ]]; then
+      printf '%s\n' "$spec"
+      return
+    fi
+
+    # Unscoped package with version/tag, e.g. pkg@1.2.3.
+    if [[ "$spec" == *@* ]]; then
+      printf '%s\n' "${spec%@*}"
+      return
+    fi
+
+    printf '%s\n' "$spec"
+  }
+
+  # Extract first likely gem package from gem install arguments.
+  _gem_guard_package() {
+    local arg=""
+    local skip_next=0
+
+    for arg in "$@"; do
+      if (( skip_next )); then
+        skip_next=0
+        continue
+      fi
+
+      case "$arg" in
+        # Common gem flags with a separate value.
+        -v|--version|-i|--install-dir|-n|--bindir|-P|--trust-policy|--source)
+          skip_next=1
+          continue
+          ;;
+        install)
+          continue
+          ;;
+        -*)
+          continue
+          ;;
+      esac
+
+      printf '%s\n' "$arg"
+      return
+    done
+  }
+
+  npm() {
+    if mise_global_guard_enabled; then
+      local arg
+      local is_global_install=0
+      local -a npm_guard_pkgs
+      local pkg=""
+      local normalized_pkg=""
+
+      if [[ "$1" == "install" || "$1" == "i" || "$1" == "add" ]]; then
+        for arg in "$@"; do
+          if [[ "$arg" == "-g" || "$arg" == "--global" || "$arg" == "--location=global" ]]; then
+            is_global_install=1
+            break
+          fi
+        done
+      fi
+
+      if (( is_global_install )); then
+        echo "[guard] Avoid npm global installs when using mise."
+        npm_guard_pkgs=(${(@f)$(_npm_guard_packages "$@")})
+        if (( ${#npm_guard_pkgs[@]} > 0 )); then
+          for pkg in "${npm_guard_pkgs[@]}"; do
+            normalized_pkg="$(_npm_guard_pkg_name "$pkg")"
+            [[ -n "$normalized_pkg" ]] && echo "[guard] Use: mise use -g npm:${normalized_pkg}@latest"
+          done
+        else
+          echo "[guard] Use: mise use -g npm:<package>@latest"
+        fi
+        echo "[guard] Bypass once: MISE_ALLOW_GLOBAL_INSTALL=1 npm $*"
+        return 1
+      fi
+    fi
+
+    command npm "$@"
+  }
+
+  gem() {
+    if mise_global_guard_enabled && [[ "$1" == "install" ]]; then
+      local gem_pkg=""
+
+      echo "[guard] Avoid gem install when using mise."
+      gem_pkg="$(_gem_guard_package "$@")"
+      if [[ -n "$gem_pkg" ]]; then
+        echo "[guard] Use: mise use -g gem:${gem_pkg}@latest"
+      else
+        echo "[guard] Use: mise use -g gem:<package>@latest"
+      fi
+      echo "[guard] Bypass once: MISE_ALLOW_GLOBAL_INSTALL=1 gem $*"
+      return 1
+    fi
+
+    command gem "$@"
+  }
+fi
+
 # Apt
 # Use sudo without aliases
 alias instaluj="\sudo apt install -y"
@@ -372,24 +531,28 @@ function update-all () {
     fi
   fi
 
+  # Build an explicit PATH for user-scoped tool updates.
+  # This avoids relying on interactive shell initialization when running via sudo.
+  local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/share/mise/bin:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:${target_home}/.zinit/plugins/jdx---mise/mise/bin:/usr/local/bin:/usr/bin:/bin"
+
   # Update mise-managed tools for the target user.
   local mise_command='mise upgrade'
   echo
-  if sudo -H -u "${target_user}" zsh -lc 'command -v mise >/dev/null 2>&1'; then
+  if sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc 'command -v mise >/dev/null 2>&1'; then
     echo "[mise] Upgrading mise tools"
-    sudo -H -u "${target_user}" zsh -lc "${mise_command}" >/dev/null 2>&1
+    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc "${mise_command}" >/dev/null 2>&1
     local _mise_ec=$?
     if (( _mise_ec == 0 )); then
       echo "[mise] Update complete"
     else
-      echo "[mise] Update failed (exit ${_mise_ec}) try running: 'sudo -H -u ${target_user} zsh -lc \"${mise_command}\"' to see details."
+      echo "[mise] Update failed (exit ${_mise_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"${mise_command}\"' to see details."
     fi
   else
     echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
   fi
 
-  # Include mise shims so npm is discoverable when running via sudo
-  local npm_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/share/mise/bin:${target_home}/.local/bin:/usr/local/bin:/usr/bin:/bin"
+  # Reuse the same PATH so npm from mise shims is discoverable via sudo.
+  local npm_env_path="${user_tool_env_path}"
 
   if sudo -H -u "${target_user}" env PATH="${npm_env_path}" sh -lc 'command -v npm >/dev/null 2>&1'; then
     echo
