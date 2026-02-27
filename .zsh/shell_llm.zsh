@@ -49,6 +49,9 @@ octmp() {
   _llm_tmp opencode "" "$@"
 }
 
+# Alias for running opencode with server port (for nvim integration)
+alias ocp='opencode --port'
+
 gsum() {
   # Function to generate commit message using the gemini model
   generate_commit_message() {

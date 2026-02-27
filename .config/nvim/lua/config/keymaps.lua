@@ -173,3 +173,30 @@ vim.api.nvim_create_autocmd("LspAttach", {
     keymap("n", "]d", vim.diagnostic.goto_next, vim.tbl_extend("force", bufopts, { desc = "Next diagnostic" }))
   end,
 })
+
+-- ============================================================================
+-- OPENCODE KEYMAPS (AI Assistant integration)
+-- ============================================================================
+
+-- Ask opencode with current context (visual selection or cursor position)
+keymap({ "n", "x" }, "<leader>oa", function()
+  require("opencode").ask("@this: ", { submit = true })
+end, { desc = "Ask opencode (with context)" })
+
+-- Select and execute opencode action/prompt
+keymap({ "n", "x" }, "<leader>ox", function()
+  require("opencode").select()
+end, { desc = "Execute opencode action" })
+
+-- Toggle opencode terminal
+keymap({ "n", "t" }, "<leader>ot", function()
+  require("opencode").toggle()
+end, { desc = "Toggle opencode" })
+
+-- Scroll opencode output
+keymap("n", "<S-C-u>", function()
+  require("opencode").command("session.half.page.up")
+end, { desc = "Scroll opencode up" })
+keymap("n", "<S-C-d>", function()
+  require("opencode").command("session.half.page.down")
+end, { desc = "Scroll opencode down" })

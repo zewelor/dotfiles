@@ -23,6 +23,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── mini-pairs.lua           # Autopairs
 │   │   ├── mini-surround.lua        # Surround (gsa/gsd/gsr)
 │   │   ├── neotree.lua              # File explorer
+│   │   ├── opencode.lua             # AI Assistant (opencode.nvim)
 │   │   ├── telescope.lua            # Wyszukiwanie i fuzzy finder
 │   │   ├── treesitter.lua           # Tree-sitter (Neovim 0.11+)
 │   │   ├── solarized.lua            # Motyw kolorów
@@ -121,6 +122,45 @@ Główne opcje edytora (z `lua/config/options.lua`):
 - **Setup**: Zaloguj przez `:Copilot auth`
 - **Jak działa z blink.cmp**: Inline podpowiedzi są wyłączone, Copilot jest wpięty jako źródło w menu autouzupełniania (przez `blink-copilot`).
   - Akceptujesz je tak samo jak inne pozycje w menu — `<CR>` (Enter).
+
+---
+
+### **opencode.nvim** — AI Assistant (opencode)
+
+- **Repo**: [nickjvandyke/opencode.nvim](https://github.com/nickjvandyke/opencode.nvim)
+- **Cel**: Integracja z opencode AI assistant — edytorowo-świadome research, review i requesty
+- **Wymagania**: Zainstalowany `opencode` CLI (patrz sekcja "Instalacja opencode CLI" poniżej)
+- **Integracja**: Używa snacks.nvim dla lepszego UI (input + picker)
+- **Context placeholders**: `@this` (zaznaczenie/kursor), `@buffer`, `@diagnostics`, `@diff`, itp.
+- **Komendy**:
+  - `:checkhealth opencode` — Sprawdź status integracji
+- **Keymaps**:
+  - `<leader>oa` — Ask opencode (z kontekstem `@this`)
+  - `<leader>ox` — Wybierz i wykonaj akcję/prompt
+  - `<leader>ot` — Toggle okno opencode (otwórz/zamknij terminal)
+  - `<S-C-u>` — Scroll opencode w górę (half page)
+  - `<S-C-d>` — Scroll opencode w dół (half page)
+- **Użycie step-by-step**:
+  1. Upewnij się, że `opencode` CLI jest zainstalowany i działa w terminalu
+  2. Uruchom Neovim — plugin automatycznie połączy się z działającym serwerem lub uruchomi własny
+  3. Użyj `<leader>oa` aby zapytać AI o kod pod kursorem / zaznaczeniu
+  4. Użyj `<leader>ox` aby wybrać z gotowych promptów (explain, fix, review, test, itp.)
+  5. Edytuj kod — zmiany od opencode automatycznie przeładują buffery
+
+#### Instalacja opencode CLI
+
+```bash
+# Via Homebrew (macOS/Linux)
+brew install anomalyco/opencode/opencode
+
+# Lub przez mise (zgodnie z zasadami repo)
+mise use -g github:anomalyco/opencode
+```
+
+**Ważne**: Uruchom `opencode` z flagą `--port` aby udostępnić serwer dla Neovim:
+```bash
+opencode --port
+```
 
 ---
 
@@ -277,6 +317,14 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 ---
 
+#### AI Assistant (opencode.nvim)
+
+- `<Space>oa` — Ask opencode o kod pod kursorem/zaznaczeniu (`@this`)
+- `<Space>ox` — Wybierz akcję/prompt z listy (explain, fix, review, test...)
+- `<Space>ot` — Toggle okno opencode (otwórz/zamknij terminal AI)
+
+---
+
 ### Bez Leadera
 
 #### LSP (aktywne gdy serwer LSP jest podłączony)
@@ -300,6 +348,15 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 #### Wyrównywanie (mini.align)
 
 - `ga` — Wyrównaj tekst (Normal: po ruchu/operatorze, Visual: na zaznaczeniu)
+
+---
+
+#### AI Assistant (opencode.nvim)
+
+- `Shift+Ctrl+u` — Scroll opencode w górę (half page)
+- `Shift+Ctrl+d` — Scroll opencode w dół (half page)
+
+---
 
 #### Surround (mini.surround)
 

@@ -7,6 +7,7 @@ return {
   end,
   opts = {
     lazygit = { enabled = true },
+    terminal = { enabled = true },
   },
 
   keys = {
