@@ -33,3 +33,64 @@ Tested:
 Not tested:
 - Full media workflow for yt-dlp with conversion paths requiring `ffmpeg`.
 - Extended `codex` authenticated runtime scenario beyond version/help checks.
+
+## 2026-03-01 — Consolidate Dockerfile indentation to one ftplugin
+
+1. **The Problem**
+Dockerfile indentation logic for `RUN` blocks needed to support nested shell bodies (`if/for/while/case`) with `+2` spaces, and the first compatibility approach duplicated behavior across two ftplugin files.
+
+2. **Root Cause**
+Compatibility for alternate Dockerfile filename variants was handled by adding a second wrapper ftplugin that sourced `dockerfile.lua`, which increased maintenance overhead and config surface.
+
+3. **The Fix**
+- Kept a single authoritative ftplugin: `after/ftplugin/dockerfile.lua`.
+- Removed the compatibility wrapper ftplugin.
+- Added filetype aliasing in `lua/config/options.lua` for Dockerfile filename variants.
+- Updated `.config/nvim/README.md` to document the single-file setup and behavior.
+
+4. **Key Insight**
+For this case, filetype aliasing is cleaner than ftplugin forwarding: one filetype (`dockerfile`) means one indentation implementation and fewer moving parts.
+
+5. **The Lesson**
+Prefer central filetype mapping over duplicate per-filetype ftplugin wrappers when behavior is identical.
+
+6. **Verification / Testing**
+Tested:
+- `make doctor` (syntax checks, stow dry-run, tool versions).
+- Headless Neovim on `/home/omen/personal/pingodoce/Dockerfile` confirmed:
+  - `filetype=dockerfile`
+  - `indentexpr=v:lua.DockerfileRunIndent()`
+  - `if` lines at 4 spaces and nested body lines at 6 spaces.
+- Headless Neovim on Dockerfile filename variants confirmed filetype aliasing to `dockerfile` and identical indentation behavior.
+
+Not tested:
+- Manual interactive typing flow in a live Neovim UI session (Enter/o-based editing ergonomics).
+
+## 2026-03-01 — Preserve Dockerfile RUN indentation on save
+
+1. **The Problem**
+Custom Dockerfile indentation worked while typing (`<CR>`/`o`) and manual reindent (`==`, `gg=G`), but saving the file could revert nested `RUN` shell block indentation back to 4 spaces.
+
+2. **Root Cause**
+`conform.nvim` was configured with `format_on_save` + `lsp_format = "fallback"` for most filetypes, and `dockerls` exposes document formatting. On `:w`, LSP formatting flattened nested shell body indentation inside `RUN`.
+
+3. **The Fix**
+- Updated `.config/nvim/lua/plugins/conform.lua` to skip autoformat on save for `dockerfile` (and existing `markdown` skip remains).
+- Kept the Dockerfile-specific `indentexpr` as the source of indentation behavior.
+- Updated `.config/nvim/README.md` to document that Dockerfile is intentionally excluded from format-on-save.
+
+4. **Key Insight**
+An LSP formatter can silently override custom indentation logic on save, even when editing behavior appears correct during insert/reindent operations.
+
+5. **The Lesson**
+When using custom filetype indentation rules, verify save-time formatter hooks (`BufWritePre`/format-on-save) and explicitly exclude conflicting filetypes.
+
+6. **Verification / Testing**
+Tested:
+- `make doctor`.
+- Reproduced root cause with active `dockerls`: `conform.format({ lsp_format = "fallback" })` flattened nested RUN shell indentation from 6 to 4 spaces.
+- After fix, with active `dockerls`, `:w` no longer changed nested RUN indentation.
+- Verified on `/home/omen/personal/pingodoce/Dockerfile` behavior path via headless Neovim flow.
+
+Not tested:
+- Manual long interactive session with mixed formatting commands across multiple Dockerfiles.

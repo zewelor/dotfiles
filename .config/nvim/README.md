@@ -30,7 +30,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   └── which-key.lua            # Podpowiedzi skrótów
 │   └── after/
 │       └── ftplugin/
-│           ├── dockerfile.lua # Nadpisy dla Dockerfile (4 spacje dla RUN)
+│           ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
 │           └── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
 └── lazy-lock.json       # Zablokowane wersje pluginów
 ```
@@ -62,7 +62,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/`):
 | Język | Plik | Opis nadpisu |
 |-------|------|--------------|
 | **Markdown** | `markdown.lua` | 2 spacje, `wrap`, `linebreak`, `breakindent` |
-| **Dockerfile** | `dockerfile.lua` | 4 spacje (wyrównanie komend `RUN`), wyłączony `smartindent` |
+| **Dockerfile** | `dockerfile.lua` | 4 spacje dla kontynuacji `RUN` oraz +2 spacje dla bloków shell (`if/for/while/case`); dotyczy też pliku `fdockerfile` przez alias filetype |
 
 ## 🔌 Pluginy i ich użycie
 
@@ -210,7 +210,7 @@ opencode --port
 
 - **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Autoformat on save**: `lua`, `sh`, `python`, `yaml`, `json` (Markdown wyłączony)
+- **Autoformat on save**: `lua`, `sh`, `python`, `yaml`, `json` (Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
 - **Keymaps**:
   - `<Space>cf` — Format buffer
 

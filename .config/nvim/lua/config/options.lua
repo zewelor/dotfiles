@@ -66,7 +66,11 @@ vim.opt.confirm = true            -- prompt to save when quitting modified buffe
 -- Filetype detection
 -- Helm chart templates should use `helm` filetype so helm_ls can attach.
 vim.filetype.add({
+  filename = {
+    ["fdockerfile"] = "dockerfile",
+  },
   pattern = {
+    [".*/[fF][dD]ockerfile[^/]*"] = "dockerfile",
     [".*/templates/.*%.ya?ml"] = "helm",
     [".*/templates/.*%.tpl"] = "helm",
     [".*%.gotmpl"] = "helm",

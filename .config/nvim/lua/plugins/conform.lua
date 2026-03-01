@@ -3,9 +3,10 @@ return {
   "stevearc/conform.nvim",
   event = { "BufReadPre", "BufNewFile" },
   opts = {
-    -- Disable autoformat for Markdown (manual formatting still possible).
+    -- Disable autoformat for Markdown/Dockerfile (manual formatting still possible).
     format_on_save = function(bufnr)
-      if vim.bo[bufnr].filetype == "markdown" then
+      local ft = vim.bo[bufnr].filetype
+      if ft == "markdown" or ft == "dockerfile" then
         return nil
       end
 
