@@ -598,10 +598,11 @@ if has "git"; then
   # Usage:
   #   git-fixup                # fixup against HEAD
   #   git-fixup <commit-ish>   # fixup against selected commit
-  #   git-fixup <commit> <base-branch>  # custom base for autosquash rebase
+  #   git-fixup <commit> <base-branch>  # optional explicit rebase base
   function git-fixup () {
     local target="${1:-HEAD}"
-    local base_branch="${2:-$(git_main_branch)}"
+    local base_branch="${2:-}"
+    local target_commit=""
     local rebase_base=""
     local should_push=0
 
@@ -610,25 +611,32 @@ if has "git"; then
       return 1
     fi
 
-    if ! git rev-parse --verify "$target" >/dev/null 2>&1; then
+    target_commit=$(git rev-parse --verify "$target^{commit}" 2>/dev/null) || {
       echo "git-fixup: target commit '$target' not found" >&2
       return 1
-    fi
+    }
 
     ga .
-    git commit --fixup="$target" || return 1
+    git commit --fixup="$target_commit" || return 1
 
-    rebase_base=$(git merge-base "$base_branch" HEAD 2>/dev/null) || {
-      echo "git-fixup: cannot resolve merge-base with '$base_branch'" >&2
-      return 1
-    }
+    if [[ -n "$base_branch" ]]; then
+      rebase_base=$(git merge-base "$base_branch" HEAD 2>/dev/null)
+    fi
+
+    if [[ -z "$rebase_base" ]]; then
+      rebase_base=$(git rev-parse --verify "${target_commit}^" 2>/dev/null)
+    fi
 
     if [[ -t 0 ]]; then
       read -q "should_push?git-fixup: force-push after autosquash rebase? [y/N] "
       echo
     fi
 
-    GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$rebase_base" || return 1
+    if [[ -n "$rebase_base" ]]; then
+      GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$rebase_base" || return 1
+    else
+      GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash --root || return 1
+    fi
 
     if [[ "$should_push" == "y" ]]; then
       gpf
