@@ -639,7 +639,7 @@ if has "git"; then
     fi
 
     if [[ "$should_push" == "y" ]]; then
-      gpf
+      git push --force-with-lease
     fi
   }
 
