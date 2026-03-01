@@ -603,6 +603,7 @@ if has "git"; then
     local target="${1:-HEAD}"
     local base_branch="${2:-$(git_main_branch)}"
     local rebase_base=""
+    local should_push=0
 
     if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       echo "git-fixup: not inside a git repository" >&2
@@ -622,8 +623,16 @@ if has "git"; then
       return 1
     }
 
-    git rebase -i --autosquash "$rebase_base" || return 1
-    gpf
+    if [[ -t 0 ]]; then
+      read -q "should_push?git-fixup: force-push after autosquash rebase? [y/N] "
+      echo
+    fi
+
+    GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash "$rebase_base" || return 1
+
+    if [[ "$should_push" == "y" ]]; then
+      gpf
+    fi
   }
 
   # Worktree
