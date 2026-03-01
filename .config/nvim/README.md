@@ -30,7 +30,8 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   └── which-key.lua            # Podpowiedzi skrótów
 │   └── after/
 │       └── ftplugin/
-│           └── markdown.lua  # Nadpisy dla Markdown (2 spacje + wrap)
+│           ├── dockerfile.lua # Nadpisy dla Dockerfile (4 spacje dla RUN)
+│           └── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
 └── lazy-lock.json       # Zablokowane wersje pluginów
 ```
 
@@ -53,6 +54,15 @@ Główne opcje edytora (z `lua/config/options.lua`):
 | `clipboard` | "unnamedplus" | Współdzielony clipboard z systemem |
 | `undofile` | true | Trwałe undo (po zamknięciu pliku) |
 | `mouse` | "" | Wyłączona obsługa myszy |
+
+## 📁 Nadpisy per Filetype
+
+Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/`):
+
+| Język | Plik | Opis nadpisu |
+|-------|------|--------------|
+| **Markdown** | `markdown.lua` | 2 spacje, `wrap`, `linebreak`, `breakindent` |
+| **Dockerfile** | `dockerfile.lua` | 4 spacje (wyrównanie komend `RUN`), wyłączony `smartindent` |
 
 ## 🔌 Pluginy i ich użycie
 
