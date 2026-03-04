@@ -193,7 +193,7 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 - `zinit` zostaw dla:
   - pluginów shellowych (autosuggestions, syntax-highlighting, snippets),
   - przypadków gdzie kluczowa jest integracja z frameworkiem `zinit` (np. specyficzne hooki `atclone/atpull/src`).
-- Wyjątki zaakceptowane: `atuin`, `starship`, `just` i `git-fixup` zostają w `zinit` (shell init/completions, brak kompatybilnego backendu lub świadoma decyzja maintainerska).
+- Wyjątki zaakceptowane: `atuin`, `starship`, `just`, `git-fixup` i `dust` zostają w `zinit` (shell init/completions, brak kompatybilnego backendu lub świadoma decyzja maintainerska).
 - Przy każdej nowej binarce dopisz krótko w opisie zmiany: dlaczego `mise` albo dlaczego wyjątek i zostaje `zinit`.
 - Aktualizacje:
   - `update-all` ma aktualizować zarówno `zinit`, jak i `mise` (okres przejściowy),
@@ -208,6 +208,7 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 - `@jdx/usage` (`usage`) — zależność completion dla `mise`; migrować razem z decyzją jak instalowany jest `mise`.
 - `@openai/codex` (`codex`) — fala 1 migracji do `mise` (standalone CLI).
 - `github:steipete/gogcli` (`gog`) — zarządzane przez `mise` (desktop toolset).
+- `npm:@steipete/summarize` (`summarize`) — zarządzane przez `mise` (backend `npm`, brak binarek Linux na GitHub).
 - `@anomalyco/opencode` (`opencode`) — kandydat do `mise` (standalone CLI).
 - `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).
 - `starship/starship` (`starship`) — zostaje w `zinit` (intentional exception: shell init/completions).
