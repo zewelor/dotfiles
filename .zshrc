@@ -145,11 +145,6 @@ if has "zellij"; then
     zellij list-sessions --short 2>/dev/null | grep -Fxq "$session"
   }
 
-  zellij_project_layout_path() {
-    local session="${1:-}"
-    echo "$HOME/.config/zellij/layouts/projects/${session}.kdl"
-  }
-
   # Attach to an existing zellij session or create it.
   # If a project layout exists for the session name, use it for new sessions.
   zux() {
@@ -158,8 +153,7 @@ if has "zellij"; then
       session="$(zellij_session_name_from_pwd)"
     fi
 
-    local layout
-    layout="$(zellij_project_layout_path "$session")"
+    local layout_path="$HOME/.config/zellij/layouts/${session}.kdl"
 
     if [[ -n "${ZELLIJ:-}" ]]; then
       if zellij_session_exists "$session"; then
@@ -176,21 +170,23 @@ if has "zellij"; then
       return $?
     fi
 
-    if [[ -f "$layout" ]]; then
-      zellij --session "$session" --new-session-with-layout "$layout"
+    if [[ -f "$layout_path" ]]; then
+      zellij --session "$session" --new-session-with-layout "$session"
     else
-      zellij --session "$session"
+      zellij attach -c "$session"
     fi
   }
 fi
 
-# Ensure ansible dockerized wrappers are loaded in every shell started inside the ansible repo.
-ansible_project_root="$HOME/personal/ansible"
-if [[ "$PWD" == "$ansible_project_root" || "$PWD" == "$ansible_project_root/"* ]]; then
-  if [[ -f "$ansible_project_root/dockerized.sh" ]]; then
-    source "$ansible_project_root/dockerized.sh"
+# Keep a simple compatibility wrapper for tmuxinator.
+mux() {
+  if has "tmuxinator"; then
+    command tmuxinator "$@"
+  else
+    echo "mux: tmuxinator is not installed" >&2
+    return 1
   fi
-fi
+}
 
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"

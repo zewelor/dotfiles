@@ -202,18 +202,19 @@ zi proj          # Browse directories matching "proj"
 |---------|----------|
 | `zux` | Attach/create session named after current directory |
 | `zux <name>` | Attach/create named session |
-| `zux <project>` | If `.config/zellij/layouts/projects/<project>.kdl` exists, use it when creating a new session |
+| `zux <project>` | If `.config/zellij/layouts/<project>.kdl` exists, create session with that named layout |
 
 `mux` is no longer overridden in `.zshrc` and behaves as provided by tmuxinator (if installed).
+Zellij uses a custom `default_shell` bootstrap script (`.local/bin/zsh-zellij-bootstrap`) that can source per-project init files discovered from pane cwd (`.zellij-shell-init.zsh`, fallback: `containerized.sh` or `dockerized.sh`).
 
 **Migrated projects (zellij layouts):**
 
 | Project | Layout |
 |---------|--------|
-| `ai_w_biznesie` | `.config/zellij/layouts/projects/ai_w_biznesie.kdl` |
-| `ansible` | `.config/zellij/layouts/projects/ansible.kdl` |
-| `gitops` | `.config/zellij/layouts/projects/gitops.kdl` |
-| `ps_events` | `.config/zellij/layouts/projects/ps_events.kdl` |
+| `ai_w_biznesie` | `.config/zellij/layouts/ai_w_biznesie.kdl` |
+| `ansible` | `.config/zellij/layouts/ansible.kdl` |
+| `gitops` | `.config/zellij/layouts/gitops.kdl` |
+| `ps_events` | `.config/zellij/layouts/ps_events.kdl` |
 
 **Projects still using tmuxinator (for now):**
 

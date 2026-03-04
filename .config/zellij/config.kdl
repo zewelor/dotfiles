@@ -323,7 +323,7 @@ theme "solarized-light"
 // Choose the path to the default shell that zellij will use for opening new panes
 // Default: $SHELL
 // 
-// default_shell "fish"
+default_shell "/home/omen/dotfiles/.local/bin/zsh-zellij-bootstrap"
  
 // Choose the path to override cwd that zellij will use for opening new panes
 // 

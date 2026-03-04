@@ -1,4 +1,5 @@
 layout {
+    cwd "/home/omen/personal/ps_events"
     default_tab_template {
         children
         pane size=1 borderless=true {
@@ -8,13 +9,17 @@ layout {
 
     tab name="bash" focus=true {
         pane command="zsh" {
-            args "-lc" "cd \"$HOME/personal/ansible\"; clear; exec zsh -l"
+            args "-lc" "source dockerized.sh; clear; exec zsh -l"
         }
+    }
+
+    tab name="server" {
+        pane command="just"
     }
 
     tab name="ide" {
         pane command="zsh" {
-            args "-lc" "cd \"$HOME/personal/ansible\"; code -n . >/dev/null 2>&1; exec zsh -l"
+            args "-lc" "code --folder-uri \"vscode-remote://dev-container+$(pwd | tr -d '\\n' | xxd -c 256 -p)/app\""
         }
     }
 }

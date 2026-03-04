@@ -1,4 +1,5 @@
 layout {
+    cwd "/home/omen/personal/gitops"
     default_tab_template {
         children
         pane size=1 borderless=true {
@@ -19,8 +20,8 @@ layout {
     }
 
     tab name="ide" {
-        pane command="code" {
-            args "-n" "-w" "."
+        pane command="zsh" {
+            args "-lc" "code -n -w . >/dev/null 2>&1; exec /home/omen/dotfiles/.local/bin/zsh-zellij-bootstrap"
         }
     }
 }
