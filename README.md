@@ -189,34 +189,23 @@ zi proj          # Browse directories matching "proj"
 
 ---
 
-### zellij — tmux-like multiplexer setup
+### tmuxinator — project sessions
 
-- **Repo**: [zellij-org/zellij](https://github.com/zellij-org/zellij)
-- **Purpose**: Default terminal multiplexer with tmux-like keybinds
-- **Installation**: Automatic via `mise` in `./install` (`github:zellij-org/zellij@latest`)
-- **Config**: `.config/zellij/config.kdl`
+- **Repo**: [tmuxinator/tmuxinator](https://github.com/tmuxinator/tmuxinator)
+- **Purpose**: Project session orchestration for tmux
+- **Installation**: Automatic via `mise` in `./install` (`gem:tmuxinator`)
 
 **Session commands**:
 
 | Command | Behavior |
 |---------|----------|
-| `zux` | Attach/create session named after current directory |
-| `zux <name>` | Attach/create named session |
-| `zux <project>` | If `.config/zellij/layouts/<project>.kdl` exists, create session with that named layout |
+| `mux <project>` | Runs `tmuxinator <project>` |
 
-`mux` is no longer overridden in `.zshrc` and behaves as provided by tmuxinator (if installed).
-Zellij uses a custom `default_shell` bootstrap script (`.local/bin/zsh-zellij-bootstrap`) that can source per-project init files discovered from pane cwd (`.zellij-shell-init.zsh`, fallback: `containerized.sh` or `dockerized.sh`).
+**Project configs**:
 
-**Migrated projects (zellij layouts):**
+- `prv/.tmuxinator/*.yml`
 
-| Project | Layout |
-|---------|--------|
-| `ai_w_biznesie` | `.config/zellij/layouts/ai_w_biznesie.kdl` |
-| `ansible` | `.config/zellij/layouts/ansible.kdl` |
-| `gitops` | `.config/zellij/layouts/gitops.kdl` |
-| `ps_events` | `.config/zellij/layouts/ps_events.kdl` |
-
-**Projects still using tmuxinator (for now):**
+**Projects still using tmuxinator:**
 
 - `homeassistant-ps` (dynamic temp dir / port-forward / cleanup lifecycle)
 - `cc-workers`, `dottales`, `esphome` (project-exit hooks and docker lifecycle)

@@ -131,62 +131,10 @@ zinit light-mode wait lucid for \
 #
 ##########################
 
-if has "zellij"; then
-  # Build a safe default session name from the current directory.
-  zellij_session_name_from_pwd() {
-    local session="${PWD##*/}"
-    session="${session// /_}"
-    session="${session//[^[:alnum:]_.-]/_}"
-    echo "${session:-main}"
-  }
-
-  zellij_session_exists() {
-    local session="${1:-}"
-    zellij list-sessions --short 2>/dev/null | grep -Fxq "$session"
-  }
-
-  # Attach to an existing zellij session or create it.
-  # If a project layout exists for the session name, use it for new sessions.
-  zux() {
-    local session="${1:-}"
-    if [[ -z "$session" ]]; then
-      session="$(zellij_session_name_from_pwd)"
-    fi
-
-    local layout_path="$HOME/.config/zellij/layouts/${session}.kdl"
-
-    if [[ -n "${ZELLIJ:-}" ]]; then
-      if zellij_session_exists "$session"; then
-        zellij action switch-session "$session"
-      else
-        echo "Session '$session' does not exist yet. Run zux from a regular shell to create it."
-        return 1
-      fi
-      return 0
-    fi
-
-    if zellij_session_exists "$session"; then
-      zellij attach "$session"
-      return $?
-    fi
-
-    if [[ -f "$layout_path" ]]; then
-      zellij --session "$session" --new-session-with-layout "$session"
-    else
-      zellij attach -c "$session"
-    fi
-  }
+# Keep a short compatibility alias for tmuxinator.
+if has "tmuxinator"; then
+  alias mux='tmuxinator'
 fi
-
-# Keep a simple compatibility wrapper for tmuxinator.
-mux() {
-  if has "tmuxinator"; then
-    command tmuxinator "$@"
-  else
-    echo "mux: tmuxinator is not installed" >&2
-    return 1
-  fi
-}
 
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
@@ -1269,6 +1217,11 @@ bindkey '^I' _lazy_tab_complete
 
 if has "tmuxinator" ; then
   zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
+  if (( $+functions[zcompdef] )); then
+    zcompdef _tmuxinator mux tmuxinator
+  elif (( $+functions[compdef] )); then
+    compdef _tmuxinator mux tmuxinator
+  fi
 fi
 
 # Auto-select starship config based on REMOTE_FS environment variable

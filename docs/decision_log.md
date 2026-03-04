@@ -94,3 +94,34 @@ Tested:
 
 Not tested:
 - Manual long interactive session with mixed formatting commands across multiple Dockerfiles.
+
+## 2026-03-04 — Roll back Zellij integration and return to tmuxinator-first workflow
+
+1. **The Problem**
+Zellij required multiple behavioral workarounds to match existing tmuxinator project workflows (eg. pre-window shell setup, IDE pane lifecycle, and predictable project startup), which increased friction and maintenance cost.
+
+2. **Root Cause**
+The previous migration attempted to replicate tmuxinator-specific orchestration semantics in Zellij. This led to custom bootstrap scripts, layout coupling, and shell glue that still diverged from expected day-to-day behavior.
+
+3. **The Fix**
+- Removed Zellij from desktop tool installation in `install`.
+- Removed Zellij helper flow from `.zshrc` (`zux` and related logic).
+- Deleted all tracked Zellij configs/layouts/themes under `.config/zellij/`.
+- Deleted Zellij bootstrap helper scripts under `.local/bin/`.
+- Updated `README.md` to document `tmuxinator` (`mux`) as the project-session path.
+- Removed Zellij version check from `Makefile` doctor output.
+
+4. **Key Insight**
+When the operational model depends on tmuxinator conventions, forcing parity through another multiplexer can produce disproportionate complexity compared to the practical benefit.
+
+5. **The Lesson**
+Prefer the stable, lower-maintenance workflow already aligned with daily usage. Revisit Zellij only when native capabilities cover required project lifecycle behavior without shell-level workarounds.
+
+6. **Verification / Testing**
+Tested:
+- `zsh -n .zshrc install` passed after cleanup.
+- `README.md` and `install` references were updated to remove Zellij guidance/install.
+- Repo search confirmed no active `zellij` / `zux` operational references in shell workflow files.
+
+Not tested:
+- Full interactive end-to-end tmuxinator project startup for every project profile in `prv/.tmuxinator/*.yml`.
