@@ -189,6 +189,39 @@ zi proj          # Browse directories matching "proj"
 
 ---
 
+### zellij — tmux-like multiplexer setup
+
+- **Repo**: [zellij-org/zellij](https://github.com/zellij-org/zellij)
+- **Purpose**: Default terminal multiplexer with tmux-like keybinds and safe fallback to tmux
+- **Installation**: Automatic via `mise` in `./install` (`github:zellij-org/zellij@latest`)
+- **Config**: `.config/zellij/config.kdl`
+
+**Session commands**:
+
+| Command | Behavior |
+|---------|----------|
+| `tat` | Prefer zellij, fallback to tmux |
+| `tat-zellij` | Force zellij session for current directory |
+| `tat-tmux` | Force tmux session for current directory |
+| `zux <project>` | Start or attach migrated project in zellij |
+| `mux <project>` | Use migrated zellij project when available, fallback to tmuxinator |
+
+**Migrated projects (zellij layouts):**
+
+| Project | Layout |
+|---------|--------|
+| `ai_w_biznesie` | `.config/zellij/layouts/projects/ai_w_biznesie.kdl` |
+| `ansible` | `.config/zellij/layouts/projects/ansible.kdl` |
+| `gitops` | `.config/zellij/layouts/projects/gitops.kdl` |
+| `ps_events` | `.config/zellij/layouts/projects/ps_events.kdl` |
+
+**Still on tmuxinator (for now):**
+
+- `homeassistant-ps` (dynamic temp dir / port-forward / cleanup lifecycle)
+- `cc-workers`, `dottales`, `esphome` (project-exit hooks and docker lifecycle)
+
+---
+
 ## Neovim config (lazy.nvim)
 
 Minimal, modern Neovim configuration optimized for fast terminal editing.

@@ -394,6 +394,7 @@ setup_mise_desktop_tools() {
   # Keep desktop-scoped tools in one place for predictable onboarding.
   local mise_tools=(
     "gem:tmuxinator"
+    "github:zellij-org/zellij@latest"
     # The ubi backend is deprecated in mise docs.
     # Use github:owner/repo for GitHub Releases-based tools.
     "github:cli/cli@latest"

@@ -103,6 +103,7 @@ doctor:
 	@printf "  nvim:  "; nvim --version 2>/dev/null | head -1 | grep -oE 'v[0-9.]+' || echo "not found"
 	@printf "  stow:  "; stow --version 2>/dev/null | head -1 | grep -oE '[0-9.]+' || echo "not found"
 	@printf "  tmux:  "; tmux -V 2>/dev/null | cut -d' ' -f2 || echo "not found"
+	@printf "  zellij: "; zellij --version 2>/dev/null || echo "not found"
 	@echo ""
 	@echo "========================================"
 	@echo "Done"

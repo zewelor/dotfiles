@@ -131,11 +131,21 @@ zinit light-mode wait lucid for \
 #
 ##########################
 
-if has "tmux"; then
-  # Attach or create tmux session named after current directory.
-  tat() {
-    local session="${PWD##*/}"
+if has "zellij" || has "tmux"; then
+  has_zellij() { has "zellij"; }
+  has_tmux() { has "tmux"; }
 
+  # Build a safe session name from the current directory.
+  multiplexer_session_name() {
+    local session="${PWD##*/}"
+    session="${session// /_}"
+    session="${session//[^[:alnum:]_.-]/_}"
+    echo "${session:-main}"
+  }
+
+  # tmux attach/switch helper preserved for fallback.
+  tmux_session_attach_or_create() {
+    local session="${1:-}"
     if [[ -n "$TMUX" ]]; then
       tmux has-session -t "$session" 2>/dev/null || tmux new-session -ds "$session"
       tmux switch-client -t "$session"
@@ -143,13 +153,182 @@ if has "tmux"; then
       tmux attach -t "$session" 2>/dev/null || tmux new -s "$session"
     fi
   }
+
+  zellij_session_exists() {
+    local session="${1:-}"
+    zellij list-sessions --short 2>/dev/null | grep -Fxq "$session"
+  }
+
+  # zellij attach helper with in-session switching support.
+  zellij_session_attach_or_create() {
+    local session="${1:-}"
+    if [[ -z "$session" ]]; then
+      echo "zellij_session_attach_or_create: missing session name" >&2
+      return 1
+    fi
+
+    if [[ -n "${ZELLIJ:-}" ]]; then
+      if zellij_session_exists "$session"; then
+        zellij action switch-session "$session"
+      else
+        echo "Session '$session' does not exist yet. Run this command from a regular shell to create it."
+        return 1
+      fi
+    else
+      if zellij_session_exists "$session"; then
+        zellij attach "$session"
+      else
+        zellij --session "$session"
+      fi
+    fi
+  }
+
+  zellij_project_layout_path() {
+    local project="${1:-}"
+    echo "$HOME/.config/zellij/layouts/projects/${project}.kdl"
+  }
+
+  zellij_project_root() {
+    local project="${1:-}"
+    case "$project" in
+      ai_w_biznesie) echo "$HOME/personal/ai_w_biznesie" ;;
+      ansible) echo "$HOME/personal/ansible" ;;
+      gitops) echo "$HOME/personal/gitops" ;;
+      ps_events) echo "$HOME/personal/ps_events" ;;
+      *) return 1 ;;
+    esac
+  }
+
+  zellij_project_on_start() {
+    local project="${1:-}"
+    case "$project" in
+      ai_w_biznesie|ansible|ps_events)
+        zsh -l -c "git sync"
+        ;;
+      gitops)
+        zsh -l -c "set-konsole-tab-title Gitops 2> /dev/null ; git sync"
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+  }
+
+  zellij_project_is_migrated() {
+    local project="${1:-}"
+    [[ -f "$(zellij_project_layout_path "$project")" ]]
+  }
+
+  # Start or attach a migrated project session in zellij.
+  zux() {
+    local project="${1:-}"
+    if [[ -z "$project" ]]; then
+      echo "Usage: zux <project>"
+      return 1
+    fi
+
+    if ! has_zellij; then
+      echo "zux: zellij is not installed"
+      return 1
+    fi
+
+    if ! zellij_project_is_migrated "$project"; then
+      echo "zux: project '$project' is not migrated to zellij"
+      return 1
+    fi
+
+    local layout
+    layout="$(zellij_project_layout_path "$project")"
+    local root
+    root="$(zellij_project_root "$project")" || {
+      echo "zux: unknown project root for '$project'" >&2
+      return 1
+    }
+
+    if [[ -n "${ZELLIJ:-}" ]]; then
+      if zellij_session_exists "$project"; then
+        zellij action switch-session "$project"
+      else
+        echo "Project session '$project' does not exist yet. Run zux from a regular shell to create it."
+        return 1
+      fi
+      return 0
+    fi
+
+    if zellij_session_exists "$project"; then
+      zellij attach "$project"
+      return $?
+    fi
+
+    (
+      cd "$root" || exit 1
+      zellij_project_on_start "$project" || exit $?
+      zellij --session "$project" --new-session-with-layout "$layout"
+    )
+  }
+
+  # Force zellij for current-directory sessions.
+  tat-zellij() {
+    local session
+    session="$(multiplexer_session_name)"
+    if ! has_zellij; then
+      echo "tat-zellij: zellij is not installed"
+      return 1
+    fi
+    zellij_session_attach_or_create "$session"
+  }
+
+  # Force tmux for current-directory sessions.
+  tat-tmux() {
+    local session
+    session="$(multiplexer_session_name)"
+    if ! has_tmux; then
+      echo "tat-tmux: tmux is not installed"
+      return 1
+    fi
+    tmux_session_attach_or_create "$session"
+  }
+
+  # Attach or create multiplexer session named after current directory.
+  tat() {
+    if has_zellij; then
+      tat-zellij
+      return $?
+    fi
+
+    if has_tmux; then
+      tat-tmux
+      return $?
+    fi
+
+    echo "tat: neither zellij nor tmux is installed" >&2
+    return 1
+  }
+
+  # Prefer migrated zellij projects, fallback to tmuxinator.
+  mux() {
+    local project="${1:-}"
+    if [[ -n "$project" ]] && has_zellij && zellij_project_is_migrated "$project"; then
+      zux "$@"
+      return $?
+    fi
+
+    if has "tmuxinator"; then
+      command tmuxinator "$@"
+      return $?
+    fi
+
+    if [[ -n "$project" ]]; then
+      echo "mux: '$project' is not migrated to zellij and tmuxinator is not installed" >&2
+    else
+      echo "mux: tmuxinator is not installed" >&2
+    fi
+    return 1
+  }
 fi
 
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
-
-# Not using now
-# zinit light-mode from"gh-r" as"program" for @zellij-org/zellij
 
 # A cat clone with syntax highlighting and Git integration.
 zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
@@ -1229,8 +1408,6 @@ bindkey '^I' _lazy_tab_complete
 
 if has "tmuxinator" ; then
   zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
-
-  alias mux="tmuxinator"
 fi
 
 # Auto-select starship config based on REMOTE_FS environment variable
