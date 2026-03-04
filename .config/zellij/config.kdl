@@ -233,7 +233,17 @@ keybinds clear-defaults=true {
         bind "down" { MoveFocus "down"; SwitchToMode "normal"; }
         bind "up" { MoveFocus "up"; SwitchToMode "normal"; }
         bind "right" { MoveFocus "right"; SwitchToMode "normal"; }
+        bind "1" { GoToTab 1; SwitchToMode "normal"; }
+        bind "2" { GoToTab 2; SwitchToMode "normal"; }
+        bind "3" { GoToTab 3; SwitchToMode "normal"; }
+        bind "4" { GoToTab 4; SwitchToMode "normal"; }
+        bind "5" { GoToTab 5; SwitchToMode "normal"; }
+        bind "6" { GoToTab 6; SwitchToMode "normal"; }
+        bind "7" { GoToTab 7; SwitchToMode "normal"; }
+        bind "8" { GoToTab 8; SwitchToMode "normal"; }
+        bind "9" { GoToTab 9; SwitchToMode "normal"; }
         bind "space" { GoToNextTab; SwitchToMode "normal"; }
+        bind "Ctrl Space" { GoToNextTab; SwitchToMode "normal"; }
         bind "\"" { NewPane "down"; SwitchToMode "normal"; }
         bind "%" { NewPane "right"; SwitchToMode "normal"; }
         bind "," { SwitchToMode "renametab"; }
@@ -241,8 +251,16 @@ keybinds clear-defaults=true {
         bind "<" { MoveTab "left"; SwitchToMode "normal"; }
         bind ">" { MoveTab "right"; SwitchToMode "normal"; }
         bind "K" { CloseTab; SwitchToMode "normal"; }
+        bind "a" { GoToPreviousTab; SwitchToMode "normal"; }
+        bind "?" {
+            LaunchOrFocusPlugin "zellij:about" {
+                floating true
+                move_to_focused_tab true
+            }
+            SwitchToMode "normal"
+        }
         bind "[" { SwitchToMode "scroll"; }
-        bind "Ctrl a" { Write 1; SwitchToMode "normal"; }
+        bind "Ctrl a" { GoToPreviousTab; SwitchToMode "normal"; }
         bind "Ctrl b" { Write 2; SwitchToMode "normal"; }
         bind "c" { NewTab; SwitchToMode "normal"; }
         bind "h" { MoveFocus "left"; SwitchToMode "normal"; }
@@ -314,7 +332,7 @@ theme "solarized-light"
 // The name of the default layout to load on startup
 // Default: "default"
 // 
-// default_layout "compact"
+default_layout "no-status"
  
 // The folder in which Zellij will look for layouts
 // (Requires restart)
@@ -333,7 +351,7 @@ theme "solarized-light"
 //   - true (default)
 //   - false
 // 
-// mouse_mode false
+mouse_mode false
  
 // Toggle having pane frames around the panes
 // Options:

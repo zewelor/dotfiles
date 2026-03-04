@@ -192,7 +192,7 @@ zi proj          # Browse directories matching "proj"
 ### zellij — tmux-like multiplexer setup
 
 - **Repo**: [zellij-org/zellij](https://github.com/zellij-org/zellij)
-- **Purpose**: Default terminal multiplexer with tmux-like keybinds and safe fallback to tmux
+- **Purpose**: Default terminal multiplexer with tmux-like keybinds
 - **Installation**: Automatic via `mise` in `./install` (`github:zellij-org/zellij@latest`)
 - **Config**: `.config/zellij/config.kdl`
 
@@ -200,11 +200,11 @@ zi proj          # Browse directories matching "proj"
 
 | Command | Behavior |
 |---------|----------|
-| `tat` | Prefer zellij, fallback to tmux |
-| `tat-zellij` | Force zellij session for current directory |
-| `tat-tmux` | Force tmux session for current directory |
-| `zux <project>` | Start or attach migrated project in zellij |
-| `mux <project>` | Use migrated zellij project when available, fallback to tmuxinator |
+| `zux` | Attach/create session named after current directory |
+| `zux <name>` | Attach/create named session |
+| `zux <project>` | If `.config/zellij/layouts/projects/<project>.kdl` exists, use it when creating a new session |
+
+`mux` is no longer overridden in `.zshrc` and behaves as provided by tmuxinator (if installed).
 
 **Migrated projects (zellij layouts):**
 
@@ -215,7 +215,7 @@ zi proj          # Browse directories matching "proj"
 | `gitops` | `.config/zellij/layouts/projects/gitops.kdl` |
 | `ps_events` | `.config/zellij/layouts/projects/ps_events.kdl` |
 
-**Still on tmuxinator (for now):**
+**Projects still using tmuxinator (for now):**
 
 - `homeassistant-ps` (dynamic temp dir / port-forward / cleanup lifecycle)
 - `cc-workers`, `dottales`, `esphome` (project-exit hooks and docker lifecycle)

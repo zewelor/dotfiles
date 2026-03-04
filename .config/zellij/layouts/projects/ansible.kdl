@@ -1,23 +1,20 @@
 layout {
     default_tab_template {
-        pane size=1 borderless=true {
-            plugin location="tab-bar"
-        }
         children
         pane size=1 borderless=true {
-            plugin location="status-bar"
+            plugin location="tab-bar"
         }
     }
 
     tab name="bash" focus=true {
         pane command="zsh" {
-            args "-lc" "source dockerized.sh; clear; exec zsh -l"
+            args "-lc" "cd \"$HOME/personal/ansible\"; clear; exec zsh -l"
         }
     }
 
     tab name="ide" {
-        pane command="code" {
-            args "-n" "-w" "."
+        pane command="zsh" {
+            args "-lc" "cd \"$HOME/personal/ansible\"; code -n . >/dev/null 2>&1; exec zsh -l"
         }
     }
 }
