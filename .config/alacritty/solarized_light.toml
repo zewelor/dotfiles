@@ -4,6 +4,8 @@
 [colors.primary]
 background = '#fdf6e3'
 foreground = '#586e75'
+# Keep dim text readable on light backgrounds in TUI apps.
+dim_foreground = '#657b83'
 
 # Normal colors
 [colors.normal]
