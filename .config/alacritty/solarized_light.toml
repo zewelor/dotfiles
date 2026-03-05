@@ -4,8 +4,20 @@
 [colors.primary]
 background = '#fdf6e3'
 foreground = '#586e75'
-# Keep dim text readable on light backgrounds in TUI apps.
-dim_foreground = '#657b83'
+# Avoid near-invisible faint/dim text on light backgrounds in TUI apps.
+dim_foreground = '#586e75'
+
+# Some TUIs render "secondary" labels using ANSI white + faint; on Solarized Light
+# that can end up too close to the background. Keep dim white readable.
+[colors.dim]
+black   = '#073642'
+red     = '#dc322f'
+green   = '#859900'
+yellow  = '#b58900'
+blue    = '#268bd2'
+magenta = '#d33682'
+cyan    = '#2aa198'
+white   = '#657b83'
 
 # Normal colors
 [colors.normal]
@@ -16,7 +28,7 @@ yellow  = '#b58900'
 blue    = '#268bd2'
 magenta = '#d33682'
 cyan    = '#2aa198'
-white   = '#eee8d5'
+white   = '#657b83'
 
 # Bright colors
 [colors.bright]
@@ -27,4 +39,4 @@ yellow  = '#657b83'
 blue    = '#839496'
 magenta = '#6c71c4'
 cyan    = '#93a1a1'
-white   = '#fdf6e3'
+white   = '#839496'

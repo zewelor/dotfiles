@@ -125,3 +125,37 @@ Tested:
 
 Not tested:
 - Full interactive end-to-end tmuxinator project startup for every project profile in `prv/.tmuxinator/*.yml`.
+
+## 2026-03-05 — Restore gws scope readability and stabilize tmux statusline colors
+
+1. **The Problem**
+`gws auth login` scope names were barely readable in Solarized Light, and after improving terminal palette contrast, the tmux bottom statusline looked wrong.
+
+2. **Root Cause**
+`gws` uses ANSI color roles (including white/dim variants) for scope rows. In Solarized Light, the previous ANSI white values were too close to background (`#eee8d5` and `#fdf6e3` on `#fdf6e3`). tmux statusline used palette-based colors (`colour7`), so terminal ANSI palette adjustments propagated into tmux UI.
+
+3. **The Fix**
+- Updated Alacritty Solarized Light palette to increase readability for `dim`, `normal white`, and `bright white`.
+- Added Ghostty readability safeguards: `faint-opacity = 1.0`, `minimum-contrast = 3`, and explicit palette overrides for ANSI white slots (7, 15).
+- Updated tmux statusline/window styles to explicit Solarized hex colors, decoupling statusbar appearance from terminal ANSI palette shifts.
+
+4. **Key Insight**
+On light themes, ANSI white can be effectively invisible even when default foreground is fine. Palette changes that fix one TUI can unintentionally alter other tools that depend on palette indices.
+
+5. **The Lesson**
+When tuning terminal palette for readability, audit downstream consumers (tmux, TUIs) and pin critical UI surfaces (like tmux statusline) to explicit colors.
+
+6. **Verification / Testing**
+Tested:
+- Reproduced the full `gws auth login` scope picker (`Select OAuth scopes`, `108/170 selected`) in TTY.
+- Calculated objective contrast improvement on Solarized Light background:
+  - `normal white`: `1.14 -> 4.13`
+  - `bright white`: `1.00 -> 2.93`
+  - `dim white`: `4.13`
+- Reloaded tmux config and verified active styles:
+  - `status-style "fg=#b58900,bg=#eee8d5"`
+  - `window-status-style "fg=#b58900,bg=#eee8d5"`
+  - `window-status-current-style "fg=#dc322f,bg=#eee8d5"`
+
+Not tested:
+- Manual visual comparison on every terminal profile/font combination beyond the current desktop setup.

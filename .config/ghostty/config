@@ -42,6 +42,12 @@
 # # Just for example:
 # resize-overlay-duration = 4s 200ms
 theme = Builtin Solarized Light
+# Keep faint labels readable on light themes used by TUI pickers.
+faint-opacity = 1.0
+minimum-contrast = 3
+# If a TUI uses ANSI white for secondary labels, keep it readable on light bg.
+palette = 7=#657b83
+palette = 15=#839496
 # fullscreen = true # Too much fullscreen
 maximize = true
 font-family = "JetBrainsMonoNL Nerd Font Mono"
