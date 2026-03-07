@@ -189,16 +189,17 @@ zi proj          # Browse directories matching "proj"
 
 ---
 
-### tmuxinator — project sessions
+### tmux and tmuxinator — session helpers
 
 - **Repo**: [tmuxinator/tmuxinator](https://github.com/tmuxinator/tmuxinator)
-- **Purpose**: Project session orchestration for tmux
+- **Purpose**: `tat` handles current-directory tmux sessions, while `mux` runs tmuxinator project sessions
 - **Installation**: Automatic via `mise` in `./install` (`gem:tmuxinator`)
 
 **Session commands**:
 
 | Command | Behavior |
 |---------|----------|
+| `tat` | Attaches to or creates a tmux session named after the current directory |
 | `mux <project>` | Runs `tmuxinator <project>` |
 
 **Project configs**:

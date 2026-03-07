@@ -159,3 +159,36 @@ Tested:
 
 Not tested:
 - Manual visual comparison on every terminal profile/font combination beyond the current desktop setup.
+
+## 2026-03-07 — Restore `tat` and narrow tmux session helper exposure
+
+1. **The Problem**
+The current-directory tmux helper `tat` disappeared during the short Zellij migration/rollback window, and the follow-up cleanup risked leaving `mux` and related helper functions visible even when their backing binary was unavailable.
+
+2. **Root Cause**
+`tat` was removed while simplifying multiplexer helpers for Zellij, and the later rollback restored the tmuxinator workflow without restoring the current-directory helper. After that, shell glue still needed a clear boundary between tmux-backed helpers and tmuxinator-backed helpers.
+
+3. **The Fix**
+- Restored `tat` in `.zshrc` as the current-directory tmux attach/create helper.
+- Kept `tat` defined only when `tmux` is installed.
+- Kept `mux` and `setup_tmuxinator_completion()` defined only when `tmuxinator` is installed, to avoid unnecessary global shell namespace entries.
+- Left `tmuxinator` installation ownership in `install` via `mise` (`gem:tmuxinator`).
+- Updated `README.md` so the documented session helpers match the shell behavior again.
+- Added a short comment above the guarded completion hook call to explain why the function existence check is intentional.
+
+4. **Key Insight**
+There are two separate concerns here: tmux session behavior (`tat`) and tmuxinator project orchestration (`mux`). They should not share the same shell exposure rules just because tmuxinator ultimately runs on top of tmux.
+
+5. **The Lesson**
+Keep shell helpers narrowly scoped both in behavior and in visibility. If a helper depends on a binary, only define it when that binary exists; if installation is already owned by bootstrap tooling, avoid duplicating that ownership elsewhere in the shell config.
+
+6. **Verification / Testing**
+Tested:
+- Investigated git history and confirmed `tat` disappeared in the Zellij-era helper rewrite on 2026-03-04.
+- Ran `zsh -n .zshrc` after each `.zshrc` edit to confirm the shell config remained syntactically valid.
+- Verified the final helper layout in `.zshrc`: `tat` is gated by `tmux`, while `mux` and `setup_tmuxinator_completion()` are gated by `tmuxinator`.
+- Verified `README.md` reflects both `tat` and `mux`.
+
+Not tested:
+- Live interactive `tat` attach/switch behavior inside and outside an existing tmux session.
+- Interactive `mux` completion behavior in a freshly started shell.

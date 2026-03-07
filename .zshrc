@@ -131,9 +131,35 @@ zinit light-mode wait lucid for \
 #
 ##########################
 
-# Keep a short compatibility alias for tmuxinator.
+# Session helpers for tmux and tmuxinator.
+if has "tmux"; then
+  tat() {
+    local session="${PWD##*/}"
+
+    if [[ -n "$TMUX" ]]; then
+      tmux has-session -t "$session" 2>/dev/null || tmux new-session -ds "$session"
+      tmux switch-client -t "$session"
+  else
+      tmux attach -t "$session" 2>/dev/null || tmux new -s "$session"
+    fi
+  }
+fi
+
 if has "tmuxinator"; then
-  alias mux='tmuxinator'
+  mux() {
+    command tmuxinator "$@"
+  }
+
+  setup_tmuxinator_completion() {
+    zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"
+    zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
+
+    if (( $+functions[zcompdef] )); then
+      zcompdef _tmuxinator mux tmuxinator
+    elif (( $+functions[compdef] )); then
+      compdef _tmuxinator mux tmuxinator
+    fi
+  }
 fi
 
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
@@ -1215,14 +1241,8 @@ _lazy_tab_complete() {
 zle -N _lazy_tab_complete
 bindkey '^I' _lazy_tab_complete
 
-if has "tmuxinator" ; then
-  zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"; zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
-  if (( $+functions[zcompdef] )); then
-    zcompdef _tmuxinator mux tmuxinator
-  elif (( $+functions[compdef] )); then
-    compdef _tmuxinator mux tmuxinator
-  fi
-fi
+# Only call the completion hook when tmuxinator defined it during shell init.
+(( $+functions[setup_tmuxinator_completion] )) && setup_tmuxinator_completion
 
 # Auto-select starship config based on REMOTE_FS environment variable
 # REMOTE_FS=1 indicates a slow/network filesystem mount (e.g., SSHFS)
