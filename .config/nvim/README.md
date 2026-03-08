@@ -271,6 +271,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `marksman` — Markdown
 - `dockerls` — Dockerfile
 - `docker_compose_language_service` — docker-compose
+- `ruby_lsp` — Ruby
 
 **Komendy**:
 - `:Mason` — UI menedżera serwerów

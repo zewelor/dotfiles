@@ -24,6 +24,7 @@ return {
         "marksman",                      -- Markdown
         "dockerls",                      -- Dockerfile
         "docker_compose_language_service", -- docker-compose.yml
+        "ruby_lsp",                      -- Ruby
       },
       automatic_installation = true,
       -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
@@ -46,7 +47,7 @@ return {
       end
 
       local lspconfig = require("lspconfig")
-      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service" }
+      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service", "ruby_lsp" }
 
       for _, server in ipairs(servers) do
         local opts = {}
