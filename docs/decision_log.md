@@ -192,3 +192,30 @@ Tested:
 Not tested:
 - Live interactive `tat` attach/switch behavior inside and outside an existing tmux session.
 - Interactive `mux` completion behavior in a freshly started shell.
+
+## 2026-03-08 — Stabilize Codex installation under mise
+
+1. **The Problem**
+`codex` stopped working through the mise shim because `github:openai/codex@latest` could not be resolved during auto-install.
+
+2. **Root Cause**
+The Codex repository publishes GitHub releases under `rust-v*` tags, but the current mise GitHub backend attempted to resolve `latest` as a literal release tag (`latest`, then `rust-vlatest` after testing `version_prefix`). That made `latest` unusable for this repository through the current `github:` backend setup.
+
+3. **The Fix**
+- Unblocked the current machine by pinning the already-installed Codex build in `~/.config/mise/config.toml` to `rust-v0.112.0`.
+- Changed `install` to use `npm:@openai/codex@latest`, which is the upstream-recommended Codex installation path.
+
+4. **Key Insight**
+For repositories with nonstandard release tags, `mise github:*@latest` can fail even when asset selection is correct.
+
+5. **The Lesson**
+Prefer the upstream-supported distribution channel when it exists; use the `github` backend only when the repository's release/tag semantics match what mise can resolve reliably.
+
+6. **Verification / Testing**
+Tested:
+- `codex --version` via the mise shim returns `codex-cli 0.112.0`.
+- `mise ls` now resolves `github:openai/codex` to `rust-v0.112.0` instead of `latest (missing)`.
+- `make doctor` passes.
+
+Not tested:
+- A fresh `mise` install of `npm:@openai/codex@latest`, because the bash execution environment here cannot perform network package downloads.
