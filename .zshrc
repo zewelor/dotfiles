@@ -636,7 +636,7 @@ if has "git"; then
       return 1
     }
 
-    ga .
+    git add .
     git commit --fixup="$target_commit" || return 1
 
     if [[ -n "$base_branch" ]]; then
