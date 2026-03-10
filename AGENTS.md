@@ -207,7 +207,6 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 - `@jdx/mise` (`mise`) — może zostać w `zinit` jako bootstrap, ale rozważyć system package lub self-hosted install dla uproszczenia łańcucha zależności.
 - `@jdx/usage` (`usage`) — zależność completion dla `mise`; migrować razem z decyzją jak instalowany jest `mise`.
 - `@openai/codex` (`codex`) — fala 1 migracji do `mise` (standalone CLI).
-- `github:steipete/gogcli` (`gog`) — zarządzane przez `mise` (desktop toolset).
 - `npm:@steipete/summarize` (`summarize`) — zarządzane przez `mise` (backend `npm`, brak binarek Linux na GitHub).
 - `@anomalyco/opencode` (`opencode`) — kandydat do `mise` (standalone CLI).
 - `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).

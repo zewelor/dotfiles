@@ -399,7 +399,6 @@ setup_mise_desktop_tools() {
     "github:cli/cli@latest"
     # Codex officially ships via npm; rust-v* GitHub tags break mise latest resolution.
     "npm:@openai/codex@latest"
-    "github:steipete/gogcli@latest"
     "github:yt-dlp/yt-dlp[asset_pattern=yt-dlp_linux.zip,rename_exe=yt-dlp]@latest"
     "npm:@steipete/summarize@latest"
   )

@@ -26,7 +26,7 @@ When managing CLI tools via `mise github`, explicitly encode asset selection for
 Tested:
 - `./install` (desktop profile) completed successfully.
 - Fresh login shell (`zsh -l`) resolves commands correctly.
-- Version checks passed for `codex`, `gh`, `gog`, `yt-dlp`.
+- Version checks passed for `codex`, `gh`, `yt-dlp`.
 - `pipx` no longer contains `yt-dlp`.
 - `mise ls` shows only the intended backends for migrated tools.
 
