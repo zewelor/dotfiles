@@ -551,19 +551,26 @@ function update-all () {
   # Build an explicit PATH for user-scoped tool updates.
   # This avoids relying on interactive shell initialization when running via sudo.
   local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/share/mise/bin:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:${target_home}/.zinit/plugins/jdx---mise/mise/bin:/usr/local/bin:/usr/bin:/bin"
+  run_for_target_user () {
+    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc "${1}"
+  }
+
+  target_user_has () {
+    run_for_target_user "command -v ${1} >/dev/null 2>&1"
+  }
 
   # Update mise-managed tools for the target user.
   local mise_command='mise upgrade'
   echo
-  if sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc 'command -v mise >/dev/null 2>&1'; then
+  if target_user_has "mise"; then
     echo "[mise] Upgrading mise tools"
-    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc "${mise_command}" >/dev/null 2>&1
+    run_for_target_user "${mise_command}" >/dev/null 2>&1
     local _mise_ec=$?
     if (( _mise_ec == 0 )); then
       echo "[mise] Update complete"
       # Cleanup old versions of tools to save space.
       echo "[mise] Pruning old tool versions"
-      sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc 'mise prune -y' >/dev/null 2>&1
+      run_for_target_user 'mise prune -y' >/dev/null 2>&1
     else
       echo "[mise] Update failed (exit ${_mise_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"${mise_command}\"' to see details."
     fi
@@ -571,13 +578,10 @@ function update-all () {
     echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
   fi
 
-  # Reuse the same PATH so npm from mise shims is discoverable via sudo.
-  local npm_env_path="${user_tool_env_path}"
-
-  if sudo -H -u "${target_user}" env PATH="${npm_env_path}" sh -lc 'command -v npm >/dev/null 2>&1'; then
+  if target_user_has "npm"; then
     echo
     echo "[npm] Updating global npm packages"
-    if sudo -H -u "${target_user}" env PATH="${npm_env_path}" NPM_CONFIG_LOGLEVEL=error npm update -g; then
+    if run_for_target_user 'NPM_CONFIG_LOGLEVEL=error npm update -g'; then
       echo "[npm] Update complete"
     else
       echo "[npm] Update failed"
@@ -585,6 +589,20 @@ function update-all () {
   else
     echo
     echo "[npm] Skipping npm update: npm not found for user '${target_user}'."
+  fi
+
+  if target_user_has "npx"; then
+    echo
+    echo "[skills] Updating skills via npx"
+    if run_for_target_user 'npx --yes skills update'; then
+      echo "[skills] Update complete"
+    else
+      local _skills_ec=$?
+      echo "[skills] Update failed (exit ${_skills_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"npx --yes skills update\"' to see details."
+    fi
+  else
+    echo
+    echo "[skills] Skipping skills update: npx not found for user '${target_user}'."
   fi
 }
 
