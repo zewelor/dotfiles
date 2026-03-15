@@ -95,28 +95,7 @@
     "redhat.telemetry.enabled": false,
     "remote.autoForwardPorts": false,
     "remote.autoForwardPortsSource": "hybrid",
-    "rubyLsp.enabledFeatures": {
-        "codeActions": true,
-        "diagnostics": true,
-        "documentHighlights": true,
-        "documentLink": true,
-        "documentSymbols": true,
-        "foldingRanges": true,
-        "formatting": true,
-        "hover": true,
-        "inlayHint": true,
-        "onTypeFormatting": true,
-        "selectionRanges": true,
-        "semanticHighlighting": true,
-        "completion": true
-    },
-    "rubyLsp.featureFlags": {
-        "all": true
-    },
     "rubyLsp.rubyExecutablePath": "/home/omen/.local/share/mise/shims/ruby",
-    "rubyLsp.rubyVersionManager": {
-        "identifier": "auto"
-    },
     "settingsSync.ignoredSettings": [
         "editor.fontSize"
     ],
@@ -195,12 +174,15 @@
     "workbench.colorTheme": "Solarized Light",
     "vim.smartRelativeLine": true,
     "remote.SSH.enableDynamicForwarding": false,
-    "chat.tools.terminal.terminalProfile.linux": {
-        "path": "/usr/bin/zsh",
-        "env": {
-            "ZSHRC_SKIP_CUSTOMIZATIONS": "1"
-        }
-    },
+    // "chat.tools.terminal.terminalProfile.linux": {
+    //     "path": "/usr/bin/zsh",
+    //     "env": {
+    //         "ZSHRC_SKIP_CUSTOMIZATIONS": "1"
+    //     }
+    // },
     "claudeCode.selectedModel": "default",
-    "claudeCode.preferredLocation": "panel"
+    "claudeCode.preferredLocation": "panel",
+    "rubyLsp.rubyVersionManager": {
+        "identifier": "mise"
+    }
 }
