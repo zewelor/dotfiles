@@ -686,26 +686,35 @@ if has "git"; then
   alias gwtrm='git worktree remove'
   alias gwtpr='git worktree prune'
 
-  function gwta() {
-    local branch=$1
-    local base=${2:-$(git_main_branch)} # Default to main branch from origin if missing
-    local dir="$PWD"
-    local root=""
-    local new_wt_path=""
-    # Define files to link from main worktree
-    local files_to_link=( ".env" )
+function gwta() {
+  local branch=$1
+  local base=${2:-$(git_main_branch)} # Default to main branch from origin if missing
+  local dir="$PWD"
+  local root=""
+  local new_wt_path=""
+  local is_bare=0
+  # Define files to link from main worktree
+  local files_to_link=( ".env" )
 
-    if [[ -z "$branch" ]]; then
-      echo "Usage: gwta <branch-name> [base]"
-      return 1
-    fi
+  if [[ -z "$branch" ]]; then
+    echo "Usage: gwta <branch-name> [base]"
+    return 1
+  fi
 
-    if [[ "$branch" =~ "/" ]]; then
-      echo "Error: Branch name cannot contain '/' to prevent accidental subdirectory creation."
-      return 1
-    fi
+  if [[ "$branch" =~ "/" ]]; then
+    echo "Error: Branch name cannot contain '/' to prevent accidental subdirectory creation."
+    return 1
+  fi
 
-    # Walk up the directory tree to find .bare
+  # Check if current directory is a bare repository
+  if git rev-parse --is-bare-repository 2>/dev/null | grep -q "true"; then
+    is_bare=1
+    root="$PWD"
+    echo "Found bare repository at: $root"
+  fi
+
+  # Walk up the directory tree to find .bare (backwards compatibility)
+  if [[ $is_bare -eq 0 ]]; then
     while [[ "$dir" != "/" ]]; do
       if [[ -d "$dir/.bare" ]]; then
         root="$dir"
@@ -713,17 +722,23 @@ if has "git"; then
       fi
       dir=$(dirname "$dir")
     done
+  fi
 
-    if [[ -n "$root" ]]; then
+  if [[ -n "$root" ]]; then
+    if [[ $is_bare -eq 1 ]]; then
+      new_wt_path="$root/$branch"
+      git worktree add -b "$branch" "$new_wt_path" "$base"
+    else
       echo "Found .bare root at: $root"
       new_wt_path="$root/$branch"
       git -C "$root/.bare" worktree add -b "$branch" "$new_wt_path" "$base"
-    else
-      # Fallback for standard repositories (sibling folder strategy)
-      echo "No .bare found, assuming standard repo."
-      new_wt_path="${PWD:h}/$branch"
-      git worktree add -b "$branch" "../$branch" "$base"
     fi
+  else
+    # Fallback for standard repositories (sibling folder strategy)
+    echo "No bare repo or .bare found, assuming standard repo."
+    new_wt_path="${PWD:h}/$branch"
+    git worktree add -b "$branch" "../$branch" "$base"
+  fi
 
     local ret=$?
     if [[ $ret -eq 0 ]]; then
