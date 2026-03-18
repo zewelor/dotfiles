@@ -578,6 +578,21 @@ function update-all () {
     echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
   fi
 
+  # Update Neovim plugins via Lazy.nvim
+  if target_user_has "nvim"; then
+    echo
+    echo "[nvim] Updating Lazy.nvim plugins"
+    if run_for_target_user 'nvim --headless -c "Lazy! sync" -c "qa"' >/dev/null 2>&1; then
+      echo "[nvim] Plugin update complete"
+    else
+      local _nvim_ec=$?
+      echo "[nvim] Plugin update failed (exit ${_nvim_ec}) try running: 'nvim --headless -c "Lazy! sync" -c "qa"' to see details."
+    fi
+  else
+    echo
+    echo "[nvim] Skipping Neovim plugin update: nvim not found for user '${target_user}'."
+  fi
+
   if target_user_has "npm"; then
     echo
     echo "[npm] Updating global npm packages"
@@ -724,15 +739,13 @@ function gwta() {
     done
   fi
 
-  if [[ -n "$root" ]]; then
-    if [[ $is_bare -eq 1 ]]; then
-      new_wt_path="$root/$branch"
-      git worktree add -b "$branch" "$new_wt_path" "$base"
-    else
-      echo "Found .bare root at: $root"
-      new_wt_path="$root/$branch"
-      git -C "$root/.bare" worktree add -b "$branch" "$new_wt_path" "$base"
-    fi
+    if [[ -n "$root" ]]; then
+      local main_wt_path
+      if [[ $is_bare -eq 1 ]]; then
+        main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+      else
+        main_wt_path=$(git -C "$root/.bare" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+      fi
   else
     # Fallback for standard repositories (sibling folder strategy)
     echo "No bare repo or .bare found, assuming standard repo."
