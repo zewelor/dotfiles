@@ -184,5 +184,6 @@
     "claudeCode.preferredLocation": "panel",
     "rubyLsp.rubyVersionManager": {
         "identifier": "mise"
-    }
+    },
+    "gitlens.codeLens.enabled": false
 }
