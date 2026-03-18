@@ -739,13 +739,19 @@ function gwta() {
     done
   fi
 
-    if [[ -n "$root" ]]; then
-      local main_wt_path
-      if [[ $is_bare -eq 1 ]]; then
-        main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
-      else
-        main_wt_path=$(git -C "$root/.bare" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
-      fi
+  # Determine git directory and create worktree
+  local git_dir=""
+  if [[ $is_bare -eq 1 ]]; then
+    git_dir="$root"
+    new_wt_path="$root/$branch"
+  elif [[ -n "$root" ]]; then
+    git_dir="$root/.bare"
+    new_wt_path="$root/$branch"
+  fi
+
+  if [[ -n "$git_dir" ]]; then
+    # Create worktree in bare repo
+    git -C "$git_dir" worktree add -b "$branch" "$new_wt_path" "$base"
   else
     # Fallback for standard repositories (sibling folder strategy)
     echo "No bare repo or .bare found, assuming standard repo."
@@ -753,31 +759,31 @@ function gwta() {
     git worktree add -b "$branch" "../$branch" "$base"
   fi
 
-    local ret=$?
-    if [[ $ret -eq 0 ]]; then
-      local main_branch_name
-      main_branch_name=$(git_main_branch 2>/dev/null)
+  local ret=$?
+  if [[ $ret -eq 0 ]]; then
+    local main_branch_name
+    main_branch_name=$(git_main_branch 2>/dev/null)
 
-      if [[ -n "$main_branch_name" ]]; then
-         local main_wt_path
-         if [[ -n "$root" ]]; then
-            main_wt_path=$(git -C "$root/.bare" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
-         else
-            main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
-         fi
+    if [[ -n "$main_branch_name" ]]; then
+      local main_wt_path=""
+      if [[ -n "$git_dir" ]]; then
+        main_wt_path=$(git -C "$git_dir" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+      else
+        main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+      fi
 
-         if [[ -n "$main_wt_path" ]]; then
-           for file in "${files_to_link[@]}"; do
-             if [[ -f "$main_wt_path/$file" ]]; then
-               echo "Linking $file from $main_wt_path to $new_wt_path"
-               ln -s "$main_wt_path/$file" "$new_wt_path/$file"
-             fi
-           done
-         fi
+      if [[ -n "$main_wt_path" ]]; then
+        for file in "${files_to_link[@]}"; do
+          if [[ -f "$main_wt_path/$file" ]]; then
+            echo "Linking $file from $main_wt_path to $new_wt_path"
+            ln -s "$main_wt_path/$file" "$new_wt_path/$file"
+          fi
+        done
       fi
     fi
-    return $ret
-  }
+  fi
+  return $ret
+}
 
   function git_main_branch () {
     git ls-remote --symref origin HEAD | sed -n 's#^ref: refs/heads/\(.*\)\s\+HEAD#\1#p'
