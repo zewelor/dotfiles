@@ -782,6 +782,9 @@ function gwta() {
       fi
     fi
   fi
+  if [[ $ret -eq 0 && -d "$new_wt_path" ]]; then
+    cd "$new_wt_path"
+  fi
   return $ret
 }
 
