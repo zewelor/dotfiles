@@ -834,6 +834,9 @@ if has "git"; then
     echo "Creating initial worktree at $first_wt_path"
     git -C "$bare_dir" worktree add "$first_wt_path" "$default_branch" || return 1
 
+    git -C "$bare_dir" config "branch.$default_branch.remote" origin || return 1
+    git -C "$bare_dir" config "branch.$default_branch.merge" "refs/heads/$default_branch" || return 1
+
     gwtclone_write_wtp_config "$first_wt_path" || return 1
 
     echo "Bootstrap complete"

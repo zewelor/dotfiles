@@ -393,6 +393,7 @@ setup_mise_desktop_tools() {
   print_banner "Installing desktop tools via mise..."
   # Keep desktop-scoped tools in one place for predictable onboarding.
   local mise_tools=(
+    "ruby"
     "gem:tmuxinator"
     # The ubi backend is deprecated in mise docs.
     # Use github:owner/repo for GitHub Releases-based tools.
