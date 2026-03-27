@@ -221,7 +221,7 @@ function cdls() {
 }
 
 zinit light-mode wait"2" lucid from"gh-r" as"program" \
-  atclone"./just --completions zsh > _just" atpull"%atclone" \
+  atclone"JUST_COMPLETE=zsh ./just > _just" atpull"%atclone" \
   pick"just" for @casey/just
 
 if is_desktop; then
