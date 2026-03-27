@@ -10,8 +10,9 @@ Komentarze w kodzie/configach: po angielsku. Ten plik: po polsku.
   wywołuj `print_banner('Opis kroku')`.
 - Stosuj minimalne, celowe zmiany i trzymaj styl istniejącego kodu.
 - Jeśli używasz jakiegoś warunku (np. `[[ ! -t 0 ]]`) więcej niż raz, wydziel go do funkcji pomocniczej (np. `is_interactive`).
+- Jeśli funkcja pomocnicza jest używana tylko przez jedną funkcję, preferuj zadeklarowanie jej wewnątrz tej funkcji; globalny scope zostaw dla helperów współdzielonych.
 - **Domyślnie używaj stow** do linkowania plików/katalogów, chyba że znajdziesz breaking case (np. katalog do którego aplikacja pisze runtime data).
-- Po istotnych zmianach/debugowaniu/refactorach przygotuj **draft** do `docs/decision_log.md` (nie dopisuj automatycznie) i zapytaj użytkownika: "Shall I append this to the decision log?"
+- Po debugowaniu jakiegos bledu / poprawkach przygotuj **draft** do `docs/decision_log.md` (nie dopisuj automatycznie) i zapytaj użytkownika: "Shall I append this to the decision log?"
   - Wpis musi zawierać: 1) **The Problem**, 2) **Root Cause**, 3) **The Fix**, 4) **Key Insight**, 5) **The Lesson**, 6) **Verification / Testing** (co było przetestowane + co NIE).
 
 ## Neovim: kiedy aktualizować README (MUST)

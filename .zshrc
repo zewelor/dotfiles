@@ -696,6 +696,154 @@ if has "git"; then
     fi
   }
 
+  # Resolve the default branch for the current repo or an explicit git dir.
+  function git_default_branch_name () {
+    local repo_dir="${1:-.}"
+    local head_ref=""
+
+    head_ref=$(git -C "$repo_dir" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)
+    if [[ -n "$head_ref" ]]; then
+      echo "${head_ref#origin/}"
+      return 0
+    fi
+
+    head_ref=$(git -C "$repo_dir" ls-remote --symref origin HEAD 2>/dev/null | sed -n 's#^ref: refs/heads/\(.*\)\s\+HEAD#\1#p' | head -n 1)
+    if [[ -n "$head_ref" ]]; then
+      echo "$head_ref"
+      return 0
+    fi
+
+    return 1
+  }
+
+  # Bootstrap a bare-repo + worktree layout for first-time cloning.
+  function gwtclone () {
+    local repo_url="${1:-}"
+    local target_dir="${2:-}"
+    local repo_name=""
+    local bare_dir=""
+    local default_branch=""
+    local first_wt_path=""
+
+    # Keep config bootstrap scoped to gwtclone to avoid polluting the global shell namespace.
+    function gwtclone_write_wtp_config () {
+      local worktree_path="$1"
+      local config_path="$worktree_path/.wtp.yml"
+      local has_env_example=0
+
+      if [[ -e "$config_path" ]]; then
+        echo "Keeping existing .wtp.yml from repository."
+        return 0
+      fi
+
+      if [[ -f "$worktree_path/.env.example" ]]; then
+        has_env_example=1
+      fi
+
+      {
+        echo 'version: "1.0"'
+        echo 'defaults:'
+        echo '  base_dir: ".."'
+        echo
+
+        if [[ $has_env_example -eq 1 ]]; then
+          echo 'hooks:'
+          echo '  post_create:'
+          echo '    # Copy gitignored files from main worktree to new worktree'
+          echo '    # Note: "from" is relative to the main worktree and "to" is relative to the new worktree'
+          echo '    - type: copy'
+          echo '      from: ".env"'
+          echo '      to: ".env"'
+          echo
+        fi
+
+        echo '# Additional examples:'
+        echo '# hooks:'
+        echo '#   post_create:'
+        echo '#     # Copy gitignored files from main worktree to new worktree'
+        echo '#     # Note: "from" is relative to the main worktree and "to" is relative to the new worktree'
+        echo '#     - type: copy'
+        echo '#       from: ".env"'
+        echo '#       to: ".env"'
+        echo '#'
+        echo '#     - type: copy'
+        echo '#       from: ".claude"'
+        echo '#'
+        echo '#     - type: symlink'
+        echo '#       from: ".bin"'
+        echo '#       to: ".bin"'
+        echo '#'
+        echo '#     - type: command'
+        echo '#       command: "mise trust"'
+      } > "$config_path"
+
+      echo "Created project-local .wtp.yml at $config_path"
+    }
+
+    if [[ -z "$repo_url" ]]; then
+      echo "Usage: gwtclone <repo-url> [target-dir]"
+      return 1
+    fi
+
+    if [[ -z "$target_dir" ]]; then
+      repo_name="${repo_url:t}"
+      repo_name="${repo_name%.git}"
+      target_dir="$repo_name"
+    fi
+
+    if [[ -z "$target_dir" ]]; then
+      echo "Error: Could not derive target directory from repository URL." >&2
+      return 1
+    fi
+
+    if [[ -e "$target_dir" ]] && [[ ! -d "$target_dir" ]]; then
+      echo "Error: Target path exists and is not a directory: $target_dir" >&2
+      return 1
+    fi
+
+    if [[ -d "$target_dir" ]] && [[ -n "$(ls -A -- "$target_dir" 2>/dev/null)" ]]; then
+      echo "Error: Target directory must not exist or must be empty: $target_dir" >&2
+      return 1
+    fi
+
+    mkdir -p -- "$target_dir"
+    target_dir=$(cd "$target_dir" && pwd)
+    bare_dir="$target_dir/.bare"
+
+    echo "Cloning bare repository into $bare_dir"
+    git clone --bare -- "$repo_url" "$bare_dir" || return 1
+
+    echo "Configuring origin fetch refspec"
+    git -C "$bare_dir" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*' || return 1
+
+    echo "Fetching origin branches"
+    git -C "$bare_dir" fetch origin --prune || return 1
+    git -C "$bare_dir" remote set-head origin -a >/dev/null 2>&1 || true
+
+    default_branch=$(git_default_branch_name "$bare_dir") || {
+      echo "Error: Could not resolve remote default branch for $repo_url" >&2
+      return 1
+    }
+
+    first_wt_path="$target_dir/$default_branch"
+    if [[ -e "$first_wt_path" ]]; then
+      echo "Error: Initial worktree path already exists: $first_wt_path" >&2
+      return 1
+    fi
+
+    echo "Creating initial worktree at $first_wt_path"
+    git -C "$bare_dir" worktree add "$first_wt_path" "$default_branch" || return 1
+
+    gwtclone_write_wtp_config "$first_wt_path" || return 1
+
+    echo "Bootstrap complete"
+    echo "  Bare repo: $bare_dir"
+    echo "  Default branch: $default_branch"
+    echo "  First worktree: $first_wt_path"
+
+    cd "$first_wt_path" || return 1
+  }
+
 if has "wtp"; then
   # Wait until compinit is available, then initialize wtp once.
   _wtp_lazy_init() {
@@ -792,7 +940,7 @@ else
 fi # end: worktree
 
   function git_main_branch () {
-    git ls-remote --symref origin HEAD | sed -n 's#^ref: refs/heads/\(.*\)\s\+HEAD#\1#p'
+    git_default_branch_name "${1:-.}"
   }
 
   function grhco () {
