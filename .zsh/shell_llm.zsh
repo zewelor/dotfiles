@@ -150,12 +150,13 @@ Rules:
   # Uses file-based commit to avoid "argument list too long" errors
   do_commit() {
     local message="$1"
+    shift  # Remove message from args, rest are git flags
     local msg_file=$(mktemp)
 
     # Write message to file to avoid argument length limits
     printf '%s' "$message" >"$msg_file"
 
-    if git commit -F "$msg_file"; then
+    if git commit -F "$msg_file" "$@"; then
       rm -f "$msg_file"
       return 0
     else
@@ -167,10 +168,15 @@ Rules:
 
   # Main script
   force_accept="false"
-  if [[ "$1" = -[yY] ]]; then
-    force_accept="true"
+  git_args=()
+  while [[ "$1" == -* ]]; do
+    if [[ "$1" == -[yY] ]]; then
+      force_accept="true"
+    else
+      git_args+=("$1")
+    fi
     shift
-  fi
+  done
 
   commit_message=$(generate_commit_message)
   local gen_status=$?
@@ -188,7 +194,7 @@ Rules:
   fi
 
   if [ "$force_accept" = "true" ]; then
-    do_commit "$commit_message"
+    do_commit "$commit_message" "${git_args[@]}"
     return $?
   fi
 
@@ -203,7 +209,7 @@ Rules:
 
     case "$choice" in
     [aA])
-      do_commit "$commit_message"
+      do_commit "$commit_message" "${git_args[@]}"
       return $?
       ;;
     [rR])
