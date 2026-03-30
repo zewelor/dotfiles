@@ -716,14 +716,13 @@ if has "git"; then
     return 1
   }
 
-  # Bootstrap a bare-repo + worktree layout for first-time cloning.
+  # Bootstrap a normal clone into <repo>/<default-branch>/ layout for worktrees.
   function gwtclone () {
     local repo_url="${1:-}"
     local target_dir="${2:-}"
     local repo_name=""
-    local bare_dir=""
     local default_branch=""
-    local first_wt_path=""
+    local clone_path=""
 
     # Keep config bootstrap scoped to gwtclone to avoid polluting the global shell namespace.
     function gwtclone_write_wtp_config () {
@@ -808,43 +807,29 @@ if has "git"; then
 
     mkdir -p -- "$target_dir"
     target_dir=$(cd "$target_dir" && pwd)
-    bare_dir="$target_dir/.bare"
 
-    echo "Cloning bare repository into $bare_dir"
-    git clone --bare -- "$repo_url" "$bare_dir" || return 1
+    echo "Detecting default branch..."
+    default_branch=$(git ls-remote --symref -- HEAD "$repo_url" 2>/dev/null | awk '/^ref:/{sub("refs/heads/",""); print $2; exit}') || true
+    if [[ -z "$default_branch" ]]; then
+      default_branch="main"
+    fi
 
-    echo "Configuring origin fetch refspec"
-    git -C "$bare_dir" config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*' || return 1
-
-    echo "Fetching origin branches"
-    git -C "$bare_dir" fetch origin --prune || return 1
-    git -C "$bare_dir" remote set-head origin -a >/dev/null 2>&1 || true
-
-    default_branch=$(git_default_branch_name "$bare_dir") || {
-      echo "Error: Could not resolve remote default branch for $repo_url" >&2
-      return 1
-    }
-
-    first_wt_path="$target_dir/$default_branch"
-    if [[ -e "$first_wt_path" ]]; then
-      echo "Error: Initial worktree path already exists: $first_wt_path" >&2
+    clone_path="$target_dir/$default_branch"
+    if [[ -e "$clone_path" ]]; then
+      echo "Error: Clone path already exists: $clone_path" >&2
       return 1
     fi
 
-    echo "Creating initial worktree at $first_wt_path"
-    git -C "$bare_dir" worktree add "$first_wt_path" "$default_branch" || return 1
+    echo "Cloning $default_branch into $clone_path"
+    git clone --branch "$default_branch" -- "$repo_url" "$clone_path" || return 1
 
-    git -C "$bare_dir" config "branch.$default_branch.remote" origin || return 1
-    git -C "$bare_dir" config "branch.$default_branch.merge" "refs/heads/$default_branch" || return 1
-
-    gwtclone_write_wtp_config "$first_wt_path" || return 1
+    gwtclone_write_wtp_config "$clone_path" || return 1
 
     echo "Bootstrap complete"
-    echo "  Bare repo: $bare_dir"
+    echo "  Clone root: $clone_path"
     echo "  Default branch: $default_branch"
-    echo "  First worktree: $first_wt_path"
 
-    cd "$first_wt_path" || return 1
+    cd "$clone_path" || return 1
   }
 
 if has "wtp"; then
@@ -1332,6 +1317,7 @@ if has "ruby"; then
 
   function loadrails() {
     alias be='bundle exec'
+    alias rails='bundle exec rails'
     alias ror='bundle exec rails'
     alias rorc='bundle exec rails console'
     alias rordc='bundle exec rails dbconsole'

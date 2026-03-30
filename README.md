@@ -116,32 +116,31 @@ zinit times
 
 ## Shell Tools
 
-### Git worktrees — bare repo bootstrap
+### Git worktrees — normal clone bootstrap
 
-- **Purpose**: bootstrap a repository once into the dotfiles worktree layout with a bare repo at `.bare/` and sibling worktrees next to it
+- **Purpose**: bootstrap a repository into a worktree-friendly layout with a normal clone (no bare repo)
 - **Bootstrap command**: `gwtclone <repo-url> [target-dir]`
 - **Resulting layout**:
 
 ```text
 my-project/
-├── .bare/
-└── main/
+└── main/          ← normal clone, default branch checked out
 ```
 
 - **Behavior**:
-  - clones the remote as a bare repo into `.bare/`
-  - detects the remote default branch and creates the first worktree with that branch name
-  - changes the current shell into the first worktree
+  - detects the remote default branch via `git ls-remote`
+  - clones normally into `<target-dir>/<default-branch>/`
+  - changes the current shell into the clone directory
   - creates `.wtp.yml` only if the repository does not already provide one
 - **Generated `.wtp.yml`**:
   - sets `version: "1.0"`
-  - sets `defaults.base_dir: ".."` so `wtp add` creates sibling worktrees matching this layout
+  - sets `defaults.base_dir: ".."` so `wtp add` creates sibling worktrees next to the clone
   - enables a `.env` copy hook automatically when the repo contains `.env.example`
   - includes commented examples for extra copy/symlink/command hooks, including `mise trust`
 - **Follow-up commands**:
-  - `wtp add feature/x` — create another sibling worktree when `wtp` is installed
+  - `wtp add feature/x` — create a sibling worktree when `wtp` is installed
   - `gwta feature-x` — fallback helper for creating a new worktree without `wtp`
-  - `git -C .bare worktree list` — inspect worktrees from the bare repo directory
+  - `git worktree list` — inspect worktrees
 
 ### eza — Modern ls replacement
 
