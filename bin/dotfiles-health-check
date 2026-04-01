@@ -3,7 +3,15 @@
 set -u
 set -o pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
+SCRIPT_PATH="${(%):-%x}"
+if command -v readlink >/dev/null 2>&1; then
+  resolved_script_path=$(readlink -f "$SCRIPT_PATH" 2>/dev/null || true)
+  if [[ -n "$resolved_script_path" ]]; then
+    SCRIPT_PATH="$resolved_script_path"
+  fi
+fi
+
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 source "$BASE_DIR/.zsh/helpers.zsh"
@@ -189,6 +197,7 @@ check_effective_ssh_auth_sock() {
   local output_file
   local effective_sock=""
   local link_path="$HOME/.ssh/ssh_auth_sock"
+  local resolved_link_target=""
   output_file=$(mktemp -t dotfiles-ssh-auth.XXXXXX)
 
   if zsh -i -c 'printf "%s" "${SSH_AUTH_SOCK:-}"' >"$output_file" 2>&1; then
@@ -208,7 +217,23 @@ check_effective_ssh_auth_sock() {
   fi
 
   if [[ "$effective_sock" == "$link_path" ]]; then
-    pass "Interactive zsh exports SSH_AUTH_SOCK via ~/.ssh/ssh_auth_sock"
+    if [[ ! -L "$link_path" ]]; then
+      fail "Interactive zsh exports ~/.ssh/ssh_auth_sock but the symlink is missing"
+      return
+    fi
+
+    resolved_link_target=$(readlink -f "$link_path" 2>/dev/null || true)
+    if [[ -z "$resolved_link_target" ]]; then
+      fail "~/.ssh/ssh_auth_sock is stale or cannot be resolved"
+      return
+    fi
+
+    if [[ ! -S "$resolved_link_target" ]]; then
+      fail "~/.ssh/ssh_auth_sock does not point to a live socket"
+      return
+    fi
+
+    pass "Interactive zsh exports SSH_AUTH_SOCK via a valid ~/.ssh/ssh_auth_sock symlink"
     return
   fi
 
