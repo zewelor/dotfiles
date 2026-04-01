@@ -24,7 +24,6 @@ return {
         "marksman",                      -- Markdown
         "dockerls",                      -- Dockerfile
         "docker_compose_language_service", -- docker-compose.yml
-        "ruby_lsp",                      -- Ruby
       },
       automatic_installation = true,
       -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
@@ -47,7 +46,17 @@ return {
       end
 
       local lspconfig = require("lspconfig")
-      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service", "ruby_lsp" }
+
+      -- Try `bundle exec` first if Gemfile exists, fall back to direct binary
+      local function ruby_cmd(base_cmd)
+        local gemfile = vim.fs.find("Gemfile", { upward = true, type = "file" })[1]
+        if gemfile and vim.fn.executable("bundle") == 1 then
+          return vim.list_extend({ "bundle", "exec" }, base_cmd)
+        end
+        return base_cmd
+      end
+
+      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service", "ruby_lsp", "rubocop" }
 
       for _, server in ipairs(servers) do
         local opts = {}
@@ -97,6 +106,11 @@ return {
           if ok then
             opts.settings.json.schemas = schemastore.json.schemas()
           end
+        elseif server == "ruby_lsp" then
+          opts.cmd = { vim.fn.expand("~/.local/share/mise/shims/ruby-lsp") }
+        elseif server == "rubocop" then
+          -- Prefer `bundle exec`, fall back to mise shim
+          opts.cmd = ruby_cmd({ vim.fn.expand("~/.local/share/mise/shims/rubocop"), "--lsp" })
         end
         lspconfig[server].setup(opts)
       end
