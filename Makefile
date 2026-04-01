@@ -1,10 +1,11 @@
-.PHONY: all install base update-fonts setup packages zinit_update doctor skills
+.PHONY: all install base update-fonts setup packages zinit_update doctor verify skills
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
 
 FONT_INSTALLER=$(BASE)/install-font
+HEALTHCHECK=$(BASE)/bin/dotfiles-health-check
 DOTFILES_FONTS_DIR=$(BASE)/.local/share/fonts
 JETBRAINS_FONT_PACKAGE=JetBrainsMono
 JETBRAINS_FONT_SUBFAMILY=JetBrainsMonoNLNerdFontMono
@@ -86,27 +87,10 @@ zinit_update:
 	zinit update
 
 doctor:
-	@echo "========================================"
-	@echo "Dotfiles Health Check"
-	@echo "========================================"
-	@echo ""
-	@echo "-> Checking shell script syntax..."
-	@zsh -n install install-font .zshrc .zsh/*.zsh && echo "  OK: All scripts pass syntax check" || echo "  ERROR: Syntax errors found"
-	@echo ""
-	@echo "-> Checking stow dry-run..."
-	@TMPDIR=$$(mktemp -d) && stow -n -t "$$TMPDIR" . 2>&1 | head -20; rmdir "$$TMPDIR" 2>/dev/null || true
-	@echo "  (dry-run to temp target)"
-	@echo ""
-	@echo "-> Checking tool versions..."
-	@printf "  git:   "; git --version 2>/dev/null | cut -d' ' -f3 || echo "not found"
-	@printf "  zsh:   "; zsh --version 2>/dev/null | cut -d' ' -f2 || echo "not found"
-	@printf "  nvim:  "; nvim --version 2>/dev/null | head -1 | grep -oE 'v[0-9.]+' || echo "not found"
-	@printf "  stow:  "; stow --version 2>/dev/null | head -1 | grep -oE '[0-9.]+' || echo "not found"
-	@printf "  tmux:  "; tmux -V 2>/dev/null | cut -d' ' -f2 || echo "not found"
-	@echo ""
-	@echo "========================================"
-	@echo "Done"
-	@echo "========================================"
+	@"$(HEALTHCHECK)" doctor
+
+verify:
+	@"$(HEALTHCHECK)" verify
 
 # Refresh private stow links (including prv/.agents -> ~/.agents)
 skills:

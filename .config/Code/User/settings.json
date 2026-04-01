@@ -185,5 +185,6 @@
     "rubyLsp.rubyVersionManager": {
         "identifier": "mise"
     },
-    "gitlens.codeLens.enabled": false
+    "gitlens.codeLens.enabled": false,
+    "editor.lineNumbers": "relative"
 }

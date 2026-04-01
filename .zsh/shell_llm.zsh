@@ -13,12 +13,6 @@ function _codex() {
   # Remove the function to prevent recursion on subsequent calls
   unfunction $0
 
-  # Ensure the completion system is initialized
-  if ! type compinit &>/dev/null; then
-    autoload -Uz compinit
-    compinit
-  fi
-
   eval "$(codex completion zsh)"
 
   # Re-run the completion function now that real completion is loaded

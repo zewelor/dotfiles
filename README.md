@@ -9,6 +9,18 @@ Some examples here:
 git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
 ```
 
+## Health Checks
+
+Use the built-in health checks before or after bigger changes:
+
+```bash
+make doctor  # fast repo-local checks (syntax, stow dry-run, required tools)
+make verify  # deeper environment drift checks for the current machine
+```
+
+- `make doctor` is meant to stay fast and offline.
+- `make verify` checks the real interactive shell startup and local workstation state.
+
 ### Shell requirement (zsh)
 
 The `./install` script aborts if your **login shell** is not `zsh` to avoid the common “installed but nothing changed” confusion when the user stays in `bash` (e.g. on Raspberry Pi OS).

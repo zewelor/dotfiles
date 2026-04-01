@@ -43,12 +43,6 @@ if has "docker"; then
     # Remove the function to prevent recursion on subsequent calls
     unfunction $0
 
-    # Ensure the completion system is initialized
-    if ! type compinit &>/dev/null; then
-        autoload -Uz compinit
-        compinit
-    fi
-
     eval "$(docker completion zsh)"
 
     $0 "$@"

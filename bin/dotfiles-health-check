@@ -1,0 +1,300 @@
+#!/bin/zsh
+
+set -u
+set -o pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+source "$BASE_DIR/.zsh/helpers.zsh"
+
+MODE="${1:-doctor}"
+
+case "$MODE" in
+  doctor|verify) ;;
+  *)
+    echo "Usage: $0 <doctor|verify>" >&2
+    exit 2
+    ;;
+esac
+
+typeset -gi PASS_COUNT=0
+typeset -gi WARN_COUNT=0
+typeset -gi FAIL_COUNT=0
+
+print_header() {
+  local title="$1"
+  printf "========================================\n%s\n========================================\n" "$title"
+}
+
+print_section() {
+  local title="$1"
+  printf "\n-> %s...\n" "$title"
+}
+
+pass() {
+  PASS_COUNT+=1
+  printf "  OK: %s\n" "$1"
+}
+
+warn() {
+  WARN_COUNT+=1
+  printf "  WARN: %s\n" "$1"
+}
+
+fail() {
+  FAIL_COUNT+=1
+  printf "  FAIL: %s\n" "$1"
+}
+
+show_command_output() {
+  local output_file="$1"
+  local max_lines="${2:-20}"
+  sed -n "1,${max_lines}p" "$output_file" | sed 's/^/    /'
+}
+
+get_login_shell() {
+  local user="${USER:-}"
+  local shell=""
+
+  if [[ -n "$user" ]] && has "getent"; then
+    shell=$(getent passwd "$user" | awk -F: '{print $7}')
+  elif [[ -n "$user" ]] && [[ -r /etc/passwd ]]; then
+    shell=$(awk -F: -v u="$user" '$1 == u { print $7 }' /etc/passwd)
+  fi
+
+  if [[ -z "$shell" ]]; then
+    shell="${SHELL:-}"
+  fi
+
+  printf "%s\n" "$shell"
+}
+
+current_profile() {
+  local profile_file="$HOME/.zshrc.d/profile.zsh"
+  local profile="server"
+
+  if [[ -f "$profile_file" ]]; then
+    profile=$(unset DOTFILES_PROFILE; source "$profile_file" >/dev/null 2>&1 && printf "%s" "${DOTFILES_PROFILE:-server}")
+  fi
+
+  printf "%s\n" "${profile:-server}"
+}
+
+check_script_syntax() {
+  local output_file
+  output_file=$(mktemp -t dotfiles-syntax.XXXXXX)
+
+  if zsh -n "$BASE_DIR/install" "$BASE_DIR/install-font" "$BASE_DIR/.zshrc" "$BASE_DIR"/.zsh/*.zsh >"$output_file" 2>&1; then
+    pass "Shell scripts pass syntax check"
+  else
+    fail "Shell syntax check failed"
+    show_command_output "$output_file"
+  fi
+
+  rm -f "$output_file"
+}
+
+check_stow_package() {
+  local package_dir="$1"
+  local label="$2"
+  local temp_target=""
+  local output_file=""
+
+  temp_target=$(mktemp -d -t dotfiles-stow.XXXXXX)
+  output_file=$(mktemp -t dotfiles-stow-output.XXXXXX)
+
+  if stow -n -d "$package_dir" -t "$temp_target" . >"$output_file" 2>&1; then
+    pass "$label stow dry-run passed"
+  else
+    fail "$label stow dry-run failed"
+    show_command_output "$output_file"
+  fi
+
+  rm -f "$output_file"
+  rmdir "$temp_target" 2>/dev/null || true
+}
+
+check_required_tools() {
+  local required_tools=(git zsh stow)
+  local optional_tools=(nvim tmux)
+  local tool=""
+
+  for tool in "${required_tools[@]}"; do
+    if has "$tool"; then
+      pass "Required tool available: $tool"
+    else
+      fail "Required tool missing: $tool"
+    fi
+  done
+
+  for tool in "${optional_tools[@]}"; do
+    if has "$tool"; then
+      pass "Optional tool available: $tool"
+    else
+      warn "Optional tool missing: $tool"
+    fi
+  done
+}
+
+check_login_shell_is_zsh() {
+  local login_shell=""
+
+  login_shell=$(get_login_shell)
+  if [[ -n "$login_shell" && "${login_shell##*/}" == "zsh" ]]; then
+    pass "Login shell is zsh"
+  else
+    fail "Login shell is not zsh (detected: ${login_shell:-<unknown>})"
+  fi
+}
+
+check_interactive_shell_startup() {
+  local output_file
+  output_file=$(mktemp -t dotfiles-zsh-startup.XXXXXX)
+
+  if zsh -i -c exit >"$output_file" 2>&1; then
+    if [[ -s "$output_file" ]]; then
+      fail "Interactive zsh startup produced unexpected output"
+      show_command_output "$output_file"
+    else
+      pass "Interactive zsh startup is silent"
+    fi
+  else
+    fail "Interactive zsh startup exited with an error"
+    show_command_output "$output_file"
+  fi
+
+  rm -f "$output_file"
+}
+
+check_zinit_installation() {
+  local zinit_script="$HOME/.zinit/bin/zinit.zsh"
+
+  if [[ -f "$zinit_script" ]]; then
+    pass "zinit bootstrap exists"
+  else
+    fail "zinit bootstrap missing at $zinit_script"
+  fi
+}
+
+check_ssh_directories() {
+  if [[ -d "$HOME/.ssh/config.d" ]]; then
+    pass "~/.ssh/config.d exists"
+  else
+    fail "~/.ssh/config.d is missing"
+  fi
+}
+
+check_effective_ssh_auth_sock() {
+  local output_file
+  local effective_sock=""
+  local link_path="$HOME/.ssh/ssh_auth_sock"
+  output_file=$(mktemp -t dotfiles-ssh-auth.XXXXXX)
+
+  if zsh -i -c 'printf "%s" "${SSH_AUTH_SOCK:-}"' >"$output_file" 2>&1; then
+    effective_sock=$(<"$output_file")
+  else
+    fail "Could not determine SSH_AUTH_SOCK from interactive zsh"
+    show_command_output "$output_file"
+    rm -f "$output_file"
+    return
+  fi
+
+  rm -f "$output_file"
+
+  if [[ -z "$effective_sock" ]]; then
+    warn "Interactive zsh did not export SSH_AUTH_SOCK"
+    return
+  fi
+
+  if [[ "$effective_sock" == "$link_path" ]]; then
+    pass "Interactive zsh exports SSH_AUTH_SOCK via ~/.ssh/ssh_auth_sock"
+    return
+  fi
+
+  if [[ ! -L "$link_path" ]]; then
+    fail "~/.ssh/ssh_auth_sock is missing while SSH_AUTH_SOCK points elsewhere"
+    return
+  fi
+
+  if symlink_points_to "$link_path" "$effective_sock"; then
+    pass "~/.ssh/ssh_auth_sock points to the effective SSH_AUTH_SOCK target"
+  else
+    fail "~/.ssh/ssh_auth_sock does not match effective SSH_AUTH_SOCK ($effective_sock)"
+  fi
+}
+
+check_editor_support() {
+  if ! has "nvim"; then
+    if has "vim"; then
+      warn "Neovim is not installed; Vim fallback is expected"
+    else
+      fail "Neither Neovim nor Vim is installed"
+    fi
+    return
+  fi
+
+  local nvim_version=""
+  autoload -Uz is-at-least
+  nvim_version=$(nvim --version 2>/dev/null | head -n 1 | grep -oE 'v[0-9]+\.[0-9]+' | sed 's/^v//')
+
+  if [[ -z "$nvim_version" ]]; then
+    warn "Could not parse Neovim version"
+    return
+  fi
+
+  if is-at-least "0.8" "$nvim_version"; then
+    pass "Neovim version is supported (${nvim_version})"
+  elif has "vim"; then
+    warn "Neovim ${nvim_version} is older than 0.8; Vim fallback should be used"
+  else
+    fail "Neovim ${nvim_version} is older than 0.8 and no Vim fallback is installed"
+  fi
+}
+
+print_header "Dotfiles Health Check (${MODE})"
+
+print_section "Checking shell script syntax"
+check_script_syntax
+
+print_section "Checking stow dry-runs"
+check_stow_package "$BASE_DIR" "Base repo"
+if [[ -d "$BASE_DIR/prv" ]]; then
+  check_stow_package "$BASE_DIR/prv" "Private repo"
+fi
+
+print_section "Checking tool availability"
+check_required_tools
+
+if [[ "$MODE" == "verify" ]]; then
+  profile=""
+
+  print_section "Checking shell and environment drift"
+  check_login_shell_is_zsh
+  check_interactive_shell_startup
+  check_zinit_installation
+  check_ssh_directories
+  check_effective_ssh_auth_sock
+  check_editor_support
+
+  profile=$(current_profile)
+  if [[ "$profile" == "desktop" ]]; then
+    if [[ -S "/run/user/$UID/gcr/ssh" ]]; then
+      pass "Desktop profile detected and GCR SSH agent socket is available"
+    else
+      warn "Desktop profile detected but GCR SSH agent socket is unavailable"
+    fi
+  fi
+fi
+
+printf "\n"
+print_header "Summary"
+printf "  Passed: %d\n" "$PASS_COUNT"
+printf "  Warnings: %d\n" "$WARN_COUNT"
+printf "  Failed: %d\n" "$FAIL_COUNT"
+
+if (( FAIL_COUNT > 0 )); then
+  exit 1
+fi
+
+exit 0

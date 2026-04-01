@@ -2,9 +2,7 @@
 # Useful for AI agents (VS Code Copilot, etc.) that need a minimal shell
 [[ -n "${ZSHRC_SKIP_CUSTOMIZATIONS:-}" ]] && return
 
-if [ ! -f "$HOME/.zshrc.zwc" -o "$HOME/.zshrc" -nt "$HOME/.zshrc.zwc" ]; then
-  zcompile $HOME/.zshrc
-fi
+source "$HOME/.zsh/helpers.zsh"
 
 # Load dotfiles profile (Desktop/Server)
 if [ -f "$HOME/.zshrc.d/profile.zsh" ]; then
@@ -1473,7 +1471,7 @@ fi
 
 # Fix SSH agent forwarding for tmux (creates symlink that .tmux.conf expects)
 if [[ -n "$SSH_AUTH_SOCK" && "$SSH_AUTH_SOCK" != "$HOME/.ssh/ssh_auth_sock" ]]; then
-  ln -sfn "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
+  ensure_symlink_target "$SSH_AUTH_SOCK" "$HOME/.ssh/ssh_auth_sock"
 fi
 
 # Disable git completion on remote filesystems to avoid lag

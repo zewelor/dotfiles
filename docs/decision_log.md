@@ -219,3 +219,31 @@ Tested:
 
 Not tested:
 - A fresh `mise` install of `npm:@openai/codex@latest`, because the bash execution environment here cannot perform network package downloads.
+
+## 2026-04-01 — Remove `.zshrc.zwc` from the shell startup flow
+
+1. **The Problem**
+`~/.zshrc.zwc` added extra startup state and previously caused refresh issues during interactive shell startup.
+
+2. **Root Cause**
+`zcompile` created a separate bytecode artifact for `.zshrc`, but in this setup it did not provide a noticeable benefit relative to the maintenance and debugging cost of keeping the cache healthy.
+
+3. **The Fix**
+- Removed `zcompile` from `.zshrc`.
+- Stopped using `~/.zshrc.zwc` in the normal shell startup flow.
+
+4. **Key Insight**
+For the current shell startup path, the meaningful performance wins come from lazy-loading and reducing work in init, not from bytecode caching `.zshrc`.
+
+5. **The Lesson**
+If a performance mechanism does not deliver a measurable win and introduces extra state and drift, prefer removing it over repeatedly repairing the cache lifecycle around it.
+
+6. **Verification / Testing**
+Tested:
+- `zsh -i -c exit`
+- interactive startup timing remained about `0.16s`
+- `make doctor`
+- `make verify`
+
+Not tested:
+- long-term startup comparison across multiple hosts and profiles

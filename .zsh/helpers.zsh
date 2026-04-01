@@ -4,6 +4,36 @@
 # Check if a command exists
 has() { command -v "${1:-}" >/dev/null 2>&1; }
 
+# Return success when a symlink already points to the expected target.
+symlink_points_to() {
+  local link_path="${1:-}"
+  local expected_target="${2:-}"
+  local current_target=""
+
+  [[ -L "$link_path" ]] || return 1
+  current_target=$(readlink "$link_path" 2>/dev/null) || return 1
+  [[ "$current_target" == "$expected_target" ]]
+}
+
+# Recreate a symlink only when the current target does not match.
+ensure_symlink_target() {
+  local target_path="${1:-}"
+  local link_path="${2:-}"
+
+  [[ -n "$target_path" && -n "$link_path" ]] || return 1
+  mkdir -p "${link_path:h}"
+
+  if symlink_points_to "$link_path" "$target_path"; then
+    return 0
+  fi
+
+  if [[ -e "$link_path" || -L "$link_path" ]]; then
+    rm -f "$link_path"
+  fi
+
+  ln -s "$target_path" "$link_path"
+}
+
 # Resolve browser command from XDG settings or fallback list
 # Returns the browser command or empty string if not found
 resolve_browser_cmd() {
