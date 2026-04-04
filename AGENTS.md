@@ -204,12 +204,14 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 
 - `@keis/git-fixup` (`git-fixup`) — zostaje w `zinit` (brak działającego źródła `mise github:*`; repo nie publikuje Releases pod `latest`).
 - `@casey/just` (`just`) — zostaje w `zinit` (intentional exception).
-- `@cli/cli` (`gh`) — fala 1 migracji do `mise` (standalone CLI).
+- `@cli/cli` (`gh`) — uses mise registry shorthand `github-cli`.
 - `@jdx/mise` (`mise`) — może zostać w `zinit` jako bootstrap, ale rozważyć system package lub self-hosted install dla uproszczenia łańcucha zależności.
 - `@jdx/usage` (`usage`) — zależność completion dla `mise`; migrować razem z decyzją jak instalowany jest `mise`.
-- `@openai/codex` (`codex`) — fala 1 migracji do `mise` (standalone CLI).
-- `npm:@steipete/summarize` (`summarize`) — zarządzane przez `mise` (backend `npm`, brak binarek Linux na GitHub).
-- `@anomalyco/opencode` (`opencode`) — kandydat do `mise` (standalone CLI).
+- `@openai/codex` (`codex`) — uses mise registry shorthand `codex` (aqua backend; avoids `rust-v*` tag resolution issue).
+- `@yt-dlp/yt-dlp` (`yt-dlp`) — uses mise registry shorthand `yt-dlp`.
+- `@steipete/summarize` (`summarize`) — managed via `mise` (`npm` backend; not in registry).
+- `@anomalyco/opencode` (`opencode`) — candidate for `mise` (registry shorthand `opencode` available).
+- `@satococoa/wtp` (`wtp`) — managed via `mise` (`github` backend; not in registry).
 - `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).
 - `starship/starship` (`starship`) — zostaje w `zinit` (intentional exception: shell init/completions).
 
