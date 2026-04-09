@@ -225,7 +225,7 @@ zinit light-mode wait"2" lucid from"gh-r" as"program" \
 if is_desktop; then
   zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
       pick'mise/bin/mise' \
-      atclone'./mise/bin/mise complete zsh >_mise' atpull'%atclone' \
+      atclone'./mise/bin/mise completion zsh >_mise' atpull'%atclone' \
       @jdx/mise
 
   # Fixes:

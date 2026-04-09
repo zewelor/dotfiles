@@ -186,5 +186,6 @@
         "identifier": "mise"
     },
     "gitlens.codeLens.enabled": false,
-    "editor.lineNumbers": "relative"
+    "editor.lineNumbers": "relative",
+    "terminal.integrated.copyOnSelection": true
 }
