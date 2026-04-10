@@ -26,11 +26,15 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── opencode.lua             # AI Assistant (opencode.nvim)
 │   │   ├── telescope.lua            # Wyszukiwanie i fuzzy finder
 │   │   ├── treesitter.lua           # Tree-sitter (Neovim 0.11+)
+│   │   ├── ts-comments.lua          # Commentstring dla natywnego gc/gcc
 │   │   ├── solarized.lua            # Motyw kolorów
 │   │   └── which-key.lua            # Podpowiedzi skrótów
+│   ├── ftdetect/
+│   │   └── just.lua          # Filetype detection dla Justfile
 │   └── after/
 │       └── ftplugin/
 │           ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
+│           ├── just.lua       # Commentstring (#) dla Justfile
 │           └── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
 └── lazy-lock.json       # Zablokowane wersje pluginów
 ```
@@ -57,12 +61,13 @@ Główne opcje edytora (z `lua/config/options.lua`):
 
 ## 📁 Nadpisy per Filetype
 
-Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/`):
+Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ftdetect/`):
 
 | Język | Plik | Opis nadpisu |
 |-------|------|--------------|
 | **Markdown** | `markdown.lua` | 2 spacje, `wrap`, `linebreak`, `breakindent` |
 | **Dockerfile** | `dockerfile.lua` | 4 spacje dla kontynuacji `RUN` oraz +2 spacje dla bloków shell (`if/for/while/case`); dotyczy też pliku `fdockerfile` przez alias filetype |
+| **Just** | `just.lua` | `commentstring = "# %s"` + `ts-comments.nvim` (ftdetect w `ftdetect/just.lua`) |
 
 ## 🔌 Pluginy i ich użycie
 
@@ -252,6 +257,14 @@ opencode --port
 
 ---
 
+### **ts-comments.nvim** — Commentstring dla natywnego komentowania
+
+- **Repo**: [folke/ts-comments.nvim](https://github.com/folke/ts-comments.nvim)
+- **Cel**: Ustawia poprawny `commentstring` dla wbudowanego `gc` / `gcc`, także dla `Justfile` i innych filetype opartych o tree-sitter
+- **Dodatkowe**: Nie zastępuje natywnego komentowania Neovima, tylko je uzupełnia
+
+---
+
 ### **LSP** — Language Server Protocol
 
 Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
@@ -406,6 +419,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 #### Komentowanie
 
 - `Ctrl+/` — Przełącz komentarz wiersza/zaznaczenia (Neovim 0.10+; terminal wysyła to jako `<C-_>`)
+- `gc` / `gcc` — Natywne komentowanie Neovima z `commentstring` uzupełnianym przez `ts-comments.nvim`
 
 ---
 
