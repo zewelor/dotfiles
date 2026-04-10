@@ -15,7 +15,12 @@ if has_nvim_011 then
 end
 
 local source_defaults = { 'lsp', 'path', 'snippets', 'buffer' }
-local providers = {}
+local providers = {
+  -- Keep buffer words as a fallback to LSP, matching the recommended blink.cmp setup.
+  lsp = {
+    fallbacks = { 'buffer' },
+  },
+}
 
 if has_nvim_011 then
   table.insert(source_defaults, 'copilot')

@@ -247,3 +247,30 @@ Tested:
 
 Not tested:
 - long-term startup comparison across multiple hosts and profiles
+
+## 2026-04-10 — Clarify blink.cmp buffer source as fallback to LSP
+
+1. **The Problem**
+Ruby completion in Neovim was unclear about whether buffer words (strings, keyword argument names) should appear alongside LSP suggestions or only when LSP returns no results.
+
+2. **Root Cause**
+The blink.cmp config listed `buffer` in `sources.default` but did not explicitly declare it as a fallback to `lsp`. Without explicit `fallbacks`, the recommended behavior (buffer words only when LSP has nothing) was implicit and undocumented in the local config.
+
+3. **The Fix**
+- Added explicit `sources.providers.lsp.fallbacks = { 'buffer' }` in `blink.lua`, matching the blink.cmp recommended setup and LazyVim defaults.
+- Updated `.config/nvim/README.md` to document that `buffer` is a fallback source, not a parallel one.
+
+4. **Key Insight**
+blink.cmp's default provider config has `lsp.fallbacks = { 'buffer' }`, meaning buffer words only surface when LSP returns zero items. This is the same model LazyVim and Omarchy use. Explicitly declaring it avoids ambiguity and follows best practices for semantic-first completion.
+
+5. **The Lesson**
+In completion engines, prefer semantic sources (`lsp`) over textual ones (`buffer`). When following established distro conventions (LazyVim, Omarchy), make the choice explicit in local config rather than relying on implicit defaults.
+
+6. **Verification / Testing**
+Tested:
+- Verified blink.lua config syntax and README documentation correctness.
+- Compared with LazyVim blink.cmp extra default sources and blink.cmp reference docs.
+
+Not tested:
+- Full interactive Neovim runtime (local nvim is v0.10.4; telescope.nvim requires 0.11+).
+- Interactive Ruby file completion behavior with ruby_lsp active.

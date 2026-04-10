@@ -120,6 +120,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
+- **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi.
 - **Uwaga o kompatybilności**: Źródło Copilota w menu autouzupełniania jest aktywne tylko na Neovim 0.11+ (na starszych wersjach jest automatycznie wyłączone).
 - **Keymaps** (w menu autouzupełniania):
   - `<C-Space>` — Wymuś pokazanie menu
