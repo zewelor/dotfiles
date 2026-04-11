@@ -1,13 +1,9 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "@mohak34/opencode-notifier@latest"
-  ],
-  "disabled_providers": [
-    "openrouter"
-  ],
+  "plugin": ["@mohak34/opencode-notifier@latest"],
+  "disabled_providers": ["openrouter", "perplexity"],
   "permission": {
-    "git push": "ask"
+    "git push": "ask",
   },
   "provider": {
     "openai": {
@@ -15,18 +11,16 @@
         "reasoningEffort": "medium",
         "reasoningSummary": "auto",
         "textVerbosity": "medium",
-        "include": [
-          "reasoning.encrypted_content"
-        ],
-        "store": false
-      }
-    }
+        "include": ["reasoning.encrypted_content"],
+        "store": false,
+      },
+    },
   },
   "mcp": {
     "deepwiki": {
       "type": "remote",
       "url": "https://mcp.deepwiki.com/mcp",
-      "enabled": true
+      "enabled": true,
     },
     "devtools": {
       "type": "local",
@@ -38,8 +32,8 @@
         "--chrome-arg=--ozone-platform=wayland",
         "--chrome-arg=--enable-features=UseOzonePlatform",
         "--isolated",
-        "--no-usage-statistics"
-      ]
+        "--no-usage-statistics",
+      ],
     },
     "brave-search": {
       "type": "local",
@@ -52,25 +46,21 @@
         "BRAVE_API_KEY",
         "-e",
         "BRAVE_MCP_TRANSPORT=stdio",
-        "mcp/brave-search"
+        "mcp/brave-search",
       ],
       "environment": {
-        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}"
-      }
+        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}",
+      },
     },
     "perplexity": {
       "enabled": false,
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@perplexity-ai/mcp-server"
-      ]
+      "command": ["npx", "-y", "@perplexity-ai/mcp-server"],
     },
     "gh_grep": {
       "enabled": false,
       "type": "remote",
-      "url": "https://mcp.grep.app"
+      "url": "https://mcp.grep.app",
     },
     "github": {
       "type": "remote",
@@ -79,12 +69,12 @@
       "oauth": {
         "clientId": "{env:GITHUB_MCP_CLIENT_ID}",
         "clientSecret": "{env:GITHUB_MCP_CLIENT_SECRET}",
-        "scope": "repo read:org"
+        "scope": "repo read:org",
       },
       "headers": {
         "X-MCP-Toolsets": "repos,issues,pull_requests,actions",
-        "X-MCP-Readonly": "true"
-      }
-    }
-  }
+        "X-MCP-Readonly": "true",
+      },
+    },
+  },
 }
