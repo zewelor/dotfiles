@@ -59,7 +59,6 @@ CONFIG_FILE="$HOME/.config/kscreenlockerrc"
 GROUP="Daemon"
 KEY_TIMEOUT="Timeout"       # Timeout in minutes before auto-lock
 KEY_LOCK_ENABLED="Autolock" # Autolock enabled (true/false)
-KEY_LOCK_ON_LID="LockOnLid" # Lock on lid close (true/false)
 
 # D-Bus call to apply settings immediately
 QDBUS_SERVICE="org.freedesktop.ScreenSaver"
@@ -248,7 +247,7 @@ show_status() {
   echo ""
 
   if [[ "$timeout" == "$NEW_TIMEOUT_MINUTES" ]]; then
-    echo "Status: 🔶 TOGGLED (20 minute timeout active)"
+    echo "Status: 🔶 TOGGLED ($NEW_TIMEOUT_MINUTES minute timeout active)"
   elif [[ "$timeout" == "$SAFE_TIMEOUT_MINUTES" ]]; then
     echo "Status: 🟢 SAFE MODE (5 minute timeout)"
   else
@@ -311,12 +310,10 @@ fi
 echo "Saving current screen lock settings..."
 CURRENT_TIMEOUT=$(get_config "$CONFIG_FILE" "$GROUP" "$KEY_TIMEOUT")
 CURRENT_LOCK_ENABLED=$(get_config "$CONFIG_FILE" "$GROUP" "$KEY_LOCK_ENABLED")
-CURRENT_LOCK_ON_LID=$(get_config "$CONFIG_FILE" "$GROUP" "$KEY_LOCK_ON_LID")
 
 echo "Current Settings:"
 echo "  Timeout          : $CURRENT_TIMEOUT minutes"
 echo "  Autolock Enabled : $CURRENT_LOCK_ENABLED"
-echo "  Lock on Lid      : $CURRENT_LOCK_ON_LID"
 echo ""
 
 # Apply new settings
@@ -345,11 +342,9 @@ echo ""
 echo "Restoring original screen lock settings:"
 echo "  Timeout          : $CURRENT_TIMEOUT minutes"
 echo "  Autolock Enabled : $CURRENT_LOCK_ENABLED"
-echo "  Lock on Lid      : $CURRENT_LOCK_ON_LID"
 echo ""
 set_config "$CONFIG_FILE" "$GROUP" "$KEY_TIMEOUT" "$CURRENT_TIMEOUT"
 set_config "$CONFIG_FILE" "$GROUP" "$KEY_LOCK_ENABLED" "$CURRENT_LOCK_ENABLED"
-set_config "$CONFIG_FILE" "$GROUP" "$KEY_LOCK_ON_LID" "$CURRENT_LOCK_ON_LID"
 
 # Apply D-Bus command to reconfigure screensaver
 apply_qdbus_command
