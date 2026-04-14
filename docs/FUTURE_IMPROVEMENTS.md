@@ -10,13 +10,6 @@ Pomysły na ulepszenia dotfiles - do zrobienia gdy będzie czas/potrzeba.
 - Priorytet: niski (LSP formatting zazwyczaj wystarczy)
 - Repo: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 
-### gitsigns.nvim
-- Git diff w gutterze
-- Stage/reset hunks
-- Blame line
-- Priorytet: niski (lazygit via snacks.nvim już jest)
-- Repo: [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)
-
 ### nvim-dap (debugging)
 - DAP dla Python, Node.js
 - Priorytet: bardzo niski (k8s debugging = kubectl/k9s)

@@ -14,6 +14,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   └── keymaps.lua  # Wszystkie keybindings
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
+│   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
 │   │   ├── copilot.lua              # GitHub Copilot
 │   │   ├── lsp.lua                  # LSP + mason (language servers)
@@ -79,6 +80,27 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Keymaps**:
   - `:Lazy` — Otwórz UI managera
   - `:Lazy sync` — Synchronizuj pluginy (install/update/clean)
+
+---
+
+### **gitsigns.nvim** — Stage hunks i blame w buforze
+
+- **Repo**: [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)
+- **Cel**: Git diff w gutterze, stage/reset hunks i podgląd blame bez wychodzenia z Neovim
+- **Keymaps**:
+  - `<Space>hs` — Stage hunk pod kursorem
+  - `<Space>hs` w Visual — Stage zaznaczone linie z aktualnego hunk'a
+  - `<Space>hS` — Stage cały bufor
+- **Uwagi**: Plugin korzysta z `signcolumn`, więc `vim.opt.signcolumn = "yes"` zostaje w core options.
+- **Przykłady**:
+  - Chcesz stage'ować tylko 2 linie z większego hunka: zaznacz je w Visual mode i naciśnij `<Space>hs`.
+  - Chcesz stage'ować cały obecny change set w pliku: naciśnij `<Space>hs` w Normal mode.
+  - Chcesz ogarnąć commit/branch/stash dla całego repo: `<leader>gg` otwiera LazyGit (floating window przez snacks.nvim).
+
+### Gdy używać czego
+
+- `gitsigns` — gdy pracujesz na fragmencie pliku i chcesz stage'ować tylko wybrane linie/hunki.
+- `LazyGit` (`<leader>gg`) — gdy chcesz zrobić commit, przełączyć branch, stash albo ogarnąć stan całego repo.
 
 ---
 

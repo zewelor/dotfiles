@@ -94,6 +94,27 @@ keymap("n", "<leader>cf", function()
 	require("conform").format({ lsp_format = "fallback" })
 end, { desc = "Format buffer (conform)" })
 
+-- Git hunks (gitsigns)
+local function stage_selected_hunk()
+	local gitsigns = require("gitsigns")
+	local start_line = vim.fn.line("v")
+	local end_line = vim.fn.line(".")
+
+	if start_line > end_line then
+		start_line, end_line = end_line, start_line
+	end
+
+	gitsigns.stage_hunk({ start_line, end_line })
+end
+
+keymap("n", "<leader>hs", function()
+	require("gitsigns").stage_hunk()
+end, { desc = "Stage hunk (gitsigns)" })
+keymap("x", "<leader>hs", stage_selected_hunk, { desc = "Stage selected lines (gitsigns)" })
+keymap("n", "<leader>hS", function()
+	require("gitsigns").stage_buffer()
+end, { desc = "Stage buffer (gitsigns)" })
+
 -- Better window navigation
 keymap("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
 keymap("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })

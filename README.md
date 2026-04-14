@@ -254,6 +254,7 @@ zi proj          # Browse directories matching "proj"
 ## Neovim config (lazy.nvim)
 
 Minimal, modern Neovim configuration optimized for fast terminal editing.
+Full Neovim docs, keymaps and workflow examples live in [`.config/nvim/README.md`](./.config/nvim/README.md).
 
 ### Neovim installation
 
@@ -279,6 +280,7 @@ After the first launch:
 │   │   └── options.lua        # All vim.opt settings
 │   └── plugins/               # Plugins (auto-imported by lazy.nvim)
 │       ├── blink.lua          # Completion engine
+│       ├── gitsigns.lua       # Partial git staging + blame
 │       ├── copilot.lua        # GitHub Copilot (AI-assisted coding)
 │       ├── mini-icons.lua     # Icons (lightweight alternative to nvim-web-devicons)
 │       ├── neotree.lua        # File explorer (sidebar)
