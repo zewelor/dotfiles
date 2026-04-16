@@ -87,13 +87,12 @@ end, { desc = "Update n_lines (mini.surround)" })
 
 -- Formatting (conform.nvim)
 keymap("n", "<leader>cf", function()
-	local filename = vim.api.nvim_buf_get_name(0)
-	local is_tmuxinator = filename:match("/%.tmuxinator/.*%.yml$") or filename:match("/%.tmuxinator/.*%.yaml$")
-	if is_tmuxinator then
+	local ft = vim.bo.filetype
+	if ft == "eruby.yaml.tmuxinator" then
 		if vim.notify then vim.notify("Tmuxinator YAML with ERB is excluded from formatting", vim.log.levels.INFO, { title = "Conform" }) end
 		return
 	end
-	if vim.bo.filetype == "markdown" then
+	if ft == "markdown" then
 		if vim.notify then vim.notify("Markdown autoformat is disabled", vim.log.levels.INFO, { title = "Conform" }) end
 		return
 	end

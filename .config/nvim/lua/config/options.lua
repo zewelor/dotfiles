@@ -73,6 +73,16 @@ vim.filetype.add({
     [".*/[fF][dD]ockerfile[^/]*"] = "dockerfile",
     [".*/templates/.*%.ya?ml"] = "helm",
     [".*/templates/.*%.tpl"] = "helm",
+    [".*/%.tmuxinator/.*%.ya?ml"] = function(path, bufnr)
+      local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      for _, line in ipairs(lines) do
+        if line:match("<%%[=#%-]?") then
+          return "eruby.yaml.tmuxinator"
+        end
+      end
+
+      return "yaml.tmuxinator"
+    end,
     [".*%.gotmpl"] = "helm",
   },
 })

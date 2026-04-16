@@ -6,8 +6,7 @@ return {
     -- Disable autoformat for Markdown/Dockerfile (manual formatting still possible).
     format_on_save = function(bufnr)
       local ft = vim.bo[bufnr].filetype
-      local filename = vim.api.nvim_buf_get_name(bufnr)
-      local is_tmuxinator = filename:match("/%.tmuxinator/.*%.yml$") or filename:match("/%.tmuxinator/.*%.yaml$")
+      local is_tmuxinator = ft == "eruby.yaml.tmuxinator"
 
       if ft == "markdown" or ft == "dockerfile" or is_tmuxinator then
         return nil
@@ -27,14 +26,15 @@ return {
       zsh = { "beautysh" },
 
       yaml = function(bufnr)
-        local filename = vim.api.nvim_buf_get_name(bufnr)
-        -- tmuxinator allows ERB/Ruby inside YAML, which prettier cannot parse.
-        if filename:match("/%.tmuxinator/.*%.yml$") or filename:match("/%.tmuxinator/.*%.yaml$") then
+        local ft = vim.bo[bufnr].filetype
+        if ft == "yaml.tmuxinator" or ft == "eruby.yaml.tmuxinator" then
           return {}
         end
 
         return { "prettier" }
       end,
+      ["yaml.tmuxinator"] = { "prettier" },
+      ["eruby.yaml.tmuxinator"] = {},
       ["yaml.docker-compose"] = { "prettier" },
 
       json = { "prettier" },

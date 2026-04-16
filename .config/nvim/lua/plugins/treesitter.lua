@@ -12,6 +12,8 @@ return {
       install_dir = vim.fn.stdpath("data") .. "/site",
     })
 
+    vim.treesitter.language.register("yaml", { "yaml.tmuxinator", "eruby.yaml.tmuxinator" })
+
     -- Enable tree-sitter highlighting for commonly used filetypes.
     local group = vim.api.nvim_create_augroup("DotfilesTreesitter", { clear = true })
     vim.api.nvim_create_autocmd("FileType", {
@@ -28,6 +30,8 @@ return {
         "json",
         "jsonc",
         "yaml",
+        "yaml.tmuxinator",
+        "eruby.yaml.tmuxinator",
         "toml",
         "markdown",
         "dockerfile",

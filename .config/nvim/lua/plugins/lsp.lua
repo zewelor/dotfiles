@@ -93,6 +93,8 @@ return {
             opts.settings.yaml.schemas = schemastore.yaml.schemas()
           end
 
+          opts.filetypes = { "yaml", "yaml.docker-compose", "yaml.tmuxinator" }
+
         elseif server == "helm_ls" then
           opts.filetypes = { "helm" }
         elseif server == "jsonls" then
