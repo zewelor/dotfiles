@@ -607,7 +607,7 @@ function update-all () {
   if target_user_has "npx"; then
     echo
     echo "[skills] Updating skills via npx"
-    if run_for_target_user 'npx --yes --global skills update'; then
+    if run_for_target_user 'npx --yes skills update --global'; then
       echo "[skills] Update complete"
     else
       local _skills_ec=$?
