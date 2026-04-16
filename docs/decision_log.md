@@ -274,3 +274,31 @@ Tested:
 Not tested:
 - Full interactive Neovim runtime (local nvim is v0.10.4; telescope.nvim requires 0.11+).
 - Interactive Ruby file completion behavior with ruby_lsp active.
+
+## 2026-04-16 — Use a zsh-aware formatter instead of shfmt for .zshrc
+
+1. **The Problem**
+`shfmt` failed on `.zshrc` with `parameter expansion requires a literal` while formatting the zinit completion bootstrap line.
+
+2. **Root Cause**
+`conform.nvim` mapped `zsh` to `shfmt`, but the file contains zsh-specific syntax that `shfmt` does not parse reliably.
+
+3. **The Fix**
+- Changed `conform.nvim` so `zsh` uses `beautysh` instead of `shfmt`.
+- Added `beautysh` to `mason-tool-installer.nvim` so it is installed with the rest of the Neovim tooling.
+- Updated the Neovim README to document the formatter split between `sh`/`bash` and `zsh`.
+
+4. **Key Insight**
+Shell formatting needs to match the shell dialect. A formatter that is fine for POSIX shell can still reject valid zsh syntax.
+
+5. **The Lesson**
+Do not route zsh files through generic shell formatters unless you have verified dialect support. Prefer a formatter that matches the filetype explicitly.
+
+6. **Verification / Testing**
+Tested:
+- `zsh -n .zshrc`
+- `luac -p .config/nvim/lua/plugins/conform.lua`
+- `luac -p .config/nvim/lua/plugins/mason-tool-installer.lua`
+
+Not tested:
+- Full Neovim startup in this environment, because the local `nvim` build is older than the installed `telescope.nvim` requirement.

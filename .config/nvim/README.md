@@ -238,7 +238,7 @@ opencode --port
 
 - **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Autoformat on save**: `lua`, `sh`, `python`, `yaml`, `json` (Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
+- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `yaml`, `json` (`sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`; Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
 - **Keymaps**:
   - `<Space>cf` — Format buffer
 
@@ -247,7 +247,7 @@ opencode --port
 ### **mason-tool-installer.nvim** — Auto-instalacja narzędzi
 
 - **Repo**: [WhoIsSethDaniel/mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim)
-- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `ruff`, `prettier`) i np. `hadolint`
+- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `prettier`) i np. `hadolint`
 
 ---
 

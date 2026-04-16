@@ -99,7 +99,7 @@ ZINIT_SCRIPT="${HOME}/${ZINIT_SCRIPT_REL}"
 
 source "${ZINIT_SCRIPT}"
 autoload -Uz _zinit
-(( ${+_comps} )) && _comps[zinit]=_zinit
+(( $+_comps )) && _comps[zinit]=_zinit
 unalias zi 2>/dev/null  # Remove zinit's zi alias to preserve zoxide's zi
 ### End of zinit's installer chunk
 

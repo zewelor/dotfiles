@@ -8,6 +8,7 @@ return {
       -- Formatters used by conform.nvim
       "stylua",
       "shfmt",
+      "beautysh",
       "ruff",
       "prettier",
 
