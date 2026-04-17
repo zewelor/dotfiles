@@ -383,12 +383,46 @@ EOF
   fi
 }
 
+# Function to let mise use the GitHub CLI token for GitHub API calls.
+setup_mise_github_credentials() {
+  if ! has "mise"; then
+    return
+  fi
+
+  if ! has "gh"; then
+    echo "GitHub CLI not found; mise GitHub installs may be rate-limited."
+    return
+  fi
+
+  if ! gh auth status --hostname github.com >/dev/null 2>&1; then
+    echo "GitHub CLI is not authenticated; skipping mise GitHub credential helper."
+    return
+  fi
+
+  local current_command=""
+  current_command=$(mise settings get github.credential_command 2>/dev/null || true)
+
+  if [[ "$current_command" == "gh auth token" ]]; then
+    echo "mise GitHub credential helper already configured."
+  else
+    mise settings set github.credential_command "gh auth token"
+    echo "Configured mise GitHub credential helper via gh auth token."
+  fi
+
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    export GITHUB_TOKEN="$(gh auth token)"
+    echo "Exported GITHUB_TOKEN for this install run."
+  fi
+}
+
 # Function to install desktop-specific tools via mise.
 setup_mise_desktop_tools() {
   if ! has "mise"; then
     echo "mise not found; skipping mise desktop tools."
     return
   fi
+
+  setup_mise_github_credentials
 
   print_banner "Installing desktop tools via mise..."
   # Keep desktop-scoped tools in one place for predictable onboarding.
@@ -608,8 +642,30 @@ run_installation() {
   init_colors
   require_zsh_login_shell
 
+  cleanup_retired_zinit_caches() {
+    setopt localoptions null_glob
+
+    local -a retired_paths=(
+      "$HOME_DIR/.zinit/plugins/b4b4r07---enhancd"
+      "$HOME_DIR/.zinit/snippets"/PZT::modules*
+    )
+    local -a existing_paths=()
+    local path=""
+
+    for path in "${retired_paths[@]}"; do
+      [[ -e "$path" ]] && existing_paths+=("$path")
+    done
+
+    (( ${#existing_paths[@]} == 0 )) && return 0
+
+    rm -rf -- "${existing_paths[@]}"
+  }
+
   print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."
+
+  print_banner "Removing retired Zinit caches"
+  cleanup_retired_zinit_caches
 
   # Interactive prompts first (before long-running tasks like font cache)
   print_banner "Secret environment variables from Vault (optional)"
