@@ -63,17 +63,16 @@ format = """([\
 [$stashed](fg:vcs bg:bg)\
 [$ahead_behind](fg:vcs bg:bg)\
 [\\]](bg:bg fg:vcs)](bg:bg))"""
-staged             = "+"
-modified           = "!"
-deleted            = "-"
-typechanged        = "~"
-renamed            = ">"
-conflicted         = "~"
-untracked          = "?"
-stashed            = "*"
-ahead              = "↑"
-behind             = "↓"
-diverged           = "↕$ahead_count/$behind_count "
+staged     = "+"
+modified   = "!"
+renamed    = ">"
+deleted    = "-"
+conflicted = "~"
+untracked  = "?"
+stashed    = "*"
+ahead      = "↑"
+behind     = "↓"
+diverged   = "↕$ahead_count/$behind_count "
 
 [git_state]
 format = "[$state($progress_current/$progress_total) ](fg:mod bg:bg)"
