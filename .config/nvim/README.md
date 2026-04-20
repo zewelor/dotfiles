@@ -31,7 +31,8 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── solarized.lua            # Motyw kolorów
 │   │   └── which-key.lua            # Podpowiedzi skrótów
 │   ├── ftdetect/
-│   │   └── just.lua          # Filetype detection dla Justfile
+│   │   ├── just.lua          # Filetype detection dla Justfile
+│   │   └── sshconfig.lua     # Filetype detection dla ~/.ssh/config.d/*
 │   └── after/
 │       └── ftplugin/
 │           ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
@@ -69,6 +70,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 | **Markdown** | `markdown.lua` | 2 spacje, `wrap`, `linebreak`, `breakindent` |
 | **Dockerfile** | `dockerfile.lua` | 4 spacje dla kontynuacji `RUN` oraz +2 spacje dla bloków shell (`if/for/while/case`); dotyczy też pliku `fdockerfile` przez alias filetype |
 | **Just** | `just.lua` | `commentstring = "# %s"` + `ts-comments.nvim` (ftdetect w `ftdetect/just.lua`) |
+| **SSH config** | `sshconfig.lua` | Ustawia `filetype=sshconfig` dla fragmentów `~/.ssh/config.d/*`, żeby działały builtinowe komentarze (`# %s`) |
 
 ## 🔌 Pluginy i ich użycie
 
