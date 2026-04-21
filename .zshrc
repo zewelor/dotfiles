@@ -838,6 +838,8 @@ if has "wtp"; then
     source <(wtp shell-init zsh)
   }
   add-zsh-hook precmd _wtp_lazy_init
+
+  alias wtpm='wtp cd @'
 else
   alias gwtls='git worktree list'
   alias gwtrm='git worktree remove'
