@@ -958,6 +958,7 @@ fi
 #
 alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && ./install && cd -'
 alias t='tail -f'
+alias tailf='tail -f'
 alias ..='cd ..'
 alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 

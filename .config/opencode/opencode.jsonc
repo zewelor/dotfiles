@@ -1,9 +1,17 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@mohak34/opencode-notifier@latest"],
-  "disabled_providers": ["openrouter", "perplexity", "groq"],
+  "plugin": [
+    "@mohak34/opencode-notifier@latest",
+    "opencode-websearch"
+  ],
+  "disabled_providers": [
+    "openrouter",
+    "perplexity",
+    "groq"
+  ],
   "permission": {
     "git push": "ask",
+    "websearch": "allow"
   },
   "provider": {
     "openai": {
@@ -11,7 +19,9 @@
         "reasoningEffort": "medium",
         "reasoningSummary": "auto",
         "textVerbosity": "medium",
-        "include": ["reasoning.encrypted_content"],
+        "include": [
+          "reasoning.encrypted_content"
+        ],
         "store": false,
       },
     },
@@ -32,30 +42,24 @@
         "--chrome-arg=--ozone-platform=wayland",
         "--chrome-arg=--enable-features=UseOzonePlatform",
         "--isolated",
-        "--no-usage-statistics",
-      ],
+        "--no-usage-statistics"
+      ]
     },
-    "brave-search": {
+    "duckduckgo": {
       "type": "local",
       "command": [
-        "docker",
-        "run",
-        "-i",
-        "--rm",
-        "-e",
-        "BRAVE_API_KEY",
-        "-e",
-        "BRAVE_MCP_TRANSPORT=stdio",
-        "mcp/brave-search",
-      ],
-      "environment": {
-        "BRAVE_API_KEY": "{env:BRAVE_API_KEY}",
-      },
+        "uvx",
+        "duckduckgo-mcp-server"
+      ]
     },
     "perplexity": {
       "enabled": false,
       "type": "local",
-      "command": ["npx", "-y", "@perplexity-ai/mcp-server"],
+      "command": [
+        "npx",
+        "-y",
+        "@perplexity-ai/mcp-server"
+      ],
     },
     "gh_grep": {
       "enabled": false,
