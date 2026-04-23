@@ -840,6 +840,10 @@ if has "wtp"; then
   add-zsh-hook precmd _wtp_lazy_init
 
   alias wtpm='wtp cd @'
+  function wtpb() {
+    local branch="$1"
+    wtp add -b "$branch" && wtp cd "$branch"
+  }
 else
   alias gwtls='git worktree list'
   alias gwtrm='git worktree remove'
