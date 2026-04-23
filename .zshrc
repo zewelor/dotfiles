@@ -842,7 +842,12 @@ if has "wtp"; then
   alias wtpm='wtp cd @'
   function wtpb() {
     local branch="$1"
-    wtp add -b "$branch" && wtp cd "$branch"
+    # Always use the binary directly to reliably capture the created path,
+    # bypassing the wtp shell function wrapper that intercepts 'add' and 'cd'.
+    # --quiet outputs only the path to stdout; hooks and status go to stderr.
+    local target_dir
+    target_dir=$(command wtp add -b "$branch" --quiet) || return 1
+    [[ -n "$target_dir" ]] && cd "$target_dir"
   }
 else
   alias gwtls='git worktree list'
