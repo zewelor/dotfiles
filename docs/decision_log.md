@@ -302,3 +302,34 @@ Tested:
 
 Not tested:
 - Full Neovim startup in this environment, because the local `nvim` build is older than the installed `telescope.nvim` requirement.
+
+## 2026-04-24 — Fail-fast w `.zshrc`: `gwtclone`, `update-all`, `code_pod`
+
+1. **The Problem**
+`gwtclone` źle wykrywał default branch przez błędną składnię `git ls-remote --symref -- HEAD "$repo_url"` (traktował `HEAD` jako URL repozytorium). W wielu miejscach `.zshrc` stosowano fallbacki zamiast fail-fast, co maskowało błędy (pusty default branch → fallback do `main`, brak kubeconfig → fallback do `"default"`).
+
+2. **Root Cause**
+- `git ls-remote` ma składnię `<repo> [<refs>...]`; `--` powodował traktowanie `HEAD` jako repozytorium.
+- `2>/dev/null || true` w `update-all` i `code_pod` ukrywało błędy krytyczne (RBAC, brak sieci, brak kubeconfig).
+- Fallbacki były wygodne w pisaniu, ale powodowały niepoprawne zachowanie w runtime.
+
+3. **The Fix**
+- `gwtclone`: usunięto `--`, zamieniono kolejność na `git ls-remote --symref "$repo_url" HEAD`. Zastąpiono fallback do `main` fail-fast z czytelnym błędem.
+- `update-all`: zastąpiono fallback do `$USER`/`$HOME` fail-fast przy braku rozwiązania target usera.
+- `code_pod`: usunięto `2>/dev/null || true` z 3 miejsc kubectl — błędy są teraz widoczne i natychmiastowe.
+
+4. **Key Insight**
+`2>/dev/null || true` jest antywzorcem w skryptach, które mają robić coś konkretnego z wynikiem komendy. Jeśli wynik jest pusty z powodu błędu, kod downstream często interpretuje to jako "brak danych" i podejmuje niewłaściwe decyzje (np. zakłada `terminated` zamiast zawieść).
+
+5. **The Lesson**
+W shell scripting: fail-fast > silent fallback. Jeśli komenda jest krytyczna dla decyzji logiki, nie tłum jej błędów. Fallbacki tylko tam, gdzie "brak danych" jest prawidłowym stanem (np. optional completion).
+
+6. **Verification / Testing**
+Tested:
+- `git ls-remote --symref "git@github.com:zewelor/dot2dot.git" HEAD` → zwraca `dev`
+- Nieistniejące repo → błąd i `exit 1`
+- `zsh -n .zshrc` po wszystkich zmianach przechodzi
+
+Not tested:
+- Pełny `update-all` jako root na systemie bez UID 1000
+- `code_pod` z faktycznym kubectl i błędami RBAC

@@ -483,13 +483,19 @@ function update-all () {
     target_user="${SUDO_USER}"
   else
     target_user="$(id -nu 1000 2>/dev/null)"
-    [[ -z "${target_user}" ]] && target_user="${USER}"
+    if [[ -z "${target_user}" ]]; then
+      echo "Error: Cannot determine target user (SUDO_USER not set and no user with UID 1000 found)." >&2
+      return 1
+    fi
   fi
 
   # Resolve target user's home directory
   local target_home
-  target_home="$(getent passwd "${target_user}" 2>/dev/null | cut -d: -f6)"
-  [[ -z "${target_home}" ]] && target_home="$HOME"
+  target_home="$(getent passwd "${target_user}" | cut -d: -f6)"
+  if [[ -z "${target_home}" ]]; then
+    echo "Error: Cannot resolve home directory for user '${target_user}'." >&2
+    return 1
+  fi
 
   echo "[apt] Running system package maintenance"
   if update; then
@@ -807,9 +813,10 @@ if has "git"; then
     target_dir=$(cd "$target_dir" && pwd)
 
     echo "Detecting default branch..."
-    default_branch=$(git ls-remote --symref -- HEAD "$repo_url" 2>/dev/null | awk '/^ref:/{sub("refs/heads/",""); print $2; exit}') || true
+    default_branch=$(git ls-remote --symref "$repo_url" HEAD 2>/dev/null | awk '/^ref:/{sub("refs/heads/",""); print $2; exit}') || true
     if [[ -z "$default_branch" ]]; then
-      default_branch="main"
+      echo "Error: Could not detect default branch for '$repo_url'. Ensure the repository exists and is accessible." >&2
+      return 1
     fi
 
     clone_path="$target_dir/$default_branch"
@@ -1175,7 +1182,7 @@ command -v tar >/dev/null 2>&1 || exit 15
 
       if [[ "$existing_state" == "running" ]]; then
         local debug_mounts=""
-        debug_mounts=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .spec.ephemeralContainers[?(@.name==\"$debug_container\")].volumeMounts[*]}{.name}{\":\"}{.mountPath}{\"\\n\"}{end}" 2>/dev/null || true)
+        debug_mounts=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .spec.ephemeralContainers[?(@.name==\"$debug_container\")].volumeMounts[*]}{.name}{\":\"}{.mountPath}{\"\\n\"}{end}")
         if grep -qx "config" <<<"$pod_volumes"; then
           if ! grep -qx "config:/nonexistent" <<<"$debug_mounts"; then
             existing_state="terminated"
@@ -1234,11 +1241,11 @@ EOF
       local waiting_reason=""
       local i
       for ((i = 0; i < debug_wait_seconds; i++)); do
-        running_now=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .status.ephemeralContainerStatuses[?(@.name==\"$debug_container\")]}{.state.running.startedAt}{end}" 2>/dev/null || true)
+        running_now=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .status.ephemeralContainerStatuses[?(@.name==\"$debug_container\")]}{.state.running.startedAt}{end}")
         if [[ -n "$running_now" ]]; then
           break
         fi
-        waiting_reason=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .status.ephemeralContainerStatuses[?(@.name==\"$debug_container\")]}{.state.waiting.reason}{.state.terminated.reason}{end}" 2>/dev/null || true)
+        waiting_reason=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .status.ephemeralContainerStatuses[?(@.name==\"$debug_container\")]}{.state.waiting.reason}{.state.terminated.reason}{end}")
         sleep 1
       done
       if [[ -z "$running_now" ]]; then
@@ -1272,7 +1279,7 @@ printf "code_pod preflight ok (uid=%s home=%s agent=%s)\n" "$uid" "$home" "$agen
       return 1
     fi
 
-    ctx=$("$kubectl_bin" config current-context 2>/dev/null || printf "default")
+    ctx=$("$kubectl_bin" config current-context)
     json=$(printf '{"context":"%s","podname":"%s","namespace":"%s","name":"%s"}' "$ctx" "$pod" "$ns" "$container")
     hex=$(printf '%s' "$json" | xxd -p -c 999 | tr -d '\n')
     path_esc=${folder// /%20}
