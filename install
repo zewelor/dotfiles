@@ -500,33 +500,55 @@ setup_rclone() {
   echo "rclone config generated at $target"
 }
 
+# Generic helper to set up an AI tool directory via stow.
+# Fails early if any subdirectory in the package already exists as a real
+# directory in the target (stow would descend into it instead of folding).
+setup_ai_tool() {
+  local name="$1"
+  local target_dir="$2"
+  local pkg="$3"
+  shift 3
+  local extra_args=("$@")
+
+  print_banner "Setting up $name configuration..."
+  mkdir -p "$target_dir"
+
+  local repo_pkg="$BASE_DIR/$pkg"
+  if [[ -d "$repo_pkg" ]]; then
+    local dir
+    for dir in "$repo_pkg"/*(/N); do
+      local subdir="${dir:t}"
+      if [[ -d "$target_dir/$subdir" ]] && [[ ! -L "$target_dir/$subdir" ]]; then
+        echo "ERROR: $target_dir/$subdir already exists as a directory." >&2
+        echo "To switch to dotfiles-managed symlink, remove it manually and re-run:" >&2
+        echo "  rm -rf $target_dir/$subdir && ./install" >&2
+        return 1
+      fi
+    done
+  fi
+
+  install_with_stow -d "$BASE_DIR" -t "$target_dir" "${extra_args[@]}" "$pkg"
+}
+
 # Function to setup Claude Code configuration via stow.
 # Uses stow to link .claude contents (skills/, settings.json, scripts) into ~/.claude/.
 # settings.local.json is ignored (per-project file for this dotfiles repo).
 setup_claude() {
-  print_banner "Setting up Claude Code configuration..."
-  local claude_dir="$HOME_DIR/.claude"
-
-  mkdir -p "$claude_dir"
-
-  # Use stow to link .claude package contents into ~/.claude
-  # --ignore: skip settings.local.json (per-project) and skills/ (managed via prv/.agents)
-  install_with_stow -d "$BASE_DIR" -t "$claude_dir" \
+  setup_ai_tool "Claude Code" "$HOME_DIR/.claude" ".claude" \
     --ignore='settings\.local\.json' \
-    --ignore='^skills$' \
-    .claude
+    --ignore='^skills$'
 }
 
 # Function to setup Codex configuration via stow.
 # Uses stow to link .codex contents (scripts) into ~/.codex/.
 setup_codex() {
-  print_banner "Setting up Codex configuration..."
-  local codex_dir="$HOME_DIR/.codex"
+  setup_ai_tool "Codex" "$HOME_DIR/.codex" ".codex"
+}
 
-  mkdir -p "$codex_dir"
-
-  # Use stow to link .codex package contents into ~/.codex
-  install_with_stow -d "$BASE_DIR" -t "$codex_dir" .codex
+# Function to setup OpenCode configuration via stow.
+# Uses stow to link .opencode contents (commands) into ~/.opencode/.
+setup_opencode() {
+  setup_ai_tool "OpenCode" "$HOME_DIR/.opencode" ".opencode"
 }
 
 # Function to setup Vim autoload directories and plugins.
@@ -712,6 +734,7 @@ run_installation() {
     setup_mise_desktop_tools
     setup_claude
     setup_codex
+    setup_opencode
     # Nie dziala idelanie , poki co koomentuje
     # setup_desktop_entries
   fi
