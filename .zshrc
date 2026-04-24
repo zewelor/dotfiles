@@ -139,23 +139,6 @@ if has "tmux"; then
   }
 fi
 
-if has "tmuxinator"; then
-  mux() {
-    command tmuxinator "$@"
-  }
-
-  setup_tmuxinator_completion() {
-    zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"
-    zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
-
-    if (( $+functions[zcompdef] )); then
-      zcompdef _tmuxinator mux tmuxinator
-    elif (( $+functions[compdef] )); then
-      compdef _tmuxinator mux tmuxinator
-    fi
-  }
-fi
-
 zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
@@ -236,6 +219,23 @@ zinit light-mode as'program' \
     bpick"opencode-$(_ghr_linux)$([[ $(_ghr_linux) == linux-x64 && -r /proc/cpuinfo ]] && ! grep -qi 'avx2' /proc/cpuinfo 2>/dev/null && echo '-baseline').tar.gz" \
     pick"opencode" \
     for @anomalyco/opencode
+fi
+
+if has "tmuxinator" || (has "mise" && mise which tmuxinator &>/dev/null); then
+  mux() {
+    command tmuxinator "$@"
+  }
+
+  setup_tmuxinator_completion() {
+    zinit ice as"completion" mv"tmuxinator.zsh -> _tmuxinator"
+    zinit snippet https://raw.githubusercontent.com/tmuxinator/tmuxinator/master/completion/tmuxinator.zsh
+
+    if (( $+functions[zcompdef] )); then
+      zcompdef _tmuxinator mux tmuxinator
+    elif (( $+functions[compdef] )); then
+      compdef _tmuxinator mux tmuxinator
+    fi
+  }
 fi
 
 ##########################
