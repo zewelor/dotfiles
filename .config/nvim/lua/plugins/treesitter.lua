@@ -12,6 +12,25 @@ return {
       install_dir = vim.fn.stdpath("data") .. "/site",
     })
 
+    -- Auto-install commonly used parsers if missing.
+    -- nvim-treesitter 1.0+ removed ensure_installed from setup();
+    -- install() is async and handles missing parsers gracefully.
+    local needed = {
+      "lua", "vim", "vimdoc", "query", "bash", "python",
+      "json", "yaml", "toml", "markdown", "markdown_inline",
+      "dockerfile", "git_config", "gitcommit", "diff", "helm",
+    }
+    local installed = require("nvim-treesitter.config").get_installed()
+    local missing = {}
+    for _, lang in ipairs(needed) do
+      if not vim.tbl_contains(installed, lang) then
+        table.insert(missing, lang)
+      end
+    end
+    if #missing > 0 then
+      require("nvim-treesitter").install(missing)
+    end
+
     vim.treesitter.language.register("yaml", { "yaml.tmuxinator", "eruby.yaml.tmuxinator" })
 
     -- Enable tree-sitter highlighting for commonly used filetypes.

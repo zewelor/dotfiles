@@ -159,9 +159,15 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua)
 - **Cel**: Integracja z GitHub Copilot AI
 - **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
-- **Setup**: Zaloguj przez `:Copilot auth`
-- **Jak działa z blink.cmp**: Inline podpowiedzi są wyłączone, Copilot jest wpięty jako źródło w menu autouzupełniania (przez `blink-copilot`).
-  - Akceptujesz je tak samo jak inne pozycje w menu — `<CR>` (Enter).
+- **Autoryzacja (one-time)**:
+  1. W Neovim: `:Copilot auth`
+  2. Otworzy się URL w przeglądarce → zaloguj na GitHub → kliknij "Authorize GitHub Copilot"
+  3. Token zapisze się automatycznie; od tej momentu Copilot działa w każdym buforze.
+- **Jak używać w tej konfiguracji**:
+  - Inline suggestions (`Tab` do akceptacji) są **wyłączone** — Copilot jest wpięty jako źródło w menu autouzupełniania `blink.cmp` (przez `blink-copilot`).
+  - Podczas pisania kodu sugestie Copilota pojawiają się w menu autouzupełniania.
+  - `<C-Space>` — wymuś pokazanie menu.
+  - `<CR>` (Enter) lub `<Tab>` — akceptuj sugestię Copilota tak samo jak każdą inną pozycję w menu.
 
 ---
 
@@ -275,7 +281,7 @@ opencode --port
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
 - **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
-- **Parsery**: instalowane po upgrdzie (polecane: lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm)
+- **Auto-install**: Brakujące parsery (lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm) są instalowane automatycznie przy pierwszym starcie. Wymaga kompilacji (gcc/clang).
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery
   - `:TSInstall <lang>` — Zainstaluj parser dla języka
@@ -309,7 +315,13 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `marksman` — Markdown
 - `dockerls` — Dockerfile
 - `docker_compose_language_service` — docker-compose
-- `ruby_lsp` — Ruby
+- `ruby_lsp` — Ruby (via mise)
+- `rubocop` — Ruby linter (via mise, z `bundle exec` gdy Gemfile obok)
+
+**Konfiguracja API**:
+- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
+- **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach).
+- **Ruby**: ścieżki do `ruby-lsp` i `rubocop` są rozwiązywane dynamicznie przez `mise which` (działa z `mise activate`, nie wymaga shims w PATH).
 
 **Komendy**:
 - `:Mason` — UI menedżera serwerów

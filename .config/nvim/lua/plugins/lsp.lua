@@ -1,6 +1,83 @@
 -- lsp — Language Server Protocol for intelligent code features
 local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
 
+-- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed)
+local function mise_bin(tool)
+  local path = vim.fn.system({ "mise", "which", tool }):gsub("%s+$", "")
+  if vim.v.shell_error ~= 0 or path == "" then
+    return nil
+  end
+  return path
+end
+
+-- Try `bundle exec` first if Gemfile exists, fall back to direct binary
+local function ruby_cmd(base_cmd)
+  local gemfile = vim.fs.find("Gemfile", { upward = true, type = "file" })[1]
+  if gemfile and vim.fn.executable("bundle") == 1 then
+    return vim.list_extend({ "bundle", "exec" }, base_cmd)
+  end
+  return base_cmd
+end
+
+-- Build per-server opts table (shared between 0.11+ and <0.11 paths)
+local function make_server_opts(server)
+  local opts = {}
+  if server == "lua_ls" then
+    opts.settings = {
+      Lua = {
+        diagnostics = { globals = { "vim" } },
+        workspace = { checkThirdParty = false },
+      },
+    }
+  elseif server == "yamlls" then
+    opts.settings = {
+      yaml = {
+        customTags = {
+          "!secret scalar",
+          "!lambda scalar",
+          "!include scalar",
+          "!include_dir_list scalar",
+          "!include_dir_merge_list scalar",
+          "!include_dir_merge_named scalar",
+        },
+      },
+    }
+    local ok, schemastore = pcall(require, "schemastore")
+    if ok then
+      -- Use SchemaStore.nvim catalog (disable built-in schema store).
+      opts.settings.yaml.schemaStore = {
+        enable = false,
+        url = "",
+      }
+      opts.settings.yaml.schemas = schemastore.yaml.schemas()
+    end
+    opts.filetypes = { "yaml", "yaml.docker-compose", "yaml.tmuxinator" }
+  elseif server == "helm_ls" then
+    opts.filetypes = { "helm" }
+  elseif server == "jsonls" then
+    opts.settings = {
+      json = {
+        validate = { enable = true },
+      },
+    }
+    local ok, schemastore = pcall(require, "schemastore")
+    if ok then
+      opts.settings.json.schemas = schemastore.json.schemas()
+    end
+  elseif server == "ruby_lsp" then
+    local path = mise_bin("ruby-lsp")
+    if path then
+      opts.cmd = { path }
+    end
+  elseif server == "rubocop" then
+    local path = mise_bin("rubocop")
+    if path then
+      opts.cmd = ruby_cmd({ path, "--lsp" })
+    end
+  end
+  return opts
+end
+
 return {
   -- Mason: LSP server manager
   {
@@ -45,76 +122,30 @@ return {
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
       end
 
-      local lspconfig = require("lspconfig")
+      local mason_servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service" }
+      local extra_servers = { "ruby_lsp", "rubocop" }
 
-      -- Try `bundle exec` first if Gemfile exists, fall back to direct binary
-      local function ruby_cmd(base_cmd)
-        local gemfile = vim.fs.find("Gemfile", { upward = true, type = "file" })[1]
-        if gemfile and vim.fn.executable("bundle") == 1 then
-          return vim.list_extend({ "bundle", "exec" }, base_cmd)
+      if has_nvim_011 then
+        -- Neovim 0.11+: use native vim.lsp.config() + vim.lsp.enable().
+        -- mason-lspconfig handles vim.lsp.enable() for Mason-managed servers.
+        for _, server in ipairs(mason_servers) do
+          vim.lsp.config(server, make_server_opts(server))
         end
-        return base_cmd
-      end
-
-      local servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service", "ruby_lsp", "rubocop" }
-
-      for _, server in ipairs(servers) do
-        local opts = {}
-        -- lua_ls specific: recognize vim global
-        if server == "lua_ls" then
-          opts.settings = {
-            Lua = {
-              diagnostics = { globals = { "vim" } },
-              workspace = { checkThirdParty = false },
-            },
-          }
-        elseif server == "yamlls" then
-          -- ESPHome / HA-style YAML custom tags (avoid "Unresolved tag" diagnostics)
-          opts.settings = {
-            yaml = {
-              customTags = {
-                "!secret scalar",
-                "!lambda scalar",
-                "!include scalar",
-                "!include_dir_list scalar",
-                "!include_dir_merge_list scalar",
-                "!include_dir_merge_named scalar",
-              },
-            },
-          }
-
-          local ok, schemastore = pcall(require, "schemastore")
-          if ok then
-            -- Use SchemaStore.nvim catalog (disable built-in schema store).
-            opts.settings.yaml.schemaStore = {
-              enable = false,
-              url = "",
-            }
-            opts.settings.yaml.schemas = schemastore.yaml.schemas()
+        for _, server in ipairs(extra_servers) do
+          local opts = make_server_opts(server)
+          -- Only enable if mise resolved the binary (fail-fast)
+          if opts.cmd and vim.fn.executable(opts.cmd[1]) == 1 then
+            vim.lsp.config(server, opts)
+            vim.lsp.enable(server)
           end
-
-          opts.filetypes = { "yaml", "yaml.docker-compose", "yaml.tmuxinator" }
-
-        elseif server == "helm_ls" then
-          opts.filetypes = { "helm" }
-        elseif server == "jsonls" then
-          opts.settings = {
-            json = {
-              validate = { enable = true },
-            },
-          }
-
-          local ok, schemastore = pcall(require, "schemastore")
-          if ok then
-            opts.settings.json.schemas = schemastore.json.schemas()
-          end
-        elseif server == "ruby_lsp" then
-          opts.cmd = { vim.fn.expand("~/.local/share/mise/shims/ruby-lsp") }
-        elseif server == "rubocop" then
-          -- Prefer `bundle exec`, fall back to mise shim
-          opts.cmd = ruby_cmd({ vim.fn.expand("~/.local/share/mise/shims/rubocop"), "--lsp" })
         end
-        lspconfig[server].setup(opts)
+      else
+        -- Neovim <0.11: fall back to deprecated lspconfig.setup() API.
+        local lspconfig = require("lspconfig")
+        local all_servers = vim.list_extend(vim.deepcopy(mason_servers), extra_servers)
+        for _, server in ipairs(all_servers) do
+          lspconfig[server].setup(make_server_opts(server))
+        end
       end
     end,
   },
