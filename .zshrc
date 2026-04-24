@@ -41,10 +41,6 @@ if [ -d "$HOME/.local/bin" ]; then
   path+=("$HOME/.local/bin")
 fi
 
-if [ -d "$HOME/.local/share/mise/shims" ]; then
-  path+=("$HOME/.local/share/mise/shims")
-fi
-
 if [ -d "$HOME/.krew/bin" ]; then
   path+=("$HOME/.krew/bin")
 fi
@@ -223,10 +219,12 @@ zinit light-mode wait"2" lucid from"gh-r" as"program" \
   pick"just" for @casey/just
 
 if is_desktop; then
-  zinit light-mode as'program' bpick'mise-*.tar.gz' from'gh-r' for \
-      pick'mise/bin/mise' \
-      atclone'./mise/bin/mise completion zsh >_mise' atpull'%atclone' \
-      @jdx/mise
+zinit light-mode as'program' \
+    bpick"mise-*$(_ghr_linux).tar.gz" \
+    pick'mise/bin/mise' \
+    atclone'./mise/bin/mise completion zsh >_mise' atpull'%atclone' \
+    from'gh-r' for \
+    @jdx/mise
 
   # Fixes:
   # Error: usage CLI not found. This is required for completions to work in mise.
@@ -235,43 +233,7 @@ if is_desktop; then
 
   zinit light-mode from"gh-r" as"program" \
     atclone"./opencode completion > _opencode; echo 'compdef _opencode_yargs_completions oc' >> _opencode" atpull"%atclone" \
-    bpick"$(
-      emulate -L zsh
-
-      typeset os arch ext baseline_suffix musl_suffix
-      baseline_suffix=""
-      musl_suffix=""
-
-      case "$OSTYPE" in
-        linux*)  os="linux";  ext="tar.gz" ;;
-        darwin*) os="darwin"; ext="zip" ;;
-        *)       os="linux";  ext="tar.gz" ;;
-      esac
-
-      case "$(uname -m)" in
-        x86_64)        arch="x64" ;;
-        aarch64|arm64) arch="arm64" ;;
-        *)             arch="x64" ;;
-      esac
-
-      if [[ "$arch" == "x64" ]]; then
-        if [[ "$os" == "linux" ]] && [[ -r /proc/cpuinfo ]]; then
-          grep -qi 'avx2' /proc/cpuinfo || baseline_suffix="-baseline"
-        elif [[ "$os" == "darwin" ]] && command -v sysctl >/dev/null 2>&1; then
-          [[ "$(sysctl -n hw.optional.avx2_0 2>/dev/null)" == "1" ]] || baseline_suffix="-baseline"
-        fi
-      fi
-
-      if [[ "$os" == "linux" ]]; then
-        if [[ -f /etc/alpine-release ]]; then
-          musl_suffix="-musl"
-        elif command -v ldd >/dev/null 2>&1 && ldd --version 2>/dev/null | grep -qi 'musl'; then
-          musl_suffix="-musl"
-        fi
-      fi
-
-      print -r -- "opencode-${os}-${arch}${baseline_suffix}${musl_suffix}.${ext}"
-    )" \
+    bpick"opencode-$(_ghr_linux)$([[ $(_ghr_linux) == linux-x64 && -r /proc/cpuinfo ]] && ! grep -qi 'avx2' /proc/cpuinfo 2>/dev/null && echo '-baseline').tar.gz" \
     pick"opencode" \
     for @anomalyco/opencode
 fi

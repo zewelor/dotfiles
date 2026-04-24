@@ -94,3 +94,14 @@ resolve_browser_cmd() {
     echo ""
   fi
 }
+
+# GitHub Releases platform suffix for zinit bpick (Linux only)
+_ghr_linux() {
+  local arch
+  case "$(uname -m)" in
+    x86_64)        arch="x64" ;;
+    aarch64|arm64) arch="arm64" ;;
+    *)             arch="x64" ;;
+  esac
+  print -r -- "linux-${arch}"
+}
