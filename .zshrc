@@ -430,7 +430,9 @@ fi
 # Use sudo without aliases
 alias instaluj="\sudo apt install -y"
 alias szukaj="\sudo apt-cache search"
-alias czysc_dpkg="\sudo apt autoremove -y --purge ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs --no-run-if-empty \sudo dpkg --purge"
+alias czysc_dpkg="\sudo apt autoremove -y --purge ; \sudo apt autoclean ; dpkg --list |grep \"^rc\" | cut -d \" \" -f 3 | xargs --no-run-if-empty \sudo dpkg --purge"
+alias duze_pakiety="dpkg-query -Wf '\${Installed-Size}\t\${Package}\n' | sort -rn | head -30 | awk '{printf \"%.1f MB\t%s\n\", \$1/1024, \$2}'"
+alias apt_obsolete="aptitude search '~o'"
 
 # Pipx nees to be updated as user
 function update () {
