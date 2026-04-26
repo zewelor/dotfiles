@@ -160,12 +160,12 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Cel**: Integracja z GitHub Copilot AI
 - **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
 - **Autoryzacja (one-time)**:
-  1. W Neovim: `:Copilot auth`
+  1. W Neovim: `:Copilot auth` (lub automatycznie przy `:Lazy sync` przez `build`).
   2. Otworzy się URL w przeglądarce → zaloguj na GitHub → kliknij "Authorize GitHub Copilot"
-  3. Token zapisze się automatycznie; od tej momentu Copilot działa w każdym buforze.
+  3. Token zapisze się automatycznie; od tego momentu Copilot działa w każdym buforze.
 - **Jak używać w tej konfiguracji**:
-  - Inline suggestions (`Tab` do akceptacji) są **wyłączone** — Copilot jest wpięty jako źródło w menu autouzupełniania `blink.cmp` (przez `blink-copilot`).
-  - Podczas pisania kodu sugestie Copilota pojawiają się w menu autouzupełniania.
+  - Inline suggestions (ghost text) są **wyłączone** — Copilot jest wpięty jako źródło w menu autouzupełniania `blink.cmp` (przez `blink-copilot`).
+  - Sugestie Copilota pojawiają się w menu autouzupełniania.
   - `<C-Space>` — wymuś pokazanie menu.
   - `<CR>` (Enter) lub `<Tab>` — akceptuj sugestię Copilota tak samo jak każdą inną pozycję w menu.
 
@@ -319,8 +319,8 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `rubocop` — Ruby linter (via mise, z `bundle exec` gdy Gemfile obok)
 
 **Konfiguracja API**:
-- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
-- **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach).
+- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona. Copilot LSP jawnie wyłączony (`vim.lsp.config("copilot", {})` bez `enable`) — copilot.lua zarządza własnym klientem.
+- **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach). Copilot nie jest w liście serwerów.
 - **Ruby**: ścieżki do `ruby-lsp` i `rubocop` są rozwiązywane dynamicznie przez `mise which` (działa z `mise activate`, nie wymaga shims w PATH).
 
 **Komendy**:
