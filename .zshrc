@@ -801,111 +801,121 @@ if has "git"; then
     cd "$clone_path" || return 1
   }
 
-if has "wtp"; then
-  # Wait until compinit is available, then initialize wtp once.
-  _wtp_lazy_init() {
-    (( $+functions[compdef] )) || return 0
-    add-zsh-hook -d precmd _wtp_lazy_init
-    source <(wtp shell-init zsh)
-  }
-  add-zsh-hook precmd _wtp_lazy_init
+  if has "wtp"; then
+    # Wait until compinit is available, then initialize wtp once.
+    _wtp_lazy_init() {
+      (( $+functions[compdef] )) || return 0
+      add-zsh-hook -d precmd _wtp_lazy_init
+      source <(wtp shell-init zsh)
+    }
+    add-zsh-hook precmd _wtp_lazy_init
 
-  alias wtpm='wtp cd @'
-  function wtpb() {
-    local branch="$1"
-    # Always use the binary directly to reliably capture the created path,
-    # bypassing the wtp shell function wrapper that intercepts 'add' and 'cd'.
-    # --quiet outputs only the path to stdout; hooks and status go to stderr.
-    local target_dir
-    target_dir=$(command wtp add -b "$branch" --quiet) || return 1
-    [[ -n "$target_dir" ]] && cd "$target_dir"
-  }
-else
-  alias gwtls='git worktree list'
-  alias gwtrm='git worktree remove'
-  alias gwtpr='git worktree prune'
+    alias wtpm='wtp cd @'
+    function wtpb() {
+      local branch="$1"
+      # Always use the binary directly to reliably capture the created path,
+      # bypassing the wtp shell function wrapper that intercepts 'add' and 'cd'.
+      # --quiet outputs only the path to stdout; hooks and status go to stderr.
+      local target_dir
+      target_dir=$(command wtp add -b "$branch" --quiet) || return 1
+      [[ -n "$target_dir" ]] && cd "$target_dir"
+    }
+  else
+    alias gwtls='git worktree list'
+    alias gwtrm='git worktree remove'
+    alias gwtpr='git worktree prune'
 
-  function gwta() {
-    local branch=$1
-    local base=${2:-$(git_main_branch)}
-    local dir="$PWD"
-    local root=""
-    local new_wt_path=""
-    local is_bare=0
-    local files_to_link=( ".env" )
+    function gwta() {
+      local branch=$1
+      local base=${2:-$(git_main_branch)}
+      local dir="$PWD"
+      local root=""
+      local new_wt_path=""
+      local is_bare=0
+      local files_to_link=( ".env" )
 
-    if [[ -z "$branch" ]]; then
-      echo "Usage: gwta <branch-name> [base]"
-      return 1
-    fi
+      if [[ -z "$branch" ]]; then
+        echo "Usage: gwta <branch-name> [base]"
+        return 1
+      fi
 
-    if [[ "$branch" =~ "/" ]]; then
-      echo "Error: Branch name cannot contain '/' to prevent accidental subdirectory creation."
-      return 1
-    fi
+      if [[ "$branch" =~ "/" ]]; then
+        echo "Error: Branch name cannot contain '/' to prevent accidental subdirectory creation."
+        return 1
+      fi
 
-    if git rev-parse --is-bare-repository 2>/dev/null | grep -q "true"; then
-      is_bare=1
-      root="$PWD"
-      echo "Found bare repository at: $root"
-    fi
+      if git rev-parse --is-bare-repository 2>/dev/null | grep -q "true"; then
+        is_bare=1
+        root="$PWD"
+        echo "Found bare repository at: $root"
+      fi
 
-    if [[ $is_bare -eq 0 ]]; then
-      while [[ "$dir" != "/" ]]; do
-        if [[ -d "$dir/.bare" ]]; then
-          root="$dir"
-          break
-        fi
-        dir=$(dirname "$dir")
-      done
-    fi
+      if [[ $is_bare -eq 0 ]]; then
+        while [[ "$dir" != "/" ]]; do
+          if [[ -d "$dir/.bare" ]]; then
+            root="$dir"
+            break
+          fi
+          dir=$(dirname "$dir")
+        done
+      fi
 
-    local git_dir=""
-    if [[ $is_bare -eq 1 ]]; then
-      git_dir="$root"
-      new_wt_path="$root/$branch"
-    elif [[ -n "$root" ]]; then
-      git_dir="$root/.bare"
-      new_wt_path="$root/$branch"
-    fi
+      local git_dir=""
+      if [[ $is_bare -eq 1 ]]; then
+        git_dir="$root"
+        new_wt_path="$root/$branch"
+      elif [[ -n "$root" ]]; then
+        git_dir="$root/.bare"
+        new_wt_path="$root/$branch"
+      fi
 
-    if [[ -n "$git_dir" ]]; then
-      git -C "$git_dir" worktree add -b "$branch" "$new_wt_path" "$base"
-    else
-      echo "No bare repo or .bare found, assuming standard repo."
-      new_wt_path="${PWD:h}/$branch"
-      git worktree add -b "$branch" "../$branch" "$base"
-    fi
+      if [[ -n "$git_dir" ]]; then
+        git -C "$git_dir" worktree add -b "$branch" "$new_wt_path" "$base"
+      else
+        echo "No bare repo or .bare found, assuming standard repo."
+        new_wt_path="${PWD:h}/$branch"
+        git worktree add -b "$branch" "../$branch" "$base"
+      fi
 
-    local ret=$?
-    if [[ $ret -eq 0 ]]; then
-      local main_branch_name
-      main_branch_name=$(git_main_branch 2>/dev/null)
+      local ret=$?
+      if [[ $ret -eq 0 ]]; then
+        local main_branch_name
+        main_branch_name=$(git_main_branch 2>/dev/null)
 
-      if [[ -n "$main_branch_name" ]]; then
-        local main_wt_path=""
-        if [[ -n "$git_dir" ]]; then
-          main_wt_path=$(git -C "$git_dir" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
-        else
-          main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
-        fi
+        if [[ -n "$main_branch_name" ]]; then
+          local main_wt_path=""
+          if [[ -n "$git_dir" ]]; then
+            main_wt_path=$(git -C "$git_dir" worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+          else
+            main_wt_path=$(git worktree list | grep " \[${main_branch_name}\]$" | awk '{print $1}' | head -n 1)
+          fi
 
-        if [[ -n "$main_wt_path" ]]; then
-          for file in "${files_to_link[@]}"; do
-            if [[ -f "$main_wt_path/$file" ]]; then
-              echo "Linking $file from $main_wt_path to $new_wt_path"
-              ln -s "$main_wt_path/$file" "$new_wt_path/$file"
-            fi
-          done
+          if [[ -n "$main_wt_path" ]]; then
+            for file in "${files_to_link[@]}"; do
+              if [[ -f "$main_wt_path/$file" ]]; then
+                echo "Linking $file from $main_wt_path to $new_wt_path"
+                ln -s "$main_wt_path/$file" "$new_wt_path/$file"
+              fi
+            done
+          fi
         fi
       fi
-    fi
-    if [[ $ret -eq 0 && -d "$new_wt_path" ]]; then
-      cd "$new_wt_path"
-    fi
-    return $ret
-  }
-fi # end: worktree
+      if [[ $ret -eq 0 && -d "$new_wt_path" ]]; then
+        cd "$new_wt_path"
+      fi
+      return $ret
+    }
+  fi # end: worktree
+
+  if has "workmux"; then
+    # Wait until compinit is available, then initialize workmux completions once.
+    _workmux_lazy_init() {
+      (( $+functions[compdef] )) || return 0
+      add-zsh-hook -d precmd _workmux_lazy_init
+      source <(workmux completions zsh)
+    }
+    add-zsh-hook precmd _workmux_lazy_init
+  fi
 
   function git_main_branch () {
     git_default_branch_name "${1:-.}"

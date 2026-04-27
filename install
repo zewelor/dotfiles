@@ -434,6 +434,7 @@ setup_mise_desktop_tools() {
     "yt-dlp"
     "npm:@steipete/summarize@latest"
     "github:satococoa/wtp@latest"
+    "workmux"
   )
 
   local tool=""
