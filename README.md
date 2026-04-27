@@ -143,15 +143,9 @@ my-project/
   - detects the remote default branch via `git ls-remote`
   - clones normally into `<target-dir>/<default-branch>/`
   - changes the current shell into the clone directory
-  - creates `.wtp.yml` only if the repository does not already provide one
-- **Generated `.wtp.yml`**:
-  - sets `version: "1.0"`
-  - sets `defaults.base_dir: ".."` so `wtp add` creates sibling worktrees next to the clone
-  - enables a `.env` copy hook automatically when the repo contains `.env.example`
-  - includes commented examples for extra copy/symlink/command hooks, including `mise trust`
 - **Follow-up commands**:
-  - `wtp add feature/x` — create a sibling worktree when `wtp` is installed
-  - `gwta feature-x` — fallback helper for creating a new worktree without `wtp`
+  - `gwta feature-x` — create a new sibling worktree and cd into it
+  - `gwtcd feature-x` — cd into an existing worktree by branch name
   - `git worktree list` — inspect worktrees
 
 ### eza — Modern ls replacement

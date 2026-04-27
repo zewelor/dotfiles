@@ -212,7 +212,6 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 - `@yt-dlp/yt-dlp` (`yt-dlp`) — uses mise registry shorthand `yt-dlp`.
 - `@steipete/summarize` (`summarize`) — managed via `mise` (`npm` backend; not in registry).
 - `@anomalyco/opencode` (`opencode`) — candidate for `mise` (registry shorthand `opencode` available).
-- `@satococoa/wtp` (`wtp`) — managed via `mise` (`github` backend; not in registry).
 - `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).
 - `starship/starship` (`starship`) — zostaje w `zinit` (intentional exception: shell init/completions).
 
