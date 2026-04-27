@@ -140,25 +140,6 @@ Minimalne, spójne formaty:
   - `aac` = `app-cli -c`
 - Przy dodawaniu kolejnych aliasów do tej samej apki dopisz je w tym samym bloku, zamiast rozrzucać po plikach.
 
-## Claude Code (`.claude/`)
-
-Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignore`), ale `setup_claude()` używa **osobnego wywołania stow** do linkowania jego zawartości.
-
-**Dlaczego osobne wywołanie?** Claude Code zapisuje w `~/.claude/` swoje dane runtime (history, plans, todos, projects, credentials). Główny stow linkowałby cały `~/.claude` jako symlink — wtedy Claude pisałby do repo git. Osobne wywołanie `stow -t ~/.claude .claude` tworzy `~/.claude/` jako prawdziwy katalog i linkuje tylko wybrane elementy.
-
-**Co linkujemy do `~/.claude/`:**
-- `settings.json` — globalne ustawienia
-- `status-line.sh`, `claude-code-notifier.sh` — skrypty pomocnicze
-
-**Co NIE linkujemy:**
-- `settings.local.json` — to jest plik **per-project** dla tego repo dotfiles! Zawiera permissions które Claude Code używa gdy pracuje w tym katalogu. NIE kopiować do `~/.claude/`.
-- `skills/` — skille trzymamy globalnie w `prv/.agents/skills` i linkujemy przez zwykły stow z `prv/`
-
-**Dodając nowy skill:**
-1. Utwórz katalog w `prv/.agents/skills/<nazwa>/`
-2. Dodaj `SKILL.md` (wymagany przez Claude Code)
-3. Uruchom `./install` (lub `make skills`) — stow z `prv/` automatycznie odświeży linki
-
 ## Nowa konwencja wspolnego katalogu (`.agents/`)
 
 **Konwencja:**
@@ -207,7 +188,7 @@ Katalog `.claude/` jest **ignorowany przez główny stow** (w `.stow-local-ignor
 - `@casey/just` (`just`) — zostaje w `zinit` (intentional exception).
 - `@cli/cli` (`gh`) — uses mise registry shorthand `github-cli`.
 - `@jdx/mise` (`mise`) — może zostać w `zinit` jako bootstrap, ale rozważyć system package lub self-hosted install dla uproszczenia łańcucha zależności.
-- `@jdx/usage` (`usage`) — zależność completion dla `mise`; migrować razem z decyzją jak instalowany jest `mise`.
+- `@jdx/usage` (`usage`) — installed via `mise use -g usage` (no longer in zinit).
 - `@openai/codex` (`codex`) — uses mise registry shorthand `codex` (aqua backend; avoids `rust-v*` tag resolution issue).
 - `@yt-dlp/yt-dlp` (`yt-dlp`) — uses mise registry shorthand `yt-dlp`.
 - `@steipete/summarize` (`summarize`) — managed via `mise` (`npm` backend; not in registry).

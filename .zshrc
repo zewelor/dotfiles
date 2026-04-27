@@ -202,17 +202,11 @@ zinit light-mode wait"2" lucid from"gh-r" as"program" \
   pick"just" for @casey/just
 
 if is_desktop; then
-zinit light-mode as'program' \
-    bpick"mise-*$(_ghr_linux).tar.gz" \
-    pick'mise/bin/mise' \
-    atclone'./mise/bin/mise completion zsh >_mise' atpull'%atclone' \
-    from'gh-r' for \
-    @jdx/mise
-
-  # Fixes:
-  # Error: usage CLI not found. This is required for completions to work in mise.
-  # See https://usage.jdx.dev for more information.
-  zinit light-mode wait"1" lucid from"gh-r" as"program" pick"usage" for @jdx/usage
+  zinit light-mode as'program' \
+      bpick"mise-*$(_ghr_linux).tar.gz" \
+      pick'mise/bin/mise' \
+      from'gh-r' for \
+      @jdx/mise
 
   zinit light-mode from"gh-r" as"program" \
     atclone"./opencode completion > _opencode; echo 'compdef _opencode_yargs_completions oc' >> _opencode" atpull"%atclone" \
@@ -1354,6 +1348,16 @@ if has "mise"; then
     eval "$(mise activate zsh)"
   }
   add-zsh-hook precmd _mise_lazy_init
+
+  # Cache mise completions; requires `usage` installed via `mise use -g usage`.
+  # Regenerate if cache is missing or older than 7 days.
+  local mise_completion_cache="${HOME}/.cache/zsh/completions"
+  local mise_completion_file="$mise_completion_cache/_mise"
+  if [[ ! -f "$mise_completion_file" ]] || [[ -n "$(find "$mise_completion_file" -mtime +7 2>/dev/null)" ]]; then
+    mkdir -p "$mise_completion_cache"
+    mise completion zsh >| "$mise_completion_file" 2>/dev/null
+  fi
+  fpath+=("$mise_completion_cache")
 fi
 
 # Lazy-load complist only when you press TAB the first time

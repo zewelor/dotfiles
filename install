@@ -427,6 +427,7 @@ setup_mise_desktop_tools() {
   print_banner "Installing desktop tools via mise..."
   # Keep desktop-scoped tools in one place for predictable onboarding.
   local mise_tools=(
+    "usage"          # Required for `mise completion zsh`
     "ruby"
     "gem:tmuxinator"
     "github-cli"
@@ -530,15 +531,6 @@ setup_ai_tool() {
   install_with_stow -d "$BASE_DIR" -t "$target_dir" "${extra_args[@]}" "$pkg"
 }
 
-# Function to setup Claude Code configuration via stow.
-# Uses stow to link .claude contents (skills/, settings.json, scripts) into ~/.claude/.
-# settings.local.json is ignored (per-project file for this dotfiles repo).
-setup_claude() {
-  setup_ai_tool "Claude Code" "$HOME_DIR/.claude" ".claude" \
-    --ignore='settings\.local\.json' \
-    --ignore='^skills$'
-}
-
 # Function to setup Codex configuration via stow.
 # Uses stow to link .codex contents (scripts) into ~/.codex/.
 setup_codex() {
@@ -548,7 +540,11 @@ setup_codex() {
 # Function to setup OpenCode configuration via stow.
 # Uses stow to link .opencode contents (commands) into ~/.opencode/.
 setup_opencode() {
-  setup_ai_tool "OpenCode" "$HOME_DIR/.opencode" ".opencode"
+  setup_ai_tool "OpenCode" "$HOME_DIR/.opencode" ".opencode" \
+    --ignore='node_modules' \
+    --ignore='package\.json' \
+    --ignore='package-lock\.json' \
+    --ignore='bun\.lock'
 }
 
 # Function to setup Vim autoload directories and plugins.
@@ -732,7 +728,6 @@ run_installation() {
   if is_desktop; then
     setup_atuin
     setup_mise_desktop_tools
-    setup_claude
     setup_codex
     setup_opencode
     # Nie dziala idelanie , poki co koomentuje
