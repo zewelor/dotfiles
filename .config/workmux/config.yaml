@@ -1,0 +1,9 @@
+nerdfont: true # Enable nerdfont icons (prompted on first run)
+merge_strategy: rebase # Make workmux merge do rebase by default
+agent: opencode
+
+panes:
+  - command: <agent> # Start the configured agent (e.g., claude)
+    focus: true
+  - split: horizontal # Second pane with default shell
+    percentage: 40
