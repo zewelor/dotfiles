@@ -51,6 +51,11 @@ imap <C-s> <esc>:w<CR>
 nnoremap <Leader>q :q<cr>
 nnoremap <Leader>Q :qa!<cr>
 
+" Disable Ctrl+Z suspend (prevent accidental backgrounding in tmux)
+nnoremap <C-z> <Nop>
+inoremap <C-z> <Nop>
+vnoremap <C-z> <Nop>
+
 " <F10> | NERD Tree
 inoremap <F10> <esc>:NERDTreeToggle<cr>
 nnoremap <F10> :NERDTreeToggle<cr>

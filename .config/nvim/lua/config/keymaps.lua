@@ -120,6 +120,9 @@ keymap("n", "<leader>hS", function()
 	require("gitsigns").stage_buffer()
 end, { desc = "Stage buffer (gitsigns)" })
 
+-- Disable Ctrl+Z suspend (prevent accidental backgrounding in tmux)
+keymap({ "n", "i", "v", "x" }, "<C-z>", "<Nop>", { desc = "Disable suspend (Ctrl+Z)" })
+
 -- Better window navigation
 keymap("n", "<C-h>", "<C-w>h", { desc = "Move to left window" })
 keymap("n", "<C-j>", "<C-w>j", { desc = "Move to bottom window" })

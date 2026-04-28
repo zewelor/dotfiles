@@ -29,6 +29,7 @@ is_vscode_terminal() {
 setopt globdots               # Include hidden files (those starting with a dot) in pathname expansion
 setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
+stty susp undef               # Disable Ctrl+Z suspend (redundant with tmux zoom binding on C-z)
 setopt interactivecomments    # Enable the use of comments in interactive shells
 typeset -U path fpath
 

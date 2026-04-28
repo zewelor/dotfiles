@@ -453,6 +453,10 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `<` — Wcięcie w lewo (i zachowaj zaznaczenie)
 - `>` — Wcięcie w prawo (i zachowaj zaznaczenie)
 
+#### Zawieszanie procesu
+
+- `<C-z>` — **Wyłączone** w Neovim (zablokowane w `keymaps.lua`; w zsh też wyłączone przez `stty susp undef` w `.zshrc`)
+
 #### Komentowanie
 
 - `Ctrl+/` — Przełącz komentarz wiersza/zaznaczenia (Neovim 0.10+; terminal wysyła to jako `<C-_>`)
