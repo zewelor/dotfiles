@@ -145,7 +145,7 @@ my-project/
   - changes the current shell into the clone directory
 - **Follow-up commands**:
   - `gwta feature-x` — create a new sibling worktree and cd into it
-  - `gwtcd feature-x` — cd into an existing worktree by branch name
+  - `gwtcd feature-x` — cd into an existing worktree by branch name (Tab completion suggests only worktree branches)
   - `git worktree list` — inspect worktrees
 
 ### eza — Modern ls replacement
