@@ -28,7 +28,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── telescope.lua            # Wyszukiwanie i fuzzy finder
 │   │   ├── treesitter.lua           # Tree-sitter (Neovim 0.11+)
 │   │   ├── ts-comments.lua          # Commentstring dla natywnego gc/gcc
-│   │   ├── solarized.lua            # Motyw kolorów
+│   │   ├── catppuccin.lua           # Motyw kolorów
 │   │   └── which-key.lua            # Podpowiedzi skrótów
 │   ├── ftdetect/
 │   │   ├── just.lua          # Filetype detection dla Justfile

@@ -1,4 +1,4 @@
-nerdfont: true # Enable nerdfont icons (prompted on first run)
+nerdfont: false # Disable nerdfont icons in window names
 merge_strategy: rebase # Make workmux merge do rebase by default
 agent: opencode
 

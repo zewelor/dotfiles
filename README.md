@@ -153,7 +153,7 @@ my-project/
 - **Repo**: [eza-community/eza](https://github.com/eza-community/eza)
 - **Purpose**: A modern replacement for `ls` with icons, colors, and git integration
 - **Installation**: Automatic via zinit (downloaded from GitHub releases)
-- **Theme**: Solarized Light (`.config/eza/theme.yml`)
+- **Theme**: Catppuccin Latte (eza uses default terminal colors)
 
 **Aliases**:
 
@@ -278,7 +278,7 @@ After the first launch:
 │       ├── copilot.lua        # GitHub Copilot (AI-assisted coding)
 │       ├── mini-icons.lua     # Icons (lightweight alternative to nvim-web-devicons)
 │       ├── neotree.lua        # File explorer (sidebar)
-│       ├── solarized.lua      # Colorscheme (light theme)
+│       ├── catppuccin.lua     # Colorscheme (light theme)
 │       └── which-key.lua      # Keybinding hints (popup menu)
 ```
 
@@ -436,22 +436,6 @@ After the first launch:
 - `Ctrl+S` — Save file in Normal and Insert mode (`:w`)
 
 **Full list**: see `.config/nvim/lua/config/keymaps.lua`
-
----
-
-### **solarized.nvim** — Colorscheme
-
-- **Repo**: [maxmx03/solarized.nvim](https://github.com/maxmx03/solarized.nvim)
-- **Purpose**: Classic Solarized theme (light variant)
-- **Settings**:
-  - Background: `light`
-  - Truecolor: on (`termguicolors`)
-- **Toggle dark/light** (optional):
-
-  ```vim
-  :set background=dark
-  :set background=light
-  ```
 
 ---
 

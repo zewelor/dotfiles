@@ -171,7 +171,6 @@
         ],
         "vs-kubernetes.kubeconfig": "/home/omen/.kube/config"
     },
-    "workbench.colorTheme": "Catppuccin Latte",
     "vim.smartRelativeLine": true,
     "remote.SSH.enableDynamicForwarding": false,
     // "chat.tools.terminal.terminalProfile.linux": {
@@ -187,5 +186,6 @@
     },
     "gitlens.codeLens.enabled": false,
     "editor.lineNumbers": "relative",
-    "terminal.integrated.copyOnSelection": true
+    "terminal.integrated.copyOnSelection": true,
+    "workbench.colorTheme": "Catppuccin Latte"
 }
