@@ -1,6 +1,7 @@
-nerdfont: false # Disable nerdfont icons in window names
-merge_strategy: rebase # Make workmux merge do rebase by default
+nerdfont: true
+merge_strategy: squash
 agent: opencode
+status_format: false
 
 panes:
   - command: <agent> # Start the configured agent (e.g., claude)
