@@ -1,0 +1,6 @@
+{
+  "$schema": "https://opencode.ai/tui.json",
+  "keybinds": {
+    "terminal_suspend": "<leader>z"
+  }
+}

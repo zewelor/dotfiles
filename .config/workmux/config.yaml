@@ -4,6 +4,6 @@ agent: opencode
 
 panes:
   - command: <agent> # Start the configured agent (e.g., claude)
-    focus: true
+    zoom: true
   - split: horizontal # Second pane with default shell
     percentage: 40
