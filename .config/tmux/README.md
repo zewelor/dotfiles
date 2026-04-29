@@ -85,8 +85,7 @@ set -ag status-right "#{E:@catppuccin_status_session}"
 
 ```
 .config/tmux/plugins/
-├── catppuccin/tmux     # Theme
-└── tmux-sensible/      # Sensible defaults
+└── catppuccin/tmux     # Theme
 ```
 
 Managed via `dotfiles_update` alias (runs `git submodule update --recursive --remote`).
