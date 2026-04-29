@@ -74,7 +74,7 @@ export DEFAULT_USER=$(whoami)
 # make it more responsive
 export KEYTIMEOUT=1
 
-export MC_SKIN=$HOME/.local/share/mc/skins/catppuccin.ini
+export MC_SKIN=$HOME/.local/share/mc/skins/catppuccin-latte.ini
 
 #
 # Zinit

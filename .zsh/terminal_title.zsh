@@ -25,6 +25,7 @@ _title_terminal_session_prefix() {
 _title_terminal() {
   emulate -L zsh
   [[ -t 1 ]] || return 0
+  [[ -n "${TMUX:-}" ]] && return 0   # skip when inside tmux (pane_title managed by tmux)
   local input="$1"
   # Expand prompt escapes (e.g. %~)
   local expanded
