@@ -658,15 +658,13 @@ if has "git"; then
     fi
   }
 
-  if has "workmux"; then
-    # Wait until compinit is available, then initialize workmux completions once.
-    _workmux_lazy_init() {
-      (( $+functions[compdef] )) || return 0
-      add-zsh-hook -d precmd _workmux_lazy_init
-      source <(workmux completions zsh)
-    }
-    add-zsh-hook precmd _workmux_lazy_init
-  fi
+  _workmux_lazy_init() {
+    (( $+functions[compdef] )) || return 0
+    has "workmux" || return 0
+    add-zsh-hook -d precmd _workmux_lazy_init
+    source <(workmux completions zsh)
+  }
+  add-zsh-hook precmd _workmux_lazy_init
 
   function grhco () {
     git reset HEAD $1 && git checkout -- $1
