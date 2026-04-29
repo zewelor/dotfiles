@@ -93,8 +93,7 @@ call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
 Plug 'pbrisbin/vim-mkdir'
 
 " Colors
-Plug 'chriskempson/vim-tomorrow-theme'
-Plug 'altercation/vim-colors-solarized'
+Plug 'catppuccin/vim', { 'as': 'catppuccin' }
 " Plug 'bling/vim-airline'
 
 " Edit
@@ -122,9 +121,7 @@ Plug 'gregsexton/gitv', { 'on': 'Gitv' }
 
 call plug#end()
 
-colorscheme solarized
-" colorscheme Tomorrow-Night
-set background=light
+colorscheme catppuccin_latte
 
 " Local config
 if filereadable($HOME . "/.vimrc.local")

@@ -1,7 +1,7 @@
 [general]
 # Themes from https://github.com/alacritty/alacritty-theme
 import = [
-    "~/.config/alacritty/solarized_light.toml"
+    "~/.config/alacritty/catppuccin-latte.toml"
 ]
 
 [font]

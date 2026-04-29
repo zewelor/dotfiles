@@ -267,12 +267,12 @@ opencode --port
 
 ---
 
-### **solarized-osaka.nvim** — Motyw Kolorów
+### **catppuccin** — Motyw Kolorów
 
-- **Repo**: [craftzdog/solarized-osaka.nvim](https://github.com/craftzdog/solarized-osaka.nvim)
-- **Cel**: Piękny motyw Solarized z wariantami light/dark
-- **Aktywny**: `solarized-osaka` (dark mode)
-- **Zmiana**: Edytuj `lua/plugins/solarized.lua`
+- **Repo**: [catppuccin/nvim](https://github.com/catppuccin/nvim)
+- **Cel**: Soothing pastel theme dla Neovim
+- **Aktywny**: `catppuccin` z flavour `latte`
+- **Zmiana**: Edytuj `lua/plugins/catppuccin.lua`
 
 ---
 

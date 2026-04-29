@@ -1,5 +1,4 @@
--- Set light background early, before lazy.nvim loads plugins
-vim.o.background = "light"
+-- Bootstrap lazy.nvim and core configuration
 
 -- For Neovim < 0.11: mock missing vim.lsp.enable (auto-removes on upgrade)
 if vim.version().minor < 11 then
@@ -13,5 +12,3 @@ require("config.options")
 
 -- Keymaps (custom keyboard shortcuts)
 require("config.keymaps")
-
-

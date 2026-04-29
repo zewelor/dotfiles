@@ -3,52 +3,65 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 add_newline = false
-palette = "p10k"
-format = "$username$hostname$directory$git_branch$git_status$git_state[](fg:bg) "
+palette = "catppuccin_latte"  # https://github.com/catppuccin/starship/blob/main/starship.toml
+format = "$username$hostname$directory$git_branch$git_status$git_state[](fg:mantle) "
 right_format = "$character$cmd_duration$kubernetes"
 
-[palettes.p10k]
-bg  = "236" # dark gray (tło)
-dir = "31"  # deep blue (ścieżka katalogu)
-anc = "39"  # light blue (ikona kłódki, styl katalogu)
-vcs = "76"  # lime green (git branch)
-mod = "178" # gold (zmiany w git, zwykły użytkownik)
-err = "196" # red (błędy, usunięte pliki, root)
-unt = "39"  # light blue (nieśledzone pliki)
-gry = "248" # grey (czas trwania komendy)
-hst = "242" # dark grey (hostname - subtelny)
-k8s = "134" # purple (kubernetes)
-suc = "70"  # green (sukces komendy)
-fail = "160" # red (błąd komendy)
-vim = "106" # green (tryb vim)
+[palettes.catppuccin_latte]
+rosewater = "#dc8a78"
+flamingo  = "#dd7878"
+pink      = "#ea76cb"
+mauve     = "#8839ef"
+red       = "#d20f39"
+maroon    = "#e64553"
+peach     = "#fe640b"
+yellow    = "#df8e1d"
+green     = "#40a02b"
+teal      = "#179299"
+sky       = "#04a5e5"
+sapphire  = "#209fb5"
+blue      = "#1e66f5"
+lavender  = "#7287fd"
+text      = "#4c4f69"
+subtext1  = "#5c5f77"
+subtext0  = "#6c6f85"
+overlay2  = "#7c7f93"
+overlay1  = "#8c8fa1"
+overlay0  = "#9ca0b0"
+surface2  = "#acb0be"
+surface1  = "#bcc0cc"
+surface0  = "#ccd0da"
+base      = "#eff1f5"
+mantle    = "#e6e9ef"
+crust     = "#dce0e8"
 
 [username]
 show_always = true
 format      = "[$user]($style)"
-style_root  = "fg:err bg:bg bold"
-style_user  = "fg:mod bg:bg bold"
+style_root  = "fg:red bg:mantle bold"
+style_user  = "fg:peach bg:mantle bold"
 
 # https://starship.rs/config/#hostname
 [hostname]
 ssh_symbol = " 🌐"
 format = '[@$hostname$ssh_symbol]($style)'
-style = "bg:bg fg:hst bold"
+style = "bg:mantle fg:overlay2 bold"
 # Zrobilem tak bo inaczje trzebbay zmienia etc sudeors na kazdym host zeby zachowyal env ssh przy sudo, sporo roboty i pamietania, zawsz emoge wrocic
 ssh_only = false
 
 [directory]
-format                    = '[ ](bg:bg)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
+format                    = '[ ](bg:mantle)[$path]($style)[$read_only]($read_only_style)[ ](bg:mantle)'
 read_only                 = " 󰌾"
-read_only_style           = "fg:anc bg:bg bold"
-style                     = "bg:bg fg:anc bold"
+read_only_style           = "fg:sapphire bg:mantle bold"
+style                     = "bg:mantle fg:sapphire bold"
 fish_style_pwd_dir_length = 1
-# before_repo_root_style    = "bg:bg fg:dir"
-# repo_root_style           = "fg:anc bg:bg bold"
-# repo_root_format          = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:bg)'
+# before_repo_root_style    = "bg:mantle fg:blue"
+# repo_root_style           = "fg:sapphire bg:mantle bold"
+# repo_root_format          = '[ $before_root_path]($before_repo_root_style)[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style)[ ](bg:mantle)'
 
 [git_branch]
 symbol = " "
-format = "[$symbol$branch ](fg:vcs bg:bg)"
+format = "[$symbol$branch ](fg:green bg:mantle)"
 truncation_length = 32
 truncation_symbol = "…"
 
@@ -56,13 +69,13 @@ truncation_symbol = "…"
 [git_status]
 # A conditional format string wrapped in ( and ) will not render if all variables inside are empty.
 format = """([\
-[\\[](fg:vcs bg:bg)[$staged](fg:mod bg:bg bold)\
-[$deleted$conflicted](fg:err bg:bg)\
-[$modified$typechanged$renamed](fg:mod bg:bg)\
-[$untracked](fg:unt bg:bg)\
-[$stashed](fg:vcs bg:bg)\
-[$ahead_behind](fg:vcs bg:bg)\
-[\\]](bg:bg fg:vcs)](bg:bg))"""
+[\\[](fg:green bg:mantle)[$staged](fg:peach bg:mantle bold)\
+[$deleted$conflicted](fg:red bg:mantle)\
+[$modified$typechanged$renamed](fg:peach bg:mantle)\
+[$untracked](fg:sky bg:mantle)\
+[$stashed](fg:green bg:mantle)\
+[$ahead_behind](fg:green bg:mantle)\
+[\\]](bg:mantle fg:green)](bg:mantle))"""
 staged     = "+"
 modified   = "!"
 renamed    = ">"
@@ -75,20 +88,20 @@ behind     = "↓"
 diverged   = "↕$ahead_count/$behind_count "
 
 [git_state]
-format = "[$state($progress_current/$progress_total) ](fg:mod bg:bg)"
+format = "[$state($progress_current/$progress_total) ](fg:peach bg:mantle)"
 
 [cmd_duration]
 min_time = 3000
-format = "[$duration ](fg:gry bg:bg)"
+format = "[$duration ](fg:subtext0 bg:mantle)"
 
 [character]
-format          = "[](fg:bg)[ $symbol](bg:bg)[ ](bg:bg)"
-success_symbol  = "[󰄬](fg:suc bg:bg bold)"
-error_symbol    = "[󰅖](fg:fail bg:bg bold)"
-vimcmd_symbol   = "[NORMAL](fg:vim bg:bg bold)"
+format          = "[](fg:mantle)[ $symbol](bg:mantle)[ ](bg:mantle)"
+success_symbol  = "[󰄬](fg:green bg:mantle bold)"
+error_symbol    = "[󰅖](fg:red bg:mantle bold)"
+vimcmd_symbol   = "[❮](fg:subtext1 bg:mantle bold)"
 
 [kubernetes]
 disabled = false
 detect_env_vars = ["KUBECONFIG"]
 format = '[⎈ $cluster( \($namespace\)) ]($style)'
-style = "fg:k8s bg:bg bold"
+style = "fg:mauve bg:mantle bold"
