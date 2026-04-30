@@ -24,13 +24,14 @@ APT_PACKAGES_CORE= \
 	fd-find \
 	ncdu \
 	curl \
+	btop \
 	jq \
-	stow
+	stow \
+	ripgrep
 
 APT_PACKAGES_OPTIONAL= \
 	lazygit \
-	duf \
-	ripgrep
+	duf
 
 all: base setup
 
