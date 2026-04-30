@@ -74,7 +74,6 @@ export DEFAULT_USER=$(whoami)
 # make it more responsive
 export KEYTIMEOUT=1
 
-export MC_SKIN=$HOME/.local/share/mc/skins/catppuccin-latte.ini
 
 #
 # Zinit
@@ -1195,9 +1194,15 @@ else
   export STARSHIP_CONFIG="${HOME}/.config/starship.toml"
 fi
 
+# Fallback ZSH prompt for when Starship is not loaded (e.g. inside Midnight Commander).
+# Uses only built-in %-escapes — no forks, no subshells, instant rendering.
+# Overridden by Starship when it initializes.
+PROMPT='%F{208}%n%f%F{240}@%f%F{blue}%m%f %F{cyan}%~%f %(?.%F{green}❯%f.%F{red}❯%f) '
+
 # Initialize Starship prompt last to avoid recursive ZLE wrappers when using vi-mode/atuin.
 # We also use a guard to prevent multiple initializations if .zshrc is sourced again.
-if [[ -z "$STARSHIP_INITIALIZED" ]]; then
+# Skip Starship entirely when running inside Midnight Commander subshell (MC_SID is set by mc).
+if [[ -z "$STARSHIP_INITIALIZED" && -z "${MC_SID:-}" ]]; then
   zinit ice as"command" from"gh-r" \
             atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
             atpull"%atclone" src"init.zsh"

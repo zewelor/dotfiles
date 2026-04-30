@@ -38,7 +38,7 @@ crust     = "#dce0e8"
 [username]
 show_always = true
 format      = "[$user]($style)"
-style_root  = "fg:red bg:mantle bold"
+style_root  = "bg:maroon fg:base bold"
 style_user  = "fg:peach bg:mantle bold"
 
 # https://starship.rs/config/#hostname

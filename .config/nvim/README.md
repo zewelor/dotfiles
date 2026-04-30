@@ -271,7 +271,7 @@ opencode --port
 
 - **Repo**: [catppuccin/nvim](https://github.com/catppuccin/nvim)
 - **Cel**: Soothing pastel theme dla Neovim
-- **Aktywny**: `catppuccin` z flavour `latte`
+- **Aktywny**: `catppuccin` z flavour `latte`, transparentne tło (dopasowane do terminala)
 - **Zmiana**: Edytuj `lua/plugins/catppuccin.lua`
 
 ---

@@ -6,6 +6,7 @@ return {
   priority = 1000,
   opts = {
     flavour = "latte",
+    transparent_background = true,
   },
   config = function(_, opts)
     vim.o.termguicolors = true
