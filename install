@@ -677,10 +677,10 @@ run_installation() {
       "$HOME_DIR/.zinit/snippets"/PZT::modules*
     )
     local -a existing_paths=()
-    local path=""
+    local retired_path
 
-    for path in "${retired_paths[@]}"; do
-      [[ -e "$path" ]] && existing_paths+=("$path")
+    for retired_path in "${retired_paths[@]}"; do
+      [[ -e "$retired_path" ]] && existing_paths+=("$retired_path")
     done
 
     (( ${#existing_paths[@]} == 0 )) && return 0
