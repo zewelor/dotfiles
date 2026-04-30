@@ -149,6 +149,14 @@ Minimalne, spójne formaty:
 - Źródło w repo: `prv/.agents/`
 - Główny stow z `prv/` linkuje to 1:1 do `~/.agents/`.
 
+## Themes i kolorystyka
+
+- Wszystkie aplikacje TUI/GUI używają **Catppuccin** (domyślnie flavor `latte`).
+- **Transparency jest preferowane** — terminal background powinien być widoczny przez aplikacje:
+  - Neovim: `transparent_background = true` w `catppuccin.lua`
+  - btop: `theme_background = false` w `btop.conf`
+  - Przy dodawaniu nowych tooli z theme support — zawsze preferuj transparent background.
+
 ## Preferencje środowiskowe
 
 - **NIE używaj direnv** - nie lubię hooków na zmianę katalogu. Per-project env rozwiązuję przez:

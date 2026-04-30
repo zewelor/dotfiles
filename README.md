@@ -221,6 +221,22 @@ zi proj          # Browse directories matching "proj"
 
 ---
 
+### btop — Resource monitor
+
+- **Repo**: [aristocratos/btop](https://github.com/aristocratos/btop)
+- **Purpose**: A resource monitor that shows CPU, memory, disk, and network usage in a beautiful and interactive way
+- **Installation**: Automatic via `Makefile` (`APT_PACKAGES_CORE`)
+- **Theme**: Catppuccin Latte (via `~/.config/btop/themes/`)
+
+**Config**:
+
+- `~/.config/btop/btop.conf` — managed by dotfiles (stow)
+- `~/.config/btop/themes/catppuccin_latte.theme` — default theme
+
+To change flavor, replace the theme file in `~/.config/btop/themes/` and update `color_theme` in `~/.config/btop/btop.conf`.
+
+---
+
 ### tmux and tmuxinator — session helpers
 
 - **Repo**: [tmuxinator/tmuxinator](https://github.com/tmuxinator/tmuxinator)
