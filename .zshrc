@@ -1210,7 +1210,7 @@ if [[ -z "$STARSHIP_INITIALIZED" && -z "${MC_SID:-}" ]]; then
   STARSHIP_INITIALIZED=1
 fi
 
-_title_terminal_pwd
+[[ -z "${TMUX:-}" ]] && _title_terminal_pwd
 
 # Prefer the system-provided GCR ssh-agent on desktop.
 # This avoids spawning ad-hoc ssh-agent processes (which can pile up over time).

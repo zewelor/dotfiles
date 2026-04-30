@@ -2,6 +2,8 @@
 # Requirements:
 # - Automatically set the title on shell startup, after every prompt refresh, and on each directory change
 # - Use the current directory only (no user@host) in the rendered title
+# Skip entirely inside tmux: tmux manages pane titles on its own.
+[[ -n "${TMUX:-}" ]] && return 0
 
 autoload -Uz add-zsh-hook
 
