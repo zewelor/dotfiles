@@ -690,7 +690,7 @@ fi
 #
 # Utils
 #
-alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && ./install && cd -'
+alias dotfiles_update='cd ~/dotfiles && gpl && git submodule update --recursive --remote && if [[ "${DOTFILES_PROFILE:-server}" != "server" ]]; then (cd prv && git pull || echo "⚠ Skipping prv update (no access)" >&2); fi && ./install && cd -'
 alias t='tail -f'
 alias tailf='tail -f'
 alias ..='cd ..'
