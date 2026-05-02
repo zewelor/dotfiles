@@ -1,4 +1,5 @@
 -- catppuccin/nvim — soothing pastel theme for Neovim
+-- Source: https://github.com/catppuccin/nvim
 return {
   "catppuccin/nvim",
   name = "catppuccin",

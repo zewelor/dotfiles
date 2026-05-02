@@ -1,3 +1,5 @@
+# Starship config with Catppuccin Latte palette
+# Palette source: https://github.com/catppuccin/starship/blob/main/starship.toml
 # https://starship.rs/config/
 
 "$schema" = 'https://starship.rs/config-schema.json'

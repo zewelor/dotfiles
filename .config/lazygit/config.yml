@@ -1,0 +1,31 @@
+# Catppuccin Latte theme for lazygit (blue accent)
+# Source: https://github.com/catppuccin/lazygit/blob/main/themes/latte/blue.yml
+theme:
+  activeBorderColor:
+    - '#1e66f5'
+    - bold
+  inactiveBorderColor:
+    - '#6c6f85'
+  searchingActiveBorderColor:
+    - '#df8e1d'
+  optionsTextColor:
+    - '#1e66f5'
+  selectedLineBgColor:
+    - '#ccd0da'
+  inactiveViewSelectedLineBgColor:
+    - '#9ca0b0'
+  cherryPickedCommitFgColor:
+    - '#1e66f5'
+  cherryPickedCommitBgColor:
+    - '#bcc0cc'
+  markedBaseCommitFgColor:
+    - '#1e66f5'
+  markedBaseCommitBgColor:
+    - '#df8e1d'
+  unstagedChangesColor:
+    - '#d20f39'
+  defaultFgColor:
+    - '#4c4f69'
+
+authorColors:
+  '*': '#7287fd'

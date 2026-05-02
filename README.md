@@ -237,6 +237,19 @@ To change flavor, replace the theme file in `~/.config/btop/themes/` and update 
 
 ---
 
+### Catppuccin theme accents
+
+Most tools in this repo use Catppuccin **Latte** as the base flavor. Some tools (lazygit, atuin) also allow picking an **accent color** within that flavor:
+
+- **Available accents**: `blue` (default), `flamingo`, `green`, `lavender`, `maroon`, `mauve`, `peach`, `pink`, `red`, `rosewater`, `sapphire`, `sky`, `teal`, `yellow`
+- **Tools that support accents**:
+  - `lazygit` — `.config/lazygit/config.yml`
+  - `atuin` — `.config/atuin/config.toml` + theme file in `.config/atuin/themes/`
+
+To switch the accent, replace the theme file/config reference with the desired accent name. For example, for `atuin` change `catppuccin-latte-blue` → `catppuccin-latte-mauve` (and ensure the matching theme file exists).
+
+---
+
 ### tmux and tmuxinator — session helpers
 
 - **Repo**: [tmuxinator/tmuxinator](https://github.com/tmuxinator/tmuxinator)

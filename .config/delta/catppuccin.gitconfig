@@ -1,3 +1,5 @@
+# Catppuccin themes for delta
+# Source: https://github.com/catppuccin/delta
 [delta "catppuccin-latte"]
 	blame-palette = "#eff1f5 #e6e9ef #dce0e8 #ccd0da #bcc0cc"
 	commit-decoration-style = "#9ca0b0" bold box ul

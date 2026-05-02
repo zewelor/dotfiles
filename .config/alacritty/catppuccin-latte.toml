@@ -1,3 +1,5 @@
+# Catppuccin Latte theme for Alacritty
+# Source: https://github.com/catppuccin/alacritty
 [colors.primary]
 background = "#ffffff"
 foreground = "#4c4f69"

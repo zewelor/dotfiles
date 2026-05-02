@@ -93,6 +93,7 @@ call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
 Plug 'pbrisbin/vim-mkdir'
 
 " Colors
+" Source: https://github.com/catppuccin/vim
 Plug 'catppuccin/vim', { 'as': 'catppuccin' }
 " Plug 'bling/vim-airline'
 

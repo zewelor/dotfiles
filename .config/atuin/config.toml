@@ -4,5 +4,10 @@ sync_frequency = "2h"
 filter_mode_shell_up_key_binding = "directory"
 style = "full"
 
+# Theme: Catppuccin Latte (blue accent)
+# Source: https://github.com/catppuccin/atuin
+[theme]
+name = "catppuccin-latte-blue"
+
 [sync]
 records = true
