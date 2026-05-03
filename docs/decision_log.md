@@ -333,3 +333,35 @@ Tested:
 Not tested:
 - Pełny `update-all` jako root na systemie bez UID 1000
 - `code_pod` z faktycznym kubectl i błędami RBAC
+
+## 2026-05-03 — Fix nvim_pod path normalization and extend editing image
+
+1. **The Problem**
+`nvim_pod homeassistant-nugat/config/configuration.yaml` opened a blank file instead of the real Home Assistant config.
+
+2. **Root Cause**
+The helper passed `config/configuration.yaml` to Neovim as a relative path. Inside the ephemeral debug container, the mounted config lives at `/config/configuration.yaml`, so Neovim created/opened a different relative path from the working directory.
+
+3. **The Fix**
+- Normalize user-provided pod paths to absolute paths before launching Neovim: `config/...` now becomes `/config/...`.
+- Extended the Neovim image with practical editing tools: `mini.pairs`, `gitsigns`, `telescope`, `git`, `ripgrep`, `fd-find`.
+- Pinned `telescope.nvim` to `0.1.8` because the image uses Neovim `0.10.4` and Telescope `master` requires `0.11+`.
+- Included runtime `git` and `fd` binaries in the final stage, not only in the build stage.
+
+4. **Key Insight**
+The mount was correct; only the path passed to Neovim was wrong. The image issues were separate runtime packaging problems, not the cause of the blank file.
+
+5. **The Lesson**
+When editing files inside containers, always align helper input semantics with real mount paths. For minimal runtime images, verify that plugin runtime dependencies are actually present in the final stage, not only in the build stage.
+
+6. **Verification / Testing**
+Tested:
+- Confirmed `/config/configuration.yaml` exists in the app container (`10463` bytes).
+- Verified `nvim_pod` opens `/config/configuration.yaml` and shows real content.
+- Rebuilt the Neovim image locally and verified all new plugins are installed.
+- Verified `git`, `rg`, and `fdfind` exist and are executable in the runtime image.
+- Verified `require("telescope.builtin")` and `require("gitsigns")` succeed at runtime.
+
+Not tested:
+- GitHub Actions publish for the updated image.
+- Pulling the refreshed GHCR image from a cluster node after publish.
