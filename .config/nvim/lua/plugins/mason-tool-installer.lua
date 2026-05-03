@@ -10,6 +10,7 @@ return {
       "shfmt",
       "beautysh",
       "ruff",
+      "biome",
       "prettier",
 
       -- Useful CLI tools

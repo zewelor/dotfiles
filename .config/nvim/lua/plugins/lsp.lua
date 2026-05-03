@@ -29,41 +29,8 @@ local function make_server_opts(server)
         workspace = { checkThirdParty = false },
       },
     }
-  elseif server == "yamlls" then
-    opts.settings = {
-      yaml = {
-        customTags = {
-          "!secret scalar",
-          "!lambda scalar",
-          "!include scalar",
-          "!include_dir_list scalar",
-          "!include_dir_merge_list scalar",
-          "!include_dir_merge_named scalar",
-        },
-      },
-    }
-    local ok, schemastore = pcall(require, "schemastore")
-    if ok then
-      -- Use SchemaStore.nvim catalog (disable built-in schema store).
-      opts.settings.yaml.schemaStore = {
-        enable = false,
-        url = "",
-      }
-      opts.settings.yaml.schemas = schemastore.yaml.schemas()
-    end
-    opts.filetypes = { "yaml", "yaml.docker-compose", "yaml.tmuxinator" }
   elseif server == "helm_ls" then
     opts.filetypes = { "helm" }
-  elseif server == "jsonls" then
-    opts.settings = {
-      json = {
-        validate = { enable = true },
-      },
-    }
-    local ok, schemastore = pcall(require, "schemastore")
-    if ok then
-      opts.settings.json.schemas = schemastore.json.schemas()
-    end
   elseif server == "ruby_lsp" then
     local path = mise_bin("ruby-lsp")
     if path then
@@ -92,15 +59,10 @@ return {
     opts = {
       ensure_installed = {
         "lua_ls",        -- Lua (Neovim config)
-        "bashls",        -- Bash/Zsh
-        "yamlls",        -- YAML (K8s, docker-compose)
-        "jsonls",        -- JSON
+        "biome",         -- JSON (lightweight compiled LSP)
         "helm_ls",       -- Helm charts
-        "basedpyright",  -- Python
-
-        "marksman",                      -- Markdown
-        "dockerls",                      -- Dockerfile
-        "docker_compose_language_service", -- docker-compose.yml
+        "ruff",          -- Python (lightweight LSP / linter / formatter)
+        "marksman",      -- Markdown
       },
       automatic_installation = true,
       -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
@@ -108,21 +70,16 @@ return {
       automatic_enable = has_nvim_011,
     },
   },
-  -- JSON schemas for jsonls (SchemaStore)
-  {
-    "b0o/SchemaStore.nvim",
-    lazy = true,
-  },
   -- LSP configuration
   {
     "neovim/nvim-lspconfig",
-    dependencies = { "williamboman/mason-lspconfig.nvim", "b0o/SchemaStore.nvim" },
+    dependencies = { "williamboman/mason-lspconfig.nvim" },
     config = function()
       if vim.fn.exists(':LspInfo') == 0 then
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
       end
 
-      local mason_servers = { "lua_ls", "bashls", "yamlls", "jsonls", "helm_ls", "basedpyright", "marksman", "dockerls", "docker_compose_language_service" }
+      local mason_servers = { "lua_ls", "biome", "helm_ls", "ruff", "marksman" }
       local extra_servers = { "ruby_lsp", "rubocop" }
 
       if has_nvim_011 then

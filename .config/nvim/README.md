@@ -303,18 +303,13 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — Menedżer serwerów LSP
 - **mason-lspconfig.nvim**: [williamboman/mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) — Bridge mason ↔ lspconfig
 - **nvim-lspconfig**: [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) — Konfiguracja LSP
-- **SchemaStore.nvim**: [b0o/SchemaStore.nvim](https://github.com/b0o/SchemaStore.nvim) — Schematy JSON/YAML dla `jsonls` i `yamlls` (podpowiedzi + walidacja; wspiera `$schema`)
 
 **Zainstalowane serwery**:
 - `lua_ls` — Lua (konfiguracja Neovim)
-- `bashls` — Bash/Zsh
-- `yamlls` — YAML (K8s, docker-compose; ESPHome: `!secret`, `!lambda`)
-- `jsonls` — JSON (walidacja `$schema`)
+- `biome` — JSON (lekki skompilowany LSP)
 - `helm_ls` — Helm charts
-- `basedpyright` — Python
+- `ruff` — Python (lightweight LSP + linter + formatter)
 - `marksman` — Markdown
-- `dockerls` — Dockerfile
-- `docker_compose_language_service` — docker-compose
 - `ruby_lsp` — Ruby (via mise)
 - `rubocop` — Ruby linter (via mise, z `bundle exec` gdy Gemfile obok)
 
@@ -327,6 +322,11 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `:Mason` — UI menedżera serwerów
 - `:MasonInstall <server>` — Zainstaluj serwer
 - `:LspInfo` — Info o aktywnych serwerach
+
+**Cleanup — usuń zbędne serwery z Masona** (po zmianach w configu):
+```vim
+:MasonUninstall basedpyright jsonls yamlls bashls dockerls docker_compose_language_service
+```
 
 **Keymaps** (aktywne gdy LSP jest podłączony):
 - `gd` — Go to definition
