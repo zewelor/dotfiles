@@ -269,7 +269,6 @@ To switch the accent, replace the theme file/config reference with the desired a
 
 **Projects still using tmuxinator:**
 
-- `homeassistant-ps` (dynamic temp dir / port-forward / cleanup lifecycle)
 - `cc-workers`, `dottales`, `esphome` (project-exit hooks and docker lifecycle)
 
 ---

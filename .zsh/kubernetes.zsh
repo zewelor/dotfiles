@@ -7,14 +7,14 @@ if has "kubectl"; then
 
   zpcompdef _kubectl kubectl
 
-  # Open a file inside a pod with a bare neovim via ephemeral debug container
+  # Open a mounted pod path with a bare neovim via ephemeral debug container.
   nvim_pod() {
     local input="${1:-}"
-    local app folder open_path
+    local app path_fragment open_path
     app="${input%%/*}"
-    folder=""
+    path_fragment=""
     if [[ $input == */* ]]; then
-      folder="${input#*/}"
+      path_fragment="${input#*/}"
     fi
     if [[ -z $input || -z $app ]]; then
       echo "usage: nvim_pod <app-name>[/path]"
@@ -29,10 +29,10 @@ if has "kubectl"; then
 
     local line ns pod
     line=$("$kubectl_bin" get pods -A -l app.kubernetes.io/name="$app" \
-      -o jsonpath='{range .items[?(@.status.phase=="Running")]}{.metadata.namespace} {.metadata.name}{"\n"}{end}' \
+      -o jsonpath='{range .items[?(@.status.phase=="Running")]}{.metadata.namespace}{"\t"}{.metadata.name}{"\n"}{end}' \
       | head -n1)
-    ns=${line%% *}
-    pod=${line#* }
+    ns=${line%%$'\t'*}
+    pod=${line#*$'\t'}
     if [[ -z $pod || -z $ns || $pod == "$line" ]]; then
       echo "no running pod found for app=$app"
       return 1
@@ -42,15 +42,13 @@ if has "kubectl"; then
     pod_json=$("$kubectl_bin" -n "$ns" get pod "$pod" -o json) || return 1
     containers=$(jq -r '.spec.containers[]?.name' <<<"$pod_json")
 
-    local debug_container="nvim-debug-$(date +%s%N)"
     local debug_target="app"
-    local debug_image="ghcr.io/zewelor/nvim:latest"
-    local debug_profile=""
-    local -a debug_profile_args
-    debug_profile_args=()
-
     if ! grep -qx "$debug_target" <<<"$containers"; then
       debug_target="$(head -n1 <<<"$containers")"
+    fi
+    if [[ -z "$debug_target" ]]; then
+      echo "pod $pod has no regular containers"
+      return 1
     fi
 
     local git_ssh_command=""
@@ -62,496 +60,188 @@ if has "kubectl"; then
       | .[0].value // empty
     ' <<<"$pod_json")
 
-    local mount_table
-    mount_table=$(jq -r --arg target "$debug_target" '
-      .spec as $spec |
-      ($spec.volumes // []) as $volumes |
-      [
-        $spec.containers[]
-        | select(.name == $target)
-        | .volumeMounts // []
-        | map(select((.subPath // "") == "" and (.subPathExpr // "") == ""))
-        | unique_by(.name + "|" + .mountPath)
-        | .[]
-        | . as $mount
-        | ($volumes[]? | select(.name == $mount.name)) as $volume
-        | [
-            $mount.name,
-            $mount.mountPath,
-            (if $mount.readOnly then "ro" else "rw" end),
-            (if $volume.persistentVolumeClaim then "pvc"
-             elif $volume.configMap then "configMap"
-             elif $volume.secret then "secret"
-             elif $volume.projected then "projected"
-             elif $volume.emptyDir then "emptyDir"
-             elif $volume.hostPath then "hostPath"
-             else "other"
-             end),
-            (if $volume.persistentVolumeClaim then $volume.persistentVolumeClaim.claimName
-             elif $volume.configMap then $volume.configMap.name
-             elif $volume.secret then $volume.secret.secretName
-             elif $volume.projected then "projected"
-             elif $volume.emptyDir then "emptyDir"
-             elif $volume.hostPath then $volume.hostPath.path
-             else ""
-             end)
-          ]
-        | @tsv
-      ]
+    local mount_roots subpath_mount_paths volume_mounts_yaml
+    mount_roots=$(jq -r --arg target "$debug_target" '
+      .spec.containers[]
+      | select(.name == $target)
+      | .volumeMounts // []
+      | map(select((.subPath // "") == "" and (.subPathExpr // "") == ""))
+      | unique_by(.mountPath)
+      | sort_by([(.mountPath | length), .mountPath])
       | .[]?
+      | .mountPath
+    ' <<<"$pod_json")
+    subpath_mount_paths=$(jq -r --arg target "$debug_target" '
+      .spec.containers[]
+      | select(.name == $target)
+      | .volumeMounts // []
+      | map(select((.subPath // "") != "" or (.subPathExpr // "") != ""))
+      | unique_by(.mountPath)
+      | sort_by([(.mountPath | length), .mountPath])
+      | .[]?
+      | .mountPath
+    ' <<<"$pod_json")
+    volume_mounts_yaml=$(jq -r --arg target "$debug_target" '
+      .spec.containers[]
+      | select(.name == $target)
+      | .volumeMounts // []
+      | map(select((.subPath // "") == "" and (.subPathExpr // "") == ""))
+      | unique_by(.mountPath)
+      | sort_by([(.mountPath | length), .mountPath])
+      | .[]?
+      | "  - name: \(.name | @json)\n" +
+        "    mountPath: \(.mountPath | @json)" +
+        (if .readOnly then "\n    readOnly: true" else "" end) +
+        (if (.mountPropagation // "") != "" then "\n    mountPropagation: \(.mountPropagation | @json)" else "" end)
     ' <<<"$pod_json")
 
-    local selected_mount=""
-    local workspace_root=""
-    local home_path=""
-    if [[ -n "$folder" && "$folder" == /* ]]; then
-      open_path="$folder"
-    elif [[ -n "$folder" ]]; then
-      open_path="/$folder"
-    else
-      local mount_name mount_path mount_access mount_type mount_source
-      local preferred_config=""
-      local preferred_pvc=""
-      local preferred_fallback=""
-      local -a pvc_choices
-      pvc_choices=()
+    if [[ -z "$volume_mounts_yaml" ]]; then
+      printf 'container %s in pod %s has no mounted volumes to edit\n' "$debug_target" "$pod" >&2
+      return 1
+    fi
 
-      while IFS=$'\t' read -r mount_name mount_path mount_access mount_type mount_source; do
+    if [[ -n "$path_fragment" && "$path_fragment" == /* ]]; then
+      open_path="$path_fragment"
+    elif [[ -n "$path_fragment" ]]; then
+      open_path="/$path_fragment"
+    else
+      local mount_path preferred_config="" preferred_fallback=""
+      while IFS= read -r mount_path; do
         [[ -z "$mount_path" ]] && continue
 
         if [[ -z "$preferred_config" && "$mount_path" == "/config" ]]; then
           preferred_config="$mount_path"
         fi
 
-        if [[ -z "$preferred_pvc" && "$mount_type" == "pvc" ]]; then
-          preferred_pvc="$mount_path"
-        fi
-
-        if [[ "$mount_type" == "pvc" ]]; then
-          pvc_choices+=("$mount_path"$'\t'"$mount_source"$'\t'"$mount_access")
-        fi
-
         if [[ -z "$preferred_fallback" ]]; then
           case "$mount_path" in
-          /var/run/* | /run/*) ;;
+          /dev/* | /proc/* | /run/* | /sys/* | /var/run/*) ;;
           *)
             preferred_fallback="$mount_path"
             ;;
           esac
         fi
-      done <<<"$mount_table"
+      done <<<"$mount_roots"
 
-      if (( ${#pvc_choices[@]} > 1 )); then
-        if [[ -t 0 ]]; then
-          local idx=1 pvc_choice pvc_input pvc_path pvc_claim pvc_access
-
-          printf 'Multiple PVC mounts found for %s:\n' "$app"
-          for pvc_choice in "${pvc_choices[@]}"; do
-            IFS=$'\t' read -r pvc_path pvc_claim pvc_access <<<"$pvc_choice"
-            if [[ -n "$pvc_claim" ]]; then
-              printf '  %d) %s (%s, %s)\n' "$idx" "$pvc_path" "$pvc_claim" "$pvc_access"
-            else
-              printf '  %d) %s (%s)\n' "$idx" "$pvc_path" "$pvc_access"
-            fi
-            idx=$((idx + 1))
-          done
-
-          while true; do
-            read -r "?Select PVC [1-${#pvc_choices[@]}]: " pvc_input || return 1
-            if [[ "$pvc_input" == <-> ]] && (( pvc_input >= 1 && pvc_input <= ${#pvc_choices[@]} )); then
-              IFS=$'\t' read -r selected_mount _ _ <<<"${pvc_choices[$pvc_input]}"
-              break
-            fi
-
-            printf 'Invalid selection. Choose 1-%d.\n' "${#pvc_choices[@]}"
-          done
-        else
-          IFS=$'\t' read -r selected_mount _ _ <<<"${pvc_choices[1]}"
-          printf 'Multiple PVC mounts found; stdin is not interactive, defaulting to %s\n' "$selected_mount"
-        fi
-      fi
-
-      if [[ -n "$selected_mount" ]]; then
-        open_path="$selected_mount"
-      elif [[ -n "$preferred_config" ]]; then
+      if [[ -n "$preferred_config" ]]; then
         open_path="$preferred_config"
-      elif [[ -n "$preferred_pvc" ]]; then
-        open_path="$preferred_pvc"
       elif [[ -n "$preferred_fallback" ]]; then
         open_path="$preferred_fallback"
       else
-        open_path="/"
+        open_path="$(head -n1 <<<"$mount_roots")"
+      fi
+
+      if [[ -z "$open_path" ]]; then
+        echo "no mounted paths found for app=$app"
+        return 1
       fi
 
       printf 'Starting path %s\n' "$open_path"
     fi
 
-    local best_workspace_len=0
-    while IFS=$'\t' read -r mount_name mount_path mount_access mount_type mount_source; do
+    local subpath_mount=""
+    local mount_path
+    while IFS= read -r mount_path; do
       [[ -z "$mount_path" ]] && continue
       if [[ "$open_path" == "$mount_path" || "$open_path" == "$mount_path/"* ]]; then
-        if [[ -z "$workspace_root" || ${#mount_path} -lt best_workspace_len ]]; then
+        subpath_mount="$mount_path"
+        break
+      fi
+    done <<<"$subpath_mount_paths"
+
+    if [[ -n "$subpath_mount" ]]; then
+      printf 'path %s is backed by subPath mount %s\n' "$open_path" "$subpath_mount" >&2
+      printf 'ephemeral debug containers cannot mount subPath entries; open a parent path outside that subPath\n' >&2
+      return 1
+    fi
+
+    local workspace_root=""
+    local best_workspace_len=0
+    while IFS= read -r mount_path; do
+      [[ -z "$mount_path" ]] && continue
+      if [[ "$open_path" == "$mount_path" || "$open_path" == "$mount_path/"* ]]; then
+        if (( ${#mount_path} > best_workspace_len )); then
           workspace_root="$mount_path"
           best_workspace_len=${#mount_path}
         fi
       fi
-    done <<<"$mount_table"
+    done <<<"$mount_roots"
 
     if [[ -z "$workspace_root" ]]; then
-      if [[ -n "$selected_mount" ]]; then
-        workspace_root="$selected_mount"
-      elif [[ "$open_path" == */* ]]; then
-        workspace_root="${open_path%/*}"
-        [[ -n "$workspace_root" ]] || workspace_root="/"
-      else
-        workspace_root="$open_path"
-      fi
+      printf 'path %s is not backed by a mounted pod volume\n' "$open_path" >&2
+      printf 'nvim_pod only supports mounted paths from container %s\n' "$debug_target" >&2
+      return 1
     fi
 
-    home_path="$workspace_root"
-
-    local session_root="/tmp/nvim-pod-workspace"
-    local base_root="/tmp/nvim-pod-base"
-    local overlay_root="/tmp/nvim-pod-mirrors"
-    local workspace_runtime_root="$workspace_root"
-    local session_open_path="$open_path"
-    local session_home_path="$home_path"
-    local workspace_source=""
-    local workspace_target=""
-    local workspace_access="rw"
-    local direct_mounts_yaml=""
-    local overlay_mounts_yaml=""
-    local overlay_manifest=""
-    local use_workspace_copy="0"
-
-    while IFS=$'\t' read -r mount_name mount_path mount_access mount_type mount_source; do
-      if [[ "$mount_path" == "$workspace_root" ]]; then
-        workspace_access="$mount_access"
-        break
-      fi
-    done <<<"$mount_table"
-
-    case "$workspace_root" in
-    / | /bin | /dev | /etc | /home | /lib | /lib64 | /proc | /root | /run | /sbin | /sys | /tmp | /usr | /var | /var/*)
-      workspace_runtime_root="${session_root}${workspace_root}"
-      ;;
-    esac
-
-    overlay_mounts_yaml=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg overlay_root "$overlay_root" '
-      .spec.containers[]
-      | select(.name == $target)
-      | .volumeMounts // []
-      | to_entries
-      | map(select(
-          .value.mountPath != $root and
-          (if $root == "/" then
-            true
-          else
-            (.value.mountPath | startswith($root + "/"))
-          end)
-        ))
-      | sort_by([(.value.mountPath | length), .value.mountPath, .key])
-      | .[]
-      | "  - name: \(.value.name | @json)\n" +
-        "    mountPath: \(($overlay_root + "/mount-" + (.key | tostring) + "-" + .value.name) | @json)" +
-        "\n    readOnly: true" +
-        (if (.value.mountPropagation // "") != "" then "\n    mountPropagation: \(.value.mountPropagation | @json)" else "" end)
-    ' <<<"$pod_json")
-
-    overlay_manifest=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg runtime_root "$workspace_runtime_root" --arg overlay_root "$overlay_root" '
-      .spec.containers[]
-      | select(.name == $target)
-      | .volumeMounts // []
-      | to_entries
-      | map(select(
-          .value.mountPath != $root and
-          (if $root == "/" then
-            true
-          else
-            (.value.mountPath | startswith($root + "/"))
-          end)
-        ))
-      | sort_by([(.value.mountPath | length), .value.mountPath, .key])
-      | .[]
-      | [
-          ($runtime_root + (.value.mountPath | ltrimstr($root))),
-          ($overlay_root + "/mount-" + (.key | tostring) + "-" + .value.name),
-          (.value.subPath // ""),
-          (.value.subPathExpr // "")
-        ]
-      | @tsv
-    ' <<<"$pod_json")
-
-    if [[ -n "$overlay_manifest" && "$workspace_root" != "/" ]]; then
-      use_workspace_copy="1"
-      workspace_source="${base_root}${workspace_root}"
-      workspace_target="$workspace_runtime_root"
-      session_open_path="${workspace_runtime_root}${open_path#$workspace_root}"
-      session_home_path="${workspace_runtime_root}${home_path#$workspace_root}"
-
-      direct_mounts_yaml=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg base_root "$base_root" '
-        .spec.containers[]
-        | select(.name == $target)
-        | .volumeMounts // []
-        | map(select(.mountPath == $root))
-        | .[]?
-        | "  - name: \(.name | @json)\n" +
-          "    mountPath: \(($base_root + .mountPath) | @json)" +
-          (if .readOnly then "\n    readOnly: true" else "" end) +
-          (if (.mountPropagation // "") != "" then "\n    mountPropagation: \(.mountPropagation | @json)" else "" end)
-      ' <<<"$pod_json")
-    else
-      overlay_mounts_yaml=""
-      overlay_manifest=""
-
-      direct_mounts_yaml=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" '
-        .spec.containers[]
-        | select(.name == $target)
-        | .volumeMounts // []
-        | map(select(
-            ((.subPath // "") == "") and
-            ((.subPathExpr // "") == "") and
-            (if $root == "/" then
-              true
-            else
-              .mountPath == $root or (.mountPath | startswith($root + "/"))
-            end)
-          ))
-        | unique_by(.name + "|" + .mountPath)
-        | sort_by([(.mountPath | length), .mountPath, .name])
-        | .[]
-        | "  - name: \(.name | @json)\n" +
-          "    mountPath: \(.mountPath | @json)" +
-          (if .readOnly then "\n    readOnly: true" else "" end) +
-          (if (.mountPropagation // "") != "" then "\n    mountPropagation: \(.mountPropagation | @json)" else "" end)
-      ' <<<"$pod_json")
+    local session_home="$workspace_root"
+    if [[ "$session_home" == "/" ]]; then
+      session_home="/tmp/nvim-pod-home"
     fi
+
+    local debug_container="nvim-debug-$(date +%s%N)"
+    local debug_image="ghcr.io/zewelor/nvim:latest"
+    local debug_profile
+    debug_profile=$(mktemp) || return 1
+
+    {
+      printf 'volumeMounts:\n'
+      printf '%s\n' "$volume_mounts_yaml"
+    } >"$debug_profile"
 
     local -a nvim_cmd
     nvim_cmd=(
       sh -c '
         target="$1"
-        session_home="$2"
-        overlay_manifest="$3"
-        copy_mode="$4"
-        workspace_source="$5"
-        workspace_target="$6"
-        workspace_access="$7"
+        home_dir="$2"
         status=0
-        shell_status=0
-        tab=$(printf "\t")
 
-        cleanup_overlays() {
-          [ -n "$overlay_manifest" ] || return 0
-          printf "%s\n" "$overlay_manifest" | while IFS="$tab" read -r mount_path helper_path sub_path sub_path_expr; do
-            [ -n "$mount_path" ] || continue
-
-            if [ -e "$mount_path" ] || [ -L "$mount_path" ]; then
-              rm -rf "$mount_path" 2>/dev/null || true
-            fi
-
-            parent="${mount_path%/*}"
-            [ -n "$parent" ] || parent=/
-            while [ "$parent" != "$workspace_target" ] && [ "$parent" != "/" ]; do
-              rmdir "$parent" 2>/dev/null || break
-              parent="${parent%/*}"
-              [ -n "$parent" ] || parent=/
-            done
-          done
-        }
-
-        link_dir_entries() {
-          source_dir="$1"
-          target_dir="$2"
-
-          [ -d "$source_dir" ] || return 0
-
-          for entry in "$source_dir"/.[!.]* "$source_dir"/..?* "$source_dir"/*; do
-            name="${entry##*/}"
-            [ -e "$entry" ] || [ -L "$entry" ] || continue
-            if [ ! -e "$target_dir/$name" ] && [ ! -L "$target_dir/$name" ]; then
-              ln -s "$entry" "$target_dir/$name" 2>/dev/null || true
-            fi
-          done
-        }
-
-        materialize_workspace_dir() {
-          target_dir="$1"
-          relative_path="${target_dir#$workspace_target}"
-          source_dir="${workspace_source}${relative_path}"
-
-          [ "$target_dir" = "$workspace_target" ] && return 0
-
-          if [ -L "$target_dir" ]; then
-            rm -f "$target_dir" || return 1
-          fi
-
-          mkdir -p "$target_dir" || return 1
-          link_dir_entries "$source_dir" "$target_dir"
-        }
-
-        ensure_workspace_parent() {
-          target_path="$1"
-          parent="${target_path%/*}"
-          current_dir="$workspace_target"
-
-          [ -n "$parent" ] || parent=/
-          [ "$parent" = "$workspace_target" ] && return 0
-
-          relative_parent="${parent#$workspace_target}"
-          relative_parent="${relative_parent#/}"
-
-          while [ -n "$relative_parent" ]; do
-            next_segment="${relative_parent%%/*}"
-            current_dir="$current_dir/$next_segment"
-            materialize_workspace_dir "$current_dir" || return 1
-
-            if [ "$relative_parent" = "$next_segment" ]; then
-              break
-            fi
-
-            relative_parent="${relative_parent#"$next_segment"/}"
-          done
-        }
-
-        sync_new_workspace_entries() {
-          [ "$workspace_access" != "ro" ] || return 0
-          [ -d "$workspace_source" ] || return 0
-          [ -d "$workspace_target" ] || return 0
-
-          (
-            cd "$workspace_target" || exit 1
-
-            find . -mindepth 1 -type d ! -xtype l -exec sh -c "mkdir -p \"\$1/\$2\"" sh "$workspace_source" {} \;
-            find . -mindepth 1 \( -type f -o -type p -o -type b -o -type c -o -type s \) ! -xtype l -exec cp -a --parents -t "$workspace_source" {} +
-          ) || {
-            printf "Warning: could not sync new workspace entries back to %s\n" "$workspace_source" >&2
-            return 1
-          }
-        }
-
-        apply_overlays() {
-          [ -n "$overlay_manifest" ] || return 0
-          printf "%s\n" "$overlay_manifest" | while IFS="$tab" read -r mount_path helper_path sub_path sub_path_expr; do
-            [ -n "$mount_path" ] || continue
-
-            source_path="$helper_path"
-            if [ -n "$sub_path" ]; then
-              source_path="$helper_path/$sub_path"
-            elif [ -n "$sub_path_expr" ]; then
-              source_path="$helper_path/$sub_path_expr"
-            fi
-
-            parent="${mount_path%/*}"
-            [ -n "$parent" ] || parent=/
-            ensure_workspace_parent "$mount_path" || {
-              printf "Warning: could not prepare parent directory for %s\n" "$mount_path" >&2
-              continue
-            }
-            mkdir -p "$parent" 2>/dev/null || true
-
-            if [ -e "$mount_path" ] || [ -L "$mount_path" ]; then
-              rm -rf "$mount_path" 2>/dev/null || true
-            fi
-
-            if ! ln -s "$source_path" "$mount_path" 2>/dev/null; then
-              printf "Warning: could not mirror nested mount %s -> %s\n" "$mount_path" "$source_path" >&2
-            fi
-          done
-        }
-
-        if [ "$copy_mode" = "1" ]; then
-          rm -rf "$workspace_target" 2>/dev/null || true
-          mkdir -p "$workspace_target" 2>/dev/null || true
-          if [ -d "$workspace_source" ]; then
-            # Create only a shallow mirrored view; deeper trees are materialized lazily for nested mounts.
-            link_dir_entries "$workspace_source" "$workspace_target" || {
-              printf "Could not prepare workspace mirror from %s\n" "$workspace_source" >&2
-              exit 1
-            }
-          else
-            printf "Could not prepare workspace mirror from %s\n" "$workspace_source" >&2
-            exit 1
-          fi
-        fi
-
-        if [ -n "$overlay_manifest" ]; then
-          apply_overlays
-        fi
-
-        if [ -n "$session_home" ] && [ ! -d "$session_home" ]; then
-          session_home="${session_home%/*}"
-          [ -n "$session_home" ] || session_home=/
-        fi
-
-        export HOME="$session_home"
+        mkdir -p "$home_dir" 2>/dev/null || true
+        export HOME="$home_dir"
 
         if [ -d "$target" ]; then
-          if cd "$target"; then
-            nvim .
-            status=$?
-          else
-            printf "Could not enter %s\n" "$target" >&2
-            status=1
-          fi
+          cd "$target" || exit 1
+          nvim .
+          status=$?
         else
           parent="${target%/*}"
           [ -n "$parent" ] || parent=/
-          if cd "$parent"; then
-            nvim "$target"
-            status=$?
-          else
-            printf "Could not enter %s\n" "$parent" >&2
-            status=1
-          fi
+          cd "$parent" || exit 1
+          nvim "$target"
+          status=$?
         fi
 
         printf "\nNeovim exited with status %s. Staying in %s\n" "$status" "$PWD"
         if command -v bash >/dev/null 2>&1; then
-          bash -i
-          shell_status=$?
-        else
-          sh -i
-          shell_status=$?
+          exec bash -i
         fi
-
-        if [ "$copy_mode" = "1" ]; then
-          cleanup_overlays
-          sync_new_workspace_entries || true
-        fi
-
-        exit "$shell_status"
-      ' sh "$session_open_path" "$session_home_path" "$overlay_manifest" "$use_workspace_copy" "$workspace_source" "$workspace_target" "$workspace_access"
+        exec sh -i
+      ' sh "$open_path" "$session_home"
     )
 
     if typeset -f _title_terminal_cmd >/dev/null 2>&1; then
       _title_terminal_cmd "nvim_pod $app"
     fi
 
-    printf 'Found pod %s in namespace %s (target container: %s)\n' "$pod" "$ns" "$debug_target"
-    printf 'Creating ephemeral debug container %s ...\n' "$debug_container"
-
-    debug_profile=$(mktemp)
-    {
-      # Mirror mounts directly and reconstruct nested subPath mounts at the runtime path when it is safe.
-      if [[ -n "$direct_mounts_yaml" || -n "$overlay_mounts_yaml" ]]; then
-        printf 'volumeMounts:\n'
-        [[ -n "$direct_mounts_yaml" ]] && printf '%s\n' "$direct_mounts_yaml"
-        [[ -n "$overlay_mounts_yaml" ]] && printf '%s\n' "$overlay_mounts_yaml"
-      else
-        printf 'volumeMounts: []\n'
-      fi
-    } >"$debug_profile"
-    debug_profile_args=(--custom "$debug_profile")
-
     local -a debug_env_args
-    debug_env_args=(--env="HOME=$session_home_path")
+    debug_env_args=(--env="HOME=$session_home")
     if [[ -n "$git_ssh_command" ]]; then
       debug_env_args+=(--env="GIT_SSH_COMMAND=$git_ssh_command")
     fi
 
-    printf 'Attaching to %s ...\n' "$debug_container"
-    printf 'Exit the shell to return to your local terminal.\n'
+    local -a omitted_subpaths
+    omitted_subpaths=()
+    while IFS= read -r mount_path; do
+      [[ -z "$mount_path" ]] && continue
+      if [[ "$mount_path" == "$workspace_root" || "$mount_path" == "$workspace_root/"* ]]; then
+        omitted_subpaths+=("$mount_path")
+      fi
+    done <<<"$subpath_mount_paths"
+
+    printf 'Found pod %s in namespace %s (target container: %s)\n' "$pod" "$ns" "$debug_target"
+    if (( ${#omitted_subpaths[@]} > 0 )); then
+      printf 'Note: subPath mounts are omitted in the debug container: %s\n' "${(j:, :)omitted_subpaths}"
+    fi
+    printf 'Creating ephemeral debug container %s ...\n' "$debug_container"
 
     "$kubectl_bin" -n "$ns" debug -it "pod/$pod" \
       --profile=general \
@@ -559,7 +249,7 @@ if has "kubectl"; then
       --target="$debug_target" \
       --image="$debug_image" \
       "${debug_env_args[@]}" \
-      "${debug_profile_args[@]}" \
+      --custom "$debug_profile" \
       -- "${nvim_cmd[@]}"
 
     local debug_exit=$?
