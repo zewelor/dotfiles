@@ -53,6 +53,15 @@ if has "kubectl"; then
       debug_target="$(head -n1 <<<"$containers")"
     fi
 
+    local git_ssh_command=""
+    git_ssh_command=$(jq -r --arg target "$debug_target" '
+      .spec.containers[]
+      | select(.name == $target)
+      | (.env // [])
+      | map(select(.name == "GIT_SSH_COMMAND"))
+      | .[0].value // empty
+    ' <<<"$pod_json")
+
     local mount_table
     mount_table=$(jq -r --arg target "$debug_target" '
       .spec as $spec |
@@ -204,6 +213,7 @@ if has "kubectl"; then
     local session_root="/tmp/nvim-pod-workspace"
     local base_root="/tmp/nvim-pod-base"
     local overlay_root="/tmp/nvim-pod-mirrors"
+    local workspace_runtime_root="$workspace_root"
     local session_open_path="$open_path"
     local session_home_path="$home_path"
     local workspace_source=""
@@ -220,6 +230,12 @@ if has "kubectl"; then
         break
       fi
     done <<<"$mount_table"
+
+    case "$workspace_root" in
+    / | /bin | /dev | /etc | /home | /lib | /lib64 | /proc | /root | /run | /sbin | /sys | /tmp | /usr | /var | /var/*)
+      workspace_runtime_root="${session_root}${workspace_root}"
+      ;;
+    esac
 
     overlay_mounts_yaml=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg overlay_root "$overlay_root" '
       .spec.containers[]
@@ -242,7 +258,7 @@ if has "kubectl"; then
         (if (.value.mountPropagation // "") != "" then "\n    mountPropagation: \(.value.mountPropagation | @json)" else "" end)
     ' <<<"$pod_json")
 
-    overlay_manifest=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg session_root "$session_root" --arg overlay_root "$overlay_root" '
+    overlay_manifest=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg runtime_root "$workspace_runtime_root" --arg overlay_root "$overlay_root" '
       .spec.containers[]
       | select(.name == $target)
       | .volumeMounts // []
@@ -258,7 +274,7 @@ if has "kubectl"; then
       | sort_by([(.value.mountPath | length), .value.mountPath, .key])
       | .[]
       | [
-          ($session_root + .value.mountPath),
+          ($runtime_root + (.value.mountPath | ltrimstr($root))),
           ($overlay_root + "/mount-" + (.key | tostring) + "-" + .value.name),
           (.value.subPath // ""),
           (.value.subPathExpr // "")
@@ -269,9 +285,9 @@ if has "kubectl"; then
     if [[ -n "$overlay_manifest" && "$workspace_root" != "/" ]]; then
       use_workspace_copy="1"
       workspace_source="${base_root}${workspace_root}"
-      workspace_target="${session_root}${workspace_root}"
-      session_open_path="${session_root}${open_path}"
-      session_home_path="${session_root}${home_path}"
+      workspace_target="$workspace_runtime_root"
+      session_open_path="${workspace_runtime_root}${open_path#$workspace_root}"
+      session_home_path="${workspace_runtime_root}${home_path#$workspace_root}"
 
       direct_mounts_yaml=$(jq -r --arg target "$debug_target" --arg root "$workspace_root" --arg base_root "$base_root" '
         .spec.containers[]
@@ -344,6 +360,76 @@ if has "kubectl"; then
           done
         }
 
+        link_dir_entries() {
+          source_dir="$1"
+          target_dir="$2"
+
+          [ -d "$source_dir" ] || return 0
+
+          for entry in "$source_dir"/.[!.]* "$source_dir"/..?* "$source_dir"/*; do
+            name="${entry##*/}"
+            [ -e "$entry" ] || [ -L "$entry" ] || continue
+            if [ ! -e "$target_dir/$name" ] && [ ! -L "$target_dir/$name" ]; then
+              ln -s "$entry" "$target_dir/$name" 2>/dev/null || true
+            fi
+          done
+        }
+
+        materialize_workspace_dir() {
+          target_dir="$1"
+          relative_path="${target_dir#$workspace_target}"
+          source_dir="${workspace_source}${relative_path}"
+
+          [ "$target_dir" = "$workspace_target" ] && return 0
+
+          if [ -L "$target_dir" ]; then
+            rm -f "$target_dir" || return 1
+          fi
+
+          mkdir -p "$target_dir" || return 1
+          link_dir_entries "$source_dir" "$target_dir"
+        }
+
+        ensure_workspace_parent() {
+          target_path="$1"
+          parent="${target_path%/*}"
+          current_dir="$workspace_target"
+
+          [ -n "$parent" ] || parent=/
+          [ "$parent" = "$workspace_target" ] && return 0
+
+          relative_parent="${parent#$workspace_target}"
+          relative_parent="${relative_parent#/}"
+
+          while [ -n "$relative_parent" ]; do
+            next_segment="${relative_parent%%/*}"
+            current_dir="$current_dir/$next_segment"
+            materialize_workspace_dir "$current_dir" || return 1
+
+            if [ "$relative_parent" = "$next_segment" ]; then
+              break
+            fi
+
+            relative_parent="${relative_parent#"$next_segment"/}"
+          done
+        }
+
+        sync_new_workspace_entries() {
+          [ "$workspace_access" != "ro" ] || return 0
+          [ -d "$workspace_source" ] || return 0
+          [ -d "$workspace_target" ] || return 0
+
+          (
+            cd "$workspace_target" || exit 1
+
+            find . -mindepth 1 -type d ! -xtype l -exec sh -c "mkdir -p \"\$1/\$2\"" sh "$workspace_source" {} \;
+            find . -mindepth 1 \( -type f -o -type p -o -type b -o -type c -o -type s \) ! -xtype l -exec cp -a --parents -t "$workspace_source" {} +
+          ) || {
+            printf "Warning: could not sync new workspace entries back to %s\n" "$workspace_source" >&2
+            return 1
+          }
+        }
+
         apply_overlays() {
           [ -n "$overlay_manifest" ] || return 0
           printf "%s\n" "$overlay_manifest" | while IFS="$tab" read -r mount_path helper_path sub_path sub_path_expr; do
@@ -358,6 +444,10 @@ if has "kubectl"; then
 
             parent="${mount_path%/*}"
             [ -n "$parent" ] || parent=/
+            ensure_workspace_parent "$mount_path" || {
+              printf "Warning: could not prepare parent directory for %s\n" "$mount_path" >&2
+              continue
+            }
             mkdir -p "$parent" 2>/dev/null || true
 
             if [ -e "$mount_path" ] || [ -L "$mount_path" ]; then
@@ -374,12 +464,13 @@ if has "kubectl"; then
           rm -rf "$workspace_target" 2>/dev/null || true
           mkdir -p "$workspace_target" 2>/dev/null || true
           if [ -d "$workspace_source" ]; then
-            cp -a "$workspace_source"/. "$workspace_target"/ || {
-              printf "Could not prepare workspace copy from %s\n" "$workspace_source" >&2
+            # Create only a shallow mirrored view; deeper trees are materialized lazily for nested mounts.
+            link_dir_entries "$workspace_source" "$workspace_target" || {
+              printf "Could not prepare workspace mirror from %s\n" "$workspace_source" >&2
               exit 1
             }
           else
-            printf "Could not prepare workspace copy from %s\n" "$workspace_source" >&2
+            printf "Could not prepare workspace mirror from %s\n" "$workspace_source" >&2
             exit 1
           fi
         fi
@@ -426,11 +517,7 @@ if has "kubectl"; then
 
         if [ "$copy_mode" = "1" ]; then
           cleanup_overlays
-          if [ "$workspace_access" != "ro" ] && [ -d "$workspace_source" ] && [ -d "$workspace_target" ]; then
-            cp -a "$workspace_target"/. "$workspace_source"/ || {
-              printf "Warning: could not sync workspace back to %s\n" "$workspace_source" >&2
-            }
-          fi
+          sync_new_workspace_entries || true
         fi
 
         exit "$shell_status"
@@ -446,7 +533,7 @@ if has "kubectl"; then
 
     debug_profile=$(mktemp)
     {
-      # Mirror mounts without subPath directly and reconstruct nested mounts inside a temp workspace when needed.
+      # Mirror mounts directly and reconstruct nested subPath mounts at the runtime path when it is safe.
       if [[ -n "$direct_mounts_yaml" || -n "$overlay_mounts_yaml" ]]; then
         printf 'volumeMounts:\n'
         [[ -n "$direct_mounts_yaml" ]] && printf '%s\n' "$direct_mounts_yaml"
@@ -457,6 +544,12 @@ if has "kubectl"; then
     } >"$debug_profile"
     debug_profile_args=(--custom "$debug_profile")
 
+    local -a debug_env_args
+    debug_env_args=(--env="HOME=$session_home_path")
+    if [[ -n "$git_ssh_command" ]]; then
+      debug_env_args+=(--env="GIT_SSH_COMMAND=$git_ssh_command")
+    fi
+
     printf 'Attaching to %s ...\n' "$debug_container"
     printf 'Exit the shell to return to your local terminal.\n'
 
@@ -465,7 +558,7 @@ if has "kubectl"; then
       --container="$debug_container" \
       --target="$debug_target" \
       --image="$debug_image" \
-      --env="HOME=$session_home_path" \
+      "${debug_env_args[@]}" \
       "${debug_profile_args[@]}" \
       -- "${nvim_cmd[@]}"
 
