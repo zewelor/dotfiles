@@ -227,6 +227,8 @@ if has "kubectl"; then
     if [[ -n "$git_ssh_command" ]]; then
       debug_env_args+=(--env="GIT_SSH_COMMAND=$git_ssh_command")
     fi
+    debug_env_args+=(--env="GIT_USER_NAME=zewelor")
+    debug_env_args+=(--env="GIT_USER_EMAIL=zewelor@gmail.com")
 
     local -a omitted_subpaths
     omitted_subpaths=()
