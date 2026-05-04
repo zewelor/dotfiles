@@ -12,9 +12,12 @@ if has "kubectl"; then
     local input="${1:-}"
     local app folder open_path
     app="${input%%/*}"
-    folder="${input#*/}"
-    if [[ -z $input || $app == "$input" || -z $folder ]]; then
-      echo "usage: nvim_pod <app-name>/<path>"
+    folder=""
+    if [[ $input == */* ]]; then
+      folder="${input#*/}"
+    fi
+    if [[ -z $input || -z $app ]]; then
+      echo "usage: nvim_pod <app-name>[/path]"
       return 1
     fi
 
@@ -35,9 +38,9 @@ if has "kubectl"; then
       return 1
     fi
 
-    local pod_volumes containers
-    pod_volumes=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath='{range .spec.volumes[*]}{.name}{"\n"}{end}')
-    containers=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath='{range .spec.containers[*]}{.name}{"\n"}{end}')
+    local pod_json containers
+    pod_json=$("$kubectl_bin" -n "$ns" get pod "$pod" -o json) || return 1
+    containers=$(jq -r '.spec.containers[]?.name' <<<"$pod_json")
 
     local debug_container="nvim-debug"
     local debug_target="app"
@@ -50,17 +53,129 @@ if has "kubectl"; then
       debug_target="$(head -n1 <<<"$containers")"
     fi
 
-    if [[ "$folder" == /* ]]; then
+    local mount_table
+    mount_table=$(jq -r --arg target "$debug_target" '
+      .spec as $spec |
+      ($spec.volumes // []) as $volumes |
+      [
+        $spec.containers[]
+        | select(.name == $target)
+        | .volumeMounts // []
+        | map(select(has("subPath") | not))
+        | unique_by(.name + "|" + .mountPath)
+        | .[]
+        | . as $mount
+        | ($volumes[]? | select(.name == $mount.name)) as $volume
+        | [
+            $mount.name,
+            $mount.mountPath,
+            (if $mount.readOnly then "ro" else "rw" end),
+            (if $volume.persistentVolumeClaim then "pvc"
+             elif $volume.configMap then "configMap"
+             elif $volume.secret then "secret"
+             elif $volume.projected then "projected"
+             elif $volume.emptyDir then "emptyDir"
+             elif $volume.hostPath then "hostPath"
+             else "other"
+             end)
+          ]
+        | @tsv
+      ]
+      | .[]?
+    ' <<<"$pod_json")
+
+    if [[ -n "$folder" && "$folder" == /* ]]; then
       open_path="$folder"
-    else
+    elif [[ -n "$folder" ]]; then
       open_path="/$folder"
+    else
+      local mount_name mount_path mount_access mount_type
+      local preferred_config=""
+      local preferred_pvc=""
+      local preferred_fallback=""
+
+      while IFS=$'\t' read -r mount_name mount_path mount_access mount_type; do
+        [[ -z "$mount_path" ]] && continue
+
+        if [[ "$mount_path" == "/config" ]]; then
+          preferred_config="$mount_path"
+          break
+        fi
+
+        if [[ -z "$preferred_pvc" && "$mount_type" == "pvc" ]]; then
+          preferred_pvc="$mount_path"
+        fi
+
+        if [[ -z "$preferred_fallback" ]]; then
+          case "$mount_path" in
+          /var/run/* | /run/*) ;;
+          *)
+            preferred_fallback="$mount_path"
+            ;;
+          esac
+        fi
+      done <<<"$mount_table"
+
+      if [[ -n "$preferred_config" ]]; then
+        open_path="$preferred_config"
+      elif [[ -n "$preferred_pvc" ]]; then
+        open_path="$preferred_pvc"
+      elif [[ -n "$preferred_fallback" ]]; then
+        open_path="$preferred_fallback"
+      else
+        open_path="/"
+      fi
+
+      printf 'Auto-selected starting path %s\n' "$open_path"
     fi
+
+    local -a nvim_cmd
+    nvim_cmd=(
+      sh -lc '
+        target="$1"
+        status=0
+
+        if [ -d "$target" ]; then
+          if cd "$target"; then
+            nvim .
+            status=$?
+          else
+            printf "Could not enter %s\n" "$target" >&2
+            status=1
+          fi
+        else
+          parent="${target%/*}"
+          [ -n "$parent" ] || parent=/
+          if cd "$parent"; then
+            nvim "$target"
+            status=$?
+          else
+            printf "Could not enter %s\n" "$parent" >&2
+            status=1
+          fi
+        fi
+
+        printf "\nNeovim exited with status %s. Staying in %s\n" "$status" "$PWD"
+        if command -v bash >/dev/null 2>&1; then
+          exec bash
+        fi
+        exec sh
+      ' sh "$open_path"
+    )
 
     printf 'Found pod %s in namespace %s (target container: %s)\n' "$pod" "$ns" "$debug_target"
 
     local existing_state="" running_at="" terminated_reason=""
-    running_at=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .status.ephemeralContainerStatuses[?(@.name==\"$debug_container\")]}{.state.running.startedAt}{end}")
-    terminated_reason=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .status.ephemeralContainerStatuses[?(@.name==\"$debug_container\")]}{.state.terminated.reason}{end}")
+    running_at=$(jq -r --arg name "$debug_container" '
+      .status.ephemeralContainerStatuses[]?
+      | select(.name == $name)
+      | .state.running.startedAt // empty
+    ' <<<"$pod_json")
+    terminated_reason=$(jq -r --arg name "$debug_container" '
+      .status.ephemeralContainerStatuses[]?
+      | select(.name == $name)
+      | .state.terminated.reason // empty
+    ' <<<"$pod_json")
     if [[ -n "$running_at" ]]; then
       existing_state="running"
     elif [[ -n "$terminated_reason" ]]; then
@@ -69,22 +184,27 @@ if has "kubectl"; then
 
     if [[ "$existing_state" == "running" ]]; then
       local debug_mounts=""
-      debug_mounts=$("$kubectl_bin" -n "$ns" get pod "$pod" -o jsonpath="{range .spec.ephemeralContainers[?(@.name==\"$debug_container\")].volumeMounts[*]}{.name}{\":\"}{.mountPath}{\"\\n\"}{end}")
-      if grep -qx "config" <<<"$pod_volumes"; then
-        if ! grep -qx "config:/config" <<<"$debug_mounts"; then
+      debug_mounts=$(jq -r --arg name "$debug_container" '
+        .spec.ephemeralContainers[]?
+        | select(.name == $name)
+        | .volumeMounts[]?
+        | "\(.name):\(.mountPath)"
+      ' <<<"$pod_json")
+
+      while IFS=$'\t' read -r mount_name mount_path mount_access mount_type; do
+        [[ -z "$mount_name" || -z "$mount_path" ]] && continue
+        if ! grep -qx "$mount_name:$mount_path" <<<"$debug_mounts"; then
           existing_state="terminated"
+          break
         fi
-      elif grep -qx "tmpfs" <<<"$pod_volumes"; then
-        if ! grep -qx "tmpfs:/tmp" <<<"$debug_mounts"; then
-          existing_state="terminated"
-        fi
-      fi
+      done <<<"$mount_table"
     fi
 
     if [[ "$existing_state" == "running" ]]; then
       printf 'Reusing existing debug container %s\n' "$debug_container"
       printf 'Opening %s ...\n' "$open_path"
-      "$kubectl_bin" -n "$ns" exec -it "$pod" -c "$debug_container" -- nvim "$open_path"
+      printf 'Exit the shell to return to your local terminal.\n'
+      "$kubectl_bin" -n "$ns" exec -it "$pod" -c "$debug_container" -- "${nvim_cmd[@]}"
       return $?
     fi
 
@@ -96,11 +216,9 @@ if has "kubectl"; then
 
     debug_profile=$(mktemp)
     {
-      # Ephemeral containers cannot use subPath, so we mount only the
-      # top-level volumes. This is enough for editing files under /config.
+      # Ephemeral containers cannot use subPath, so reuse only top-level mounts.
       printf 'volumeMounts:\n'
-      "$kubectl_bin" -n "$ns" get pod "$pod" -o json \
-        | jq -r --arg target "$debug_target" '
+      jq -r --arg target "$debug_target" '
           .spec.containers[] | select(.name == $target) | .volumeMounts // [] |
           map(select(has("subPath") | not)) |
           unique_by(.name + .mountPath) |
@@ -108,11 +226,12 @@ if has "kubectl"; then
           "  - name: \(.name)\n" +
           "    mountPath: \(.mountPath)" +
           (if .readOnly then "\n    readOnly: true" else "" end)
-        '
+        ' <<<"$pod_json"
     } >"$debug_profile"
     debug_profile_args=(--custom "$debug_profile")
 
     printf 'Attaching to %s ...\n' "$debug_container"
+    printf 'Exit the shell to return to your local terminal.\n'
 
     "$kubectl_bin" -n "$ns" debug -it "pod/$pod" \
       --profile=general \
@@ -121,7 +240,7 @@ if has "kubectl"; then
       --image="$debug_image" \
       --env="HOME=/tmp/nvim-pod" \
       "${debug_profile_args[@]}" \
-      -- nvim "$open_path"
+      -- "${nvim_cmd[@]}"
 
     local debug_exit=$?
     rm -f "$debug_profile"
