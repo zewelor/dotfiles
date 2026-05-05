@@ -90,10 +90,16 @@ current_profile() {
 }
 
 check_script_syntax() {
-  local output_file
+  local output_file script
+  local -a script_paths
   output_file=$(mktemp -t dotfiles-syntax.XXXXXX)
 
-  if zsh -n "$BASE_DIR/install" "$BASE_DIR/install-font" "$BASE_DIR/.zshrc" "$BASE_DIR"/.zsh/*.zsh >"$output_file" 2>&1; then
+  script_paths=("$BASE_DIR/install" "$BASE_DIR/install-font" "$BASE_DIR/.zshrc")
+  for script in "$BASE_DIR"/.zsh/**/*.zsh; do
+    script_paths+=("$script")
+  done
+
+  if zsh -n "${script_paths[@]}" >"$output_file" 2>&1; then
     pass "Shell scripts pass syntax check"
   else
     fail "Shell syntax check failed"
