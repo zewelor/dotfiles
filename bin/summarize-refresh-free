@@ -1,0 +1,23 @@
+#!/bin/bash
+# 1. Odswiez darmowe modele (to doda je do config.json, ale usunie Gemini z listy)
+summarize refresh-free
+
+# 2. Wstaw 'cli/gemini' z powrotem na sam poczatek listy kandydatow w sekcji 'free'
+CONFIG="$HOME/.summarize/config.json"
+
+if [ -f "$CONFIG" ]; then
+    # Sprawdz czy jq jest zainstalowany
+    if ! command -v jq &> /dev/null; then
+        echo "Blad: 'jq' nie jest zainstalowany. Zainstaluj go: sudo apt install jq"
+        exit 1
+    fi
+
+    TMP_CONFIG=$(mktemp)
+    # Wstawia cli/gemini na poczatek, usuwajac ewentualne duplikaty z dalszej czesci listy
+    jq '.models.free.rules[0].candidates = ["cli/gemini"] + (.models.free.rules[0].candidates | map(select(. != "cli/gemini")))' "$CONFIG" > "$TMP_CONFIG" && mv "$TMP_CONFIG" "$CONFIG"
+    
+    echo "Modele odswiezone. Gemini CLI zostalo ustawione jako priorytet."
+else
+    echo "Blad: Nie znaleziono pliku konfiguracyjnego $CONFIG"
+    exit 1
+fi
