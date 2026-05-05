@@ -7,6 +7,10 @@ Catppuccin theme setup and available status modules for quick reference.
 ```tmux
 set -g @catppuccin_flavor "latte"
 set -g @catppuccin_window_status_style "rounded"
+set -g @catppuccin_window_flags "icon"
+set -g @catppuccin_window_flags_icon_format '##{?window_activity_flag,...}...#{?@workmux_status, #{@workmux_status},} '
+set -g @catppuccin_window_text ' #W'
+set -g @catppuccin_window_current_text ' #W'
 run ~/.config/tmux/plugins/catppuccin/tmux/catppuccin.tmux
 
 set -g status-right ''
@@ -14,9 +18,26 @@ set -g status-right ''
 
 - **Flavor**: `latte` (light)
 - **Window style**: `rounded` (segments with rounded corners)
+- **Window flags**: `icon` (shows Catppuccin window-state icons, including zoom)
+- **Workmux status**: appended to window flags (after catppuccin icons) via custom `@catppuccin_window_flags_icon_format`
 - **Status-right**: empty (minimalist)
 - **UI colors**: pane borders, messages, clock — all handled by catppuccin (no manual overrides)
 - **status-interval**: `1` (fast automatic-rename response)
+
+- **Flavor**: `latte` (light)
+- **Window style**: `rounded` (segments with rounded corners)
+- **Window flags**: `icon` (shows Catppuccin window-state icons, including zoom)
+- **Status-right**: empty (minimalist)
+- **UI colors**: pane borders, messages, clock — all handled by catppuccin (no manual overrides)
+- **status-interval**: `1` (fast automatic-rename response)
+
+## Zoom Behavior
+
+- `prefix + Ctrl+Z` uses zoom-follow:
+  - if the current window is not zoomed, zoom the active pane
+  - if the current window is already zoomed, unzoom, move to the next pane, and zoom it
+- Bare `Ctrl+Z` is swallowed in tmux so applications do not suspend accidentally.
+- Catppuccin window flags show the zoom icon while `#{window_zoomed_flag}` is active.
 
 ### Future: Window name with directory path
 
@@ -80,6 +101,7 @@ set -ag status-right "#{E:@catppuccin_status_session}"
 - Normal panes: shows `#{pane_current_command}` (from `automatic-rename`)
 - Workmux windows: shows branch name (workmux calls `tmux rename-window`)
 - Manual rename: `prefix + ,` to override
+- Workmux agent status: shown as icon after catppuccin window flags (configured via `@catppuccin_window_flags_icon_format`)
 
 ## Plugins (git submodules)
 
