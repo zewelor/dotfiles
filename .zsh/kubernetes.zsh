@@ -25,6 +25,109 @@ if has "kubectl"; then
     zsh "$script" "$@"
   }
 
+  podmount() {
+    mise use -g -q devspace
+
+    local input="${1:-}"
+    local app="${input%%/*}"
+    local rem_path=""
+    [[ "$input" == */* ]] && rem_path="${input#*/}"
+
+    local line ns pod pod_json container mount_path tmp_dir
+
+    # Find pod and namespace using labels (instance first, then name)
+    line=$(kubectl get pods -A -l "app.kubernetes.io/instance=$app" -o json | jq -r '
+      [
+        .items[]
+        | select(.status.phase == "Running")
+        | (.status.containerStatuses // []) as $statuses
+        | select(($statuses | length) > 0)
+        | select($statuses | all(.ready == true))
+        | {ns: .metadata.namespace, name: .metadata.name}
+      ]
+      | sort_by(.ns, .name)
+      | .[0]
+      | "\(.ns)\t\(.name)"
+    ' 2>/dev/null)
+
+    if [[ -z "$line" || "$line" == "null" ]]; then
+      line=$(kubectl get pods -A -l "app.kubernetes.io/name=$app" -o json | jq -r '
+        [
+          .items[]
+          | select(.status.phase == "Running")
+          | (.status.containerStatuses // []) as $statuses
+          | select(($statuses | length) > 0)
+          | select($statuses | all(.ready == true))
+          | {ns: .metadata.namespace, name: .metadata.name}
+        ]
+        | sort_by(.ns, .name)
+        | .[0]
+        | "\(.ns)\t\(.name)"
+      ' 2>/dev/null)
+    fi
+
+    if [[ -z "$line" || "$line" == "null" ]]; then
+      printf 'No ready running pod found for app/instance=%s\n' "$app" >&2
+      return 1
+    fi
+
+    ns="${line%%$'\t'*}"
+    pod="${line#*$'\t'}"
+    pod_json=$(kubectl get pod "$pod" -n "$ns" -o json)
+
+    # Select container (prefer "app")
+    container=$(echo "$pod_json" | jq -r '
+      .spec.containers[].name | select(. == "app") // .[0]
+    ' | head -n 1)
+
+    # Resolve remote path
+    if [[ -n "$rem_path" ]]; then
+      mount_path="$rem_path"
+    else
+      # Select mount path (prefer "/config", then anything with "config")
+      mount_path=$(echo "$pod_json" | jq -r --arg c "$container" '
+        .spec.containers[] | select(.name == $c) | .volumeMounts[] 
+        | select(.mountPath == "/config" or (.mountPath | contains("config"))) 
+        | .mountPath
+      ' | head -n 1)
+      
+      if [[ -z "$mount_path" ]]; then
+        # Fallback to first writable mount if no config found
+        mount_path=$(echo "$pod_json" | jq -r --arg c "$container" '
+          .spec.containers[] | select(.name == $c) | .volumeMounts[0].mountPath
+        ')
+      fi
+    fi
+
+    if [[ -z "$mount_path" ]]; then
+      printf 'Could not resolve mount path for %s\n' "$app" >&2
+      return 1
+    fi
+
+    printf 'Pod: %s (%s), Container: %s, Remote Path: %s\n' "$pod" "$ns" "$container" "$mount_path"
+    
+    tmp_dir=$(mktemp -d -t "ha-sync-${app}-XXXX")
+    printf 'Local temporary directory: %s\n' "$tmp_dir"
+    
+    local session_name="[${app}]"
+    if tmux has-session -t "$session_name" 2>/dev/null; then
+      printf 'Tmux session %s already exists. Killing it...\n' "$session_name"
+      tmux kill-session -t "$session_name"
+    fi
+
+    # Create session and first window for sync
+    tmux new-session -d -s "$session_name" -n "sync" \
+      "devspace sync --namespace '$ns' --pod '$pod' --container '$container' --path '${tmp_dir}:${mount_path}' --exclude .git; \
+       printf '\nSync stopped. Press any key to exit and cleanup %s...\n' '$tmp_dir'; read -k1; rm -rf '$tmp_dir'; tmux kill-session -t '$session_name'"
+
+    # Create second window for shell in tmp_dir
+    tmux new-window -t "$session_name" -n "shell" -c "$tmp_dir"
+
+    # Switch to the sync window by default and attach
+    tmux select-window -t "$session_name:sync"
+    tmux attach-session -t "$session_name"
+  }
+
   function start-k8s-work() {
     alias k="kubectl"
     alias kmurder="kubectl delete pod --grace-period=0 --force"
