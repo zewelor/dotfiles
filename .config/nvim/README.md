@@ -246,7 +246,8 @@ opencode --port
 
 - **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `yaml`, `json` (`sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`; Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
+- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `toml`, `yaml`, `json`, `javascript`, `typescript`, `css`, `graphql` (`sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`, TOML przez `taplo`, YAML przez `yamlfmt`, JSON/JS/TS/CSS/GraphQL przez `biome`; Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
+- **Notifications**: Brak dostępnego formattera nie pokazuje popupu; szczegóły sprawdzaj przez `:ConformInfo`
 - **Keymaps**:
   - `<Space>cf` — Format buffer
 
@@ -255,7 +256,7 @@ opencode --port
 ### **mason-tool-installer.nvim** — Auto-instalacja narzędzi
 
 - **Repo**: [WhoIsSethDaniel/mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim)
-- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `prettier`) i np. `hadolint`
+- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `taplo`, `biome`, `yamlfmt`) i np. `hadolint`
 
 ---
 
@@ -306,9 +307,10 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 **Zainstalowane serwery**:
 - `lua_ls` — Lua (konfiguracja Neovim)
-- `biome` — JSON (lekki skompilowany LSP)
+- `biome` — JSON/JS/TS/CSS/GraphQL (lekki skompilowany LSP)
 - `helm_ls` — Helm charts
 - `ruff` — Python (lightweight LSP + linter + formatter)
+- `taplo` — TOML (lekki skompilowany LSP + formatter)
 - `marksman` — Markdown
 - `ruby_lsp` — Ruby (via mise)
 - `rubocop` — Ruby linter (via mise, z `bundle exec` gdy Gemfile obok)

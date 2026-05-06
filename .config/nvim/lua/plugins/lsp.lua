@@ -62,6 +62,7 @@ return {
         "biome",         -- JSON (lightweight compiled LSP)
         "helm_ls",       -- Helm charts
         "ruff",          -- Python (lightweight LSP / linter / formatter)
+        "taplo",         -- TOML (compiled LSP / formatter)
         "marksman",      -- Markdown
       },
       automatic_installation = true,
@@ -79,7 +80,7 @@ return {
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
       end
 
-      local mason_servers = { "lua_ls", "biome", "helm_ls", "ruff", "marksman" }
+      local mason_servers = { "lua_ls", "biome", "helm_ls", "ruff", "taplo", "marksman" }
       local extra_servers = { "ruby_lsp", "rubocop" }
 
       if has_nvim_011 then

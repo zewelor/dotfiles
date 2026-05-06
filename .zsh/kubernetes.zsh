@@ -47,8 +47,8 @@ if has "kubectl"; then
       ]
       | sort_by(.ns, .name)
       | .[0]
-      | "\(.ns)\t\(.name)"
-    ' 2>/dev/null)
+      | if . == null then empty else "\(.ns)\t\(.name)" end
+    ')
 
     if [[ -z "$line" || "$line" == "null" ]]; then
       line=$(kubectl get pods -A -l "app.kubernetes.io/name=$app" -o json | jq -r '
@@ -62,8 +62,8 @@ if has "kubectl"; then
         ]
         | sort_by(.ns, .name)
         | .[0]
-        | "\(.ns)\t\(.name)"
-      ' 2>/dev/null)
+        | if . == null then empty else "\(.ns)\t\(.name)" end
+      ')
     fi
 
     if [[ -z "$line" || "$line" == "null" ]]; then
@@ -76,26 +76,27 @@ if has "kubectl"; then
     pod_json=$(kubectl get pod "$pod" -n "$ns" -o json)
 
     # Select container (prefer "app")
-    container=$(echo "$pod_json" | jq -r '
-      .spec.containers[].name | select(. == "app") // .[0]
-    ' | head -n 1)
+    container=$(jq -r '
+      [.spec.containers[]?.name]
+      | if index("app") then "app" else .[0] // empty end
+    ' <<<"$pod_json")
 
     # Resolve remote path
     if [[ -n "$rem_path" ]]; then
       mount_path="$rem_path"
     else
       # Select mount path (prefer "/config", then anything with "config")
-      mount_path=$(echo "$pod_json" | jq -r --arg c "$container" '
-        .spec.containers[] | select(.name == $c) | .volumeMounts[] 
+      mount_path=$(jq -r --arg c "$container" '
+        .spec.containers[] | select(.name == $c) | .volumeMounts[]? 
         | select(.mountPath == "/config" or (.mountPath | contains("config"))) 
         | .mountPath
-      ' | head -n 1)
+      ' <<<"$pod_json" | head -n 1)
       
       if [[ -z "$mount_path" ]]; then
         # Fallback to first writable mount if no config found
-        mount_path=$(echo "$pod_json" | jq -r --arg c "$container" '
-          .spec.containers[] | select(.name == $c) | .volumeMounts[0].mountPath
-        ')
+        mount_path=$(jq -r --arg c "$container" '
+          .spec.containers[] | select(.name == $c) | .volumeMounts[0].mountPath // empty
+        ' <<<"$pod_json")
       fi
     fi
 

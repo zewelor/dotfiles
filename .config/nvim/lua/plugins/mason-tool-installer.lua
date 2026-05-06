@@ -10,8 +10,9 @@ return {
       "shfmt",
       "beautysh",
       "ruff",
+      "taplo",
       "biome",
-      "prettier",
+      "yamlfmt",
 
       -- Useful CLI tools
       "hadolint",

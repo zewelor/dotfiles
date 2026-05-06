@@ -3,6 +3,8 @@ return {
   "stevearc/conform.nvim",
   event = { "BufReadPre", "BufNewFile" },
   opts = {
+    notify_no_formatters = false,
+
     -- Disable autoformat for Markdown/Dockerfile (manual formatting still possible).
     format_on_save = function(bufnr)
       local ft = vim.bo[bufnr].filetype
@@ -21,9 +23,17 @@ return {
     formatters_by_ft = {
       lua = { "stylua" },
       python = { "ruff_format" },
+      toml = { "taplo" },
       sh = { "shfmt" },
       bash = { "shfmt" },
       zsh = { "beautysh" },
+
+      javascript = { "biome" },
+      javascriptreact = { "biome" },
+      typescript = { "biome" },
+      typescriptreact = { "biome" },
+      css = { "biome" },
+      graphql = { "biome" },
 
       yaml = function(bufnr)
         local ft = vim.bo[bufnr].filetype
@@ -31,15 +41,15 @@ return {
           return {}
         end
 
-        return { "prettier" }
+        return { "yamlfmt" }
       end,
-      ["yaml.tmuxinator"] = { "prettier" },
+      ["yaml.tmuxinator"] = { "yamlfmt" },
       ["eruby.yaml.tmuxinator"] = {},
-      ["yaml.docker-compose"] = { "prettier" },
+      ["yaml.docker-compose"] = { "yamlfmt" },
 
-      json = { "prettier" },
-      jsonc = { "prettier" },
-      json5 = { "prettier" },
+      json = { "biome" },
+      jsonc = { "biome" },
+      json5 = { "biome" },
     },
 
     formatters = {
