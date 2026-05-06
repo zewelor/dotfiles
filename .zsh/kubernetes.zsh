@@ -106,29 +106,54 @@ if has "kubectl"; then
     fi
 
     printf 'Pod: %s (%s), Container: %s, Remote Path: %s\n' "$pod" "$ns" "$container" "$mount_path"
-    
+
     tmp_dir=$(mktemp -d -t "ha-sync-${app}-XXXX")
     printf 'Local temporary directory: %s\n' "$tmp_dir"
-    
+
+    local -a sync_excludes sync_cmd
+    local exclude sync_cmd_str
+
+    sync_excludes=(.git)
+    case "$app" in
+      homeassistant*|home-assistant*)
+        sync_excludes+=(
+          '*.db'
+          '*.db-wal'
+          'custom_components/'
+          'www/community/'
+        )
+        ;;
+    esac
+
+    sync_cmd=(
+      devspace sync
+      --namespace "$ns"
+      --pod "$pod"
+      --container "$container"
+      --path "${tmp_dir}:${mount_path}"
+    )
+    for exclude in "${sync_excludes[@]}"; do
+      sync_cmd+=(--exclude "$exclude")
+    done
+    sync_cmd_str="${(j: :)${(@q)sync_cmd}}"
+
     local session_name="[${app}]"
     if tmux has-session -t "$session_name" 2>/dev/null; then
       printf 'Tmux session %s already exists. Killing it...\n' "$session_name"
       tmux kill-session -t "$session_name"
     fi
 
-    cd "$tmp_dir" || return 1
-
     # Create session and first window for sync
-    tmux new-session -d -s "$session_name" -n "sync" \
-      "devspace sync --namespace '$ns' --pod '$pod' --container '$container' --path '${tmp_dir}:${mount_path}'; \
-       printf '\nSync stopped. Press any key to exit and cleanup %s...\n' '$tmp_dir'; read -k1; rm -rf '$tmp_dir'; tmux kill-session -t '$session_name'"
+    tmux new-session -d -s "$session_name" -n "sync" -c "$tmp_dir" \
+      zsh -lc "${sync_cmd_str}; \
+      printf '\nSync stopped. Press any key to exit and cleanup %s...\n' '$tmp_dir'; read -k1; rm -rf '$tmp_dir'; tmux kill-session -t '$session_name'"
 
     # Create second window for shell in tmp_dir
-    tmux new-window -t "$session_name" -n "shell"
+    tmux new-window -t "$session_name" -n "shell" -c "$tmp_dir"
 
     # Switch to the sync window by default and attach
     tmux select-window -t "${session_name}:sync"
-    tmux attach-session -t "$session_name"
+    tmux attach-session -t "$session_name" -c "$tmp_dir"
   }
 
   function start-k8s-work() {
