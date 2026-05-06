@@ -31,7 +31,13 @@ if has "kubectl"; then
     local input="${1:-}"
     local app="${input%%/*}"
     local rem_path=""
+    local sync_runner="$HOME/.zsh/kubernetes/podmount-sync.zsh"
     [[ "$input" == */* ]] && rem_path="${input#*/}"
+
+    if [[ ! -r "$sync_runner" ]]; then
+      printf 'podmount sync helper not found: %s\n' "$sync_runner" >&2
+      return 1
+    fi
 
     local line ns pod pod_json container mount_path tmp_dir
 
@@ -110,8 +116,9 @@ if has "kubectl"; then
     tmp_dir=$(mktemp -d -t "ha-sync-${app}-XXXX")
     printf 'Local temporary directory: %s\n' "$tmp_dir"
 
-    local -a sync_excludes sync_cmd
-    local exclude sync_cmd_str
+    local -a sync_excludes sync_cmd tmux_sync_cmd
+    local exclude
+    local session_name="[${app}]"
 
     sync_excludes=(.git)
     case "$app" in
@@ -135,9 +142,7 @@ if has "kubectl"; then
     for exclude in "${sync_excludes[@]}"; do
       sync_cmd+=(--exclude "$exclude")
     done
-    sync_cmd_str="${(j: :)${(@q)sync_cmd}}"
-
-    local session_name="[${app}]"
+    tmux_sync_cmd=(zsh "$sync_runner" "$tmp_dir" "$session_name" "${sync_cmd[@]}")
     if tmux has-session -t "$session_name" 2>/dev/null; then
       printf 'Tmux session %s already exists. Killing it...\n' "$session_name"
       tmux kill-session -t "$session_name"
@@ -145,8 +150,7 @@ if has "kubectl"; then
 
     # Create session and first window for sync
     tmux new-session -d -s "$session_name" -n "sync" -c "$tmp_dir" \
-      zsh -lc "${sync_cmd_str}; \
-      printf '\nSync stopped. Press any key to exit and cleanup %s...\n' '$tmp_dir'; read -k1; rm -rf '$tmp_dir'; tmux kill-session -t '$session_name'"
+      "${(j: :)${(@q)tmux_sync_cmd}}"
 
     # Create second window for shell in tmp_dir
     tmux new-window -t "$session_name" -n "shell" -c "$tmp_dir"
