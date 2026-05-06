@@ -116,16 +116,18 @@ if has "kubectl"; then
       tmux kill-session -t "$session_name"
     fi
 
+    cd "$tmp_dir" || return 1
+
     # Create session and first window for sync
     tmux new-session -d -s "$session_name" -n "sync" \
-      "devspace sync --namespace '$ns' --pod '$pod' --container '$container' --path '${tmp_dir}:${mount_path}' --exclude .git; \
+      "devspace sync --namespace '$ns' --pod '$pod' --container '$container' --path '${tmp_dir}:${mount_path}'; \
        printf '\nSync stopped. Press any key to exit and cleanup %s...\n' '$tmp_dir'; read -k1; rm -rf '$tmp_dir'; tmux kill-session -t '$session_name'"
 
     # Create second window for shell in tmp_dir
-    tmux new-window -t "$session_name" -n "shell" -c "$tmp_dir"
+    tmux new-window -t "$session_name" -n "shell"
 
     # Switch to the sync window by default and attach
-    tmux select-window -t "$session_name:sync"
+    tmux select-window -t "${session_name}:sync"
     tmux attach-session -t "$session_name"
   }
 
