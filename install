@@ -433,6 +433,8 @@ setup_mise_desktop_tools() {
     "github-cli"
     "codex"
     "yt-dlp"
+    "kubectl"
+    "helm"
     "npm:@steipete/summarize@latest"
     "workmux"
   )
