@@ -47,10 +47,12 @@ return {
       ["eruby.yaml.tmuxinator"] = {},
       ["yaml.docker-compose"] = { "yamlfmt" },
 
-      json = { "biome" },
-      jsonc = { "biome" },
-      json5 = { "biome" },
-    },
+       json = { "biome" },
+       jsonc = { "biome" },
+       json5 = { "biome" },
+
+       ruby = { "rubyfmt" },
+     },
 
     formatters = {
       shfmt = {

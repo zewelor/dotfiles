@@ -246,7 +246,7 @@ opencode --port
 
 - **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `toml`, `yaml`, `json`, `javascript`, `typescript`, `css`, `graphql` (`sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`, TOML przez `taplo`, YAML przez `yamlfmt`, JSON/JS/TS/CSS/GraphQL przez `biome`; Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
+- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `toml`, `yaml`, `json`, `javascript`, `typescript`, `css`, `graphql`, `ruby` (`sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`, TOML przez `taplo`, YAML przez `yamlfmt`, JSON/JS/TS/CSS/GraphQL przez `biome`, Ruby przez `rubyfmt` (szybki formatter w Rust); Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
 - **Notifications**: Brak dostępnego formattera nie pokazuje popupu; szczegóły sprawdzaj przez `:ConformInfo`
 - **Keymaps**:
   - `<Space>cf` — Format buffer
@@ -256,7 +256,7 @@ opencode --port
 ### **mason-tool-installer.nvim** — Auto-instalacja narzędzi
 
 - **Repo**: [WhoIsSethDaniel/mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim)
-- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `taplo`, `biome`, `yamlfmt`) i np. `hadolint`
+- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `taplo`, `biome`, `yamlfmt`, `rubyfmt`) i np. `hadolint`
 
 ---
 
@@ -313,7 +313,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `taplo` — TOML (lekki skompilowany LSP + formatter)
 - `marksman` — Markdown
 - `ruby_lsp` — Ruby (via mise)
-- `rubocop` — Ruby linter (via mise, z `bundle exec` gdy Gemfile obok)
+- `rubocop` — Ruby linter (via mise, z `bundle exec` gdy Gemfile obok) - linting, formatowanie przez `rubyfmt`
 
 **Konfiguracja API**:
 - **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona. Copilot LSP jawnie wyłączony (`vim.lsp.config("copilot", {})` bez `enable`) — copilot.lua zarządza własnym klientem.

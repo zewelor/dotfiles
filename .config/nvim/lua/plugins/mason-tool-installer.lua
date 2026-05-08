@@ -12,10 +12,11 @@ return {
       "ruff",
       "taplo",
       "biome",
-      "yamlfmt",
+       "yamlfmt",
+       "rubyfmt",
 
-      -- Useful CLI tools
-      "hadolint",
+       -- Useful CLI tools
+       "hadolint",
     },
     auto_update = false,
     run_on_start = true,
