@@ -123,7 +123,40 @@ if has "git"; then
   }
 
   alias gwtls='git worktree list'
-  alias gwtrm='git worktree remove'
+  # Remove a worktree directory and optionally delete the branch.
+  function gwtrm() {
+    if [[ -z "$1" ]]; then
+      echo "Usage: gwtrm <worktree-dir>" >&2
+      return 1
+    fi
+
+    local worktree_dir="$1"
+
+    if [[ ! -d "$worktree_dir" ]]; then
+      echo "Error: Directory '$worktree_dir' does not exist." >&2
+      return 1
+    fi
+
+    # Resolve the branch name from the worktree directory
+    local branch=""
+    if [[ -f "$worktree_dir/.git" ]]; then
+      branch=$(git -C "$worktree_dir" symbolic-ref --short HEAD 2>/dev/null)
+    fi
+
+    git worktree remove "$worktree_dir" || return 1
+
+    if [[ -n "$branch" ]]; then
+      echo -n "Delete branch '$branch'? [y/N] "
+      read -k 1 confirm
+      echo
+      if [[ "$confirm" =~ ^[yY]$ ]]; then
+        git branch -D "$branch"
+      else
+        echo "Branch '$branch' left intact."
+      fi
+    fi
+  }
+
   alias gwtpr='git worktree prune'
 
   function gwta() {
@@ -246,5 +279,9 @@ if has "git"; then
     return $checkout_status
   }
 
-  ZINIT_COMPDEF_REPLAY+=("_gwtcd gwtcd")
+  _gwtrm() {
+    _arguments '1:worktree directory:_files(-/)'
+  }
+
+  ZINIT_COMPDEF_REPLAY+=("_gwtcd gwtcd _gwtrm gwtrm")
 fi
