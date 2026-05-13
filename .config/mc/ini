@@ -123,6 +123,7 @@ screen-256color=
 
 tmux-256color=
 alacritty=
+foot=
 
 [Panels]
 show_mini_info=true

@@ -47,6 +47,13 @@ DOTFILES_ALLOW_NON_ZSH_SHELL=1 ./install
 
 Local customization can be done by putting files in the ~/.zshrc.d/ directory. These files will be sourced by the main .zshrc file.
 
+## Terminal emulators
+
+- `alacritty` and `foot` can coexist; this repo does not force a full migration.
+- `foot` is installed as an optional desktop package together with `foot-terminfo`.
+- Existing `alacritty` config remains intact, so you can switch per launch instead of per machine.
+- New `foot` config lives in `~/.config/foot/foot.ini` and mirrors the current font, theme, clipboard, and keybinding workflow as closely as possible.
+
 ## rclone NAS mount (desktop only)
 
 The install script can configure rclone to mount a NAS via WebDAV with local caching. This is useful for remote access over VPN where NFS/SMB performance suffers from latency.

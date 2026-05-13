@@ -785,7 +785,34 @@ EOF
     fi
   fi
 
+  setup_terminal_emulator
+
   print_banner "Installation completed successfully."
+}
+
+# Offer to install a terminal emulator when both foot and alacritty are absent.
+setup_terminal_emulator() {
+  is_desktop || return 0
+  is_interactive || return 0
+
+  has alacritty && return 0
+  has foot && return 0
+
+  print_banner "Terminal emulator"
+  echo "Neither alacritty nor foot is installed."
+  read -r "choice?Install which terminal emulator? (1=alacritty, 2=foot, s=skip) [s] "
+
+  case "$choice" in
+    1)
+      sudo apt-get install -y --no-install-recommends alacritty
+      ;;
+    2)
+      sudo apt-get install -y --no-install-recommends foot foot-terminfo
+      ;;
+    *)
+      echo "Skipping terminal emulator installation."
+      ;;
+  esac
 }
 
 run_installation
