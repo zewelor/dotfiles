@@ -29,7 +29,9 @@ is_vscode_terminal() {
 setopt globdots               # Include hidden files (those starting with a dot) in pathname expansion
 setopt nullglob               # Allows filename patterns which match no files to expand to a null string, rather than themselves
 setopt noflowcontrol          # Disable flow control (e.g., prevent Ctrl-S and Ctrl-Q from stopping output)
-stty susp undef               # Disable Ctrl+Z suspend (redundant with tmux zoom binding on C-z)
+if is_interactive; then
+  stty susp undef             # Disable Ctrl+Z suspend (redundant with tmux zoom binding on C-z)
+fi
 setopt interactivecomments    # Enable the use of comments in interactive shells
 typeset -U path fpath
 
@@ -957,12 +959,17 @@ if [[ -d "$HOME/.zshrc.d" ]]; then
 fi
 
 if has "mise"; then
-  # Lazy-load mise activation for faster startup
-  _mise_lazy_init() {
-    unfunction _mise_lazy_init
+  if is_interactive; then
+    # Lazy-load mise activation for faster startup.
+    _mise_lazy_init() {
+      unfunction _mise_lazy_init
+      eval "$(mise activate zsh)"
+    }
+    add-zsh-hook precmd _mise_lazy_init
+  else
+    # Non-interactive shells do not reach precmd, so activate mise immediately.
     eval "$(mise activate zsh)"
-  }
-  add-zsh-hook precmd _mise_lazy_init
+  fi
 
   # Cache mise completions; requires `usage` installed via `mise use -g usage`.
   # Regenerate if cache is missing or older than 7 days.

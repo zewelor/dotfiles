@@ -1,3 +1,4 @@
 {
-  "sound": false
+  "sound": false,
+  "showFullPath": true
 }

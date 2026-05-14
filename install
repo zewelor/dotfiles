@@ -503,6 +503,69 @@ setup_rclone() {
   echo "rclone config generated at $target"
 }
 
+# Function to enable repo-managed user systemd units after stow linked them.
+setup_user_systemd_units() {
+  if ! is_desktop; then
+    return
+  fi
+
+  local -a enable_units=()
+  local -a enable_now_units=()
+  local joined_units=""
+  local unit=""
+
+  if [[ -f "$CONFIG_DIR/systemd/user/rclone-nas.service" ]] \
+    && [[ -f "$CONFIG_DIR/systemd/user/rclone-sleep-handler.service" ]] \
+    && [[ -f "$CONFIG_DIR/rclone/rclone.conf" ]]; then
+    if [[ ! -d /mnt/nas ]]; then
+      echo "Note: /mnt/nas missing. See README.md for first-time setup."
+    fi
+    enable_units+=(
+      "rclone-nas.service"
+      "rclone-sleep-handler.service"
+    )
+  fi
+
+  if [[ -x "$HOME_DIR/bin/daily_briefing/run.sh" ]] \
+    && [[ -f "$CONFIG_DIR/systemd/user/daily-briefing.service" ]] \
+    && [[ -f "$CONFIG_DIR/systemd/user/daily-briefing.timer" ]]; then
+    enable_now_units+=("daily-briefing.timer")
+  fi
+
+  if (( ${#enable_units[@]} == 0 )) && (( ${#enable_now_units[@]} == 0 )); then
+    return
+  fi
+
+  if ! has "systemctl"; then
+    echo "systemctl not found; skipping user systemd unit setup."
+    return
+  fi
+
+  if ! systemctl --user show-environment >/dev/null 2>&1; then
+    echo "systemd user manager is not available in this session."
+    if (( ${#enable_units[@]} )); then
+      joined_units="${(j: :)enable_units}"
+      echo "Enable these later: systemctl --user daemon-reload && systemctl --user enable $joined_units"
+    fi
+    if (( ${#enable_now_units[@]} )); then
+      joined_units="${(j: :)enable_now_units}"
+      echo "Enable these later: systemctl --user daemon-reload && systemctl --user enable --now $joined_units"
+    fi
+    return
+  fi
+
+  print_banner "Enabling user systemd units"
+  systemctl --user daemon-reload
+
+  for unit in "${enable_units[@]}"; do
+    systemctl --user enable "$unit"
+  done
+
+  for unit in "${enable_now_units[@]}"; do
+    systemctl --user enable --now "$unit"
+  done
+}
+
 # Generic helper to set up an AI tool directory via stow.
 # Fails early if any subdirectory in the package already exists as a real
 # directory in the target (stow would descend into it instead of folding).
@@ -702,17 +765,6 @@ run_installation() {
 
   setup_rclone
 
-  # Enable rclone systemd service (after stow linked it and rclone.conf exists)
-  if is_desktop && [[ -f "$CONFIG_DIR/systemd/user/rclone-nas.service" ]] && [[ -f "$CONFIG_DIR/rclone/rclone.conf" ]]; then
-    if [[ ! -d /mnt/nas ]]; then
-      echo "Note: /mnt/nas missing. See README.md for first-time setup."
-    fi
-    echo "Enabling rclone services..."
-    systemctl --user daemon-reload
-    systemctl --user enable rclone-nas.service 2>/dev/null || true
-    systemctl --user enable rclone-sleep-handler.service 2>/dev/null || true
-  fi
-
   # Private overrides and fonts after all Y/N prompts (font cache takes time)
   if is_desktop; then
     print_banner "Stowing private overrides from prv/"
@@ -786,6 +838,7 @@ EOF
   fi
 
   setup_terminal_emulator
+  setup_user_systemd_units
 
   print_banner "Installation completed successfully."
 }

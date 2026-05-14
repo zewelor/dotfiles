@@ -127,6 +127,28 @@ Generate obscured password: `rclone obscure "your_plaintext_password"`
 - Icons: installer copies `webapps/icons/<icon_filename>` per row into `~/.local/share/applications/icons/` (no resizing, so use a size that looks good in your DE).
 - Stale entries check: installer lists `dotfiles-*` entries not declared in `apps.tsv` and offers to remove them (non-interactive: only warns).
 
+## Scheduled user jobs
+
+- Repo-managed scheduled jobs live in `~/.config/systemd/user/` and are synced by `stow` like the rest of the dotfiles.
+- Put public jobs in `.config/systemd/user/` and private jobs in `prv/.config/systemd/user/`.
+- Register units in `install` via `setup_user_systemd_units()` so `./install` reloads `systemd --user` and enables them automatically.
+- Use `Persistent=true` in timers when a missed run should fire on the next login/resume instead of being skipped.
+
+### Daily briefing timer
+
+- Script: `prv/bin/daily_briefing/run.sh`
+- Units: `prv/.config/systemd/user/daily-briefing.service` and `prv/.config/systemd/user/daily-briefing.timer`
+- Schedule: every day at `07:00`
+- Catch-up behavior: if the laptop was asleep or you were logged out at `07:00`, `Persistent=true` makes the missed run execute when the user session comes back.
+
+Useful commands:
+
+```bash
+systemctl --user status daily-briefing.timer
+systemctl --user list-timers daily-briefing.timer
+journalctl --user -u daily-briefing.service -f
+```
+
 ## Benchmarking / Profiling
 
 ```zsh
