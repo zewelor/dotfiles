@@ -123,7 +123,8 @@ Rules:
     fi
 
     # Generate commit message
-    cat "$tmpfile" | opencode run -m github-copilot/gpt-5-mini "$prompt" 2>/dev/null
+    # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output
+    command cat "$tmpfile" | opencode run -m github-copilot/gpt-5-mini "$prompt" 2>/dev/null
     local result=$?
 
     rm -f "$tmpfile"
