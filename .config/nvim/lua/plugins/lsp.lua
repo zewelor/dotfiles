@@ -34,7 +34,7 @@ local function make_server_opts(server)
   elseif server == "ruby_lsp" then
     local path = mise_bin("ruby-lsp")
     if path then
-      opts.cmd = { path }
+      opts.cmd = ruby_cmd({ path })
     end
   elseif server == "rubocop" then
     local path = mise_bin("rubocop")
