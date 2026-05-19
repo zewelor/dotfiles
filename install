@@ -436,6 +436,7 @@ setup_mise_desktop_tools() {
     "kubectl"
     "helm"
     "npm:@steipete/summarize@latest"
+    "npm:ctx7"
     "workmux"
   )
 
