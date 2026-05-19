@@ -112,11 +112,21 @@ There is no PR URL. The delivery target is `origin/<default-branch>`.
 
 If `wait_for_checks=false`, skip to Step 7 (Success) with status `checks not watched (--no-wait)`.
 
+Never wait indefinitely:
+- If no GitHub Actions checks/runs are discovered after the explicit retry window below, treat that as a successful delivery with status `no GitHub Actions runs found`.
+- If checks/runs exist but remain pending for more than 30 minutes, STOP with a report that includes the pending check/run names and links.
+
 ### PR mode
 
-Run: `gh pr checks --watch --fail-fast --interval 30`
+1. Check whether this PR has any checks:
+   `gh pr checks --json name,state,bucket,link`
+2. If the command reports no checks or exits only because checks are pending/not yet created, wait 30 seconds and retry. Repeat for up to 2 minutes.
+3. If no checks are found after waiting, go to Step 7 (Success) with status `no GitHub Actions runs found for PR`.
+4. If checks exist, run with a 30 minute cap:
+   `timeout 30m gh pr checks --watch --fail-fast --interval 30`
 
 If exit code is 0 - go to Step 7 (Success).
+If exit code is 124 - STOP with a timeout report listing pending checks and links.
 If exit code is not 0 - go to Step 6 (Auto-fix loop).
 
 ### Direct push mode
@@ -126,9 +136,10 @@ If exit code is not 0 - go to Step 6 (Auto-fix loop).
 2. If no runs are found immediately, wait 30 seconds and retry. Repeat for up to 2 minutes.
 3. If no runs are found after waiting, go to Step 7 (Success) with status `no GitHub Actions runs found for pushed commit`.
 4. For each run found for the pushed commit, run:
-   `gh run watch <run-id> --exit-status --interval 30`
+   `timeout 30m gh run watch <run-id> --exit-status --interval 30`
 
 If all watched runs exit with code 0 - go to Step 7 (Success).
+If any watched run exits with code 124 - STOP with a timeout report listing pending runs and links.
 If any watched run exits with non-zero status - go to Step 6 (Auto-fix loop).
 
 ## Step 6: Auto-fix loop
@@ -155,8 +166,8 @@ For each attempt:
      * Direct push mode: `git push origin <branch>`
    - Record the new pushed commit SHA with: `git rev-parse HEAD`
 5. Watch checks again:
-   - PR mode: `gh pr checks --watch --fail-fast --interval 30`
-   - Direct push mode: find runs for the new SHA and watch them with `gh run watch <run-id> --exit-status --interval 30`
+   - PR mode: repeat Step 5 PR-mode discovery first; if checks exist, run `timeout 30m gh pr checks --watch --fail-fast --interval 30`
+   - Direct push mode: repeat Step 5 direct-push discovery first; if runs exist, watch them with `timeout 30m gh run watch <run-id> --exit-status --interval 30`
 6. If checks pass - break loop and go to Step 7.
 7. If still failing and attempts < 3 - repeat from step 1 with updated context.
 8. If all 3 attempts fail - STOP with comprehensive report:
@@ -174,5 +185,5 @@ Print:
 - Target:
   * PR mode: `<pr-url>`
   * Direct push mode: `origin/<default-branch>`
-- Status: `checks passed`, `checks not watched (--no-wait)`, or `no GitHub Actions runs found for pushed commit`
+- Status: `checks passed`, `checks not watched (--no-wait)`, `no GitHub Actions runs found for PR`, or `no GitHub Actions runs found for pushed commit`
 - If auto-fix loop was used, include: **Auto-fixes applied:** N attempts
