@@ -1054,3 +1054,7 @@ if [[ -n "${REMOTE_FS:-}" ]]; then
     compdef _files git
   fi
 fi
+
+
+# Added by Antigravity CLI installer
+export PATH="/home/omen/.local/bin:$PATH"

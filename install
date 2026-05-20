@@ -609,17 +609,25 @@ setup_ai_tool() {
 # Function to setup Codex configuration via stow.
 # Uses stow to link .codex contents (scripts) into ~/.codex/.
 setup_codex() {
+  mkdir -p "$HOME_DIR/.codex/commands"
   setup_ai_tool "Codex" "$HOME_DIR/.codex" ".codex"
+
+  # Stow shared agent commands into ~/.codex/commands/
+  stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.codex/commands" commands
 }
 
 # Function to setup OpenCode configuration via stow.
 # Uses stow to link .opencode contents (commands) into ~/.opencode/.
 setup_opencode() {
+  mkdir -p "$HOME_DIR/.opencode/commands"
   setup_ai_tool "OpenCode" "$HOME_DIR/.opencode" ".opencode" \
     --ignore='node_modules' \
     --ignore='package\.json' \
     --ignore='package-lock\.json' \
     --ignore='bun\.lock'
+
+  # Stow shared agent commands into ~/.opencode/commands/
+  stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.opencode/commands" commands
 }
 
 # Function to setup Vim autoload directories and plugins.

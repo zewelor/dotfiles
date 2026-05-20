@@ -12,3 +12,5 @@ Makefile
 .opencode  # stowed separately into ~/.opencode (OpenCode keeps runtime data there)
 .config/rclone  # generated from template by install script
 install.d/  # install helper modules/scripts
+.antigravitycli
+
