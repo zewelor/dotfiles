@@ -630,6 +630,14 @@ setup_opencode() {
   stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.opencode/commands" commands
 }
 
+# Function to setup Antigravity CLI configuration via stow.
+# Uses stow to link stable CLI config while leaving runtime data unmanaged.
+setup_antigravity_cli() {
+  mkdir -p "$HOME_DIR/.gemini/antigravity-cli"
+  print_banner "Setting up Antigravity CLI configuration..."
+  install_with_stow -d "$BASE_DIR/.gemini" -t "$HOME_DIR/.gemini/antigravity-cli" "antigravity-cli"
+}
+
 # Function to setup Vim autoload directories and plugins.
 setup_vim() {
   print_banner "Setting up Vim..."
@@ -802,6 +810,7 @@ run_installation() {
     setup_mise_desktop_tools
     setup_codex
     setup_opencode
+    setup_antigravity_cli
     # Nie dziala idelanie , poki co koomentuje
     # setup_desktop_entries
   fi
