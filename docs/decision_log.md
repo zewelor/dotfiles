@@ -365,3 +365,33 @@ Tested:
 Not tested:
 - GitHub Actions publish for the updated image.
 - Pulling the refreshed GHCR image from a cluster node after publish.
+
+## 2026-05-22 — Bypass delta pager in non-interactive shells
+
+1. **The Problem**
+When running git diff or git show in non-interactive environments (such as when LLMs, agents, or tools execute commands via a runner), the output used `delta` as the git pager. `delta` produced complex grid structures, unicode borders, line numbering, and side-by-side output that consumed an excessive number of tokens and made automated diff parsing extremely difficult.
+
+2. **Root Cause**
+The default git configuration set `core.pager = delta` globally. Under LLM/agent run-command environments, a pseudo-terminal (PTY) is typically allocated to handle commands. Because a PTY is present, Git detected it as a TTY and fell back to utilizing the configured pager (`delta`), unaware that the wrapper shell execution itself is completely non-interactive.
+
+3. **The Fix**
+- Modified `.zshenv` to check for non-interactive shell sessions (`[[ ! -o interactive ]]`).
+- Conditionally set `export GIT_PAGER=cat` in those sessions.
+- This forces Git to bypass the global `delta` pager config in any non-interactive script or agent execution shell, reverting to clean, raw, standard git diff output.
+
+4. **Key Insight**
+PTY allocation by command runners tricks git/pagers into believing a real human user is present. To prevent pagers from corrupting programmatic terminal inputs/outputs with rich terminal formatting, the shell itself should inspect its interactive status and configure the environment accordingly.
+
+5. **The Lesson**
+When building developer dotfiles, consider the operational environments of modern tooling (like CI/CD pipelines, programmatic CLI wrappers, and LLMs). Environment variables like `GIT_PAGER` provide a clean mechanism to dynamically downgrade interactive decorations to standard raw outputs without altering core tool configs.
+
+6. **Verification / Testing**
+Tested:
+- Standard interactive shells still correctly use `delta` pager with all side-by-side formatting.
+- Non-interactive zsh sessions (`zsh -c`) successfully export `GIT_PAGER=cat` and bypass `delta` entirely.
+- Verified plain raw git diff outputs in LLM runner environments.
+- Ran `./install` successfully to stow the updated `.zshenv` symlink.
+
+Not tested:
+- Behavioral changes on systems using shells other than Zsh (like standard Bash environments), as Zsh is the primary and only interactive shell setup defined in these dotfiles.
+
