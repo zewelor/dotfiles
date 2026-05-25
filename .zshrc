@@ -983,6 +983,12 @@ if has "mise"; then
   fpath+=("$mise_completion_cache")
 fi
 
+agent_browser_skills_dir="${HOME}/.local/share/mise/installs/npm-agent-browser/latest/lib/node_modules/agent-browser/skill-data"
+if [[ -d "$agent_browser_skills_dir" ]]; then
+  export AGENT_BROWSER_SKILLS_DIR="$agent_browser_skills_dir"
+fi
+unset agent_browser_skills_dir
+
 # Lazy-load complist only when you press TAB the first time
 _lazy_tab_complete() {
   zmodload -i zsh/complist
