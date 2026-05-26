@@ -8,6 +8,7 @@
   excludesfile = ~/.gitignore_global
   # pager = less -F -X
   pager = delta
+  quotepath = false
 [branch]
   autosetuprebase = always
 [push]

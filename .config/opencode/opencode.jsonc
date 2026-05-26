@@ -1,14 +1,8 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": [
-    "@mohak34/opencode-notifier@latest",
-    "opencode-websearch"
-  ],
-  "disabled_providers": [
-    "openrouter",
-    "perplexity",
-    "groq"
-  ],
+  "plugin": ["@mohak34/opencode-notifier@latest", "opencode-websearch"],
+  "formatter": true,
+  "disabled_providers": ["openrouter", "perplexity", "groq"],
   "permission": {
     "git push": "ask",
     "websearch": "allow"
@@ -19,10 +13,8 @@
         "reasoningEffort": "medium",
         "reasoningSummary": "auto",
         "textVerbosity": "medium",
-        "include": [
-          "reasoning.encrypted_content"
-        ],
-        "store": false,
+        "include": ["reasoning.encrypted_content"],
+        "store": false
       }
     }
   },
@@ -47,19 +39,12 @@
     },
     "duckduckgo": {
       "type": "local",
-      "command": [
-        "uvx",
-        "duckduckgo-mcp-server"
-      ]
+      "command": ["uvx", "duckduckgo-mcp-server"]
     },
     "perplexity": {
       "enabled": false,
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "@perplexity-ai/mcp-server"
-      ]
+      "command": ["npx", "-y", "@perplexity-ai/mcp-server"]
     },
     "gh_grep": {
       "type": "remote",
@@ -76,7 +61,7 @@
       },
       "headers": {
         "X-MCP-Toolsets": "repos,issues,pull_requests,actions",
-        "X-MCP-Readonly": "true",
+        "X-MCP-Readonly": "true"
       }
     }
   }
