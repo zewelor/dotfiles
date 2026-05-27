@@ -2,7 +2,7 @@
   "$schema": "https://opencode.ai/config.json",
   "plugin": ["@mohak34/opencode-notifier@latest", "opencode-websearch"],
   "formatter": true,
-  "disabled_providers": ["openrouter", "perplexity", "groq"],
+  "disabled_providers": ["openrouter", "perplexity", "groq", "google"],
   "permission": {
     "git push": "ask",
     "websearch": "allow"
@@ -15,6 +15,12 @@
         "textVerbosity": "medium",
         "include": ["reasoning.encrypted_content"],
         "store": false
+      }
+    },
+    "anthropic": {
+      "options": {
+        "baseURL": "https://api.pioneer.ai/v1",
+        "apiKey": "{env:PIONEER_API_KEY}"
       }
     }
   },
@@ -40,11 +46,6 @@
     "duckduckgo": {
       "type": "local",
       "command": ["uvx", "duckduckgo-mcp-server"]
-    },
-    "perplexity": {
-      "enabled": false,
-      "type": "local",
-      "command": ["npx", "-y", "@perplexity-ai/mcp-server"]
     },
     "gh_grep": {
       "type": "remote",

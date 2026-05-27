@@ -14,6 +14,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   └── keymaps.lua  # Wszystkie keybindings
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
+│   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
 │   │   ├── copilot.lua              # GitHub Copilot
@@ -49,9 +50,6 @@ Główne opcje edytora (z `lua/config/options.lua`):
 |-------|---------|------|
 | `number` | true | Numery linii |
 | `relativenumber` | true | Relatywne numery (do nawigacji) |
-| `expandtab` | true | Spacje zamiast tab |
-| `tabstop` | 2 | Szerokość tabulacji |
-| `shiftwidth` | 2 | Wcięcie przy `>>` |
 | `smartindent` | true | Inteligentne wcięcia |
 | `wrap` | false | Bez zawijania długich linii |
 | `ignorecase` | true | Ignoruj wielkość liter w wyszukiwaniu |
@@ -61,14 +59,16 @@ Główne opcje edytora (z `lua/config/options.lua`):
 | `undofile` | true | Trwałe undo (po zamknięciu pliku) |
 | `mouse` | "" | Wyłączona obsługa myszy |
 
+**Indent settings** (`expandtab`, `tabstop`, `shiftwidth`) są zarządzane przez `.editorconfig` via plugin `editorconfig-vim`. Plik `.editorconfig` znajduje się w `~/dotfiles/.editorconfig` i jest linkowany do `~/.editorconfig` przez stow.
+
 ## 📁 Nadpisy per Filetype
 
 Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ftdetect/`):
 
 | Język | Plik | Opis nadpisu |
 |-------|------|--------------|
-| **Markdown** | `markdown.lua` | 2 spacje, `wrap`, `linebreak`, `breakindent` |
-| **Dockerfile** | `dockerfile.lua` | 4 spacje dla kontynuacji `RUN` oraz +2 spacje dla bloków shell (`if/for/while/case`); dotyczy też pliku `fdockerfile` przez alias filetype |
+| **Markdown** | `markdown.lua` | `wrap`, `linebreak`, `breakindent` (indent zarządzany przez `.editorconfig`) |
+| **Dockerfile** | `dockerfile.lua` | Custom indent logic dla kontynuacji `RUN` oraz bloków shell (`if/for/while/case`); basic indent (4 spacje) zarządzany przez `.editorconfig` |
 | **Just** | `just.lua` | `commentstring = "# %s"` + `ts-comments.nvim` (ftdetect w `ftdetect/just.lua`) |
 | **SSH config** | `sshconfig.lua` | Ustawia `filetype=sshconfig` dla fragmentów `~/.ssh/config.d/*`, żeby działały builtinowe komentarze (`# %s`) |
 

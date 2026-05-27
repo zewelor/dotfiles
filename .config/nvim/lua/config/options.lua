@@ -14,10 +14,9 @@ vim.opt.cursorline     = true      -- Highlight the current line
 vim.opt.clipboard      = "unnamed" -- Use the system clipboard for all yanks/pastes
 -- Linux tip: install xclip (X11) or wl-clipboard (Wayland)
 
--- Indentation & tabs (project defaults; override per filetype in after/ftplugin)
-vim.opt.expandtab      = true      -- Insert spaces when pressing <Tab>
-vim.opt.shiftwidth     = 2         -- Autoindent width and << / >> shift size
-vim.opt.tabstop        = 2         -- Display width of a literal <Tab> character
+-- Indentation & tabs
+-- Basic indent (expandtab, shiftwidth, tabstop) managed by .editorconfig via editorconfig-vim plugin
+-- These options are not supported by editorconfig, so kept here:
 vim.opt.softtabstop    = -1        -- Use shiftwidth for <Tab>/<BS> in insert mode (−1 follows shiftwidth)
 vim.opt.autoindent     = true      -- Copy indent from current line when starting a new one
 vim.opt.smartindent    = true      -- Smart auto-indenting for new lines in many languages

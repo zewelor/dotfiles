@@ -1,17 +1,6 @@
 -- Dockerfile specific settings
--- Align RUN commands by using 4 spaces for indentation (matching 'RUN ')
---
-
--- ~/.config/nvim/after/indent/dockerfile.lua
-
-vim.opt_local.expandtab = true
-vim.opt_local.tabstop = 4
-vim.opt_local.softtabstop = 4
-vim.opt_local.shiftwidth = 4
-
-vim.opt_local.autoindent = true
-vim.opt_local.smartindent = false
-vim.opt_local.cindent = false
+-- Basic indent (expandtab, tabstop, shiftwidth) managed by .editorconfig (indent_size = 4)
+-- Custom indent logic for RUN continuation lines:
 
 local DEFAULT_INDENTEXPR = vim.bo.indentexpr
 local RUN_CONT = 4 -- kolejne linie po "RUN ... \" mają 4 spacje
