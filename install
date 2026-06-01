@@ -434,7 +434,6 @@ setup_mise_desktop_tools() {
     "codex"
     "yt-dlp"
     "kubectl"
-    "helm"
     "npm:@steipete/summarize@latest"
     "npm:ctx7"
     "workmux"
