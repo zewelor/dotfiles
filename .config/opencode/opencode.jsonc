@@ -19,12 +19,6 @@
         "include": ["reasoning.encrypted_content"],
         "store": false
       }
-    },
-    "anthropic": {
-      "options": {
-        "baseURL": "https://api.pioneer.ai/v1",
-        "apiKey": "{env:PIONEER_API_KEY}"
-      }
     }
   },
   "mcp": {
