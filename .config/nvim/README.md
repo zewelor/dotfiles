@@ -55,11 +55,13 @@ Główne opcje edytora (z `lua/config/options.lua`):
 | `ignorecase` | true | Ignoruj wielkość liter w wyszukiwaniu |
 | `smartcase` | true | ...chyba że wpiszesz wielką literę |
 | `termguicolors` | true | True color support |
-| `clipboard` | "unnamedplus" | Współdzielony clipboard z systemem |
+| `clipboard` | "" | Clipboard systemowy nie jest domyślnym rejestrem; tylko świadome yankowanie (`y`) kopiuje do `+` |
 | `undofile` | true | Trwałe undo (po zamknięciu pliku) |
 | `mouse` | "" | Wyłączona obsługa myszy |
 
 **Indent settings** (`expandtab`, `tabstop`, `shiftwidth`) są zarządzane przez `.editorconfig` via plugin `editorconfig-vim`. Plik `.editorconfig` znajduje się w `~/dotfiles/.editorconfig` i jest linkowany do `~/.editorconfig` przez stow.
+
+**Clipboard**: konfiguracja emuluje zachowanie SmartYank bez osobnego pluginu. Operacje `delete`/`change` nie nadpisują systemowego schowka, a `TextYankPost` kopiuje do rejestru `+` tylko przy operatorze `y`. W sesji SSH Neovim wymusza wbudowany provider `osc52`, żeby yank mógł trafić do lokalnego schowka terminala także wtedy, gdy autodetekcja zawodzi pod tmuxem.
 
 ## 📁 Nadpisy per Filetype
 

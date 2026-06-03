@@ -11,7 +11,20 @@ vim.opt.termguicolors  = true      -- Enable 24-bit colors (truecolor) in termin
 vim.opt.cursorline     = true      -- Highlight the current line
 
 -- System clipboard
-vim.opt.clipboard      = "unnamed" -- Use the system clipboard for all yanks/pastes
+-- Keep delete/change operations out of the system clipboard; only yanks copy there.
+vim.opt.clipboard      = ""
+if vim.env.SSH_CONNECTION or vim.env.SSH_TTY then
+  vim.g.clipboard = "osc52"
+end
+vim.api.nvim_create_autocmd("TextYankPost", {
+  callback = function()
+    if vim.v.event.operator == "y" then
+      vim.fn.setreg("+", vim.v.event.regcontents, vim.v.event.regtype)
+    end
+
+    vim.highlight.on_yank({ timeout = 150 })
+  end,
+})
 -- Linux tip: install xclip (X11) or wl-clipboard (Wayland)
 
 -- Indentation & tabs
