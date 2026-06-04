@@ -43,4 +43,12 @@ require("lazy").setup({
     enabled = true,
     frequency = 604800 -- check every week
   },
+  performance = {
+    rtp = {
+      paths = {
+        "/usr/lib/nvim",
+      },
+    },
+  },
 })
+

@@ -395,3 +395,32 @@ Tested:
 Not tested:
 - Behavioral changes on systems using shells other than Zsh (like standard Bash environments), as Zsh is the primary and only interactive shell setup defined in these dotfiles.
 
+## 2026-06-04 — Resolve Neovim 0.11+ Tree-sitter parser load crash due to lazy.nvim runtimepath reset
+
+1. **The Problem**
+Starting Neovim or reading any file with the `lua` filetype (including config files during startup) triggered a crash with the error:
+`Parser could not be created for buffer 1 and language "lua"`.
+
+2. **Root Cause**
+Neovim 0.11+ triggers `vim.treesitter.start()` by default inside its built-in runtime `ftplugin/lua.lua` file. To do so, it expects to find the built-in Tree-sitter parsers (`lua.so`, `vim.so`, etc.) under the paths in the runtimepath (`rtp`).
+On Debian/Ubuntu, Neovim packages install these core parsers to `/usr/lib/nvim/parser/`. By default, `/usr/lib/nvim` is present in Neovim's default runtimepath.
+However, `lazy.nvim` manages and resets the runtimepath (`rtp`) on startup. It strips custom/system-specific paths like `/usr/lib/nvim` from `rtp`, causing Neovim to lose access to the system-installed Tree-sitter parsers. As a result, when Neovim attempts to start treesitter highlighting for a buffer (e.g. `init.lua`), it fails to create the parser and throws a fatal Lua error.
+
+3. **The Fix**
+Modified `.config/nvim/lua/config/lazy.lua` to add `/usr/lib/nvim` to lazy.nvim's `performance.rtp.paths` setup list. This ensures `lazy.nvim` preserves this system directory in the runtimepath.
+
+4. **Key Insight**
+Custom package manager layouts (like Debian/Ubuntu placing native parsers in `/usr/lib/nvim`) require explicit inclusion in Neovim plugin managers (like `lazy.nvim`) that rebuild or filter the runtimepath.
+
+5. **The Lesson**
+When configuring plugin managers that override or sanitize `rtp` (e.g. `lazy.nvim`), ensure that system-specific runtime paths required for core features (like built-in Treesitter parsers on Linux distributions) are explicitly preserved.
+
+6. **Verification / Testing**
+Tested:
+- Started headless Neovim loading `init.lua`: `nvim --headless init.lua -c "q"`, which succeeded without any autocommand or Treesitter parser errors.
+- Verified that `vim.treesitter.get_parser()` successfully returns a parser object for a Lua buffer.
+- Verified `/usr/lib/nvim/parser/lua.so` exists and matches the loader requirements.
+
+Not tested:
+- Performance changes during startup with the added rtp directory.
+- Tree-sitter parser loading behavior on other operating systems (macOS, Fedora, Windows) since they use different packaging structures.
