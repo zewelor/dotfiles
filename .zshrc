@@ -131,13 +131,38 @@ zinit light-mode wait lucid for \
 # Session helpers for tmux and tmuxinator.
 if has "tmux"; then
   tat() {
-    local session="${PWD##*/}"
+    emulate -L zsh
 
+    if (( $# > 1 )); then
+      print -u2 -- "tat: too many arguments (expected 0 or 1 path)"
+      return 1
+    fi
+
+    local target="${1:-$PWD}"
+    if [[ -z "$target" ]]; then
+      print -u2 -- "tat: empty path"
+      return 1
+    fi
+
+    target="${target:A}"
+    if [[ ! -e "$target" ]]; then
+      print -u2 -- "tat: path does not exist: $target"
+      return 1
+    fi
+    if [[ ! -d "$target" ]]; then
+      print -u2 -- "tat: not a directory: $target"
+      return 1
+    fi
+
+    local session="${target##*/}"
+
+    # Start new sessions in the requested directory so "everything happens there";
+    # existing sessions keep their cwd to avoid surprising shared users.
     if [[ -n "$TMUX" ]]; then
-      tmux has-session -t "$session" 2>/dev/null || tmux new-session -ds "$session"
+      tmux has-session -t "$session" 2>/dev/null || tmux new-session -ds "$session" -c "$target"
       tmux switch-client -t "$session"
-  else
-      tmux attach -t "$session" 2>/dev/null || tmux new -s "$session"
+    else
+      tmux attach -t "$session" 2>/dev/null || tmux new -s "$session" -c "$target"
     fi
   }
 fi
@@ -696,7 +721,7 @@ if is_desktop; then
   alias update_bonus="ssh bonus -t 'cd ~/bonus_docker ; git pull origin'"
   # X cli
   _kwallet_name=$(dbus-send --session --print-reply=literal --dest=org.kde.kwalletd6 /modules/kwalletd6 org.kde.KWallet.networkWallet 2>/dev/null | tr -d '"' | tr -d '[:space:]')
-  alias bird="SWEET_COOKIE_CHROME_SAFE_STORAGE_PASSWORD=\$(kwallet-query --read-password \"Brave Safe Storage\" --folder \"Brave Keys\" ${_kwallet_name:-kdewallet}) bird --cookie-source chrome --chrome-profile-dir ~/.config/BraveSoftware/Brave-Browser/Default"
+  alias bird="SWEET_COOKIE_CHROME_SAFE_STORAGE_PASSWORD=\$(kwallet-query --read-password \"Brave Safe Storage\" --folder \"Brave Keys\" ${_kwallet_name:-kdewallet}) bird --cookie-source chrome --chrome-profile-dir ~/.config/BraveSoftware/Brave-Origin/Default"
 fi
 
 #
