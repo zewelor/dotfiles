@@ -11,9 +11,9 @@ return {
       "beautysh",
       "ruff",
       "taplo",
-      "biome",
-       "yamlfmt",
-       "rubyfmt",
+      "oxfmt",
+      "yamlfmt",
+      "rubyfmt",
 
        -- Useful CLI tools
        "hadolint",

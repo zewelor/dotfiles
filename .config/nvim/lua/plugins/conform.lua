@@ -28,12 +28,12 @@ return {
       bash = { "shfmt" },
       zsh = { "beautysh" },
 
-      javascript = { "biome" },
-      javascriptreact = { "biome" },
-      typescript = { "biome" },
-      typescriptreact = { "biome" },
-      css = { "biome" },
-      graphql = { "biome" },
+      javascript = { "oxfmt" },
+      javascriptreact = { "oxfmt" },
+      typescript = { "oxfmt" },
+      typescriptreact = { "oxfmt" },
+      css = { "oxfmt" },
+      graphql = { "oxfmt" },
 
       yaml = function(bufnr)
         local ft = vim.bo[bufnr].filetype
@@ -47,9 +47,9 @@ return {
       ["eruby.yaml.tmuxinator"] = {},
       ["yaml.docker-compose"] = { "yamlfmt" },
 
-       json = { "biome" },
-       jsonc = { "biome" },
-       json5 = { "biome" },
+       json = { "oxfmt" },
+       jsonc = { "oxfmt" },
+       json5 = { "oxfmt" },
 
        ruby = { "rubyfmt" },
      },
