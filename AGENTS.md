@@ -140,6 +140,7 @@ Minimalne, spójne formaty:
   - `aac` = `app-cli -c`
 - Przy dodawaniu kolejnych aliasów do tej samej apki dopisz je w tym samym bloku, zamiast rozrzucać po plikach.
 
+
 ## Nowa konwencja wspolnego katalogu (`.agents/`)
 
 **Konwencja:**
@@ -148,6 +149,13 @@ Minimalne, spójne formaty:
 **Jak to działa w dotfiles:**
 - Źródło w repo: `prv/.agents/`
 - Główny stow z `prv/` linkuje to 1:1 do `~/.agents/`.
+
+## Organizacja dotfiles (publiczne vs. desktop/private)
+
+Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
+- **Konfiguracje publiczne i wspólne** (używane zarówno na desktopie, jak i serwerach, np. Neovim, tmux, Alacritty/Foot): powinny znajdować się w głównym katalogu repozytorium (np. `.config/foot/`, `.config/nvim/`).
+- **Konfiguracje specyficzne dla profilu desktopowego / prywatne** (np. specyficzne dla środowiska KDE Plasma jak `klaunchrc`, ustawienia prywatne SSH, tmuxinator): muszą znajdować się w katalogu `prv/` (np. `prv/.config/klaunchrc`).
+- Skrypt `install` automatycznie linkuje zawartość katalogu `prv/` do katalogu domowego użytkownika **tylko** wtedy, gdy profil to `desktop` (`is_desktop`).
 
 ## Themes i kolorystyka
 

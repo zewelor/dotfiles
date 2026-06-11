@@ -1,5 +1,35 @@
 # Decision Log
 
+## 2026-06-11 — Optimize shell startup time & fix KDE Plasma 6 Wayland application launch delay
+
+1. **The Problem**
+Starting a new terminal window (Foot/Alacritty) via global hotkeys or launchers in KDE Plasma 6 Wayland was delayed by ~2 seconds, showing a blank screen inside the window before the Zsh prompt rendered, even though `zinit times` showed very low plugin load times (~57ms).
+
+2. **Root Cause**
+- **Shell Startup (minor):** `.zsh/docker.zsh` executed `docker compose version` synchronously on startup (adding 50ms), and `.zshrc` executed an unused `DEFAULT_USER` variable via a slow `whoami` subshell call.
+- **KDE Launcher Delay (major):** In KDE Plasma 6 Wayland, applications started via hotkeys or desktop files are wrapped in systemd transient user services (`systemd-run`). Due to D-Bus/systemd integration timeouts or environment sync delays, the launcher blocks for exactly 2 seconds before executing the application's command, leading to the blank startup state.
+
+3. **The Fix**
+- Replaced the synchronous `docker compose version` in `.zsh/docker.zsh` with a filesystem-based check for the compose binary/plugin path.
+- Removed the unused `DEFAULT_USER` export entirely from `.zshrc`.
+- Configured Zinit to defer all `wait` plugins to `wait"1"` instead of `wait"0"` to prevent blocking the first prompt render.
+- Disabled KDE's systemd transient unit wrapping globally by setting `UseSystemd=false` in `~/.config/klaunchrc` and stowed it under `prv/.config/klaunchrc`.
+
+4. **Key Insight**
+- App launch latency in Wayland desktop environments is often caused by compositor/service integration wrappers (like `systemd-run`). If GUI apps open instantly when launched from an existing terminal but take 2 seconds via system shortcuts, the wrapper is the bottleneck.
+
+5. **The Lesson**
+- Always isolate shell startup issues from compositor launch delays by testing execution inside an existing terminal. Bypassing systemd transient wrappers in KDE (`UseSystemd=false`) can resolve app-launch freezes.
+
+6. **Verification / Testing**
+Tested:
+- Confirmed that shell startup time is ~140ms and prompt drawing completes in 416ms using PTY execution traces.
+- Verified that running `foot` or `alacritty` inside another terminal launches instantly.
+- Verified that `~/.config/klaunchrc` has `UseSystemd=false` configured correctly and is managed by GNU Stow.
+
+Not tested:
+- Performance after logging out/in (requires user action to reload KDE Plasma config).
+
 ## 2026-06-11 — Optimize Neovim startup time (LSP mise which & Telescope lazy loading)
 
 1. **The Problem**
