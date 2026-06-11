@@ -72,11 +72,8 @@ if [ -f /etc/profile.d/apps-bin-path.sh ]; then
   source /etc/profile.d/apps-bin-path.sh
 fi
 
-export DEFAULT_USER=$(whoami)
-
 # make it more responsive
 export KEYTIMEOUT=1
-
 
 #
 # Zinit

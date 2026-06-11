@@ -114,7 +114,7 @@ if has "docker"; then
   ZINIT_COMPDEF_REPLAY+=("_dkNin dkNin" "_dkNrm dkNrm")
   ZINIT_COMPDEF_REPLAY+=("_dkEsh dkEsh")
 
-  if [ ! -z "`docker compose version`" ]; then
+  if has "docker-compose" || [[ -x /usr/libexec/docker/cli-plugins/docker-compose || -x ~/.docker/cli-plugins/docker-compose || -x /usr/lib/docker/cli-plugins/docker-compose ]]; then
 
     # Small helper: list docker compose service names in current project
     function _docker_compose_service_names() {
