@@ -1,34 +1,33 @@
 # Decision Log
 
-## 2026-06-11 — Optimize shell startup time & fix KDE Plasma 6 Wayland application launch delay
+## 2026-06-11 — Optimize shell startup time
 
 1. **The Problem**
-Starting a new terminal window (Foot/Alacritty) via global hotkeys or launchers in KDE Plasma 6 Wayland was delayed by ~2 seconds, showing a blank screen inside the window before the Zsh prompt rendered, even though `zinit times` showed very low plugin load times (~57ms).
+Starting a new shell (Foot/Alacritty) had minor startup delays (around 50-100ms extra) due to synchronous commands executed during Zsh initialization.
 
 2. **Root Cause**
-- **Shell Startup (minor):** `.zsh/docker.zsh` executed `docker compose version` synchronously on startup (adding 50ms), and `.zshrc` executed an unused `DEFAULT_USER` variable via a slow `whoami` subshell call.
-- **KDE Launcher Delay (major):** In KDE Plasma 6 Wayland, applications started via hotkeys or desktop files are wrapped in systemd transient user services (`systemd-run`). Due to D-Bus/systemd integration timeouts or environment sync delays, the launcher blocks for exactly 2 seconds before executing the application's command, leading to the blank startup state.
+- `.zsh/docker.zsh` executed `docker compose version` synchronously on startup (adding 50ms).
+- `.zshrc` executed an unused `DEFAULT_USER` variable via a slow `whoami` subshell call.
+- Zinit `wait"0"` configuration for syntax highlighting/completion plugins blocked the first prompt render until they loaded.
 
 3. **The Fix**
 - Replaced the synchronous `docker compose version` in `.zsh/docker.zsh` with a filesystem-based check for the compose binary/plugin path.
 - Removed the unused `DEFAULT_USER` export entirely from `.zshrc`.
 - Configured Zinit to defer all `wait` plugins to `wait"1"` instead of `wait"0"` to prevent blocking the first prompt render.
-- Disabled KDE's systemd transient unit wrapping globally by setting `_KDE_APPLICATIONS_AS_FORKING=1` in `~/.config/environment.d/10-kde-no-systemd.conf` (stowed under `prv/.config/environment.d/10-kde-no-systemd.conf`).
 
 4. **Key Insight**
-- App launch latency in Wayland desktop environments is often caused by compositor/service integration wrappers (like `systemd-run`). If GUI apps open instantly when launched from an existing terminal but take 2 seconds via system shortcuts, the wrapper is the bottleneck.
+- Shell startup optimization requires removing synchronous subprocesses and deferring slow syntax/completion plugins until after the first prompt renders.
 
 5. **The Lesson**
-- Always isolate shell startup issues from compositor launch delays by testing execution inside an existing terminal. Bypassing systemd transient wrappers in KDE (via `_KDE_APPLICATIONS_AS_FORKING=1` environment variable) can resolve app-launch freezes.
+- Avoid running command-checking subprocesses (like executing binaries with `--version`) inside the shell startup flow. Prefer filesystem checks when possible, and load secondary shell plugins asynchronously.
 
 6. **Verification / Testing**
 Tested:
 - Confirmed that shell startup time is ~140ms and prompt drawing completes in 416ms using PTY execution traces.
-- Verified that running `foot` or `alacritty` inside another terminal launches instantly.
-- Verified that `~/.config/environment.d/10-kde-no-systemd.conf` has `_KDE_APPLICATIONS_AS_FORKING=1` configured correctly and is managed by GNU Stow.
+- Verified that all autocompletion and syntax highlighting features remain fully functional after lazy loading.
 
 Not tested:
-- Performance after logging out/in (requires user action to reload KDE Plasma config).
+- Performance across different terminal emulators other than Foot/Alacritty.
 
 ## 2026-06-11 — Optimize Neovim startup time (LSP mise which & Telescope lazy loading)
 
