@@ -1,5 +1,33 @@
 # Decision Log
 
+## 2026-06-11 — Optimize Neovim startup time (LSP mise which & Telescope lazy loading)
+
+1. **The Problem**
+Neovim startup time was very slow (~2 seconds), particularly noticeable when opening Markdown files.
+
+2. **Root Cause**
+- The LSP configuration (`lua/plugins/lsp.lua`) defined a helper function `mise_bin(tool)` that used `vim.fn.system({ "mise", "which", tool })` to locate `ruby-lsp` and `rubocop` synchronously on startup, blocking the UI thread.
+- `telescope.nvim` was loaded synchronously during startup despite only being used via keymaps.
+
+3. **The Fix**
+- Modified `mise_bin(tool)` in `lua/plugins/lsp.lua` to check if the tool is already executable in the environment's `PATH` (`vim.fn.executable(tool) == 1`) before executing `mise which` synchronously.
+- Added `cmd = "Telescope"` to the plugin specification in `lua/plugins/telescope.lua` to defer its loading until first use.
+
+4. **Key Insight**
+Calling synchronous external shell commands and loading heavy UI plugins on startup are major performance hazards. Defer UI plugins using lazy triggers and check the path via `vim.fn.executable()` before calling external tools.
+
+5. **The Lesson**
+Avoid executing synchronous shell commands on startup. Ensure non-essential plugins (like fuzzy finders) are lazy loaded to keep startup time minimal.
+
+6. **Verification / Testing**
+Tested:
+- Checked startup time with `--startuptime` when launching Neovim directly and opening `README.md`.
+- Startup time dropped from ~2.0 seconds down to ~118-150 milliseconds.
+- Verified that `ruby-lsp` and `rubocop` are still resolved correctly, and Telescope commands (`<leader>ff`, `<leader>fg`) load and run Telescope on demand.
+
+Not tested:
+- Startup in environments where `mise` is not active in the shell PATH (which will still trigger the fallback `system` call, but only if needed).
+
 ## 2026-02-20 — Migrate selected CLI tools to mise (github backend)
 
 1. **The Problem**

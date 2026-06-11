@@ -3,6 +3,9 @@ local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
 
 -- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed)
 local function mise_bin(tool)
+  if vim.fn.executable(tool) == 1 then
+    return tool
+  end
   local path = vim.fn.system({ "mise", "which", tool }):gsub("%s+$", "")
   if vim.v.shell_error ~= 0 or path == "" then
     return nil
