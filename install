@@ -437,6 +437,7 @@ setup_mise_desktop_tools() {
     "npm:@steipete/summarize@latest"
     "npm:ctx7"
     "workmux"
+    "npm:agent-browser[npm_args=--ignore-scripts=false]"
   )
 
   local tool=""
