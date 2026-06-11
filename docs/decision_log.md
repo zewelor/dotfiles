@@ -13,19 +13,19 @@ Starting a new terminal window (Foot/Alacritty) via global hotkeys or launchers 
 - Replaced the synchronous `docker compose version` in `.zsh/docker.zsh` with a filesystem-based check for the compose binary/plugin path.
 - Removed the unused `DEFAULT_USER` export entirely from `.zshrc`.
 - Configured Zinit to defer all `wait` plugins to `wait"1"` instead of `wait"0"` to prevent blocking the first prompt render.
-- Disabled KDE's systemd transient unit wrapping globally by setting `UseSystemd=false` in `~/.config/klaunchrc` and stowed it under `prv/.config/klaunchrc`.
+- Disabled KDE's systemd transient unit wrapping globally by setting `_KDE_APPLICATIONS_AS_FORKING=1` in `~/.config/environment.d/10-kde-no-systemd.conf` (stowed under `prv/.config/environment.d/10-kde-no-systemd.conf`).
 
 4. **Key Insight**
 - App launch latency in Wayland desktop environments is often caused by compositor/service integration wrappers (like `systemd-run`). If GUI apps open instantly when launched from an existing terminal but take 2 seconds via system shortcuts, the wrapper is the bottleneck.
 
 5. **The Lesson**
-- Always isolate shell startup issues from compositor launch delays by testing execution inside an existing terminal. Bypassing systemd transient wrappers in KDE (`UseSystemd=false`) can resolve app-launch freezes.
+- Always isolate shell startup issues from compositor launch delays by testing execution inside an existing terminal. Bypassing systemd transient wrappers in KDE (via `_KDE_APPLICATIONS_AS_FORKING=1` environment variable) can resolve app-launch freezes.
 
 6. **Verification / Testing**
 Tested:
 - Confirmed that shell startup time is ~140ms and prompt drawing completes in 416ms using PTY execution traces.
 - Verified that running `foot` or `alacritty` inside another terminal launches instantly.
-- Verified that `~/.config/klaunchrc` has `UseSystemd=false` configured correctly and is managed by GNU Stow.
+- Verified that `~/.config/environment.d/10-kde-no-systemd.conf` has `_KDE_APPLICATIONS_AS_FORKING=1` configured correctly and is managed by GNU Stow.
 
 Not tested:
 - Performance after logging out/in (requires user action to reload KDE Plasma config).
