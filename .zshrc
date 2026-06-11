@@ -113,7 +113,7 @@ zle -N self-insert url-quote-magic
 
 # Local snippets
 
-zinit light-mode wait lucid for \
+zinit light-mode wait"1" lucid for \
   zdharma-continuum/zinit-annex-bin-gem-node \
   zdharma-continuum/zinit-annex-link-man \
   zdharma-continuum/zinit-annex-patch-dl \
@@ -164,7 +164,7 @@ if has "tmux"; then
   }
 fi
 
-zinit ice wait lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
+zinit ice wait"1" lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
 # Catppuccin Latte theme for fzf (transparent background)
@@ -268,7 +268,7 @@ fi
 
 ##########################
 
-zinit wait lucid for \
+zinit wait"1" lucid for \
   light-mode \
   atinit"
     # Hash holding paths that shouldn't be grepped (globbed) – blacklist for slow disks, mounts, etc.
