@@ -238,150 +238,7 @@ setup_ssh() {
   mkdir -p "$HOME_DIR/.ssh/config.d/"
 }
 
-# Function to install custom desktop entries defined in webapps/apps.tsv.
-setup_desktop_entries() {
-  set -euo pipefail
 
-  if ! is_desktop; then
-    echo "Skipping desktop entry installation on non-desktop profile."
-    return
-  fi
-
-  local config="$BASE_DIR/webapps/apps.tsv"
-  if [[ ! -f "$config" ]]; then
-    echo "No desktop entry config found at $config; skipping."
-    return
-  fi
-
-  local applications_dir="${XDG_DATA_HOME:-$HOME_DIR/.local/share}/applications"
-  local icon_dir="$applications_dir/icons"
-  mkdir -p "$applications_dir" "$icon_dir"
-
-  local desktop_installer=""
-  if has "desktop-file-install"; then
-    desktop_installer="desktop-file-install"
-  else
-    echo "desktop-file-install not found; will write .desktop files directly."
-  fi
-
-  local browser_cmd
-  browser_cmd=$(resolve_browser_cmd)
-
-  if [[ -z "$browser_cmd" ]]; then
-    echo "No supported browser found (set BROWSER or install Brave/Chrome/Chromium); skipping desktop entries."
-    return
-  fi
-
-  print_banner "Installing desktop entries"
-  [[ -o xtrace ]] && echo "DEBUG xtrace before loop"
-
-  local global_flags="${DOTFILES_BROWSER_FLAGS:-}"
-  local enable_wayland="${DOTFILES_CHROMIUM_WAYLAND:-1}"
-  local desired_slugs=()
-
-  while IFS='|' read -r name slug app_url icon_filename extra_flags _; do
-    # Skip comments/empty lines
-    if [[ -z "${name// }" ]] || [[ "${name:0:1}" == "#" ]]; then
-      continue
-    fi
-
-    if [[ -z "$slug" || -z "$app_url" ]]; then
-      echo "Skipping entry with missing slug or app_url: $name"
-      continue
-    fi
-
-    desired_slugs+=("$slug")
-
-    local icon_name="dotfiles-$slug"
-    local desktop_file="$applications_dir/dotfiles-$slug.desktop"
-    local tmpdir tmpfile
-    tmpdir=$(mktemp -d -t "dotfiles-$slug.XXXXXX")
-    tmpfile="$tmpdir/dotfiles-$slug.desktop"
-
-    local exec_cmd="$browser_cmd --new-window --app=$app_url --name=${name// /\\ } --class=$slug"
-    if [[ "$enable_wayland" == "1" ]]; then
-      exec_cmd+=" --ozone-platform=wayland"
-    fi
-    if [[ -n "$global_flags" ]]; then
-      exec_cmd+=" $global_flags"
-    fi
-    if [[ -n "$extra_flags" ]]; then
-      exec_cmd+=" $extra_flags"
-    fi
-
-    if [[ -z "$icon_filename" ]]; then
-      echo "Missing icon filename for $slug (column 4 in $config)."
-      return 1
-    fi
-
-    local repo_icon="$BASE_DIR/webapps/icons/$icon_filename"
-    local installed_icon="$icon_dir/${icon_name}.png"
-    if [[ ! -f "$repo_icon" ]]; then
-      echo "Icon file '$icon_filename' not found in webapps/icons for $slug."
-      return 1
-    fi
-
-    install -m 0644 "$repo_icon" "$installed_icon"
-
-    cat > "$tmpfile" <<EOF
-[Desktop Entry]
-Version=1.0
-Name=$name
-Comment=$name (PWA)
-Exec=$exec_cmd
-Terminal=false
-Type=Application
-Categories=Network;
-Icon=$icon_name
-StartupWMClass=$slug
-StartupNotify=true
-EOF
-
-    if [[ -n "$desktop_installer" ]]; then
-      "$desktop_installer" --dir "$applications_dir" --mode 0644 "$tmpfile"
-    else
-      install -m 0644 "$tmpfile" "$desktop_file"
-    fi
-    rm -rf "$tmpdir"
-
-    echo "Installed dotfiles-$slug.desktop using browser: $browser_cmd"
-  done < "$config"
-
-  print_banner "Checking stale desktop entries"
-  setopt localoptions null_glob
-  local to_remove=()
-  for file in "$applications_dir"/dotfiles-*.desktop; do
-    local slug
-    slug=${file##*/dotfiles-}
-    slug=${slug%.desktop}
-    local found=false
-    for desired in "${desired_slugs[@]}"; do
-      if [[ "$slug" == "$desired" ]]; then
-        found=true
-        break
-      fi
-    done
-    if [[ "$found" == false ]]; then
-      to_remove+=("$file")
-    fi
-  done
-
-  if (( ${#to_remove[@]} )); then
-    echo "Found stale dotfiles desktop entries:"
-    printf ' - %s\n' "${to_remove[@]}"
-    if is_interactive; then
-      read -r "response?Remove them now? [y/N] "
-      if [[ "$response" =~ ^[Yy]$ ]]; then
-        rm -f "${to_remove[@]}"
-        echo "Removed stale entries."
-      else
-        echo "Leaving stale entries in place."
-      fi
-    else
-      echo "Non-interactive mode: not removing stale entries."
-    fi
-  fi
-}
 
 # Function to let mise use the GitHub CLI token for GitHub API calls.
 setup_mise_github_credentials() {
@@ -447,11 +304,8 @@ setup_mise_desktop_tools() {
 }
 
 
-# Function to setup rclone configuration from Vault (desktop only).
+# Function to setup rclone configuration from Vault.
 setup_rclone() {
-  if ! is_desktop; then
-    return
-  fi
 
   if ! is_interactive; then
     echo "Skipping rclone setup in non-interactive mode."
@@ -506,9 +360,6 @@ setup_rclone() {
 
 # Function to enable repo-managed user systemd units after stow linked them.
 setup_user_systemd_units() {
-  if ! is_desktop; then
-    return
-  fi
 
   local -a enable_units=()
   local -a enable_now_units=()
@@ -785,7 +636,9 @@ run_installation() {
   print_banner "Secret environment variables from Vault (optional)"
   add_secret_envs_from_vault
 
-  setup_rclone
+  if is_desktop; then
+    setup_rclone
+  fi
 
   # Private overrides and fonts after all Y/N prompts (font cache takes time)
   if is_desktop; then
@@ -816,8 +669,7 @@ run_installation() {
     setup_codex
     setup_opencode
     setup_antigravity_cli
-    # Nie dziala idelanie , poki co koomentuje
-    # setup_desktop_entries
+
   fi
 
   setup_ssh
@@ -860,15 +712,56 @@ EOF
     fi
   fi
 
-  setup_terminal_emulator
-  setup_user_systemd_units
+  if is_desktop; then
+    setup_terminal_emulator
+    setup_kde_terminal_shortcut
+    setup_user_systemd_units
+  fi
 
   print_banner "Installation completed successfully."
 }
 
+# ==============================================================================
+# Desktop & KDE specific setup functions
+# ==============================================================================
+
+# Configure KDE Terminal settings and shortcuts if KDE tools are present.
+setup_kde_terminal_shortcut() {
+
+  if ! has "kwriteconfig6" && ! has "kwriteconfig5"; then
+    echo "KDE configuration tools not found; skipping KDE shortcut setup."
+    return 0
+  fi
+
+  print_banner "Configuring KDE Terminal settings and shortcuts..."
+
+  local kwriter="kwriteconfig6"
+  local kbuildsycoca="kbuildsycoca6"
+  if ! has "kwriteconfig6"; then
+    kwriter="kwriteconfig5"
+    kbuildsycoca="kbuildsycoca5"
+  fi
+
+  # 1. Set my_default_terminal_emulator as preferred terminal emulator
+  "$kwriter" --file kdeglobals --group General --key TerminalApplication "/home/omen/bin/my_default_terminal_emulator"
+
+  # 2. Configure Meta+Ins shortcut for the custom terminal .desktop file
+  "$kwriter" --file kglobalshortcutsrc --group "services" --key "net.local.my_default_terminal_emulator.desktop" "_launch=Meta+Ins"
+
+  # 3. Rebuild the system configuration cache
+  if has "$kbuildsycoca"; then
+    "$kbuildsycoca" --noincremental >/dev/null 2>&1
+  fi
+
+  # 4. Trigger KDE to reload shortcut configurations if DBus is available
+  if has "qdbus"; then
+    qdbus org.kde.KWin /KWin reconfigure >/dev/null 2>&1 || true
+    dbus-send --session --type=signal /KGlobalSettings org.kde.KGlobalSettings.notifyChange int32:3 int32:5 >/dev/null 2>&1 || true
+  fi
+}
+
 # Offer to install a terminal emulator when both foot and alacritty are absent.
 setup_terminal_emulator() {
-  is_desktop || return 0
   is_interactive || return 0
 
   has alacritty && return 0

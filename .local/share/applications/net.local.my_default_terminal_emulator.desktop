@@ -1,0 +1,7 @@
+[Desktop Entry]
+Exec=/home/omen/bin/my_default_terminal_emulator
+Name=My terminal
+NoDisplay=true
+StartupNotify=false
+Type=Application
+X-KDE-GlobalAccel-CommandShortcut=true
