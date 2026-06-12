@@ -66,6 +66,8 @@ resolve_browser_cmd() {
     # Fallback to known browser commands
     if [[ -z "$detected" ]]; then
       local browser_candidates=(
+        "brave-origin-stable"
+        "brave-origin"
         "brave-browser-stable"
         "brave-browser"
         "google-chrome-stable"

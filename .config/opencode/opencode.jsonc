@@ -33,7 +33,7 @@
         "npx",
         "-y",
         "chrome-devtools-mcp@latest",
-        "--executablePath=/usr/bin/brave-browser",
+        "--executablePath=/usr/bin/brave-origin",
         "--chrome-arg=--ozone-platform=wayland",
         "--chrome-arg=--enable-features=UseOzonePlatform",
         "--isolated",
