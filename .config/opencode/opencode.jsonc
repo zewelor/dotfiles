@@ -1,6 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@mohak34/opencode-notifier@latest", "opencode-websearch"],
+  "plugin": ["@mohak34/opencode-notifier@latest", "opencode-websearch", "./shell-env.js"],
   "formatter": true,
   "disabled_providers": ["openrouter", "perplexity", "groq"],
   // "small_model": "github-copilot/gpt-5-mini",
