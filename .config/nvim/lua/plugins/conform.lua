@@ -16,11 +16,18 @@ return {
     notify_no_formatters = false,
 
     -- Disable autoformat for Markdown/Dockerfile (manual formatting still possible).
+    -- Markdown is only autoformatted on save if a dprint.json config file is present.
     format_on_save = function(bufnr)
       local ft = vim.bo[bufnr].filetype
       local is_tmuxinator = ft == "eruby.yaml.tmuxinator"
 
-      if ft == "markdown" or ft == "dockerfile" or is_tmuxinator then
+      if ft == "markdown" then
+        local name = vim.api.nvim_buf_get_name(bufnr)
+        local has_dprint = name ~= "" and vim.fs.find({ "dprint.json" }, { path = name, upward = true })[1] ~= nil
+        if not has_dprint then
+          return nil
+        end
+      elseif ft == "dockerfile" or is_tmuxinator then
         return nil
       end
 
@@ -38,12 +45,12 @@ return {
       bash = { "shfmt" },
       zsh = { "beautysh" },
 
-      javascript = { "oxfmt" },
-      javascriptreact = { "oxfmt" },
-      typescript = { "oxfmt" },
-      typescriptreact = { "oxfmt" },
-      css = { "oxfmt" },
-      graphql = { "oxfmt" },
+      javascript = { "dprint", "oxfmt", stop_after_first = true },
+      javascriptreact = { "dprint", "oxfmt", stop_after_first = true },
+      typescript = { "dprint", "oxfmt", stop_after_first = true },
+      typescriptreact = { "dprint", "oxfmt", stop_after_first = true },
+      css = { "dprint", "oxfmt", stop_after_first = true },
+      graphql = { "dprint", "oxfmt", stop_after_first = true },
 
       yaml = function(bufnr)
         local ft = vim.bo[bufnr].filetype
@@ -57,9 +64,11 @@ return {
       ["eruby.yaml.tmuxinator"] = {},
       ["yaml.docker-compose"] = { "yamlfmt" },
 
-      json = { "oxfmt" },
-      jsonc = { "oxfmt" },
-      json5 = { "oxfmt" },
+      json = { "dprint", "oxfmt", stop_after_first = true },
+      jsonc = { "dprint", "oxfmt", stop_after_first = true },
+      json5 = { "dprint", "oxfmt", stop_after_first = true },
+
+      markdown = { "dprint" },
 
       ruby = function(bufnr)
         if rubocop_project_root(bufnr) then
@@ -71,6 +80,11 @@ return {
     },
 
     formatters = {
+      dprint = {
+        condition = function(self, ctx)
+          return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] ~= nil
+        end,
+      },
       rubocop = function(bufnr)
         local root = rubocop_project_root(bufnr)
         local bin = root and (root .. "/bin/rubocop") or nil

@@ -12,6 +12,7 @@ return {
       "ruff",
       "taplo",
       "oxfmt",
+      "dprint",
       "yamlfmt",
       "rubyfmt",
 

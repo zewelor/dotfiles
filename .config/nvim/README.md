@@ -248,7 +248,7 @@ opencode --port
 
 - **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `toml`, `yaml`, `json`, `javascript`, `typescript`, `css`, `graphql`, `ruby` (`sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`, TOML przez `taplo`, YAML przez `yamlfmt`, JSON/JS/TS/CSS/GraphQL przez `oxfmt`, Ruby przez `rubocop` w projektach z `Gemfile` i `.rubocop.yml`, poza nimi przez `rubyfmt`; Markdown i Dockerfile wyłączone, żeby nie psuć własnych wcięć `RUN`)
+- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `toml`, `yaml`, `json`, `javascript`, `typescript`, `css`, `graphql`, `ruby`, `markdown` (w JS/TS/JSON/CSS/GraphQL/Markdown automatycznie używa `dprint` jeśli w projekcie znajduje się `dprint.json`; jeśli go brak, dla JS/TS/JSON/CSS/GraphQL używa `oxfmt`, a Markdown pozostawia niesformatowany; `sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`, TOML przez `taplo`, YAML przez `yamlfmt`, Ruby przez `rubocop` w projektach z `Gemfile` i `.rubocop.yml`, poza nimi przez `rubyfmt`; Dockerfile wyłączone)
 - **Ruby**: dla projektów RuboCop conform uruchamia repo-local `bin/rubocop`, jeśli istnieje; w przeciwnym razie używa dostępnego `rubocop`. Cache RuboCopa trafia do `tmp/rubocop`.
 - **Notifications**: Brak dostępnego formattera nie pokazuje popupu; szczegóły sprawdzaj przez `:ConformInfo`
 - **Keymaps**:
@@ -259,7 +259,7 @@ opencode --port
 ### **mason-tool-installer.nvim** — Auto-instalacja narzędzi
 
 - **Repo**: [WhoIsSethDaniel/mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim)
-- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `taplo`, `oxfmt`, `yamlfmt`, `rubyfmt`) i np. `hadolint`. `rubyfmt` zostaje fallbackiem dla Ruby poza projektami RuboCop.
+- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `taplo`, `oxfmt`, `dprint`, `yamlfmt`, `rubyfmt`) i np. `hadolint`. `rubyfmt` zostaje fallbackiem dla Ruby poza projektami RuboCop.
 
 ---
 
