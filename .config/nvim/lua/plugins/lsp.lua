@@ -1,8 +1,18 @@
 -- lsp — Language Server Protocol for intelligent code features
 local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
 
--- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed)
-local function mise_bin(tool)
+-- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed).
+-- Some Mason Ruby gem wrappers can keep stale shebangs after a Ruby upgrade, so
+-- Ruby tools prefer mise before falling back to PATH.
+local function mise_bin(tool, opts)
+  opts = opts or {}
+  if opts.prefer_mise then
+    local path = vim.fn.system({ "mise", "which", tool }):gsub("%s+$", "")
+    if vim.v.shell_error == 0 and path ~= "" then
+      return path
+    end
+  end
+
   if vim.fn.executable(tool) == 1 then
     return tool
   end
@@ -11,15 +21,6 @@ local function mise_bin(tool)
     return nil
   end
   return path
-end
-
--- Try `bundle exec` first if Gemfile exists, fall back to direct binary
-local function ruby_cmd(base_cmd)
-  local gemfile = vim.fs.find("Gemfile", { upward = true, type = "file" })[1]
-  if gemfile and vim.fn.executable("bundle") == 1 then
-    return vim.list_extend({ "bundle", "exec" }, base_cmd)
-  end
-  return base_cmd
 end
 
 -- Build per-server opts table (shared between 0.11+ and <0.11 paths)
@@ -35,14 +36,9 @@ local function make_server_opts(server)
   elseif server == "helm_ls" then
     opts.filetypes = { "helm" }
   elseif server == "ruby_lsp" then
-    local path = mise_bin("ruby-lsp")
+    local path = mise_bin("ruby-lsp", { prefer_mise = true })
     if path then
-      opts.cmd = ruby_cmd({ path })
-    end
-  elseif server == "rubocop" then
-    local path = mise_bin("rubocop")
-    if path then
-      opts.cmd = ruby_cmd({ path, "--lsp" })
+      opts.cmd = { path }
     end
   end
   return opts
@@ -83,7 +79,7 @@ return {
       end
 
       local mason_servers = { "lua_ls", "helm_ls", "ruff", "taplo", "marksman" }
-      local extra_servers = { "ruby_lsp", "rubocop" }
+      local extra_servers = { "ruby_lsp" }
 
       if has_nvim_011 then
         -- Neovim 0.11+: use native vim.lsp.config() + vim.lsp.enable().
