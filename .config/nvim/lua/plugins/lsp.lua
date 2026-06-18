@@ -85,9 +85,6 @@ return {
         -- Neovim 0.11+: use native vim.lsp.config() + vim.lsp.enable().
         -- mason-lspconfig handles vim.lsp.enable() for Mason-managed servers.
 
-        -- Explicitly disable Copilot LSP (copilot.lua uses its own client)
-        vim.lsp.config("copilot", {})
-
         for _, server in ipairs(mason_servers) do
           vim.lsp.config(server, make_server_opts(server))
         end
@@ -101,7 +98,6 @@ return {
         end
       else
         -- Neovim <0.11: fall back to deprecated lspconfig.setup() API.
-        -- Copilot LSP not included in all_servers (copilot.lua manages its own client)
         local lspconfig = require("lspconfig")
         local all_servers = vim.list_extend(vim.deepcopy(mason_servers), extra_servers)
         for _, server in ipairs(all_servers) do

@@ -1,18 +1,8 @@
 -- Completion engine powered by blink.cmp for modern autocompletion features
-local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
-
 local dependencies = {
   -- optional: provides snippets for the snippet source
   'rafamadriz/friendly-snippets',
 }
-
-if has_nvim_011 then
-  -- GitHub Copilot integration for blink.cmp (requires Neovim 0.11+ via copilot.lua)
-  table.insert(dependencies, {
-    'fang2hou/blink-copilot',
-    dependencies = { 'zbirenbaum/copilot.lua' },
-  })
-end
 
 local source_defaults = { 'lsp', 'path', 'snippets', 'buffer' }
 local providers = {
@@ -21,19 +11,6 @@ local providers = {
     fallbacks = { 'buffer' },
   },
 }
-
-if has_nvim_011 then
-  table.insert(source_defaults, 'copilot')
-  providers.copilot = {
-    name = "copilot",
-    module = "blink-copilot",
-    score_offset = 100, -- Boost Copilot suggestions
-    async = true,
-    opts = {
-      max_completions = 3,
-    },
-  }
-end
 
 return {
   'saghen/blink.cmp',

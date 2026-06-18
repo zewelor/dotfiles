@@ -87,14 +87,31 @@ return {
       },
       rubocop = function(bufnr)
         local root = rubocop_project_root(bufnr)
-        local bin = root and (root .. "/bin/rubocop") or nil
 
         return {
-          command = bin and vim.fn.executable(bin) == 1 and bin or "rubocop",
-          args = { "-a", "-f", "quiet", "--stderr", "--stdin", "$FILENAME" },
-          cwd = root,
+          command = function()
+            local bin = root and (root .. "/bin/rubocop") or nil
+
+            if bin and vim.fn.executable(bin) == 1 then
+              return bin
+            end
+
+            return root and "bundle" or "rubocop"
+          end,
+          args = function(self, ctx)
+            local args = vim.deepcopy(require("conform.formatters.rubocop").args)
+            local bin = root and (root .. "/bin/rubocop") or nil
+
+            if root and not (bin and vim.fn.executable(bin) == 1) then
+              args = { "exec", "rubocop", unpack(args) }
+            end
+
+            return args
+          end,
+          cwd = function()
+            return root
+          end,
           env = { RUBOCOP_CACHE_ROOT = "tmp/rubocop" },
-          exit_codes = { 0, 1 },
         }
       end,
       shfmt = {

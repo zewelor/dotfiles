@@ -17,7 +17,6 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
-│   │   ├── copilot.lua              # GitHub Copilot
 │   │   ├── lsp.lua                  # LSP + mason (language servers)
 │   │   ├── mason-tool-installer.lua # Auto-installer narzędzi (formattery)
 │   │   ├── mini-align.lua           # Wyrównywanie tekstu
@@ -147,29 +146,11 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
 - **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi.
-- **Uwaga o kompatybilności**: Źródło Copilota w menu autouzupełniania jest aktywne tylko na Neovim 0.11+ (na starszych wersjach jest automatycznie wyłączone).
 - **Keymaps** (w menu autouzupełniania):
   - `<C-Space>` — Wymuś pokazanie menu
   - `<CR>` — Potwierdź wybór
   - `<C-e>` — Anuluj
   - `<Tab>` / `<S-Tab>` — Nawigacja w menu
-
----
-
-### **copilot.lua** — GitHub Copilot
-
-- **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua)
-- **Cel**: Integracja z GitHub Copilot AI
-- **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
-- **Autoryzacja (one-time)**:
-  1. W Neovim: `:Copilot auth` (lub automatycznie przy `:Lazy sync` przez `build`).
-  2. Otworzy się URL w przeglądarce → zaloguj na GitHub → kliknij "Authorize GitHub Copilot"
-  3. Token zapisze się automatycznie; od tego momentu Copilot działa w każdym buforze.
-- **Jak używać w tej konfiguracji**:
-  - Inline suggestions (ghost text) są **wyłączone** — Copilot jest wpięty jako źródło w menu autouzupełniania `blink.cmp` (przez `blink-copilot`).
-  - Sugestie Copilota pojawiają się w menu autouzupełniania.
-  - `<C-Space>` — wymuś pokazanie menu.
-  - `<CR>` (Enter) lub `<Tab>` — akceptuj sugestię Copilota tak samo jak każdą inną pozycję w menu.
 
 ---
 
@@ -317,8 +298,8 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `ruby_lsp` — Ruby (via mise)
 
 **Konfiguracja API**:
-- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona. Copilot LSP jawnie wyłączony (`vim.lsp.config("copilot", {})` bez `enable`) — copilot.lua zarządza własnym klientem.
-- **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach). Copilot nie jest w liście serwerów.
+- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
+- **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach).
 - **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which` (działa z `mise activate`, nie wymaga shims w PATH). Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
 
 **Komendy**:
@@ -517,12 +498,6 @@ Przy pierwszym uruchomieniu:
 
 ```vim
 :Lazy sync
-```
-
-### Copilot nie działa
-
-```vim
-:Copilot auth
 ```
 
 ### Kwadraty / brak ikon (Neo-tree, menu autouzupełniania)
