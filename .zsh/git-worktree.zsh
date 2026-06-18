@@ -126,14 +126,32 @@ if has "git"; then
   # Remove a worktree directory and optionally delete the branch.
   function gwtrm() {
     if [[ -z "$1" ]]; then
-      echo "Usage: gwtrm <worktree-dir>" >&2
+      echo "Usage: gwtrm <worktree-dir|branch-name>" >&2
       return 1
     fi
 
-    local worktree_dir="$1"
+    local target="$1"
+    local worktree_dir="$target"
 
     if [[ ! -d "$worktree_dir" ]]; then
-      echo "Error: Directory '$worktree_dir' does not exist." >&2
+      # Try to resolve by branch name
+      worktree_dir=$(git worktree list --porcelain 2>/dev/null | awk -v b="$target" '
+        /^worktree / {
+          wt = $0
+          sub(/^worktree /, "", wt)
+        }
+        $1 == "branch" {
+          sub("^refs/heads/", "", $2)
+          if ($2 == b) {
+            print wt
+            exit
+          }
+        }
+      ')
+    fi
+
+    if [[ -z "$worktree_dir" || ! -d "$worktree_dir" ]]; then
+      echo "Error: Directory or branch '$target' does not exist." >&2
       return 1
     fi
 
@@ -280,7 +298,11 @@ if has "git"; then
   }
 
   _gwtrm() {
-    _arguments '1:worktree directory:_files(-/)'
+    local -a branches
+    branches=(${(f)"$(git worktree list --porcelain 2>/dev/null | awk '$1 == "branch" { sub("^refs/heads/", "", $2); print $2 }')"})
+    _alternative \
+      'branches:worktree branch:compadd -a branches' \
+      'directories:worktree directory:_files -/'
   }
 
   ZINIT_COMPDEF_REPLAY+=("_gwtcd gwtcd _gwtrm gwtrm")
