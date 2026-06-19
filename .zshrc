@@ -295,6 +295,10 @@ if has "opencode"; then
   alias occ="opencode -c"
 fi
 
+if has "agy"; then
+  alias agyp="agy -p"
+fi
+
 # Guardrails for global package installs when mise is available.
 if is_interactive; then
   is_using_mise() {
