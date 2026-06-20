@@ -113,7 +113,7 @@ zle -N self-insert url-quote-magic
 
 # Local snippets
 
-zinit light-mode wait"1" lucid for \
+zinit light-mode lucid for \
   zdharma-continuum/zinit-annex-bin-gem-node \
   zdharma-continuum/zinit-annex-link-man \
   zdharma-continuum/zinit-annex-patch-dl \
@@ -164,7 +164,7 @@ if has "tmux"; then
   }
 fi
 
-zinit ice wait"1" lucid from"gh-r" as"program" mv"fzf* -> fzf" pick"fzf/fzf" ; zinit light junegunn/fzf
+zinit ice wait"1" lucid from"gh-r" sbin"fzf" ; zinit light junegunn/fzf
 export ZSH_FZF_HISTORY_SEARCH_FZF_EXTRA_ARGS="--height 40% --reverse"
 
 # Catppuccin Latte theme for fzf (transparent background)
@@ -177,23 +177,23 @@ export FZF_DEFAULT_OPTS=" \
 --color=border:#9CA0B0,label:#4C4F69"
 
 # A cat clone with syntax highlighting and Git integration.
-zinit light-mode from"gh-r" as"program" mv"bat-*/bat -> bat" for @sharkdp/bat
+zinit light-mode from"gh-r" sbin"bat" mv"bat-*/bat -> bat" for @sharkdp/bat
 
 # A viewer for git and diff output
-zinit light-mode from"gh-r" as"program" mv"delta-*/delta -> delta" for @dandavison/delta
+zinit light-mode from"gh-r" sbin"delta" mv"delta-*/delta -> delta" for @dandavison/delta
 
 # A more intuitive version of du written in rust.
-zinit light-mode from"gh-r" as"program" mv"dust-*/dust -> dust" for @bootandy/dust
+zinit light-mode from"gh-r" sbin"dust" mv"dust-*/dust -> dust" for @bootandy/dust
 
 # eza - modern ls replacement with icons and git integration
-zinit light-mode from"gh-r" as"program" mv"eza -> eza" for @eza-community/eza
+zinit light-mode from"gh-r" sbin"eza" mv"eza -> eza" for @eza-community/eza
 alias l='ls -1a'
 alias ll='ls -lh'
 alias la='ls -lah'
 alias lt='ls -T'  # tree view
 
 # zoxide - smarter cd with frecency
-zinit light-mode from"gh-r" as"program" \
+zinit light-mode from"gh-r" sbin"zoxide" \
   atclone"./zoxide init zsh > init.zsh" atpull"%atclone" src"init.zsh" \
   for @ajeetdsouza/zoxide
 
@@ -231,9 +231,9 @@ function cdls() {
   cd -- "$dir"
 }
 
-zinit light-mode wait"2" lucid from"gh-r" as"program" \
+zinit light-mode wait"2" lucid from"gh-r" sbin"just" \
   atclone"JUST_COMPLETE=zsh ./just > _just" atpull"%atclone" \
-  pick"just" for @casey/just
+  for @casey/just
 
 if is_desktop; then
   zinit light-mode as'program' \

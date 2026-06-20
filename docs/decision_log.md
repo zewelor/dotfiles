@@ -1,5 +1,35 @@
 # Decision Log
 
+## 2026-06-20 — Resolve Zsh command completion suggesting manpages (just.1) and version folders
+
+1. **The Problem**
+   Typing `just` and pressing `Tab` in Zsh suggested both the `just` command and the `just.1` manual page. Similarly, for other tools, Zsh autocomplete suggested directories (e.g., `bat-v0.26.1...`) as command suggestions.
+
+2. **Root Cause**
+   - The Zinit plugins for `just`, `fzf`, `bat`, `delta`, `dust`, `eza`, and `zoxide` were loaded using `as"program"` and `pick"..."`.
+   - Zinit's `as"program"` adds the entire plugin directory (e.g., `~/.zinit/plugins/casey---just`) to `$PATH`.
+   - These directories contain other files like `just.1`, `README.md`, or subdirectories like version packages.
+   - For startup speed, Zsh's command hashing (`$commands` table) indexes all file names in `$PATH` directories without checking their executable bits (`stat` calls are avoided). Thus, Zsh treated `just.1` and helper folders as valid commands.
+   - Using `wait"1"` for Zinit annexes delayed their loading, meaning custom ice-modifiers like `sbin` (from `zinit-annex-bin-gem-node`) were not registered when `.zshrc` was initially parsed, causing parser errors (`Unknown subcommand sbin...`).
+
+3. **The Fix**
+   - Migrated all Zinit CLI tools (`just`, `fzf`, `bat`, `delta`, `dust`, `eza`, and `zoxide`) in [.zshrc](file:///home/omen/dotfiles/.zshrc) to use the `sbin` ice-modifier instead of `as"program"`. This exposes only the target binaries via shims/symlinks in `~/.zinit/polaris/bin` (which is already in `$PATH`).
+   - Removed `wait"1"` from Zinit annexes loading block to load them synchronously, registering custom ice-modifiers before parsing subsequent configurations.
+   - Deleted old plugin directories from `~/.zinit/plugins/` to force clean reinstallation with updated Zinit shims.
+   - Documented this design pattern in [AGENTS.md](file:///home/omen/dotfiles/AGENTS.md).
+
+4. **Key Insight**
+   - Standalone CLI tools managed by Zinit should expose binaries via shims (`sbin`) instead of exposing whole folders (`as"program"`) to avoid `$PATH` pollution and Zsh autocomplete noise.
+   - Zinit annexes providing custom ice-modifiers must be loaded synchronously to avoid Zinit parser errors.
+
+5. **The Lesson**
+   - Zsh command caching populates `$commands` purely by listing filenames in `$PATH` directories without verifying execution permissions. Expose only the binaries to `$PATH` using shims or symlinks.
+
+6. **Verification / Testing**
+   - Verified that starting a clean Zsh session maps all tools to `~/.zinit/polaris/bin/`.
+   - Confirmed `just.1` and other non-executables are no longer indexed in Zsh's `$commands` table.
+   - Checked that [.zshrc](file:///home/omen/dotfiles/.zshrc) parses cleanly without any Zinit errors.
+
 ## 2026-06-11 — Optimize shell startup time
 
 1. **The Problem**

@@ -192,6 +192,8 @@ Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
 - `zinit` zostaw dla:
   - pluginów shellowych (autosuggestions, syntax-highlighting, snippets),
   - przypadków gdzie kluczowa jest integracja z frameworkiem `zinit` (np. specyficzne hooki `atclone/atpull/src`).
+- **Instalacja CLI przez Zinit:** Dla narzędzi CLI instalowanych przez `zinit` (np. jako wyjątki) **zawsze używaj modyfikatora `sbin`** (z `zinit-annex-bin-gem-node`) zamiast `as"program"` i `pick`. Unika to zanieczyszczania `$PATH` katalogami wtyczek, co powodowało, że pliki pomocnicze (np. manpage `just.1`, foldery wersji, pliki markdown) były traktowane przez Zsh jako polecenia i pokazywały się w autouzupełnianiu.
+  - **Ważne:** Dodatki Zinit (annexy) muszą być ładowane synchronicznie (bez `wait`), aby parser Zinit od startu powłoki rozpoznawał słowa kluczowe takie jak `sbin` (w przeciwnym razie wyrzuci błąd `Unknown subcommand sbin...`).
 - Wyjątki zaakceptowane: `atuin`, `starship`, `just`, `git-fixup` i `dust` zostają w `zinit` (shell init/completions, brak kompatybilnego backendu lub świadoma decyzja maintainerska).
 - Przy każdej nowej binarce dopisz krótko w opisie zmiany: dlaczego `mise` albo dlaczego wyjątek i zostaje `zinit`.
 - Aktualizacje:
