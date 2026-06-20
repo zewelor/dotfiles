@@ -1,6 +1,6 @@
 nerdfont: true
 merge_strategy: squash
-agent: opencode
+agent: codex
 status_format: false
 
 panes:
