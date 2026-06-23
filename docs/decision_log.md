@@ -511,3 +511,32 @@ Tested:
 Not tested:
 - Performance changes during startup with the added rtp directory.
 - Tree-sitter parser loading behavior on other operating systems (macOS, Fedora, Windows) since they use different packaging structures.
+
+## 2026-06-23 — Exclude `bird-go` from mise minimum release age security filter
+
+1. **The Problem**
+Running `mise upgrade` or installing `github:zewelor/bird-go` failed with the warning/error:
+`mise WARN  Error getting latest version for github:zewelor/bird-go: no versions found for github:zewelor/bird-go matching date filter` or `no versions found matching date filter`.
+
+2. **Root Cause**
+`mise` includes a security feature called `minimum_release_age` (which defaults to 24 hours). This feature prevents the installation or upgrade of releases that are very recently published (to mitigate potential supply chain attacks). Because all releases of `zewelor/bird-go` (v1.0.0 through v1.0.12) were created very recently (within the last few hours), they were filtered out by the date filter, resulting in 0 matching versions.
+
+3. **The Fix**
+- Modified `~/.config/mise/config.toml` to add `github:zewelor/bird-go` to the `minimum_release_age_excludes` list under `[settings]`. This allows `mise` to always pull and upgrade `bird-go` immediately upon release.
+- Preferred `gh` CLI over standard HTTPS Git commands during debugging/verification of private repositories to avoid interactive credential prompt failures.
+
+4. **Key Insight**
+For repositories owned and maintained by the user where releases are frequently built and updated, security features like `minimum_release_age` can block manual deployments or testing of new versions. These should be excluded via `minimum_release_age_excludes` or overridden via `MISE_MINIMUM_RELEASE_AGE=0s`. Furthermore, checking status on private repositories should always utilize `gh` CLI or SSH protocol.
+
+5. **The Lesson**
+When using package managers or tool managers like `mise` that enforce time-based release verification, ensure that self-hosted/personal repositories are explicitly excluded from these safety buffers to enable rapid iteration. When writing helper scripts or checking remote repository status, always target SSH or CLI wrappers to bypass interactive HTTPS prompts.
+
+6. **Verification / Testing**
+Tested:
+- Ran `MISE_MINIMUM_RELEASE_AGE=0s mise install github:zewelor/bird-go` to confirm the installation succeeds when the date filter is bypassed.
+- Added `minimum_release_age_excludes = ["github:zewelor/bird-go"]` in `~/.config/mise/config.toml`.
+- Verified that running `mise install github:zewelor/bird-go` and `mise upgrade github:zewelor/bird-go` succeeds without any environment overrides or warning messages.
+- Used `gh repo view zewelor/bird-go` and `gh release list` to verify repository accessibility and check published releases.
+
+Not tested:
+- Behavioral changes for other tools in `mise` since only `github:zewelor/bird-go` was excluded.
