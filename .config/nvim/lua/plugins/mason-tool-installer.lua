@@ -15,6 +15,9 @@ return {
       "dprint",
       "yamlfmt",
       "rubyfmt",
+      "gopls",
+      "goimports",
+      "gofumpt",
 
        -- Useful CLI tools
        "hadolint",

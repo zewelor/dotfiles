@@ -286,6 +286,7 @@ setup_mise_desktop_tools() {
   local mise_tools=(
     "usage"          # Required for `mise completion zsh`
     "ruby"
+    "go"
     "gem:tmuxinator"
     "github-cli"
     "codex"

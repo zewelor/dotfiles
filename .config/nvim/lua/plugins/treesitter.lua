@@ -19,6 +19,7 @@ return {
       "lua", "vim", "vimdoc", "query", "bash", "python",
       "json", "yaml", "toml", "markdown", "markdown_inline",
       "dockerfile", "git_config", "gitcommit", "diff", "helm",
+      "go",
     }
     local installed = require("nvim-treesitter.config").get_installed()
     local missing = {}
@@ -58,6 +59,7 @@ return {
         "gitcommit",
         "diff",
         "helm",
+        "go",
       },
       callback = function(args)
         -- `vim.treesitter.start()` is built into Neovim and uses installed parsers.

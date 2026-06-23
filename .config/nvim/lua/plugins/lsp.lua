@@ -62,6 +62,7 @@ return {
         "ruff",          -- Python (lightweight LSP / linter / formatter)
         "taplo",         -- TOML (compiled LSP / formatter)
         "marksman",      -- Markdown
+        "gopls",         -- Go
       },
       automatic_installation = true,
       -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
@@ -78,7 +79,7 @@ return {
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
       end
 
-      local mason_servers = { "lua_ls", "helm_ls", "ruff", "taplo", "marksman" }
+      local mason_servers = { "lua_ls", "helm_ls", "ruff", "taplo", "marksman", "gopls" }
       local extra_servers = { "ruby_lsp" }
 
       if has_nvim_011 then

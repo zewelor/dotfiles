@@ -41,6 +41,7 @@ return {
       lua = { "stylua" },
       python = { "ruff_format" },
       toml = { "taplo" },
+      go = { "goimports", "gofumpt" },
       sh = { "shfmt" },
       bash = { "shfmt" },
       zsh = { "beautysh" },
