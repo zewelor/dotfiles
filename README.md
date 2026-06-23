@@ -309,7 +309,6 @@ After the first launch:
 
 1. Lazy.nvim automatically installs all plugins
 2. Blink.cmp compiles native components (Rust)
-3. Authorize Copilot: `:Copilot auth` → open the link in your browser
 
 ### Configuration structure
 
@@ -323,7 +322,6 @@ After the first launch:
 │   └── plugins/               # Plugins (auto-imported by lazy.nvim)
 │       ├── blink.lua          # Completion engine
 │       ├── gitsigns.lua       # Partial git staging + blame
-│       ├── copilot.lua        # GitHub Copilot (AI-assisted coding)
 │       ├── mini-icons.lua     # Icons (lightweight alternative to nvim-web-devicons)
 │       ├── neotree.lua        # File explorer (sidebar)
 │       ├── catppuccin.lua     # Colorscheme (light theme)
@@ -351,7 +349,7 @@ After the first launch:
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Purpose**: Fast, modern autocompletion (Rust + Lua)
-- **Sources**: LSP, path, snippets, buffer, **Copilot**
+- **Sources**: LSP, path, snippets, buffer
 - **Keymaps** (preset: `default`):
   - `Ctrl-Space` — open completion menu or docs
   - `Ctrl-n` / `Ctrl-p` or `↑` / `↓` — navigate items
@@ -360,28 +358,6 @@ After the first launch:
   - `Tab` / `Shift-Tab` — navigate snippets (when active)
 
 **Fuzzy matching**: Rust implementation (falls back to Lua if Rust is unavailable)
-
----
-
-### **GitHub Copilot** — AI code suggestions
-
-- **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua) + [fang2hou/blink-copilot](https://github.com/fang2hou/blink-copilot)
-- **Purpose**: AI-assisted code suggestions directly in the completion menu
-- **Requirements**: Node.js >= 18
-- **Integration**: Copilot suggestions appear as options in blink.cmp (not inline)
-- **Authorization**:
-
-  ```vim
-  :Copilot auth
-  ```
-
-  Open the link in your browser and paste the code.
-
-**Usage**:
-
-- Start typing → Copilot suggests in the completion menu automatically
-- Select a suggestion with `Ctrl-n/p` and accept with `Ctrl-y`
-- Copilot has higher priority (`score_offset = 100`)
 
 ---
 
@@ -528,11 +504,7 @@ Key editor settings:
    - `Ctrl-n/p` → select an item
    - `Ctrl-y` → accept
 
-4. **Copilot**:
-   - Suggestions appear automatically in the completion menu
-   - Accept like a regular completion (`Ctrl-y`)
-
-5. **Update plugins**:
+4. **Update plugins**:
 
    ```vim
    :Lazy sync
@@ -575,13 +547,6 @@ return {
 
 ## 🐛 Troubleshooting
 
-### Copilot not working
-
-```vim
-:Copilot status       " Check status
-:Copilot auth         " Re-authenticate
-```
-
 ### Blink.cmp doesn’t show suggestions
 
 ```vim
@@ -596,6 +561,5 @@ return {
 - [lazy.nvim docs](https://github.com/folke/lazy.nvim)
 - [blink.cmp docs](https://github.com/saghen/blink.cmp)
 - [neo-tree wiki](https://github.com/nvim-neo-tree/neo-tree.nvim/wiki)
-- [Copilot.lua](https://github.com/zbirenbaum/copilot.lua)
 - [mini.icons](https://github.com/nvim-mini/mini.icons)
 - [Nerd Fonts](https://www.nerdfonts.com/)

@@ -1,5 +1,5 @@
 # Skip all customizations if ZSHRC_SKIP_CUSTOMIZATIONS is set
-# Useful for AI agents (VS Code Copilot, etc.) that need a minimal shell
+# Useful for AI agents that need a minimal shell
 [[ -n "${ZSHRC_SKIP_CUSTOMIZATIONS:-}" ]] && return
 
 source "$HOME/.zsh/helpers.zsh"
@@ -721,9 +721,6 @@ fi
 if is_desktop; then
   # Bonus
   alias update_bonus="ssh bonus -t 'cd ~/bonus_docker ; git pull origin'"
-  # X cli
-  _kwallet_name=$(dbus-send --session --print-reply=literal --dest=org.kde.kwalletd6 /modules/kwalletd6 org.kde.KWallet.networkWallet 2>/dev/null | tr -d '"' | tr -d '[:space:]')
-  alias bird="SWEET_COOKIE_CHROME_SAFE_STORAGE_PASSWORD=\$(kwallet-query --read-password \"Brave Safe Storage\" --folder \"Brave Keys\" ${_kwallet_name:-kdewallet}) bird --cookie-source chrome --chrome-profile-dir ~/.config/BraveSoftware/Brave-Origin/Default"
 fi
 
 #

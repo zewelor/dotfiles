@@ -13,3 +13,4 @@ Makefile
 .config/rclone  # generated from template by install script
 install.d/  # install helper modules/scripts
 .antigravitycli
+.ruby-lsp

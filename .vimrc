@@ -113,7 +113,6 @@ Plug 'junegunn/fzf.vim'
 
 Plug 'junegunn/vim-easy-align'
 Plug 'michaeljsmith/vim-indent-object'
-Plug 'github/copilot.vim'
 Plug 'NoahTheDuke/vim-just'
 
 " Git

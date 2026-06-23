@@ -296,11 +296,12 @@ setup_mise_desktop_tools() {
     "npm:ctx7"
     "workmux"
     "npm:agent-browser[npm_args=--ignore-scripts=false]"
+    "github:zewelor/bird-go"
   )
 
   local tool=""
   for tool in "${mise_tools[@]}"; do
-    mise use -g "$tool"
+    MISE_MINIMUM_RELEASE_AGE=0s mise use -g "$tool"
   done
 }
 
