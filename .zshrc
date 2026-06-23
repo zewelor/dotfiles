@@ -297,6 +297,7 @@ fi
 
 if has "agy"; then
   alias agyp="agy -p"
+  alias agyc="agy -c"
 fi
 
 # Guardrails for global package installs when mise is available.
