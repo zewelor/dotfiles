@@ -748,7 +748,7 @@ setup_kde_terminal_shortcut() {
   "$kwriter" --file kdeglobals --group General --key TerminalApplication "/home/omen/bin/my_default_terminal_emulator"
 
   # 2. Configure Meta+Ins shortcut for the custom terminal .desktop file
-  "$kwriter" --file kglobalshortcutsrc --group "services" --key "net.local.my_default_terminal_emulator.desktop" "_launch=Meta+Ins"
+  "$kwriter" --file kglobalshortcutsrc --group "services" --group "my-terminal.desktop" --key "_launch" "Meta+Ins"
 
   # 3. Rebuild the system configuration cache
   if has "$kbuildsycoca"; then
