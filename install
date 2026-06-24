@@ -496,6 +496,19 @@ setup_antigravity_cli() {
   stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.gemini/antigravity-cli/skills" skills
 }
 
+# Function to setup Summarize configuration via stow.
+# Uses stow to link stable config while leaving runtime data unmanaged.
+setup_summarize() {
+  local target_dir="$HOME_DIR/.summarize"
+  local config_file="$target_dir/config.json"
+  if [[ -f "$config_file" ]] && [[ ! -L "$config_file" ]]; then
+    print_banner "Removing existing non-symlinked Summarize config..."
+    rm -f "$config_file"
+  fi
+  setup_ai_tool "Summarize" "$target_dir" ".summarize"
+}
+
+
 # Function to setup Vim autoload directories and plugins.
 setup_vim() {
   print_banner "Setting up Vim..."
@@ -671,6 +684,7 @@ run_installation() {
     setup_codex
     setup_opencode
     setup_antigravity_cli
+    setup_summarize
 
   fi
 

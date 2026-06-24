@@ -1,0 +1,21 @@
+{
+  "model": "free",
+  "output": {
+    "language": "en"
+  },
+  "cli": {
+    "enabled": ["agy"]
+  },
+  "models": {
+    "free": {
+      "rules": [
+        {
+          "candidates": [
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            "openrouter/minimax/minimax-m2.5:free"
+          ]
+        }
+      ]
+    }
+  }
+}
