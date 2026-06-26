@@ -296,12 +296,12 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `taplo` — TOML (lekki skompilowany LSP + formatter)
 - `marksman` — Markdown
 - `gopls` — Go
-- `ruby_lsp` — Ruby (via mise)
+- `ruby_lsp` — Ruby (via `mise` + `gem:ruby-lsp`)
 
 **Konfiguracja API**:
 - **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
 - **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach).
-- **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which` (działa z `mise activate`, nie wymaga shims w PATH). Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
+- **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which` (działa z `mise activate`, nie wymaga shims w PATH). Jeśli `mise` nie rozwiąże `ruby-lsp`, klient nie startuje zamiast używać potencjalnie przestarzałego wrappera Masona z `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
 
 **Komendy**:
 - `:Mason` — UI menedżera serwerów

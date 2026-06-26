@@ -3,7 +3,7 @@ local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
 
 -- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed).
 -- Some Mason Ruby gem wrappers can keep stale shebangs after a Ruby upgrade, so
--- Ruby tools prefer mise before falling back to PATH.
+-- Ruby tools must resolve through mise instead of falling back to PATH.
 local function mise_bin(tool, opts)
   opts = opts or {}
   if opts.prefer_mise then
@@ -11,6 +11,7 @@ local function mise_bin(tool, opts)
     if vim.v.shell_error == 0 and path ~= "" then
       return path
     end
+    return nil
   end
 
   if vim.fn.executable(tool) == 1 then
@@ -100,9 +101,14 @@ return {
       else
         -- Neovim <0.11: fall back to deprecated lspconfig.setup() API.
         local lspconfig = require("lspconfig")
-        local all_servers = vim.list_extend(vim.deepcopy(mason_servers), extra_servers)
-        for _, server in ipairs(all_servers) do
+        for _, server in ipairs(mason_servers) do
           lspconfig[server].setup(make_server_opts(server))
+        end
+        for _, server in ipairs(extra_servers) do
+          local opts = make_server_opts(server)
+          if opts.cmd and vim.fn.executable(opts.cmd[1]) == 1 then
+            lspconfig[server].setup(opts)
+          end
         end
       end
     end,
