@@ -290,7 +290,7 @@ setup_mise_desktop_tools() {
     "go"
     "gem:tmuxinator"
     "github-cli"
-    "codex"
+    "codex[minimum_release_age=3d]"
     "yt-dlp"
     "kubectl"
     "npm:@steipete/summarize@latest"
