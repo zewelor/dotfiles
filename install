@@ -272,6 +272,31 @@ setup_mise_github_credentials() {
   fi
 }
 
+# Function to let user-owned GitHub Release CLIs update immediately after release.
+setup_mise_release_age_excludes() {
+  if ! has "mise"; then
+    return
+  fi
+
+  local tools=(
+    "github:zewelor/bird-go"
+    "github:zewelor/sourcetap"
+  )
+
+  local current_excludes=""
+  current_excludes=$(mise settings get minimum_release_age_excludes 2>/dev/null || true)
+
+  local tool=""
+  for tool in "${tools[@]}"; do
+    if [[ "$current_excludes" == *"\"$tool\""* ]]; then
+      continue
+    fi
+
+    mise settings add minimum_release_age_excludes "$tool"
+    current_excludes=$(mise settings get minimum_release_age_excludes 2>/dev/null || true)
+  done
+}
+
 # Function to install desktop-specific tools via mise.
 setup_mise_desktop_tools() {
   if ! has "mise"; then
@@ -280,6 +305,7 @@ setup_mise_desktop_tools() {
   fi
 
   setup_mise_github_credentials
+  setup_mise_release_age_excludes
 
   print_banner "Installing desktop tools via mise..."
   # Keep desktop-scoped tools in one place for predictable onboarding.
@@ -298,6 +324,7 @@ setup_mise_desktop_tools() {
     "workmux"
     "npm:agent-browser[npm_args=--ignore-scripts=false]"
     "github:zewelor/bird-go"
+    "github:zewelor/sourcetap"
   )
 
   local tool=""
