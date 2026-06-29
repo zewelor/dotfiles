@@ -187,5 +187,8 @@
     "gitlens.codeLens.enabled": false,
     "editor.lineNumbers": "relative",
     "terminal.integrated.copyOnSelection": true,
-    "workbench.colorTheme": "Catppuccin Latte"
+    "workbench.colorTheme": "Catppuccin Latte",
+    "search.exclude": {
+        "**/.agents/skills": true
+    }
 }
