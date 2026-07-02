@@ -427,10 +427,10 @@ if is_interactive; then
         if (( ${#npm_guard_pkgs[@]} > 0 )); then
           for pkg in "${npm_guard_pkgs[@]}"; do
             normalized_pkg="$(_npm_guard_pkg_name "$pkg")"
-            [[ -n "$normalized_pkg" ]] && echo "[guard] Use: mise use -g npm:${normalized_pkg}@latest"
+            [[ -n "$normalized_pkg" ]] && echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml npm:${normalized_pkg}@latest"
           done
         else
-          echo "[guard] Use: mise use -g npm:<package>@latest"
+          echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml npm:<package>@latest"
         fi
         echo "[guard] Bypass once: MISE_ALLOW_GLOBAL_INSTALL=1 npm $*"
         return 1
@@ -447,9 +447,9 @@ if is_interactive; then
       echo "[guard] Avoid gem install when using mise."
       gem_pkg="$(_gem_guard_package "$@")"
       if [[ -n "$gem_pkg" ]]; then
-        echo "[guard] Use: mise use -g gem:${gem_pkg}@latest"
+        echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml gem:${gem_pkg}@latest"
       else
-        echo "[guard] Use: mise use -g gem:<package>@latest"
+        echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml gem:<package>@latest"
       fi
       echo "[guard] Bypass once: MISE_ALLOW_GLOBAL_INSTALL=1 gem $*"
       return 1

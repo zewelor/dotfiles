@@ -1,0 +1,26 @@
+[tools]
+usage = "latest"
+ruby = "latest"
+"gem:ruby-lsp" = "latest"
+go = "latest"
+"gem:tmuxinator" = "latest"
+github-cli = "latest"
+codex = "latest"
+yt-dlp = { version = "latest", rename_exe = "yt-dlp" }
+kubectl = "latest"
+"npm:@steipete/summarize" = "latest"
+"npm:ctx7" = "latest"
+"npm:@tobilu/qmd" = "latest"
+workmux = "latest"
+"npm:agent-browser" = { version = "latest", npm_args = "--ignore-scripts=false" }
+"github:zewelor/bird-go" = "latest"
+"github:zewelor/sourcetap" = "latest"
+
+[settings]
+minimum_release_age_excludes = [
+  "github:zewelor/bird-go",
+  "github:zewelor/sourcetap",
+]
+
+[settings.github]
+credential_command = "gh auth token"

@@ -240,30 +240,16 @@ setup_ssh() {
 
 
 
-# Function to let mise use the GitHub CLI token for GitHub API calls.
+# Function to let mise use the GitHub CLI token for GitHub API calls during install.
 setup_mise_github_credentials() {
-  if ! has "mise"; then
-    return
-  fi
-
   if ! has "gh"; then
     echo "GitHub CLI not found; mise GitHub installs may be rate-limited."
     return
   fi
 
   if ! gh auth status --hostname github.com >/dev/null 2>&1; then
-    echo "GitHub CLI is not authenticated; skipping mise GitHub credential helper."
+    echo "GitHub CLI is not authenticated; skipping GITHUB_TOKEN export."
     return
-  fi
-
-  local current_command=""
-  current_command=$(mise settings get github.credential_command 2>/dev/null || true)
-
-  if [[ "$current_command" == "gh auth token" ]]; then
-    echo "mise GitHub credential helper already configured."
-  else
-    mise settings set github.credential_command "gh auth token"
-    echo "Configured mise GitHub credential helper via gh auth token."
   fi
 
   if [[ -z "${GITHUB_TOKEN:-}" ]]; then
@@ -272,30 +258,6 @@ setup_mise_github_credentials() {
   fi
 }
 
-# Function to let user-owned GitHub Release CLIs update immediately after release.
-setup_mise_release_age_excludes() {
-  if ! has "mise"; then
-    return
-  fi
-
-  local tools=(
-    "github:zewelor/bird-go"
-    "github:zewelor/sourcetap"
-  )
-
-  local current_excludes=""
-  current_excludes=$(mise settings get minimum_release_age_excludes 2>/dev/null || true)
-
-  local tool=""
-  for tool in "${tools[@]}"; do
-    if [[ "$current_excludes" == *"\"$tool\""* ]]; then
-      continue
-    fi
-
-    mise settings add minimum_release_age_excludes "$tool"
-    current_excludes=$(mise settings get minimum_release_age_excludes 2>/dev/null || true)
-  done
-}
 
 # Function to install desktop-specific tools via mise.
 setup_mise_desktop_tools() {
@@ -305,32 +267,9 @@ setup_mise_desktop_tools() {
   fi
 
   setup_mise_github_credentials
-  setup_mise_release_age_excludes
 
-  print_banner "Installing desktop tools via mise..."
-  # Keep desktop-scoped tools in one place for predictable onboarding.
-  local mise_tools=(
-    "usage"          # Required for `mise completion zsh`
-    "ruby"
-    "gem:ruby-lsp"
-    "go"
-    "gem:tmuxinator"
-    "github-cli"
-    "codex[minimum_release_age=3d]"
-    "yt-dlp"
-    "kubectl"
-    "npm:@steipete/summarize@latest"
-    "npm:ctx7"
-    "workmux"
-    "npm:agent-browser[npm_args=--ignore-scripts=false]"
-    "github:zewelor/bird-go"
-    "github:zewelor/sourcetap"
-  )
-
-  local tool=""
-  for tool in "${mise_tools[@]}"; do
-    MISE_MINIMUM_RELEASE_AGE=0s mise use -g "$tool"
-  done
+  print_banner "Installing tools via mise..."
+  MISE_MINIMUM_RELEASE_AGE=0s mise install
 }
 
 
@@ -668,6 +607,14 @@ run_installation() {
 
     rm -rf -- "${existing_paths[@]}"
   }
+
+  # Ensure the local config file exists so it's ready for machine-specific overrides.
+  local local_config="$HOME_DIR/.config/mise/config.local.toml"
+  if [[ ! -f "$local_config" ]]; then
+    mkdir -p "$(dirname "$local_config")"
+    touch "$local_config"
+    echo "Created empty local mise config: $local_config"
+  fi
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."

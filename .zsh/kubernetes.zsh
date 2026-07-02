@@ -26,7 +26,7 @@ if has "kubectl"; then
   }
 
   podmount() {
-    mise use -g -q devspace
+    mise use -p ~/.config/mise/config.local.toml -q devspace
 
     local input="${1:-}"
     local app="${input%%/*}"

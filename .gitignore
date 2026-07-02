@@ -2,3 +2,5 @@
 .tmp/
 .nvimlog
 .antigravitycli/*.json
+.config/mise/config.local.toml
+
