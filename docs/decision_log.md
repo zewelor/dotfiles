@@ -540,3 +540,32 @@ Tested:
 
 Not tested:
 - Behavioral changes for other tools in `mise` since only `github:zewelor/bird-go` was excluded.
+
+## 2026-07-02 — Resolve `mise` `github.credential_command` warning and symlink desync
+
+1. **The Problem**
+   Entering the `dotfiles` directory triggered a warning from `mise` about `github.credential_command` being ignored in a non-global configuration (`/home/omen/dotfiles/.config/mise/config.toml`). Also, global additions using `mise use -g` were not syncing back to the tracked file in the `dotfiles` repository because the symlink `~/.config/mise/config.toml` was being overwritten with a regular file.
+
+2. **Root Cause**
+   - `mise` security restrictions (CVE-2026-55448) disable executing `github.credential_command` in non-global configurations. Because the configuration directory resides inside the repository, `mise` treated `/home/omen/dotfiles/.config/mise/config.toml` as a project-level (local) configuration instead of the global configuration.
+   - When modifying configurations using `mise use -g`, `mise` performs an atomic write (write-and-rename) to `~/.config/mise/config.toml`. The rename operation replaces the existing symbolic link with a regular file, breaking the connection to the dotfiles repository and causing configurations to diverge.
+
+3. **The Fix**
+   - Set the `MISE_CONFIG_DIR` environment variable to `~/dotfiles/.config/mise` globally in [.zshenv](file:///home/omen/dotfiles/.zshenv). This instructs `mise` to use the repository configuration folder directly as the global configuration directory.
+   - Updated the [install](file:///home/omen/dotfiles/install) script to set `MISE_CONFIG_DIR` and create the machine-local `config.local.toml` inside the repository directory (`$BASE_DIR/.config/mise/config.local.toml`, which is safely gitignored).
+   - Dynamicized path checks and warning messages in [.zshrc](file:///home/omen/dotfiles/.zshrc) to use `MISE_CONFIG_DIR` instead of hardcoding `~/.config/mise`, and added a `mise-local` helper alias.
+   - Restored the symbolic links in `~/.config/mise/` pointing to the repository configuration as a fallback.
+   - Documented the setup and rationale in [AGENTS.md](file:///home/omen/dotfiles/AGENTS.md).
+
+4. **Key Insight**
+   Atomic file-writing tools (which write to a temp file and rename it over the target) will break symlinks by replacing them with regular files. Configuring the tools to point directly to the source directory using environment variables avoids relying on symlinks for write operations.
+
+5. **The Lesson**
+   For tools that write to their global configuration files, prefer configuring their path directory via dedicated environment variables (like `MISE_CONFIG_DIR`) rather than relying on symlinks that get broken by atomic write patterns.
+
+6. **Verification / Testing**
+   - Verified that `MISE_CONFIG_DIR` resolves the warning correctly when running `mise config`.
+   - Verified that running the `./install` script correctly stows the files as symlinks.
+   - Tested `.zshrc` changes and verified they compile and check paths correctly.
+   - Did NOT test writing new configs via `mise use -g` on a system with multiple interactive shell environments, but verified the path resolution is correct.
+

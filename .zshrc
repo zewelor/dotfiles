@@ -303,7 +303,7 @@ fi
 # Guardrails for global package installs when mise is available.
 if is_interactive; then
   is_using_mise() {
-    [[ -f "${HOME}/.config/mise/config.toml" ]] || has "mise"
+    [[ -f "${MISE_CONFIG_DIR:-$HOME/.config/mise}/config.toml" ]] || has "mise"
   }
 
   mise_global_guard_enabled() {
@@ -427,10 +427,10 @@ if is_interactive; then
         if (( ${#npm_guard_pkgs[@]} > 0 )); then
           for pkg in "${npm_guard_pkgs[@]}"; do
             normalized_pkg="$(_npm_guard_pkg_name "$pkg")"
-            [[ -n "$normalized_pkg" ]] && echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml npm:${normalized_pkg}@latest"
+            [[ -n "$normalized_pkg" ]] && echo "[guard] Use: mise-local npm:${normalized_pkg}@latest"
           done
         else
-          echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml npm:<package>@latest"
+          echo "[guard] Use: mise-local npm:<package>@latest"
         fi
         echo "[guard] Bypass once: MISE_ALLOW_GLOBAL_INSTALL=1 npm $*"
         return 1
@@ -447,9 +447,9 @@ if is_interactive; then
       echo "[guard] Avoid gem install when using mise."
       gem_pkg="$(_gem_guard_package "$@")"
       if [[ -n "$gem_pkg" ]]; then
-        echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml gem:${gem_pkg}@latest"
+        echo "[guard] Use: mise-local gem:${gem_pkg}@latest"
       else
-        echo "[guard] Use: mise use -p ~/.config/mise/config.local.toml gem:<package>@latest"
+        echo "[guard] Use: mise-local gem:<package>@latest"
       fi
       echo "[guard] Bypass once: MISE_ALLOW_GLOBAL_INSTALL=1 gem $*"
       return 1
@@ -984,6 +984,8 @@ if [[ -d "$HOME/.zshrc.d" ]]; then
 fi
 
 if has "mise"; then
+  alias mise-local="mise use -p \${MISE_CONFIG_DIR}/config.local.toml"
+
   if is_interactive; then
     # Lazy-load mise activation for faster startup.
     _mise_lazy_init() {

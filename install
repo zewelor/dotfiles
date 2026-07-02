@@ -267,9 +267,8 @@ setup_mise_desktop_tools() {
   fi
 
   setup_mise_github_credentials
-
   print_banner "Installing tools via mise..."
-  MISE_MINIMUM_RELEASE_AGE=0s mise install
+  MISE_CONFIG_DIR="$BASE_DIR/.config/mise" mise install
 }
 
 
@@ -609,7 +608,7 @@ run_installation() {
   }
 
   # Ensure the local config file exists so it's ready for machine-specific overrides.
-  local local_config="$HOME_DIR/.config/mise/config.local.toml"
+  local local_config="$BASE_DIR/.config/mise/config.local.toml"
   if [[ ! -f "$local_config" ]]; then
     mkdir -p "$(dirname "$local_config")"
     touch "$local_config"

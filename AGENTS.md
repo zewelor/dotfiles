@@ -185,6 +185,12 @@ Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
   - najpierw zaktualizuj instrukcje w `AGENTS.md`,
   - dopiero potem wdrażaj zmianę w `.zshrc` / `install`,
   - w opisie zmian dopisz co było outdated i jaka reguła została zaktualizowana.
+- **Lokalizacja konfiguracji `mise`:**
+  - Konfiguracja `mise` (zarówno `config.toml` jak i `config.local.toml`) jest zlokalizowana w repozytorium dotfiles w `.config/mise/`.
+  - Aby zapobiec nadpisywaniu symlinków przez automatyczne zapisy `mise` (które zastępują symlinki zwykłymi plikami) oraz aby wyeliminować błąd `github.credential_command` ignorowanego w nieglobalnych konfiguracjach (CVE-2026-55448), cała globalna konfiguracja `mise` jest kierowana bezpośrednio do repozytorium za pomocą zmiennej środowiskowej `export MISE_CONFIG_DIR="${HOME}/dotfiles/.config/mise"` w `.zshenv`.
+  - Dzięki temu polecenia `mise use -g` zapisują konfigurację bezpośrednio do repozytorium dotfiles.
+  - Maszynowo-specyficzne (lokalne) konfiguracje powinny być dopisywane do `config.local.toml` w tym samym katalogu (jest on zignorowany w `.gitignore`, więc nie trafi do gita).
+
 
 ### Reguły decyzyjne (MUST)
 
