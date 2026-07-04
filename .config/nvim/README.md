@@ -17,6 +17,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
+│   │   ├── copilot.lua              # GitHub Copilot (lightweight inline suggestions)
 │   │   ├── lsp.lua                  # LSP + mason (language servers)
 │   │   ├── mason-tool-installer.lua # Auto-installer narzędzi (formattery)
 │   │   ├── mini-align.lua           # Wyrównywanie tekstu
@@ -145,12 +146,31 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
-- **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi.
+- **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi. Copilot nie jest podpięty jako źródło `blink.cmp`, żeby autouzupełnianie zostało lekkie.
 - **Keymaps** (w menu autouzupełniania):
   - `<C-Space>` — Wymuś pokazanie menu
   - `<CR>` — Potwierdź wybór
   - `<C-e>` — Anuluj
   - `<Tab>` / `<S-Tab>` — Nawigacja w menu
+
+---
+
+### **copilot.lua** — GitHub Copilot (lightweight inline suggestions)
+
+- **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua)
+- **Cel**: Lżejsza integracja GitHub Copilot przez natywny klient LSP Neovima, bez źródła `blink.cmp`.
+- **Tryb pracy**: Auto-sugestie są włączone dla zwykłych plików kodu, ale z opóźnieniem `500ms`; panel, `blink.cmp` source i next-edit suggestions są wyłączone.
+- **Wyłączone filetype'y**: `markdown`, `text`, `yaml`, `gitcommit`, `gitrebase`, `help`.
+- **Wymagania**: Neovim 0.11+ i Node.js 22+.
+- **Keymaps**:
+  - `<M-]>` w Insert — Pobierz / pokaż następną sugestię
+  - `<M-[>` w Insert — Poprzednia sugestia
+  - `<M-l>` w Insert — Akceptuj sugestię
+  - `<C-]>` w Insert — Odrzuć sugestię
+  - `<Space>ct` — Przełącz auto-trigger dla bieżącego bufora
+- **Komendy**:
+  - `:Copilot auth` — Zaloguj Copilot
+  - `:Copilot status` — Sprawdź status
 
 ---
 
@@ -356,6 +376,10 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 - `<Space>cf` — Formatuj plik (conform.nvim)
 
+#### Copilot
+
+- `<Space>ct` — Przełącz auto-trigger dla bieżącego bufora
+
 #### LSP (aktywne gdy serwer LSP jest podłączony)
 
 - `<Space>rn` — Rename symbol
@@ -401,6 +425,15 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 - `Shift+Ctrl+u` — Scroll opencode w górę (half page)
 - `Shift+Ctrl+d` — Scroll opencode w dół (half page)
+
+---
+
+#### Copilot
+
+- `Alt+]` w Insert — Pobierz / pokaż następną sugestię
+- `Alt+[` w Insert — Poprzednia sugestia
+- `Alt+l` w Insert — Akceptuj sugestię
+- `Ctrl+]` w Insert — Odrzuć sugestię
 
 ---
 

@@ -229,3 +229,19 @@ end, { desc = "Scroll opencode up" })
 keymap("n", "<S-C-d>", function()
   require("opencode").command("session.half.page.down")
 end, { desc = "Scroll opencode down" })
+
+-- ============================================================================
+-- COPILOT KEYMAPS (manual inline suggestions)
+-- ============================================================================
+
+local function copilot_suggestion(action)
+	return function()
+		vim.cmd("Copilot suggestion " .. action)
+	end
+end
+
+keymap("i", "<M-]>", copilot_suggestion("next"), { desc = "Copilot next suggestion" })
+keymap("i", "<M-[>", copilot_suggestion("prev"), { desc = "Copilot previous suggestion" })
+keymap("i", "<M-l>", copilot_suggestion("accept"), { desc = "Copilot accept suggestion" })
+keymap("i", "<C-]>", copilot_suggestion("dismiss"), { desc = "Copilot dismiss suggestion" })
+keymap("n", "<leader>ct", copilot_suggestion("toggle_auto_trigger"), { desc = "Toggle Copilot auto-trigger" })
