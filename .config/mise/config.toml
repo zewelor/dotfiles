@@ -5,7 +5,7 @@ ruby = "latest"
 go = "latest"
 "gem:tmuxinator" = "latest"
 github-cli = "latest"
-codex = "latest"
+"aqua:openai/codex" = "latest"
 yt-dlp = { version = "latest", rename_exe = "yt-dlp" }
 kubectl = "latest"
 "npm:@steipete/summarize" = "latest"

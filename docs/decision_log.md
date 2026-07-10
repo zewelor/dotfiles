@@ -569,3 +569,33 @@ Not tested:
    - Tested `.zshrc` changes and verified they compile and check paths correctly.
    - Did NOT test writing new configs via `mise use -g` on a system with multiple interactive shell environments, but verified the path resolution is correct.
 
+
+## 2026-07-10 — Resolve missing codex shim and upgrade to latest version via aqua backend in mise
+
+1. **The Problem**
+The `codex` command was not available in the shell, and the version of `codex` installed was an older version (`0.142.4`). Additionally, trying to resolve it using the shorthand `codex` triggered backend conflicts with `npm:@openai/codex`.
+
+2. **Root Cause**
+- The shorthand `codex` in `mise` registry used to point to `aqua:openai/codex`, but in newer `mise` versions, the registry has changed to recommend `npm:@openai/codex`. This caused shorthand resolution to clash and prevent shim generation during `mise reshim`.
+- Furthermore, older versions of the `aqua` package (like `<= 0.133.0-alpha.1`) were bare binaries, but `mise`'s native version comparison has a bug that matched version `0.142.4` to the older bare-binary rules. Since those old rules did not put the binary in `bin/codex`, but the parser expected it there based on default constraints, `mise` failed to find the binary path and generate shims.
+
+3. **The Fix**
+- Cleared `mise` cache to update the remote registry, allowing the newer versions of `codex` (`0.143.0` and `0.144.1`) to become available.
+- Installed `codex@0.144.1` (the latest release on GitHub). Because this version uses the new `.tar.gz` package structure, it correctly placed the binary under `bin/codex`.
+- Updated `.config/mise/config.toml` to explicitly request `"aqua:openai/codex" = "latest"` instead of `codex = "latest"`, bypass shorthand-to-npm recommendations, and ensure `codex` is managed by the `aqua` backend.
+- Cleaned up manual workarounds, old directories (`0.142.4`, `0.143.0`), and temporary backend paths under `~/.local/share/mise/installs/`.
+- Executed `mise reshim` to correctly build the `codex` and `codex-code-mode-host` shims.
+
+4. **Key Insight**
+Explicitly pinning backends (like `aqua:openai/codex`) is more robust than using registry shorthands (like `codex`), which can silently change recommendations (e.g. from `aqua` to `npm`) and break the environment.
+
+5. **The Lesson**
+Keep tool references explicit when shorthand registry behaviors change or when semver bugs in version constraint evaluators resolve packages using outdated assets.
+
+6. **Verification / Testing**
+Tested:
+- Verified `mise bin-paths` lists `~/.local/share/mise/installs/aqua-openai-codex/latest/bin`.
+- Verified `/home/omen/.local/share/mise/shims/codex --version` outputs `codex-cli 0.144.1`.
+- Checked that `codex` works correctly when `mise` is activated.
+Not tested:
+- Behavior on future automatic upgrades of `codex` via `mise` (which should now succeed automatically as long as the package structure remains `.tar.gz` with `bin/codex`).
