@@ -15,6 +15,7 @@ workmux = "latest"
 "npm:agent-browser" = { version = "latest", npm_args = "--ignore-scripts=false" }
 "github:zewelor/bird-go" = "latest"
 "github:zewelor/sourcetap" = "latest"
+yq = "latest"
 
 [settings]
 minimum_release_age_excludes = [

@@ -26,7 +26,6 @@ APT_PACKAGES_CORE= \
 	curl \
 	btop \
 	jq \
-	yq \
 	stow \
 	ripgrep
 
