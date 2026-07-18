@@ -190,5 +190,13 @@
     "workbench.colorTheme": "Catppuccin Latte",
     "search.exclude": {
         "**/.agents/skills": true
-    }
+    },
+    "yaml.disableSchemaDetection": [
+        "**/.github/workflows/*.yml",
+        "**/.github/workflows/*.yaml",
+        "**/.gitea/workflows/*.yml",
+        "**/.gitea/workflows/*.yaml",
+        "**/.forgejo/workflows/*.yml",
+        "**/.forgejo/workflows/*.yaml"
+    ]
 }
