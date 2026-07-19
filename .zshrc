@@ -300,6 +300,10 @@ if has "agy"; then
   alias agyc="agy -c"
 fi
 
+if has "codex"; then
+  alias codexrl="codex resume --last"
+fi
+
 # Guardrails for global package installs when mise is available.
 if is_interactive; then
   is_using_mise() {
