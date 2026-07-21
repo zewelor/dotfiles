@@ -16,6 +16,7 @@ workmux = "latest"
 "github:zewelor/bird-go" = "latest"
 "github:zewelor/sourcetap" = "latest"
 yq = "latest"
+"github:openclaw/gogcli" = "latest"
 
 [settings]
 minimum_release_age_excludes = [
