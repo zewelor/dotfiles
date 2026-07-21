@@ -186,7 +186,7 @@ zinit light-mode from"gh-r" sbin"delta" mv"delta-*/delta -> delta" for @dandavis
 zinit light-mode from"gh-r" sbin"dust" mv"dust-*/dust -> dust" for @bootandy/dust
 
 # eza - modern ls replacement with icons and git integration
-zinit light-mode from"gh-r" sbin"eza" mv"eza -> eza" for @eza-community/eza
+zinit light-mode from"gh-r" sbin"eza" for @eza-community/eza
 alias l='ls -1a'
 alias ll='ls -lh'
 alias la='ls -lah'
