@@ -298,6 +298,7 @@ fi
 if has "agy"; then
   alias agyp="agy -p"
   alias agyc="agy -c"
+  alias agyi="agy -i"
 fi
 
 if has "codex"; then
