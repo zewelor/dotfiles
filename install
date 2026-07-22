@@ -452,14 +452,16 @@ setup_opencode() {
 # Function to setup Antigravity CLI configuration via stow.
 # Uses stow to link stable CLI config while leaving runtime data unmanaged.
 setup_antigravity_cli() {
-  mkdir -p "$HOME_DIR/.gemini/antigravity-cli/skills"
+  local target_dir="$HOME_DIR/.gemini/antigravity-cli"
+  mkdir -p "$target_dir/skills"
   print_banner "Setting up Antigravity CLI configuration..."
-  install_with_stow -d "$BASE_DIR/.gemini" -t "$HOME_DIR/.gemini/antigravity-cli" "antigravity-cli"
+
+  install_with_stow -d "$BASE_DIR/.gemini" -t "$target_dir" "antigravity-cli"
 
   # Stow shared agent skills into ~/.gemini/antigravity-cli/skills/.
   # Stow does not preserve the package name as a path component, so the
   # target must already include the `skills/` segment.
-  stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.gemini/antigravity-cli/skills" skills
+  stow -d "$HOME_DIR/.agents" -t "$target_dir/skills" skills
 }
 
 # Function to setup Summarize configuration via stow.
