@@ -861,7 +861,7 @@ export HISTFILE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh/history"
 [[ ! -d ${HISTFILE:h} ]] && mkdir -p "${HISTFILE:h}"
 export HISTSIZE=1000000
 export SAVEHIST=1000000
-# Ignore trivial commands in history
+# Ignore trivial commands in history (note: Atuin does not read HISTORY_IGNORE; see history_filter in ~/.config/atuin/config.toml)
 export HISTORY_IGNORE="(ls|pwd|exit|curl)*"
 # Don't record commands that start with a space (zsh option)
 setopt HIST_IGNORE_SPACE

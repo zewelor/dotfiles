@@ -4,6 +4,15 @@ sync_frequency = "2h"
 filter_mode_shell_up_key_binding = "directory"
 style = "full"
 
+# Exclude specific commands from history
+history_filter = [
+  "^agy",
+  "^ls($| )",
+  "^pwd$",
+  "^exit$",
+  "^curl($| )",
+]
+
 # Theme: Catppuccin Latte (blue accent)
 # Source: https://github.com/catppuccin/atuin
 [theme]
