@@ -1,8 +1,13 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugin": ["@mohak34/opencode-notifier@latest", "opencode-websearch", "./shell-env.js"],
+  "plugin": [
+    "@mohak34/opencode-notifier@latest",
+    "opencode-websearch",
+    "./shell-env.js",
+    "@leohenon/opencode-vim-plugin",
+  ],
   "formatter": true,
-  "disabled_providers": ["openrouter", "perplexity", "groq", "opencode-go"],
+  "disabled_providers": ["openrouter", "perplexity", "groq", "opencode-go", "pioneer"],
   // "small_model": "github-copilot/gpt-5-mini",
   // "small_model": "opencode-go/deepseek-v4-flash",
   "small_model": "google/gemini-flash-lite-latest",

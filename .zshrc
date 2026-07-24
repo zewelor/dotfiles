@@ -742,6 +742,7 @@ alias export_dotenv='export $(grep -v "^#" .env | xargs -d "\n")'
 alias -g C='| wc -l'
 alias -g G='| grep -e'  # egrep is deprecated
 alias -g L='| less'
+alias -g WC='| wl-copy'
 alias -g RNS='| sort -nr'
 alias -g S='| sort'
 alias -g T='| tail'
