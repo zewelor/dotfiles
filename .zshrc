@@ -992,27 +992,61 @@ fi
 if has "mise"; then
   alias mise-local="mise use -p \${MISE_CONFIG_DIR}/config.local.toml"
 
+  _mise_activate_now() {
+    local shell_code
+
+    shell_code="$(mise activate zsh)" || return
+    eval "$shell_code" || return
+    shell_code="$(mise hook-env -s zsh)" || return
+    eval "$shell_code"
+  }
+
   if is_interactive; then
-    # Lazy-load mise activation for faster startup.
+    # Activate lazily, but refresh PATH before later precmd hooks use mise tools.
     _mise_lazy_init() {
-      unfunction _mise_lazy_init
-      eval "$(mise activate zsh)"
+      _mise_activate_now || return
+      _mise_setup_completions
+      (( $+functions[_mise_setup_completions] )) && add-zsh-hook precmd _mise_setup_completions
+      add-zsh-hook -d precmd _mise_lazy_init
+      unfunction _mise_lazy_init _mise_activate_now
     }
     add-zsh-hook precmd _mise_lazy_init
+
+    # Run after mise activation; retry on precmd only if compdef is still delayed.
+    _mise_setup_completions() {
+      (( $+functions[compdef] )) || return
+
+      add-zsh-hook -d precmd _mise_setup_completions
+      local completion_cache_dir="${ZSH_CACHE_DIR}/completions"
+      local -a cli_completion_tools=(sourcetap bird gog)
+      local tool command_path completion_file completion_temp_file
+
+      for tool in "${cli_completion_tools[@]}"; do
+        command_path="$(whence -p "$tool")" || continue
+        completion_file="${completion_cache_dir}/_${tool}"
+
+        if [[ ! -s "$completion_file" || ! "$completion_file" -nt "$command_path" ]]; then
+          # Generate separately so a failed CLI cannot corrupt the working cache.
+          completion_temp_file="${completion_cache_dir}/.${tool}.$$.tmp"
+          if ! "$command_path" completion zsh >| "$completion_temp_file" \
+            || [[ ! -s "$completion_temp_file" ]] \
+            || ! command mv -f -- "$completion_temp_file" "$completion_file"; then
+            # Discard failed output and keep the previous completion untouched.
+            command rm -f -- "$completion_temp_file"
+          fi
+        fi
+
+        [[ -s "$completion_file" ]] || continue
+        autoload -Uz "_${tool}"
+        compdef "_${tool}" "$tool"
+      done
+      unfunction _mise_setup_completions
+    }
   else
     # Non-interactive shells do not reach precmd, so activate mise immediately.
-    eval "$(mise activate zsh)"
+    _mise_activate_now || return
+    unfunction _mise_activate_now
   fi
-
-  # Cache mise completions; requires `usage` installed via `mise use -g usage`.
-  # Regenerate if cache is missing or older than 7 days.
-  local mise_completion_cache="${HOME}/.cache/zsh/completions"
-  local mise_completion_file="$mise_completion_cache/_mise"
-  if [[ ! -f "$mise_completion_file" ]] || [[ -n "$(find "$mise_completion_file" -mtime +7 2>/dev/null)" ]]; then
-    mkdir -p "$mise_completion_cache"
-    mise completion zsh >| "$mise_completion_file" 2>/dev/null
-  fi
-  fpath+=("$mise_completion_cache")
 fi
 
 agent_browser_skills_dir="${HOME}/.local/share/mise/installs/npm-agent-browser/latest/lib/node_modules/agent-browser/skill-data"
