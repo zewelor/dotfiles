@@ -631,8 +631,65 @@ run_installation() {
     setup_rclone
   fi
 
+  print_flatpak_manual_instructions() {
+    local -a app_dirs=("$BASE_DIR/prv/.var/app"/*(/N))
+    (( ${#app_dirs[@]} == 0 )) && return 0
+
+    if ! has "flatpak"; then
+      return 0
+    fi
+
+    local global_overrides
+    global_overrides=$(flatpak override --user --show)
+    local -i remove_global_access=0
+    if [[ "$global_overrides" == *"filesystems=~/dotfiles;"* || "$global_overrides" == *"filesystems=$BASE_DIR;"* ]]; then
+      if [[ "$global_overrides" != *"!~/dotfiles;"* && "$global_overrides" != *"!$BASE_DIR;"* ]]; then
+        remove_global_access=1
+      fi
+    fi
+
+    local -a app_dirs_missing_access=()
+    local app_dir app_id app_overrides
+    for app_dir in "${app_dirs[@]}"; do
+      app_id="${app_dir:t}"
+      app_overrides=$(flatpak override --user --show "$app_id")
+      if [[ "$app_overrides" != *"filesystems=$app_dir;"* || "$app_overrides" == *"!$app_dir;"* ]]; then
+        app_dirs_missing_access+=("$app_dir")
+      fi
+    done
+
+    local var_app="$HOME_DIR/.var/app"
+    local -a stale_links=()
+    local link target
+    for link in "$var_app"/**/*(@N); do
+      target=$(readlink "$link")
+      if [[ "$target" == "$BASE_DIR"* ]]; then
+        stale_links+=("$link")
+      fi
+    done
+
+    (( remove_global_access || ${#app_dirs_missing_access[@]} || ${#stale_links[@]} )) || return 0
+
+    print_banner "Flatpak setup (manual)"
+    echo "Flatpak permissions and links are not changed automatically."
+    if (( remove_global_access )); then
+      echo "To remove the old global dotfiles access, run:"
+      printf '  flatpak override --user --nofilesystem=%q\n' "$BASE_DIR"
+    fi
+    for app_dir in "${app_dirs_missing_access[@]}"; do
+      app_id="${app_dir:t}"
+      echo "To grant access only to $app_id, run:"
+      printf '  flatpak override --user --filesystem=%q %q\n' "${app_dir}:rw" "$app_id"
+    done
+    for link in "${stale_links[@]}"; do
+      echo "If this old managed link blocks stow, remove it with:"
+      printf '  rm -f -- %q\n' "$link"
+    done
+  }
+
   # Private overrides and fonts after all Y/N prompts (font cache takes time)
   if is_desktop; then
+    print_flatpak_manual_instructions
     print_banner "Stowing private overrides from prv/"
     install_with_stow -t "$HOME_DIR" -d "prv" "."
 
