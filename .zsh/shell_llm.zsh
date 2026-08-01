@@ -20,6 +20,7 @@ function _codex() {
 }
 
 zpcompdef _codex codex
+zpcompdef _codex codexgo
 
 # Run LLM tool in temp dir and cleanup on exit
 _llm_tmp() {

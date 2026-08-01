@@ -305,6 +305,14 @@ if has "codex"; then
   alias codexrl="codex resume --last"
 fi
 
+# Keep the ChatGPT Go subscription credentials and sessions separate.
+codexgo() {
+  local codex_home="${CODEX_GO_HOME:-$HOME/.codex-go}"
+
+  mkdir -p "$codex_home" || return 1
+  CODEX_HOME="$codex_home" command codex "$@"
+}
+
 # Guardrails for global package installs when mise is available.
 if is_interactive; then
   is_using_mise() {
