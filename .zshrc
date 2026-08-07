@@ -998,7 +998,29 @@ if [[ -d "$HOME/.zshrc.d" ]]; then
 fi
 
 if has "mise"; then
-  alias mise-local="mise use -p \${MISE_CONFIG_DIR}/config.local.toml"
+  # Helper function to target config.local.toml for machine-specific tools
+  mise-local() {
+    local target_cfg="${MISE_CONFIG_DIR:-$HOME/.config/mise}/config.local.toml"
+
+    # If inside a project directory (contains project-specific mise or tool configs), print a friendly reminder
+    if [[ -f "mise.toml" || -f ".mise.toml" || -f ".tool-versions" || -f ".mise.local.toml" ]]; then
+      echo "[mise-local] Note: Updating machine-global config (${target_cfg#$HOME/})"
+      echo "[mise-local] If you meant project-local config, use: mise use --env local <pkg>"
+      echo ""
+    fi
+
+    local args=()
+    for arg in "$@"; do
+      if [[ "$arg" == "use" && ${#args[@]} -eq 0 ]]; then
+        continue
+      fi
+      if [[ "$arg" == "-g" || "$arg" == "--global" ]]; then
+        continue
+      fi
+      args+=("$arg")
+    done
+    mise use -p "$target_cfg" "${args[@]}"
+  }
 
   _mise_activate_now() {
     local shell_code
