@@ -9,17 +9,19 @@ Some examples here:
 git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
 ```
 
-## Health Checks
+## Health Checks & Testing
 
-Use the built-in health checks before or after bigger changes:
+Use the built-in health checks and regression test suite before or after bigger changes:
 
 ```bash
-make doctor  # fast repo-local checks (syntax, stow dry-run, required tools)
+make test    # run offline regression tests directly (zsh tests/vault_test.zsh)
+make doctor  # fast repo-local checks (syntax, stow dry-run, required tools, offline Vault tests)
 make verify  # deeper environment drift checks for the current machine
 ```
 
-- `make doctor` is meant to stay fast and offline.
-- `make verify` checks the real interactive shell startup and local workstation state.
+- `make test` runs the offline regression test suite directly (`zsh tests/vault_test.zsh`) using mocks without contacting a cluster.
+- `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, and the offline Vault helper suite.
+- `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
 
 ### Shell requirement (zsh)
 

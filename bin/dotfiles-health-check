@@ -283,6 +283,27 @@ check_editor_support() {
   fi
 }
 
+check_vault_helper_tests() {
+  local test_script="$BASE_DIR/tests/vault_test.zsh"
+  local output_file=""
+
+  if [[ ! -f "$test_script" ]]; then
+    fail "Vault test suite missing at $test_script"
+    return
+  fi
+
+  output_file=$(mktemp -t dotfiles-vault-test.XXXXXX)
+
+  if zsh "$test_script" >"$output_file" 2>&1; then
+    pass "Vault helper offline suite passed"
+  else
+    fail "Vault helper offline suite failed"
+    show_command_output "$output_file" 40
+  fi
+
+  rm -f "$output_file"
+}
+
 print_header "Dotfiles Health Check (${MODE})"
 
 print_section "Checking shell script syntax"
@@ -296,6 +317,9 @@ fi
 
 print_section "Checking tool availability"
 check_required_tools
+
+print_section "Checking Vault helpers"
+check_vault_helper_tests
 
 if [[ "$MODE" == "verify" ]]; then
   profile=""

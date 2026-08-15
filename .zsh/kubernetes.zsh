@@ -182,41 +182,7 @@ if has "kubectl"; then
       echo
     }
 
-    kvault() {
-      local ns="${VAULT_K8S_NAMESPACE:-kube-system}"
-      local pod
-      pod="$(kubectl get pod -n "$ns" -l app.kubernetes.io/name=vault,vault-active=true -o jsonpath='{.items[0].metadata.name}')"
-      [[ -z "$pod" ]] && pod="$(kubectl get pod -n "$ns" -l app.kubernetes.io/name=vault -o jsonpath='{.items[0].metadata.name}')"
-      [[ -z "$pod" ]] && {
-        echo "Vault pod not found in $ns" >&2
-        return 1
-      }
-      if [[ -n "${KVAULT_TOKEN:-}" ]]; then
-        if [[ -t 1 ]]; then
-          kubectl exec -n "$ns" -it "$pod" -- env VAULT_TOKEN="$KVAULT_TOKEN" vault "$@"
-        else
-          kubectl exec -n "$ns" -i "$pod" -- env VAULT_TOKEN="$KVAULT_TOKEN" vault "$@"
-        fi
-      else
-        if [[ -t 1 ]]; then
-          kubectl exec -n "$ns" -it "$pod" -- vault "$@"
-        else
-          kubectl exec -n "$ns" -i "$pod" -- vault "$@"
-        fi
-      fi
-    }
-    kvlogin() {
-      local t
-      read -rs "?Vault token (hidden): " t
-      echo
-      export KVAULT_TOKEN="$t"
-      unset t
-      kvault token lookup >/dev/null && echo "Vault login OK" || echo "Vault login failed"
-    }
-    kvlogout() {
-      unset KVAULT_TOKEN
-      echo "Vault token cleared from shell env"
-    }
+    source "$HOME/.zsh/lib/vault.zsh" || return 1
     # Usage:
     #   k8ssecretgen [pwgen options]
     # Examples:

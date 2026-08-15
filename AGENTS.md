@@ -16,6 +16,15 @@ Komentarze w kodzie/configach: po angielsku. Ten plik: po polsku.
 - Po debugowaniu jakiegos bledu / poprawkach przygotuj **draft** do `docs/decision_log.md` (nie dopisuj automatycznie) i zapytaj użytkownika: "Shall I append this to the decision log?"
   - Wpis musi zawierać: 1) **The Problem**, 2) **Root Cause**, 3) **The Fix**, 4) **Key Insight**, 5) **The Lesson**, 6) **Verification / Testing** (co było przetestowane + co NIE).
 
+## Granice testowania i walidacji końcowej (MUST)
+
+- **Iteracja i bieżąca praca:** Podczas iteracyjnej implementacji, code review, raportowania statusu, wyjaśnień czy wprowadzania poprawek nie uruchamiaj pełnego zestawu testów przy każdej turze. Wykonuj wyłącznie sfokusowane sprawdzenia bezpośrednio powiązane ze zmienionymi plikami.
+- **Wyzwalacz pełnej walidacji (trigger):** Standardowa prośba o review, status, wyjaśnienie czy poprawkę **nie jest** autoryzacją do uruchamiania pełnego, kosztownego suite'u. Pełną walidację końcową uruchamiaj wyłącznie po wyraźnym potwierdzeniu przez użytkownika, że przygotowujemy finalny commit, lub na jego bezpośrednie polecenie uruchomienia pełnej/końcowej walidacji.
+- **Polecenia walidacji końcowej (zgodnie z README):**
+  - `make test` — bezpośrednie uruchomienie offline'owego zestawu testów regresyjnych helperów Vault (`zsh tests/vault_test.zsh`).
+  - `make doctor` — szybkie lokalne sprawdzenia repozytorium (składnia, dry-run GNU Stow, obecność wymaganych narzędzi) oraz testy `make test`.
+  - `make verify` — rozszerzone sprawdzenia obejmujące cały zestaw `make doctor` wraz z weryfikacją dryfu środowiska (environment drift) i startu interaktywnej powłoki.
+
 ## Neovim: kiedy aktualizować README (MUST)
 
 Zawsze aktualizuj `~/.config/nvim/README.md`, gdy:

@@ -1,4 +1,4 @@
-.PHONY: all install base update-fonts setup packages zinit_update doctor verify skills
+.PHONY: all install base update-fonts setup packages zinit_update doctor verify skills test
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -87,6 +87,9 @@ packages:
 zinit_update:
 	echo "Remember to update root also"
 	zinit update
+
+test:
+	@zsh "$(BASE)/tests/vault_test.zsh"
 
 doctor:
 	@"$(HEALTHCHECK)" doctor
