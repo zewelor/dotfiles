@@ -326,6 +326,30 @@ setup_rclone() {
   echo "rclone config generated at $target"
 }
 
+# Function to optionally prepare the Storage Box media SMB automount.
+setup_storagebox_media_mount() {
+
+  if ! is_interactive; then
+    echo "Skipping Storage Box media mount setup in non-interactive mode."
+    return
+  fi
+
+  read -r "response?Would you like to setup Storage Box media? [y/N] "
+  if [[ ! "$response" =~ ^[Yy]$ ]]; then
+    echo "Skipping Storage Box media mount setup."
+    return
+  fi
+
+  local setup_script="$BASE_DIR/prv/bin/setup-storagebox-media-mount"
+  if [[ ! -f "$setup_script" || ! -x "$setup_script" ]]; then
+    echo "Storage Box setup helper is missing or not executable: $setup_script" >&2
+    return 1
+  fi
+
+  print_banner "Setting up Storage Box media mount..."
+  VAULT_TOKEN="${VAULT_TOKEN:-}" "$setup_script"
+}
+
 # Function to enable repo-managed user systemd units after stow linked them.
 setup_user_systemd_units() {
 
@@ -618,7 +642,7 @@ run_installation() {
   fi
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
-  install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" "."
+  install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
 
   print_banner "Removing retired Zinit caches"
   cleanup_retired_zinit_caches
@@ -629,6 +653,7 @@ run_installation() {
 
   if is_desktop; then
     setup_rclone
+    setup_storagebox_media_mount
   fi
 
   print_flatpak_manual_instructions() {

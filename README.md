@@ -66,7 +66,8 @@ During `./install`, answer **Y** to "Would you like to setup rclone with passwor
 
 The password is fetched from Vault at `secret/configs/rclone` (key: `nas_pass`).
 
-**Requirements**: Mount point `/mnt/nas` must exist. The install script will offer to create it with sudo, or you can create it manually:
+**Requirements**: Mount point `/mnt/nas` must exist. The install script does not
+create it; create it manually if needed:
 
 ```bash
 sudo mkdir -p /mnt/nas && sudo chown $USER:$USER /mnt/nas
@@ -119,6 +120,101 @@ Password is stored in Vault at `secret/configs/rclone` (key: `nas_pass`, obscure
 
 Generate obscured password: `rclone obscure "your_plaintext_password"`
 
+## Storage Box media SMB automount (desktop only)
+
+The Storage Box media share is mounted independently from the existing rclone
+NAS mount. It uses native kernel CIFS through the private HAProxy relay and does
+not require rclone:
+
+```text
+//storage-media.svc.lan/<storagebox_media_username> -> /mnt/storagebox/media
+```
+
+The setup reads `storagebox_media_username` and `storagebox_media_password`
+from `secret/auth/hetzner` in Vault. It manages only the generated user secret:
+`~/.config/storagebox/media.credentials`, with directory mode `0700` and file
+mode `0600`. The credentials are never stored in Git or printed.
+
+Requirements:
+
+- `curl` and `jq` for reading Vault;
+- `cifs-utils` for the eventual CIFS mount;
+- the management VPN/relay when testing DNS and the mount.
+
+During `./install`, answer **Y** to:
+
+```text
+Would you like to setup Storage Box media? [y/N]
+```
+
+Answering **N** or pressing Enter skips the feature completely: no helper,
+DNS, Vault, file, or `sudo` operation is attempted. Answering **Y** reuses an
+existing `VAULT_TOKEN` or prompts for it, refreshes the credentials, and prints
+only the missing manual actions. The helper never runs `sudo`, edits
+`/etc/fstab`, creates the mountpoint, or mounts the share.
+
+Initial setup stays under `./install`. To rerun only this setup or rotate its
+credentials later, call the stowed helper directly:
+
+```bash
+~/bin/setup-storagebox-media-mount
+```
+
+If private Stow has not completed yet, rerun `./install` instead.
+
+Add the canonical line below with `sudoedit /etc/fstab`, replacing `<username>`
+with `storagebox_media_username` from Vault if the helper has not printed the
+concrete line yet:
+
+```fstab
+//storage-media.svc.lan/<username> /mnt/storagebox/media cifs credentials=/home/omen/.config/storagebox/media.credentials,uid=1000,gid=1000,forceuid,forcegid,file_mode=0644,dir_mode=0755,iocharset=utf8,vers=3.1.1,seal,rw,nosuid,nodev,_netdev,x-systemd.automount,x-systemd.idle-timeout=15min,x-systemd.mount-timeout=30s,nofail 0 0
+```
+
+Use the numeric UID and GID printed by `id -u` and `id -g` if they differ from
+`1000`. `x-systemd.automount` makes systemd generate the mount and automount
+units from `fstab`; `x-systemd.idle-timeout=15min` attempts to unmount the share
+after 15 idle minutes, while `x-systemd.mount-timeout=30s` bounds a failed mount
+attempt. `_netdev` treats it as a network mount and `nofail` keeps an unavailable
+relay from blocking boot.
+
+After adding or changing the line, activate the generated automount and trigger
+it before running the read/write canary. `daemon-reload` regenerates the units
+but does not start a newly added automount in the current boot:
+
+```bash
+sudo install -d -m 0755 /mnt/storagebox/media
+sudo systemctl daemon-reload
+sudo systemctl restart mnt-storagebox-media.automount
+systemctl is-active mnt-storagebox-media.automount
+ls /mnt/storagebox/media >/dev/null
+findmnt --mountpoint /mnt/storagebox/media --output SOURCE,TARGET,FSTYPE,OPTIONS
+canary=$(mktemp -p /mnt/storagebox/media .dotfiles-canary.XXXXXX)
+printf 'storagebox canary\n' > "$canary" && grep -qx 'storagebox canary' "$canary" && rm -- "$canary"
+```
+
+Then verify that the still-active automount reconnects after the CIFS mount is
+disconnected:
+
+```bash
+sudo umount /mnt/storagebox/media
+systemctl is-active mnt-storagebox-media.automount
+ls /mnt/storagebox/media >/dev/null
+findmnt --mountpoint /mnt/storagebox/media --output SOURCE,TARGET,FSTYPE,OPTIONS
+```
+
+If DNS does not resolve, start the VPN/relay before the mount and canary. The
+helper still writes the credentials and prints the pending instructions.
+
+Rollback is limited to the manual system change: remove the Storage Box line
+with `sudoedit /etc/fstab`, reload systemd, and unmount it. The old `/mnt/nas`
+rclone/WebDAV mount remains unchanged throughout:
+
+```bash
+sudo systemctl stop mnt-storagebox-media.automount
+sudo umount /mnt/storagebox/media  # only if it is still mounted
+sudoedit /etc/fstab
+sudo systemctl daemon-reload
+```
 
 ## Scheduled user jobs
 

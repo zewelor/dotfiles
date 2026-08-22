@@ -599,3 +599,39 @@ Tested:
 - Checked that `codex` works correctly when `mise` is activated.
 Not tested:
 - Behavior on future automatic upgrades of `codex` via `mise` (which should now succeed automatically as long as the package structure remains `.tar.gz` with `bin/codex`).
+
+## 2026-08-22 — Keep Storage Box mount setup operator-controlled
+
+1. **The Problem**
+   The first Storage Box desktop setup combined three different responsibilities: generating a user secret, installing custom systemd mount units, and mutating system state with `sudo`. Its templates lived under `prv/.config/storagebox/`, which also allowed private Stow to manage `~/.config/storagebox`—the directory intended to hold the generated credentials file.
+
+2. **Root Cause**
+   The mount was modeled as a fully automated deployment even though this repository owns user configuration, not `/etc` or system-wide mount lifecycle. That blurred the safety boundary between a recoverable user-secret refresh and operator-controlled changes to `/etc/fstab`, mountpoints, and live mounts.
+
+3. **The Fix**
+   - Replaced the renderer/systemd installer with one linear helper, `prv/bin/setup-storagebox-media-mount`, which only reads `storagebox_media_username` and `storagebox_media_password` from `secret/auth/hetzner` and writes `~/.config/storagebox/media.credentials` using directory mode `0700` and file mode `0600`.
+   - Kept the Vault token out of `curl` arguments and environment by passing it through a mode-restricted temporary header file and removing its export attribute before invoking `curl`.
+   - Made system inspection read-only: the helper checks `cifs-utils`, the mountpoint, DNS, `/etc/fstab`, and the current mount table, then prints only the missing operator actions. A conflicting fstab entry is shown alongside the canonical entry with password-like values redacted and is never overwritten.
+   - Made SMB transport encryption explicit: the canonical CIFS options always include `vers=3.1.1,seal` in both the helper-generated line and README documentation.
+   - Removed `prv/.config/storagebox/` and all custom `.mount`/`.automount` templates. Automounting now comes from `x-systemd.automount` in `/etc/fstab`, with a 15-minute idle timeout and a 30-second mount timeout.
+   - Kept initial setup under the installer prompt, which remains side-effect-free for `N`/Enter. The stowed `setup-storagebox-media-mount` helper is the explicit credential rotation entrypoint; the Makefile does not define a one-off mount target.
+
+4. **Key Insight**
+   User-secret generation and system mount configuration have different ownership and risk profiles. Automating the secret is safe and repeatable; changing `/etc/fstab`, creating `/mnt` paths, and activating mounts should remain visible operator decisions. A helper can still provide an excellent UX by detecting exact drift and printing canonical commands without executing them.
+
+5. **The Lesson**
+   Never place repository-managed Stow content in a directory that must also contain generated secrets. For system-wide changes, prefer read-only detection plus precise remediation instructions over custom units, hidden privilege escalation, or bespoke rollback machinery. Keep the previous `/mnt/nas` path unchanged until the new mount passes explicit read/write and reconnect canaries.
+
+6. **Verification / Testing**
+   Tested:
+   - `bash -n` and ShellCheck for the helper; `zsh -n install` for the installer.
+   - Mocked Vault, DNS, fstab, and mount-table scenarios for missing setup, canonical configuration, conflicting configuration, active CIFS, idle autofs, and `findmnt` failure.
+   - Confirmed token isolation, password redaction, directory mode `0700`, credentials mode `0600`, and an unchanged `/etc/fstab` without reading the generated secret.
+   - Confirmed `N` and Enter return before helper lookup, while `Y` reports a missing helper clearly.
+   - Ran the private Stow dry-run and confirmed it no longer links `.config/storagebox`.
+   - Ran `git diff --check` in both the main repository and the private submodule.
+
+   Not tested:
+   - A live Vault request with production credentials.
+   - Live VPN/relay DNS, CIFS mounting, read/write canary, reconnect automount, or 15-minute idle unmount.
+   - `make doctor` or `make verify`; these remain deferred until preparation of the final commit.
