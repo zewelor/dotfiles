@@ -1,14 +1,24 @@
 <!-- context7 -->
-Use Context7 MCP to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service — even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer — your training data may not reflect recent changes. Prefer this over web search for library docs.
+Use Context7 when a task depends on the documented behavior of an external
+library, framework, SDK, API, CLI tool, or cloud service, especially for:
 
-Do not use for: refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.
+- exact API, configuration, or CLI syntax
+- version-specific behavior, migrations, deprecations, or breaking changes
+- setup instructions or library-specific errors
+- unfamiliar or uncertain library behavior
+- explicit requests for current documentation
 
-## Steps
+Do not use Context7 merely because a dependency is mentioned. Skip it for
+refactoring, code review, business logic, general programming concepts, or
+when the relevant information is already provided by the user or was fetched
+earlier in the current task.
 
-1. Always start with `resolve-library-id` using the library name and the user's question, unless the user provides an exact library ID in `/org/project` format
-2. Pick the best match (ID format: `/org/project`) by: exact name match, description relevance, code snippet count, source reputation (High/Medium preferred), and benchmark score (higher is better). If results don't look right, try alternate names or queries (e.g., "next.js" not "nextjs", or rephrase the question). Use version-specific IDs when the user mentions a version
-3. `query-docs` with the selected library ID and the user's full question (not single words), scoped to a single concept. If the question spans multiple distinct concepts (e.g. routing and auth and caching), make a separate `query-docs` call per concept with the same library ID, unless the question is about how the concepts interact — combined queries dilute ranking and return shallow results for each topic
-4. Answer using the fetched docs
+Determine the installed version from the repository when possible. Reuse an
+already resolved library ID. Start with one focused documentation query and
+make additional queries only when the first result is insufficient.
+
+Do not rely solely on model memory when behavior may be version-sensitive or
+recently changed. Prefer Context7 over web search for library documentation.
 <!-- context7 -->
 
 ## Git Output
