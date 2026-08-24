@@ -35,20 +35,16 @@
         "clear": true,
         "nvim --headless": true,
         "rg": true,
-        "git clone": true,
         "/bin/ls": true,
         "/^mkdir -p temp && helm template victoria-metrics-k8s-stack charts/system-monitoring/victoria-metrics-k8s-stack > temp/after\\.yaml$/": {
             "approve": true,
             "matchCommandLine": true
         },
         "diff": true,
-        "docker compose": true,
         "awk": true,
         "rsvg-convert": true,
-        "tee": true,
         "uniq": true,
-        "time": true,
-        "git checkout": true
+        "time": true
     },
     "dev.containers.defaultExtensions": [
         "GitHub.copilot"
@@ -67,7 +63,7 @@
     "editor.renderControlCharacters": false,
     "editor.renderWhitespace": "trailing",
     "editor.tabSize": 2,
-    "explorer.confirmDelete": false,
+    "explorer.confirmDelete": true,
     "explorer.confirmDragAndDrop": false,
     "files.associations": {
         ".bash_history": "plaintext"
@@ -75,8 +71,8 @@
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "git.autofetch": true,
-    "git.confirmSync": false,
-    "git.enableSmartCommit": true,
+    "git.confirmSync": true,
+    "git.enableSmartCommit": false,
     "git.ignoreMissingGitWarning": true,
     "git.ignoreRebaseWarning": true,
     "git.openRepositoryInParentFolders": "never",

@@ -9,6 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
 BASE_DIR="$SCRIPT_DIR"
 HOME_DIR="$HOME"
 CONFIG_DIR="$HOME_DIR/.config"
+MISE_BIN="$HOME_DIR/.local/bin/mise"
+STOW_APPLY=false
 
 # Source shared helper functions (has, resolve_browser_cmd, etc.)
 source "$BASE_DIR/.zsh/helpers.zsh"
@@ -19,12 +21,14 @@ FONT_INSTALLER="$BASE_DIR/install-font"
 # Common paths and URLs.
 VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
 VAULT_KEYS=("envs.zsh")
+# Never let a caller-exported Vault token cross child-process boundaries.
+typeset -g +x VAULT_TOKEN
 
 # Note: has() and resolve_browser_cmd() are now in .zsh/helpers.zsh
 
 # Function to check if the profile is desktop.
 is_desktop() {
-  [[ "${DOTFILES_PROFILE:-server}" == "desktop" ]]
+  [[ "$DOTFILES_PROFILE" == "desktop" ]]
 }
 
 # Function to check if the shell is interactive.
@@ -115,33 +119,59 @@ require_zsh_login_shell() {
   exit 1
 }
 
-# Function to install symlinks using stow.
+# Ask once before applying any Stow package during this install run.
+configure_stow_apply() {
+  if [[ "${DOTFILES_STOW_APPLY:-}" == "1" ]]; then
+    STOW_APPLY=true
+    return
+  fi
+
+  if ! is_interactive; then
+    echo "Error: Non-interactive installs require DOTFILES_STOW_APPLY=1." >&2
+    return 1
+  fi
+
+  print_banner "Stow apply confirmation"
+  read -r "response?Apply all dotfiles packages after each successful Stow dry-run? [y/N] "
+  if [[ "$response" =~ ^[Yy]$ ]]; then
+    STOW_APPLY=true
+    return
+  fi
+
+  echo "Installation cancelled before applying dotfiles links."
+  return 1
+}
+
+# Update private data to the gitlink recorded by the desktop checkout.
+setup_private_submodule() {
+  is_desktop || return 0
+
+  print_banner "Updating private desktop submodule"
+  git -C "$BASE_DIR" -c submodule.prv.update=checkout submodule update --init -- prv
+
+  local expected_commit
+  local actual_commit
+  expected_commit=$(git -C "$BASE_DIR" rev-parse HEAD:prv)
+  actual_commit=$(git -C "$BASE_DIR/prv" rev-parse HEAD)
+  if [[ "$actual_commit" != "$expected_commit" ]]; then
+    echo "Error: prv is at $actual_commit, expected recorded gitlink $expected_commit." >&2
+    return 1
+  fi
+}
+
+# Dry-run every package, then apply under the single installation-wide gate.
 install_with_stow() {
   local stow_opts=("$@")
 
   echo "Running stow with: ${stow_opts[*]}"
   if ! stow -v "${stow_opts[@]}" -n; then
     echo "Error: Stow dry run failed with options: ${stow_opts[*]}" >&2
-    exit 1
+    return 1
   fi
 
-  # Auto-apply in non-interactive mode
-  if ! is_interactive; then
-    echo "Non-interactive mode detected. Applying changes automatically..."
-    stow -v "${stow_opts[@]}"
-    return
-  fi
-
-  read -r "response?Do you want to apply the changes? [y/N] "
-  case "$response" in
-    [Yy]*)
-      echo "Applying changes..."
-      stow -v "${stow_opts[@]}"
-      ;;
-    *)
-      echo "Changes were not applied."
-      ;;
-  esac
+  [[ "$STOW_APPLY" == "true" ]] || return 1
+  echo "Applying changes..."
+  stow -v "${stow_opts[@]}"
 }
 
 # Function to force-refresh the font cache when fonts are (re)linked.
@@ -163,7 +193,6 @@ refresh_font_cache() {
 }
 
 # Function to add secret environment variables from Vault.
-# Sets VAULT_TOKEN globally for reuse by other functions (e.g., setup_rclone).
 add_secret_envs_from_vault() {
   if ! is_interactive; then
     echo "Skipping secret envs setup in non-interactive mode."
@@ -178,7 +207,6 @@ add_secret_envs_from_vault() {
 
   read -rs "VAULT_TOKEN?Please provide your Vault token: "
   echo
-  export VAULT_TOKEN
 
   # Ensure restrictive permissions for secrets directory
   (umask 077 && mkdir -p "$HOME_DIR/.zshrc.d")
@@ -188,15 +216,15 @@ add_secret_envs_from_vault() {
     echo "Fetching data for key: $key"
 
     local vault_response
-    vault_response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL/$key") || {
+    vault_response=$(vault_http_get "$VAULT_URL/$key" "$VAULT_TOKEN") || {
       echo "Failed to fetch data for $key from Vault." >&2
-      continue
+      return 1
     }
 
     local target_file="$HOME_DIR/.zshrc.d/$key"
     echo "# Generated with install script from dotfiles" > "$target_file"
     # Use @sh for safe quoting to prevent injection from special characters
-    echo "$vault_response" | jq -r '.data.data | to_entries[] | "export " + .key + "=" + (.value | @sh)' >> "$target_file"
+    print -r -- "$vault_response" | jq -er '.data.data | to_entries[] | "export " + .key + "=" + (.value | @sh)' >> "$target_file"
     chmod 600 "$target_file"
 
     echo "Environment variables for $key have been saved to $target_file"
@@ -232,43 +260,97 @@ setup_atuin() {
   ln -sfn "$src" "$dst"
 }
 
-# Function to ensure SSH directories exist.
-setup_ssh() {
-  print_banner "Ensuring SSH configuration directory exists..."
-  mkdir -p "$HOME_DIR/.ssh/config.d/"
+# Keep runtime-owned parent directories real so Stow cannot fold them into the repo.
+prepare_stow_targets() {
+  print_banner "Preparing runtime-owned Stow targets..."
+  mkdir -p \
+    "$CONFIG_DIR/Code/User" \
+    "$CONFIG_DIR/atuin" \
+    "$CONFIG_DIR/mc" \
+    "$HOME_DIR/.ssh/config.d" \
+    "$HOME_DIR/.zshrc.d"
+
+  is_desktop || return 0
+  mkdir -p "$HOME_DIR/bin" "$HOME_DIR/.var/app"
+
+  local app_dir
+  for app_dir in "$BASE_DIR/prv/.var/app"/*(/N); do
+    mkdir -p "$HOME_DIR/.var/app/${app_dir:t}"
+  done
 }
 
+# Remove only dangling links that were created by this repository.
+migrate_retired_managed_links() {
+  local alacritty_link="$CONFIG_DIR/alacritty"
+  local terminal_wrapper_link="$HOME_DIR/bin/my_default_terminal_emulator"
+  local podrun_link="$HOME_DIR/bin/podrun"
 
-
-# Function to let mise use the GitHub CLI token for GitHub API calls during install.
-setup_mise_github_credentials() {
-  if ! has "gh"; then
-    echo "GitHub CLI not found; mise GitHub installs may be rate-limited."
-    return
+  if [[ ! -L "$alacritty_link" && ! -L "$terminal_wrapper_link" && ! -L "$podrun_link" ]]; then
+    return 0
   fi
 
-  if ! gh auth status --hostname github.com >/dev/null 2>&1; then
-    echo "GitHub CLI is not authenticated; skipping GITHUB_TOKEN export."
-    return
-  fi
+  remove_retired_stow_link() {
+    local link_path="$1"
+    local expected_target="$2"
+    local current_target
+    local resolved_target
 
-  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-    export GITHUB_TOKEN="$(gh auth token)"
-    echo "Exported GITHUB_TOKEN for this install run."
-  fi
+    [[ -L "$link_path" && ! -e "$link_path" ]] || return 0
+    current_target=$(readlink "$link_path")
+    if [[ "$current_target" == /* ]]; then
+      resolved_target="${current_target:a}"
+    else
+      resolved_target="${link_path:h}/${current_target}"
+      resolved_target="${resolved_target:a}"
+    fi
+
+    if [[ "$resolved_target" != "$expected_target" ]]; then
+      echo "Keeping unmanaged symlink: $link_path -> $current_target"
+      return 0
+    fi
+
+    rm -f -- "$link_path"
+    echo "Removed retired managed symlink: $link_path"
+  }
+
+  print_banner "Removing retired managed links"
+  remove_retired_stow_link "$alacritty_link" "$BASE_DIR/.config/alacritty"
+  remove_retired_stow_link "$terminal_wrapper_link" "$BASE_DIR/bin/my_default_terminal_emulator"
+  remove_retired_stow_link "$podrun_link" "$BASE_DIR/bin/podrun"
+  unfunction remove_retired_stow_link
 }
+
 
 
 # Function to install desktop-specific tools via mise.
 setup_mise_desktop_tools() {
-  if ! has "mise"; then
-    echo "mise not found; skipping mise desktop tools."
-    return
+  if [[ ! -x "$MISE_BIN" ]]; then
+    print_banner "Installing mise for the desktop profile..."
+    make -C "$BASE_DIR" mise
+  fi
+  if [[ ! -x "$MISE_BIN" ]]; then
+    echo "mise installation did not create an executable at $MISE_BIN." >&2
+    return 1
   fi
 
-  setup_mise_github_credentials
   print_banner "Installing tools via mise..."
-  MISE_CONFIG_DIR="$BASE_DIR/.config/mise" mise install
+  if ! has "gh" || ! gh auth status --hostname github.com >/dev/null 2>&1; then
+    echo "GitHub CLI is unavailable or unauthenticated; GitHub API rate limits may apply."
+  fi
+
+  # Upstream publishes a baseline x64 build for CPUs without AVX2.
+  if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]] \
+    && { [[ ! -r /proc/cpuinfo ]] || ! grep -qim1 '\<avx2\>' /proc/cpuinfo; }; then
+    local local_config="$BASE_DIR/.config/mise/config.local.toml"
+    print_banner "Selecting the baseline OpenCode build for this CPU..."
+    MISE_CONFIG_DIR="$BASE_DIR/.config/mise" "$MISE_BIN" use --yes --path "$local_config" \
+      'github:anomalyco/opencode[asset_pattern=opencode-linux-x64-baseline.tar.gz]@latest'
+  fi
+
+  MISE_CONFIG_DIR="$BASE_DIR/.config/mise" "$MISE_BIN" install
+
+  path=("$HOME_DIR/.local/share/mise/shims" "$HOME_DIR/.local/bin" $path)
+  typeset -U path
 }
 
 
@@ -306,22 +388,68 @@ setup_rclone() {
   # Fetch rclone password from Vault (stored in secret/configs/rclone)
   local vault_url_base="${VAULT_URL%/shell_envs/data}"
   local vault_response
-  vault_response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$vault_url_base/secret/data/configs/rclone") || {
+  vault_response=$(vault_http_get "$vault_url_base/secret/data/configs/rclone" "$VAULT_TOKEN") || {
     echo "Failed to fetch rclone secrets from Vault." >&2
     return 1
   }
 
   local nas_pass
-  nas_pass=$(echo "$vault_response" | jq -r '.data.data.nas_pass')
+  nas_pass=$(print -r -- "$vault_response" | jq -er '.data.data.nas_pass // empty') || {
+    echo "Failed to parse nas_pass from the Vault response." >&2
+    return 1
+  }
 
   if [[ -z "$nas_pass" || "$nas_pass" == "null" ]]; then
     echo "nas_pass not found in Vault at secret/configs/rclone." >&2
     return 1
   fi
 
-  # Generate config from template
-  sed "s|{{nas_pass}}|$nas_pass|g" "$template" > "$target"
-  chmod 600 "$target"
+  # Render the exact password line without treating secret characters as a pattern.
+  render_rclone_config() {
+    local source_file="$1"
+    local output_file="$2"
+    local secret="$3"
+    local line
+    local -i placeholder_count=0
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      [[ "$line" == "pass = {{nas_pass}}" ]] && (( ++placeholder_count ))
+    done < "$source_file"
+
+    if (( placeholder_count != 1 )); then
+      echo "Expected exactly one rclone password placeholder; found $placeholder_count." >&2
+      return 1
+    fi
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      if [[ "$line" == "pass = {{nas_pass}}" ]]; then
+        print -r -- "pass = $secret"
+      else
+        print -r -- "$line"
+      fi
+    done < "$source_file" > "$output_file"
+  }
+
+  if ! (
+    local target_tmp=""
+    cleanup_rclone_config() {
+      [[ -z "$target_tmp" || ! -e "$target_tmp" ]] || rm -f -- "$target_tmp"
+    }
+    trap cleanup_rclone_config EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
+    target_tmp=$(mktemp "$rclone_dir/.rclone.conf.XXXXXX")
+    chmod 600 "$target_tmp"
+    render_rclone_config "$template" "$target_tmp" "$nas_pass"
+    mv -f -- "$target_tmp" "$target"
+    target_tmp=""
+  ); then
+    unfunction render_rclone_config
+    return 1
+  fi
+  unfunction render_rclone_config
 
   echo "rclone config generated at $target"
 }
@@ -347,7 +475,12 @@ setup_storagebox_media_mount() {
   fi
 
   print_banner "Setting up Storage Box media mount..."
-  VAULT_TOKEN="${VAULT_TOKEN:-}" "$setup_script"
+  # Reuse the unexported token over stdin; never expose it in argv or env.
+  if [[ -n "${VAULT_TOKEN:-}" ]]; then
+    print -r -- "$VAULT_TOKEN" | "$setup_script"
+  else
+    "$setup_script"
+  fi
 }
 
 # Function to enable repo-managed user systemd units after stow linked them.
@@ -439,8 +572,7 @@ setup_ai_tool() {
       $skip && continue
       if [[ -d "$target_dir/$subdir" ]] && [[ ! -L "$target_dir/$subdir" ]]; then
         echo "ERROR: $target_dir/$subdir already exists as a directory." >&2
-        echo "To switch to dotfiles-managed symlink, remove it manually and re-run:" >&2
-        echo "  rm -rf $target_dir/$subdir && ./install" >&2
+        echo "Move or back it up manually, then re-run ./install." >&2
         return 1
       fi
     done
@@ -456,7 +588,7 @@ setup_codex() {
   setup_ai_tool "Codex" "$HOME_DIR/.codex" ".codex"
 
   # Stow shared agent commands into ~/.codex/commands/
-  stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.codex/commands" commands
+  install_with_stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.codex/commands" commands
 }
 
 # Function to setup OpenCode configuration via stow.
@@ -470,7 +602,7 @@ setup_opencode() {
     --ignore='bun\.lock'
 
   # Stow shared agent commands into ~/.opencode/commands/
-  stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.opencode/commands" commands
+  install_with_stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.opencode/commands" commands
 }
 
 # Function to setup Antigravity CLI configuration via stow.
@@ -485,19 +617,78 @@ setup_antigravity_cli() {
   # Stow shared agent skills into ~/.gemini/antigravity-cli/skills/.
   # Stow does not preserve the package name as a path component, so the
   # target must already include the `skills/` segment.
-  stow -d "$HOME_DIR/.agents" -t "$target_dir/skills" skills
+  install_with_stow -d "$HOME_DIR/.agents" -t "$target_dir/skills" skills
 }
 
-# Function to setup Summarize configuration via stow.
-# Uses stow to link stable config while leaving runtime data unmanaged.
+# Seed Summarize once while leaving its runtime-written config unmanaged.
 setup_summarize() {
   local target_dir="$HOME_DIR/.summarize"
   local config_file="$target_dir/config.json"
-  if [[ -f "$config_file" ]] && [[ ! -L "$config_file" ]]; then
-    print_banner "Removing existing non-symlinked Summarize config..."
-    rm -f "$config_file"
+  local seed_file="$BASE_DIR/.summarize/config.json"
+
+  print_banner "Setting up Summarize configuration..."
+  if [[ -L "$target_dir" || ( -e "$target_dir" && ! -d "$target_dir" ) ]]; then
+    echo "ERROR: Summarize runtime directory must be a real directory: $target_dir" >&2
+    return 1
   fi
-  setup_ai_tool "Summarize" "$target_dir" ".summarize"
+  mkdir -p "$target_dir"
+
+  if [[ ! -f "$seed_file" ]]; then
+    echo "ERROR: Summarize config seed is missing: $seed_file" >&2
+    return 1
+  fi
+
+  install_summarize_seed() (
+    local config_tmp=""
+    cleanup_summarize_seed() {
+      [[ -z "$config_tmp" || ! -e "$config_tmp" ]] || rm -f -- "$config_tmp"
+    }
+    trap cleanup_summarize_seed EXIT
+    trap 'exit 129' HUP
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+
+    config_tmp=$(mktemp "$target_dir/.config.json.XXXXXX")
+    command install -m 600 "$seed_file" "$config_tmp"
+    mv -f -- "$config_tmp" "$config_file"
+    config_tmp=""
+  )
+
+  if [[ -L "$config_file" ]]; then
+    local linked_file
+    linked_file=$(readlink -f "$config_file") || {
+      echo "ERROR: Cannot resolve Summarize config link: $config_file" >&2
+      unfunction install_summarize_seed
+      return 1
+    }
+    if [[ "$linked_file" != "$(readlink -f "$seed_file")" ]]; then
+      echo "ERROR: $config_file points outside this dotfiles repository." >&2
+      echo "Move or fix it manually, then re-run ./install." >&2
+      unfunction install_summarize_seed
+      return 1
+    fi
+
+    install_summarize_seed
+    unfunction install_summarize_seed
+    echo "Replaced the old managed link with a runtime-owned Summarize config."
+    return 0
+  fi
+
+  if [[ -e "$config_file" ]]; then
+    if [[ ! -f "$config_file" ]]; then
+      echo "ERROR: Summarize config must be a regular file: $config_file" >&2
+      unfunction install_summarize_seed
+      return 1
+    fi
+    echo "Keeping existing runtime-owned Summarize config: $config_file"
+    chmod 600 "$config_file"
+    unfunction install_summarize_seed
+    return 0
+  fi
+
+  install_summarize_seed
+  unfunction install_summarize_seed
+  echo "Seeded runtime-owned Summarize config at $config_file"
 }
 
 
@@ -509,18 +700,18 @@ setup_vim() {
   vim +PlugInstall +qall
 }
 
-# Function to install Neovim plugins via lazy.nvim while Neovim is available.
+# Function to restore Neovim plugins from the tracked lazy.nvim lockfile.
 setup_nvim_plugins() {
   local nvim_log
-  nvim_log=$(mktemp -t install-nvim-sync.XXXXXX)
+  nvim_log=$(mktemp -t install-nvim-restore.XXXXXX)
 
-  print_banner "Installing Neovim plugins via lazy.nvim..."
-  if nvim --headless -c 'Lazy! sync' -c 'qa' >"$nvim_log" 2>&1; then
+  print_banner "Restoring Neovim plugins from lazy-lock.json..."
+  if nvim --headless -c 'Lazy! restore' -c 'qa' >"$nvim_log" 2>&1; then
     rm -f "$nvim_log"
     return
   fi
 
-  echo "Neovim lazy sync failed; output follows:" >&2
+  echo "Neovim lazy restore failed; output follows:" >&2
   cat "$nvim_log" >&2
   rm -f "$nvim_log"
   return 1
@@ -531,13 +722,17 @@ configure_profile() {
   local profile_file="$HOME_DIR/.zshrc.d/profile.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"
 
+  validate_profile() {
+    local profile="$1"
+    if [[ "$profile" != "desktop" && "$profile" != "server" ]]; then
+      echo "Error: Invalid DOTFILES_PROFILE '$profile'. Must be 'desktop' or 'server'." >&2
+      return 1
+    fi
+  }
+
   # Check if DOTFILES_PROFILE is passed via environment
   if [[ -n "${DOTFILES_PROFILE:-}" ]]; then
-    # Validate the environment variable
-    if [[ "$DOTFILES_PROFILE" != "desktop" && "$DOTFILES_PROFILE" != "server" ]]; then
-      echo "Error: Invalid DOTFILES_PROFILE '$DOTFILES_PROFILE'. Must be 'desktop' or 'server'." >&2
-      exit 1
-    fi
+    validate_profile "$DOTFILES_PROFILE"
 
     # Check if the value in the file matches the environment variable to avoid redundant writes
     local current_file_profile=""
@@ -554,23 +749,24 @@ configure_profile() {
     else
       echo "Using provided DOTFILES_PROFILE: $DOTFILES_PROFILE (matches existing configuration)"
     fi
+    unfunction validate_profile
     return
   fi
 
   # Load existing profile if available
   if [[ -f "$profile_file" ]]; then
     source "$profile_file"
+    validate_profile "${DOTFILES_PROFILE:-}"
   fi
 
   # Check for non-interactive shell
   if ! is_interactive; then
     if [[ -z "${DOTFILES_PROFILE:-}" ]]; then
-      echo "Non-interactive shell: No profile set. Defaulting to 'server'."
-      export DOTFILES_PROFILE="server"
-      echo 'export DOTFILES_PROFILE="server"' > "$profile_file"
-    else
-      echo "Non-interactive shell: Using existing profile '$DOTFILES_PROFILE'."
+      echo "Error: Non-interactive install requires DOTFILES_PROFILE=desktop or DOTFILES_PROFILE=server." >&2
+      return 1
     fi
+    echo "Non-interactive shell: Using existing profile '$DOTFILES_PROFILE'."
+    unfunction validate_profile
     return
   fi
 
@@ -578,6 +774,7 @@ configure_profile() {
     echo "Current profile is: $DOTFILES_PROFILE"
     read -r "response?Do you want to change the profile? [y/N] "
     if [[ ! "$response" =~ ^[Yy]$ ]]; then
+      unfunction validate_profile
       return
     fi
   fi
@@ -600,11 +797,12 @@ configure_profile() {
       echo "Profile set to Server."
       ;;
     *)
-      echo "Invalid choice. Defaulting to Server."
-      echo 'export DOTFILES_PROFILE="server"' > "$profile_file"
-      export DOTFILES_PROFILE="server"
+      echo "Error: Invalid profile choice '$choice'." >&2
+      unfunction validate_profile
+      return 1
       ;;
   esac
+  unfunction validate_profile
 }
 
 # Main installation routine that coordinates all tasks.
@@ -613,25 +811,10 @@ run_installation() {
 
   init_colors
   require_zsh_login_shell
-
-  cleanup_retired_zinit_caches() {
-    setopt localoptions null_glob
-
-    local -a retired_paths=(
-      "$HOME_DIR/.zinit/plugins/b4b4r07---enhancd"
-      "$HOME_DIR/.zinit/snippets"/PZT::modules*
-    )
-    local -a existing_paths=()
-    local retired_path
-
-    for retired_path in "${retired_paths[@]}"; do
-      [[ -e "$retired_path" ]] && existing_paths+=("$retired_path")
-    done
-
-    (( ${#existing_paths[@]} == 0 )) && return 0
-
-    rm -rf -- "${existing_paths[@]}"
-  }
+  configure_stow_apply
+  setup_private_submodule
+  prepare_stow_targets
+  migrate_retired_managed_links
 
   # Ensure the local config file exists so it's ready for machine-specific overrides.
   local local_config="$BASE_DIR/.config/mise/config.local.toml"
@@ -642,10 +825,7 @@ run_installation() {
   fi
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
-  install_with_stow -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
-
-  print_banner "Removing retired Zinit caches"
-  cleanup_retired_zinit_caches
+  install_with_stow -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
 
   # Interactive prompts first (before long-running tasks like font cache)
   print_banner "Secret environment variables from Vault (optional)"
@@ -716,7 +896,7 @@ run_installation() {
   if is_desktop; then
     print_flatpak_manual_instructions
     print_banner "Stowing private overrides from prv/"
-    install_with_stow -t "$HOME_DIR" -d "prv" "."
+    install_with_stow -d "$BASE_DIR/prv" -t "$HOME_DIR" "."
 
     # Stow user scripts from .local/bin
     if [[ -d "$BASE_DIR/.local/bin" ]]; then
@@ -746,8 +926,6 @@ run_installation() {
 
   fi
 
-  setup_ssh
-
   local editor_config_file="$HOME_DIR/.zshrc.d/editor.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"
 
@@ -756,7 +934,7 @@ run_installation() {
     local nvim_version
     nvim_version=$(nvim --version | head -n1 | grep -oE 'v[0-9]+\.[0-9]+' | sed 's/v//')
     autoload -Uz is-at-least
-    if is-at-least "0.8" "$nvim_version"; then
+    if is-at-least "0.11" "$nvim_version"; then
       setup_nvim_plugins
       nvim_installed=true
 
@@ -769,7 +947,7 @@ alias vim='nvim'
 EOF
     else
       print_banner "Skipping Neovim setup"
-      echo "Neovim version $nvim_version is too old (< 0.8). Using Vim instead."
+      echo "Neovim version $nvim_version is too old (< 0.11). Using Vim instead."
     fi
   fi
 
@@ -801,7 +979,6 @@ EOF
 
 # Configure KDE Terminal settings and shortcuts if KDE tools are present.
 setup_kde_terminal_shortcut() {
-
   if ! has "kwriteconfig6" && ! has "kwriteconfig5"; then
     echo "KDE configuration tools not found; skipping KDE shortcut setup."
     return 0
@@ -811,45 +988,68 @@ setup_kde_terminal_shortcut() {
 
   local kwriter="kwriteconfig6"
   local kbuildsycoca="kbuildsycoca6"
+  local kreader="kreadconfig6"
   if ! has "kwriteconfig6"; then
     kwriter="kwriteconfig5"
     kbuildsycoca="kbuildsycoca5"
+    kreader="kreadconfig5"
   fi
 
-  # 1. Set my_default_terminal_emulator as preferred terminal emulator
-  "$kwriter" --file kdeglobals --group General --key TerminalApplication "/home/omen/bin/my_default_terminal_emulator"
+  # Prefer Foot, but never leave KDE pointing to the retired wrapper.
+  local terminal_application=""
+  if has "foot"; then
+    terminal_application="foot"
+  elif has "alacritty"; then
+    terminal_application="alacritty"
+  elif has "x-terminal-emulator"; then
+    terminal_application="x-terminal-emulator"
+  fi
 
-  # 2. Configure Meta+Ins shortcut for the custom terminal .desktop file
-  "$kwriter" --file kglobalshortcutsrc --group "services" --group "my-terminal.desktop" --key "_launch" "Meta+Ins"
+  if [[ -n "$terminal_application" ]]; then
+    "$kwriter" --file kdeglobals --group General --key TerminalApplication "$terminal_application"
+  elif has "$kreader"; then
+    local current_terminal
+    current_terminal=$("$kreader" --file kdeglobals --group General --key TerminalApplication --default "")
+    if [[ "$current_terminal" == "$HOME_DIR/bin/my_default_terminal_emulator" \
+      || "$current_terminal" == "/home/omen/bin/my_default_terminal_emulator" ]]; then
+      "$kwriter" --file kdeglobals --group General --key TerminalApplication --delete ""
+      echo "Removed the retired KDE terminal wrapper setting; no replacement terminal is installed."
+    fi
+  else
+    echo "No supported terminal or KDE config reader found; keeping the current terminal setting." >&2
+  fi
 
-  # 3. Rebuild the system configuration cache
+  # The desktop entry intentionally launches Foot directly.
+  if [[ "$terminal_application" == "foot" ]]; then
+    "$kwriter" --file kglobalshortcutsrc --group "services" --group "my-terminal.desktop" --key "_launch" "Meta+Ins"
+  else
+    "$kwriter" --file kglobalshortcutsrc --group "services" --group "my-terminal.desktop" --key "_launch" --delete ""
+    echo "Disabled Meta+Ins for my-terminal.desktop because Foot is not installed."
+  fi
+
+  # Rebuild the system configuration cache.
   if has "$kbuildsycoca"; then
     "$kbuildsycoca" --noincremental >/dev/null 2>&1
   fi
 
-  # 4. Trigger KDE to reload shortcut configurations if DBus is available
+  # Trigger KDE to reload shortcut configurations if DBus is available.
   if has "qdbus"; then
     qdbus org.kde.KWin /KWin reconfigure >/dev/null 2>&1 || true
     dbus-send --session --type=signal /KGlobalSettings org.kde.KGlobalSettings.notifyChange int32:3 int32:5 >/dev/null 2>&1 || true
   fi
 }
 
-# Offer to install a terminal emulator when both foot and alacritty are absent.
+# Offer to install Foot when it is absent.
 setup_terminal_emulator() {
   is_interactive || return 0
 
-  has alacritty && return 0
   has foot && return 0
 
   print_banner "Terminal emulator"
-  echo "Neither alacritty nor foot is installed."
-  read -r "choice?Install which terminal emulator? (1=alacritty, 2=foot, s=skip) [s] "
+  read -r "choice?Foot is not installed. Install foot and foot-terminfo? [y/N] "
 
   case "$choice" in
-    1)
-      sudo apt-get install -y --no-install-recommends alacritty
-      ;;
-    2)
+    [Yy]*)
       sudo apt-get install -y --no-install-recommends foot foot-terminfo
       ;;
     *)

@@ -62,7 +62,7 @@
   path = ~/.gitconfig.local
 [credential "https://github.com"]
 	helper = 
-	helper = !/home/omen/.local/share/mise/installs/github-cli/2.97.0/gh_2.97.0_linux_amd64/bin/gh auth git-credential
+	helper = !$HOME/.local/share/mise/shims/gh auth git-credential
 [credential "https://gist.github.com"]
 	helper = 
-	helper = !/home/omen/.local/share/mise/installs/github-cli/2.97.0/gh_2.97.0_linux_amd64/bin/gh auth git-credential
+	helper = !$HOME/.local/share/mise/shims/gh auth git-credential

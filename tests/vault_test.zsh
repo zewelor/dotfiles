@@ -1,5 +1,5 @@
 #!/usr/bin/env zsh
-# Test suite for Vault helper functions (kvault, kvlogin, kvlogout) in .zsh/lib/vault.zsh
+# Test suite for Vault helpers in .zsh/lib/vault.zsh and .zsh/helpers.zsh
 # Verifies:
 # 1. KVAULT_TOKEN is never passed in kubectl or remote process argv (no token in argv).
 # 2. Token is securely framed via stdin and exported to remote vault process.
@@ -7,6 +7,7 @@
 # 4. KVAULT_TOKEN remains a shell-local variable (never exported in env), even if previously exported.
 # 5. kvlogin successfully reads input, authenticates via kvault token lookup, and stores token locally.
 # 6. kvlogout clears KVAULT_TOKEN.
+# 7. HTTP Vault requests keep tokens out of curl argv and clean temporary credentials.
 
 set -euo pipefail
 
@@ -363,4 +364,104 @@ if ! grep -q "SUCCESS_LOADED" <<< "$START_K8S_PASS_OUT"; then
   exit 1
 fi
 echo "PASS: start-k8s-work enforces single-path contract and fails without fallback"
+
+echo "=== Test 12: HTTP helper keeps Vault token out of curl argv and cleans credentials ==="
+cat << 'EOF' > "$BIN_DIR/curl"
+#!/bin/sh
+printf '%s\n' "$@" > "$VAULT_TEST_LOGS/curl_argv.log"
+header_file=""
+for arg in "$@"; do
+  case "$arg" in
+    @*) header_file="${arg#@}" ;;
+  esac
+done
+[ -n "$header_file" ] || exit 2
+printf '%s\n' "$header_file" > "$VAULT_TEST_LOGS/curl_header_path.log"
+cat "$header_file" > "$VAULT_TEST_LOGS/curl_header.log"
+stat -c '%a' "$header_file" > "$VAULT_TEST_LOGS/curl_header_mode.log"
+printf '%s\n' '{"data":{"data":{"ok":true}}}'
+exit "${MOCK_CURL_STATUS:-0}"
+EOF
+chmod +x "$BIN_DIR/curl"
+
+HELPERS_LIB="$(cd "$(dirname "$0")/../.zsh" && pwd)/helpers.zsh"
+source "$HELPERS_LIB"
+HTTP_SENTINEL_TOKEN="http-sentinel-token-9988"
+HTTP_TMPDIR="$TEST_DIR/vault-http-tmp"
+mkdir -p "$HTTP_TMPDIR"
+TMPDIR="$HTTP_TMPDIR" vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" >/dev/null
+
+if grep -q "$HTTP_SENTINEL_TOKEN" "$LOG_DIR/curl_argv.log"; then
+  echo "FAIL: HTTP Vault token appeared in curl argv!" >&2
+  exit 1
+fi
+if ! grep -q "X-Vault-Token: $HTTP_SENTINEL_TOKEN" "$LOG_DIR/curl_header.log"; then
+  echo "FAIL: HTTP Vault token was not passed through the temporary header file!" >&2
+  exit 1
+fi
+if [[ "$(cat "$LOG_DIR/curl_header_mode.log")" != "600" ]]; then
+  echo "FAIL: Temporary Vault header did not use mode 0600!" >&2
+  exit 1
+fi
+HTTP_HEADER_PATH="$(cat "$LOG_DIR/curl_header_path.log")"
+if [[ -e "$HTTP_HEADER_PATH" || -n "$(find "$HTTP_TMPDIR" -mindepth 1 -print -quit)" ]]; then
+  echo "FAIL: Temporary Vault credential files were not removed!" >&2
+  exit 1
+fi
+echo "PASS: HTTP Vault token uses a mode-0600 header file, stays out of argv, and is cleaned up"
+
+echo "=== Test 13: HTTP helper propagates temporary header cleanup failure ==="
+RM_FAIL_BIN="$TEST_DIR/rm-fail-bin"
+mkdir -p "$RM_FAIL_BIN"
+cat << 'EOF' > "$RM_FAIL_BIN/rm"
+#!/bin/sh
+/bin/rm "$@"
+exit 73
+EOF
+chmod +x "$RM_FAIL_BIN/rm"
+
+HTTP_CLEANUP_STATUS=0
+PATH="$RM_FAIL_BIN:$PATH" TMPDIR="$HTTP_TMPDIR" \
+  vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" \
+  >/dev/null 2>"$LOG_DIR/curl_cleanup_error.log" || HTTP_CLEANUP_STATUS=$?
+if (( HTTP_CLEANUP_STATUS == 0 )); then
+  echo "FAIL: HTTP helper hid temporary header cleanup failure!" >&2
+  exit 1
+fi
+if ! grep -q "failed to remove temporary credential files" "$LOG_DIR/curl_cleanup_error.log"; then
+  echo "FAIL: HTTP helper did not report temporary header cleanup failure!" >&2
+  exit 1
+fi
+echo "PASS: HTTP helper propagates temporary header cleanup failure"
+
+echo "=== Test 14: HTTP helper propagates temporary directory cleanup failure ==="
+RMDIR_FAIL_BIN="$TEST_DIR/rmdir-fail-bin"
+mkdir -p "$RMDIR_FAIL_BIN"
+cat << 'EOF' > "$RMDIR_FAIL_BIN/rmdir"
+#!/bin/sh
+/usr/bin/rmdir "$@"
+exit 74
+EOF
+chmod +x "$RMDIR_FAIL_BIN/rmdir"
+
+HTTP_CLEANUP_STATUS=0
+PATH="$RMDIR_FAIL_BIN:$PATH" TMPDIR="$HTTP_TMPDIR" \
+  vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" \
+  >/dev/null 2>"$LOG_DIR/curl_cleanup_error.log" || HTTP_CLEANUP_STATUS=$?
+if (( HTTP_CLEANUP_STATUS == 0 )); then
+  echo "FAIL: HTTP helper hid temporary directory cleanup failure!" >&2
+  exit 1
+fi
+echo "PASS: HTTP helper propagates temporary directory cleanup failure"
+
+echo "=== Test 15: HTTP helper preserves curl failure when cleanup also fails ==="
+HTTP_CLEANUP_STATUS=0
+MOCK_CURL_STATUS=42 PATH="$RM_FAIL_BIN:$PATH" TMPDIR="$HTTP_TMPDIR" \
+  vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" \
+  >/dev/null 2>"$LOG_DIR/curl_cleanup_error.log" || HTTP_CLEANUP_STATUS=$?
+if (( HTTP_CLEANUP_STATUS != 42 )); then
+  echo "FAIL: HTTP helper returned $HTTP_CLEANUP_STATUS instead of curl status 42!" >&2
+  exit 1
+fi
+echo "PASS: HTTP helper preserves curl failure when cleanup also fails"
 echo "=== ALL VAULT HELPER TESTS PASSED ==="

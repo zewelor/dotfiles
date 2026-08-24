@@ -1,12 +1,6 @@
 {
 	"inputs": [
 		{
-			"id": "github_token",
-			"type": "promptString",
-			"description": "GitHub Personal Access Token",
-			"password": true
-		},
-		{
 			"id": "context7-key",
 			"type": "promptString",
 			"description": "Context7 API Key",

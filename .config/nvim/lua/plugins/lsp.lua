@@ -1,5 +1,4 @@
 -- lsp — Language Server Protocol for intelligent code features
-local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
 
 -- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed).
 -- Some Mason Ruby gem wrappers can keep stale shebangs after a Ruby upgrade, so
@@ -24,7 +23,7 @@ local function mise_bin(tool, opts)
   return path
 end
 
--- Build per-server opts table (shared between 0.11+ and <0.11 paths)
+-- Build the per-server options shared by the native LSP configurations.
 local function make_server_opts(server)
   local opts = {}
   if server == "lua_ls" then
@@ -66,9 +65,8 @@ return {
         "gopls",         -- Go
       },
       automatic_installation = true,
-      -- Neovim 0.11 introduced `vim.lsp.enable()` / `vim.lsp.config()`. Newer
-      -- mason-lspconfig versions use that API for auto-enabling; keep it off on 0.10.
-      automatic_enable = has_nvim_011,
+      -- Mason-managed servers use Neovim 0.11's native LSP enablement.
+      automatic_enable = true,
     },
   },
   -- LSP configuration
@@ -83,32 +81,17 @@ return {
       local mason_servers = { "lua_ls", "helm_ls", "ruff", "taplo", "marksman", "gopls" }
       local extra_servers = { "ruby_lsp" }
 
-      if has_nvim_011 then
-        -- Neovim 0.11+: use native vim.lsp.config() + vim.lsp.enable().
-        -- mason-lspconfig handles vim.lsp.enable() for Mason-managed servers.
-
-        for _, server in ipairs(mason_servers) do
-          vim.lsp.config(server, make_server_opts(server))
-        end
-        for _, server in ipairs(extra_servers) do
-          local opts = make_server_opts(server)
-          -- Only enable if mise resolved the binary (fail-fast)
-          if opts.cmd and vim.fn.executable(opts.cmd[1]) == 1 then
-            vim.lsp.config(server, opts)
-            vim.lsp.enable(server)
-          end
-        end
-      else
-        -- Neovim <0.11: fall back to deprecated lspconfig.setup() API.
-        local lspconfig = require("lspconfig")
-        for _, server in ipairs(mason_servers) do
-          lspconfig[server].setup(make_server_opts(server))
-        end
-        for _, server in ipairs(extra_servers) do
-          local opts = make_server_opts(server)
-          if opts.cmd and vim.fn.executable(opts.cmd[1]) == 1 then
-            lspconfig[server].setup(opts)
-          end
+      -- Neovim 0.11+: configure servers through the native LSP API.
+      -- mason-lspconfig handles vim.lsp.enable() for Mason-managed servers.
+      for _, server in ipairs(mason_servers) do
+        vim.lsp.config(server, make_server_opts(server))
+      end
+      for _, server in ipairs(extra_servers) do
+        local opts = make_server_opts(server)
+        -- Only enable if mise resolved the binary (fail-fast)
+        if opts.cmd and vim.fn.executable(opts.cmd[1]) == 1 then
+          vim.lsp.config(server, opts)
+          vim.lsp.enable(server)
         end
       end
     end,

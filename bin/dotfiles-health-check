@@ -191,6 +191,16 @@ check_zinit_installation() {
   fi
 }
 
+check_mise_bootstrap() {
+  local mise_bin="$HOME/.local/bin/mise"
+
+  if [[ -x "$mise_bin" ]]; then
+    pass "standalone mise bootstrap exists"
+  else
+    fail "standalone mise bootstrap missing at $mise_bin"
+  fi
+}
+
 check_ssh_directories() {
   if [[ -d "$HOME/.ssh/config.d" ]]; then
     pass "~/.ssh/config.d exists"
@@ -274,12 +284,12 @@ check_editor_support() {
     return
   fi
 
-  if is-at-least "0.8" "$nvim_version"; then
+  if is-at-least "0.11" "$nvim_version"; then
     pass "Neovim version is supported (${nvim_version})"
   elif has "vim"; then
-    warn "Neovim ${nvim_version} is older than 0.8; Vim fallback should be used"
+    warn "Neovim ${nvim_version} is older than 0.11; Vim fallback should be used"
   else
-    fail "Neovim ${nvim_version} is older than 0.8 and no Vim fallback is installed"
+    fail "Neovim ${nvim_version} is older than 0.11 and no Vim fallback is installed"
   fi
 }
 
@@ -322,17 +332,19 @@ print_section "Checking Vault helpers"
 check_vault_helper_tests
 
 if [[ "$MODE" == "verify" ]]; then
-  profile=""
+  profile=$(current_profile)
 
   print_section "Checking shell and environment drift"
   check_login_shell_is_zsh
   check_interactive_shell_startup
   check_zinit_installation
+  if [[ "$profile" == "desktop" ]]; then
+    check_mise_bootstrap
+  fi
   check_ssh_directories
   check_effective_ssh_auth_sock
   check_editor_support
 
-  profile=$(current_profile)
   if [[ "$profile" == "desktop" ]]; then
     if [[ -S "/run/user/$UID/gcr/ssh" ]]; then
       pass "Desktop profile detected and GCR SSH agent socket is available"

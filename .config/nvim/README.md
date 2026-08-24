@@ -2,10 +2,13 @@
 
 Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) jako menedżerem pluginów.
 
+**Wymaganie:** Neovim 0.11 lub nowszy. Konfiguracja korzysta wyłącznie z natywnego API LSP (`vim.lsp.config()` i `vim.lsp.enable()`).
+
 ## 📁 Struktura konfiguracji
 
 ```
 .config/nvim/
+├── README.md              # Dokumentacja konfiguracji
 ├── init.lua              # Entry point - ładuje wszystko
 ├── lua/
 │   ├── config/
@@ -26,21 +29,26 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── mini-surround.lua        # Surround (gsa/gsd/gsr)
 │   │   ├── neotree.lua              # File explorer
 │   │   ├── opencode.lua             # AI Assistant (opencode.nvim)
+│   │   ├── snacks.lua               # Utility modules
 │   │   ├── telescope.lua            # Wyszukiwanie i fuzzy finder
 │   │   ├── treesitter.lua           # Tree-sitter (Neovim 0.11+)
 │   │   ├── ts-comments.lua          # Commentstring dla natywnego gc/gcc
 │   │   ├── catppuccin.lua           # Motyw kolorów
 │   │   └── which-key.lua            # Podpowiedzi skrótów
-│   ├── ftdetect/
-│   │   ├── just.lua          # Filetype detection dla Justfile
-│   │   └── sshconfig.lua     # Filetype detection dla ~/.ssh/config.d/*
-│   └── after/
-│       └── ftplugin/
-│           ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
-│           ├── just.lua       # Commentstring (#) dla Justfile
-│           └── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
-└── lazy-lock.json       # Zablokowane wersje pluginów
+├── ftdetect/
+│   ├── just.lua          # Filetype detection dla Justfile
+│   └── sshconfig.lua     # Filetype detection dla ~/.ssh/config.d/*
+├── after/
+│   └── ftplugin/
+│       ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
+│       ├── go.lua         # Nadpisy dla Go
+│       ├── just.lua       # Commentstring (#) dla Justfile
+│       ├── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
+│       └── tmuxinator.lua # Nadpisy dla tmuxinator
+└── lazy-lock.json           # Śledzony lockfile wersji pluginów
 ```
+
+`lazy-lock.json` jest śledzony przez Git, aby instalacje na różnych hostach zaczynały od tego samego zestawu wersji pluginów. `./install` odtwarza przypięte wersje przez `:Lazy restore`; `:Lazy sync` / `update-all` służy do świadomej aktualizacji lockfile.
 
 ## ⚙️ Core Options
 
@@ -202,8 +210,8 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 # Via Homebrew (macOS/Linux)
 brew install anomalyco/opencode/opencode
 
-# Lub przez mise (zgodnie z zasadami repo)
-mise use -g github:anomalyco/opencode
+# Lub z repozytorium dotfiles przez mise
+cd ~/dotfiles && mise install github:anomalyco/opencode
 ```
 
 **Ważne**: Uruchom `opencode` z flagą `--port` aby udostępnić serwer dla Neovim:
@@ -285,7 +293,7 @@ opencode --port
 
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
-- **Wymagania**: Neovim 0.11+ (na starszych wersjach plugin jest automatycznie wyłączony).
+- **Wymagania**: Neovim 0.11+.
 - **Auto-install**: Brakujące parsery (lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm, go) są instalowane automatycznie przy pierwszym starcie. Wymaga kompilacji (gcc/clang).
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery
@@ -320,8 +328,8 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 **Konfiguracja API**:
 - **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
-- **Neovim <0.11**: fallback na klasyczne `lspconfig[server].setup()` (deprecated, wyłączone na nowszych wersjach).
-- **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which` (działa z `mise activate`, nie wymaga shims w PATH). Jeśli `mise` nie rozwiąże `ruby-lsp`, klient nie startuje zamiast używać potencjalnie przestarzałego wrappera Masona z `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
+- **Neovim <0.11**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
+- **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which`; standalone `mise` jest dostępne z `.zshenv`, bez `mise activate` i hooków zmiany katalogu. Jeśli `mise` nie rozwiąże `ruby-lsp`, klient nie startuje zamiast używać potencjalnie przestarzałego wrappera Masona z `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
 
 **Komendy**:
 - `:Mason` — UI menedżera serwerów
@@ -485,16 +493,22 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 ## 🛠️ Instalacja
 
 ```bash
-# Backup starej konfiguracji (jeśli istnieje)
-mv ~/.config/nvim ~/.config/nvim.backup
-mv ~/.local/share/nvim ~/.local/share/nvim.backup
+# Przejdź do repozytorium dotfiles
+cd ~/dotfiles
 
-# Skopiuj tę konfigurację
-cp -r ~/dotfiles/.config/nvim ~/.config/
+# Najpierw sprawdź planowane linki
+stow -n -v -d .config -t ~/.config nvim
 
-# Uruchom Neovim - pluginy zainstalują się automatycznie
+# Zastosuj linkowanie konfiguracji przez GNU Stow
+stow -v -d .config -t ~/.config nvim
+
+# Uruchom Neovim - brakujące pluginy zainstalują się z wersji w lockfile
 nvim
 ```
+
+Pełny `./install` uruchamia dodatkowo `:Lazy restore`, aby przywrócić wszystkie
+pluginy do wersji zapisanych w `lazy-lock.json`. `:Lazy sync` jest zarezerwowane
+dla świadomej aktualizacji pluginów i lockfile.
 
 Przy pierwszym uruchomieniu:
 
@@ -528,10 +542,10 @@ Przy pierwszym uruchomieniu:
 
 ## 🔍 Troubleshooting
 
-### Pluginy się nie instalują
+### Pluginy nie odpowiadają wersjom z lockfile
 
 ```vim
-:Lazy sync
+:Lazy restore
 ```
 
 ### Kwadraty / brak ikon (Neo-tree, menu autouzupełniania)

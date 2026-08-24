@@ -2,7 +2,7 @@
 verbose=true
 pause_after_run=1
 shell_patterns=true
-auto_save_setup=true
+auto_save_setup=false
 preallocate_space=false
 auto_menu=false
 use_internal_view=true
@@ -122,7 +122,6 @@ color_terminals=
 screen-256color=
 
 tmux-256color=
-alacritty=
 foot=
 
 [Panels]

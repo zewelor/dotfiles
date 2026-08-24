@@ -182,7 +182,7 @@ Minimalne, spójne formaty:
 ## Organizacja dotfiles (publiczne vs. desktop/private)
 
 Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
-- **Konfiguracje publiczne i wspólne** (używane zarówno na desktopie, jak i serwerach, np. Neovim, tmux, Alacritty/Foot): powinny znajdować się w głównym katalogu repozytorium (np. `.config/foot/`, `.config/nvim/`).
+- **Konfiguracje publiczne i wspólne** (używane zarówno na desktopie, jak i serwerach, np. Neovim, tmux, Foot): powinny znajdować się w głównym katalogu repozytorium (np. `.config/foot/`, `.config/nvim/`).
 - **Konfiguracje specyficzne dla profilu desktopowego / prywatne** (np. specyficzne dla środowiska KDE Plasma jak `klaunchrc`, ustawienia prywatne SSH, tmuxinator): muszą znajdować się w katalogu `prv/` (np. `prv/.config/klaunchrc`).
 - Skrypt `install` automatycznie linkuje zawartość katalogu `prv/` do katalogu domowego użytkownika **tylko** wtedy, gdy profil to `desktop` (`is_desktop`).
 
@@ -203,6 +203,13 @@ Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
 
 ## Zsh / CLI managers (`zinit` vs `mise`)
 
+- **Aktualna polityka profili:** `mise` jest instalowane i wymagane tylko dla
+  profilu `desktop`. Na profilu `server` pozostaje opcjonalne: `update-all`
+  aktualizuje je, jeśli jest dostępne, ale jego brak nie jest błędem. Zmień tę
+  politykę dopiero, gdy pojawi się konkretny serwerowy use case, wartość albo
+  blocker uzasadniający instalację. Poniższe reguły migracji i wyjątków nadal
+  obowiązują przy wyborze standalone CLI, ale nie czynią `mise` wymaganiem
+  serwerowym.
 - `mise` backend `ubi:*` jest **deprecated**. Dla GitHub Releases używaj `github:owner/repo` zamiast `ubi:owner/repo`.
 - Źródła prawdy (sprawdzaj przed zmianą):
   - https://mise.jdx.dev/
@@ -217,6 +224,7 @@ Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
 - **Lokalizacja konfiguracji `mise`:**
   - Konfiguracja `mise` (zarówno `config.toml` jak i `config.local.toml`) jest zlokalizowana w repozytorium dotfiles w `.config/mise/`.
   - Aby zapobiec nadpisywaniu symlinków przez automatyczne zapisy `mise` (które zastępują symlinki zwykłymi plikami) oraz aby wyeliminować błąd `github.credential_command` ignorowanego w nieglobalnych konfiguracjach (CVE-2026-55448), cała globalna konfiguracja `mise` jest kierowana bezpośrednio do repozytorium za pomocą zmiennej środowiskowej `export MISE_CONFIG_DIR="${HOME}/dotfiles/.config/mise"` w `.zshenv`.
+  - `.zshenv` dodaje standalone `mise` i jego shims do `PATH` bez `mise activate`; celowo nie instalujemy hooków aktywacyjnych `precmd`/`chpwd` ani automatycznego odświeżania env przy zmianie katalogu.
   - Dzięki temu polecenia `mise use -g` zapisują konfigurację bezpośrednio do repozytorium dotfiles.
   - Maszynowo-specyficzne (lokalne) konfiguracje powinny być dopisywane do `config.local.toml` w tym samym katalogu (jest on zignorowany w `.gitignore`, więc nie trafi do gita).
 
@@ -229,24 +237,24 @@ Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
   - przypadków gdzie kluczowa jest integracja z frameworkiem `zinit` (np. specyficzne hooki `atclone/atpull/src`).
 - **Instalacja CLI przez Zinit:** Dla narzędzi CLI instalowanych przez `zinit` (np. jako wyjątki) **zawsze używaj modyfikatora `sbin`** (z `zinit-annex-bin-gem-node`) zamiast `as"program"` i `pick`. Unika to zanieczyszczania `$PATH` katalogami wtyczek, co powodowało, że pliki pomocnicze (np. manpage `just.1`, foldery wersji, pliki markdown) były traktowane przez Zsh jako polecenia i pokazywały się w autouzupełnianiu.
   - **Ważne:** Dodatki Zinit (annexy) muszą być ładowane synchronicznie (bez `wait`), aby parser Zinit od startu powłoki rozpoznawał słowa kluczowe takie jak `sbin` (w przeciwnym razie wyrzuci błąd `Unknown subcommand sbin...`).
-- Wyjątki zaakceptowane: `atuin`, `starship`, `just`, `git-fixup` i `dust` zostają w `zinit` (shell init/completions, brak kompatybilnego backendu lub świadoma decyzja maintainerska).
+- Wyjątki zaakceptowane: `atuin`, `starship`, `just` i `dust` zostają w `zinit` (shell init/completions lub świadoma decyzja maintainerska).
 - Przy każdej nowej binarce dopisz krótko w opisie zmiany: dlaczego `mise` albo dlaczego wyjątek i zostaje `zinit`.
 - Aktualizacje:
-  - `update-all` ma aktualizować zarówno `zinit`, jak i `mise` (okres przejściowy),
+  - `update-all` ma aktualizować pluginy `zinit`, samo `mise` i narzędzia zarządzane przez `mise`,
   - docelowo ograniczamy binarki w `zinit` na rzecz `mise`.
 
 ### Inwentaryzacja (stan obecny) i kierunek migracji
 
-- `@keis/git-fixup` (`git-fixup`) — zostaje w `zinit` (brak działającego źródła `mise github:*`; repo nie publikuje Releases pod `latest`).
+- `git-fixup` — natywna funkcja Zsh w `.zshrc`; brak zewnętrznej binarki.
 - `@casey/just` (`just`) — zostaje w `zinit` (intentional exception).
 - `@cli/cli` (`gh`) — uses mise registry shorthand `github-cli`.
-- `@jdx/mise` (`mise`) — może zostać w `zinit` jako bootstrap, ale rozważyć system package lub self-hosted install dla uproszczenia łańcucha zależności.
+- `@jdx/mise` (`mise`) — bootstrapowane tylko dla profilu `desktop` z wersjonowanego oficjalnego release installera do `~/.local/bin/mise`; wersja i SHA-256 installera są przypięte w `Makefile`; nie jest zarządzane przez `zinit`.
 - `@jdx/usage` (`usage`) — installed via `mise use -g usage` (no longer in zinit).
-- `@openai/codex` (`codex`) — uses mise registry shorthand `codex` (aqua backend; avoids `rust-v*` tag resolution issue).
+- `@openai/codex` (`codex`) — uses explicit `aqua:openai/codex` backend to avoid registry shorthand drift.
 - `@yt-dlp/yt-dlp` (`yt-dlp`) — uses mise registry shorthand `yt-dlp`.
 - `@steipete/summarize` (`summarize`) — managed via `mise` (`npm` backend; not in registry).
 - `@zewelor/sourcetap` (`sourcetap`) — uses `mise` GitHub backend as a standalone user-owned CLI with GitHub Releases.
-- `@anomalyco/opencode` (`opencode`) — candidate for `mise` (registry shorthand `opencode` available).
+- `@anomalyco/opencode` (`opencode`) — uses the `mise` GitHub backend; `install` persists the upstream `-baseline` asset override in `config.local.toml` on Linux x86_64 CPUs without AVX2.
 - `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).
 - `starship/starship` (`starship`) — zostaje w `zinit` (intentional exception: shell init/completions).
 

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "timezone": "Europe/Lisbon",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update the pinned mise installer and its SHA-256 together",
+      "managerFilePatterns": ["/^Makefile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+) versioning=(?<versioning>\\S+)\\s+MISE_VERSION=(?<currentValue>\\S+)\\s+MISE_INSTALLER_SHA256=(?<currentDigest>[a-f0-9]{64})"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Allow mise bootstrap updates during the monthly window",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["github-release-attachments"],
+      "matchPackageNames": ["jdx/mise"],
+      "schedule": ["* 0-3 1 * *"]
+    }
+  ]
+}

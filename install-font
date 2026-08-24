@@ -7,7 +7,9 @@ setopt nullglob
 REQUIRED_DEPS=(fc-list fc-cache curl unzip)
 FONT_NAME="${1:-}"
 FONT_SUBFAMILY_FILTER="${2:-}"
+FONT_STYLE_FILTER="${3:-}"
 USER_FONTS_DIR="${USER_FONTS_DIR:-$HOME/.local/share/fonts}"
+typeset -a FONT_STYLES=()
 
 has() { command -v "${1:-}" >/dev/null 2>&1; }
 
@@ -28,10 +30,42 @@ check_dependencies() {
 
 ensure_font_name() {
   if [[ -z "$FONT_NAME" ]]; then
-    echo "Usage: install-font <Nerd Font Name> [subfamily filter]"
-    echo "E.g.: install-font 'Hack' Mono"
+    echo "Usage: install-font <Nerd Font Name> [subfamily filter] [styles]"
+    echo "E.g.: install-font 'Hack' Mono Regular,Bold"
     exit 1
   fi
+}
+
+parse_style_filter() {
+  [[ -z "$FONT_STYLE_FILTER" ]] && return 0
+
+  local -a raw_styles=() normalized_styles=()
+  local style
+  IFS=',' read -rA raw_styles <<< "$FONT_STYLE_FILTER"
+  for style in "${raw_styles[@]}"; do
+    style="${style//[[:space:]]/}"
+    if [[ -z "$style" ]]; then
+      echo "Style filter must contain non-empty comma-separated values."
+      exit 1
+    fi
+    normalized_styles+=("${style:l}")
+  done
+  FONT_STYLES=("${normalized_styles[@]}")
+}
+
+matches_style_filter() {
+  [[ -z "$FONT_STYLE_FILTER" ]] && return 0
+
+  local filename="${1##*/}"
+  local font_style="${filename%.*}"
+  font_style="${font_style##*-}"
+  font_style="${font_style:l}"
+
+  local style
+  for style in "${FONT_STYLES[@]}"; do
+    [[ "$font_style" == "$style" ]] && return 0
+  done
+  return 1
 }
 
 download_and_install_font() {
@@ -53,7 +87,7 @@ download_and_install_font() {
   local installed=0
   local filter_lower="${FONT_SUBFAMILY_FILTER:l}"
 
-  for candidate in "$temp_dir"/*.{otf,ttf,woff,woff2,eot,svg}; do
+  for candidate in "$temp_dir"/*.{otf,ttf}; do
     [[ -e "$candidate" ]] || continue
     if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
       local base="${candidate##*/}"
@@ -62,14 +96,17 @@ download_and_install_font() {
         continue
       fi
     fi
+    if ! matches_style_filter "$candidate"; then
+      continue
+    fi
 
     mv "$candidate" "$USER_FONTS_DIR/"
     installed=$((installed + 1))
   done
 
   if (( installed == 0 )); then
-    if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
-      echo "No files matching \"$FONT_SUBFAMILY_FILTER\" were found in the $FONT_NAME release."
+    if [[ -n "$FONT_SUBFAMILY_FILTER" || -n "$FONT_STYLE_FILTER" ]]; then
+      echo "No files matching the requested filters were found in the $FONT_NAME release."
     else
       echo "No font files were extracted from the $FONT_NAME release."
     fi
@@ -82,12 +119,12 @@ download_and_install_font() {
   fi
 
   if [[ "${FONT_CACHE_QUIET:-0}" == 1 ]]; then
-    fc-cache -fv "$cache_target" >/dev/null 2>&1 || fc-cache -fv >/dev/null 2>&1
+    fc-cache -fv "$cache_target" >/dev/null 2>&1
   else
-    fc-cache -fv "$cache_target" || fc-cache -fv
+    fc-cache -fv "$cache_target"
   fi
-  if [[ -n "$FONT_SUBFAMILY_FILTER" ]]; then
-    echo "<--- Installed $installed $FONT_NAME font(s) matching \"$FONT_SUBFAMILY_FILTER\" to $USER_FONTS_DIR --->"
+  if [[ -n "$FONT_SUBFAMILY_FILTER" || -n "$FONT_STYLE_FILTER" ]]; then
+    echo "<--- Installed $installed $FONT_NAME font(s) matching the requested filters to $USER_FONTS_DIR --->"
   else
     echo "<--- $FONT_NAME installed to $USER_FONTS_DIR --->"
   fi
@@ -96,6 +133,7 @@ download_and_install_font() {
 main() {
   check_dependencies
   ensure_font_name
+  parse_style_filter
   download_and_install_font
 }
 

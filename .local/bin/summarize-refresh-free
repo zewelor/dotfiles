@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+for command_name in summarize jq; do
+    if ! command -v "$command_name" >/dev/null 2>&1; then
+        echo "Blad: '$command_name' nie jest zainstalowany." >&2
+        exit 1
+    fi
+done
+
+# 1. Odswiez darmowe modele (to zastapi kandydatow w sekcji free)
+summarize refresh-free
+
+# 2. Wstaw 'cli/agy' z powrotem na sam poczatek listy kandydatow w sekcji 'free'
+CONFIG="$HOME/.summarize/config.json"
+
+if [ -f "$CONFIG" ]; then
+    TMP_CONFIG=$(mktemp "${CONFIG}.XXXXXX")
+    trap '[[ -z "${TMP_CONFIG:-}" ]] || rm -f -- "$TMP_CONFIG"' EXIT
+    trap 'exit 130' HUP INT TERM
+    # Wstawia cli/agy na poczatek, usuwajac ewentualne duplikaty z dalszej czesci listy
+    jq '.models.free.rules[0].candidates = ["cli/agy"] + (.models.free.rules[0].candidates | map(select(. != "cli/agy")))' "$CONFIG" > "$TMP_CONFIG"
+    mv -f -- "$TMP_CONFIG" "$CONFIG"
+    TMP_CONFIG=""
+
+    echo "Modele odswiezone. Antigravity CLI zostalo ustawione jako priorytet."
+else
+    echo "Blad: Nie znaleziono pliku konfiguracyjnego $CONFIG"
+    exit 1
+fi

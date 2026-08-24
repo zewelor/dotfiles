@@ -4,6 +4,55 @@
 # Check if a command exists
 has() { command -v "${1:-}" >/dev/null 2>&1; }
 
+# Fetch a Vault JSON response without exposing the token in process arguments.
+vault_http_get() (
+  local url="${1:-}"
+  local token="${2:-}"
+  local temp_root="${TMPDIR:-/tmp}"
+  local temp_dir=""
+  local header_file=""
+  local -i curl_status=0
+  local -i cleanup_status=0
+
+  cleanup_vault_http_temp() {
+    local -i cleanup_status=0
+    if [[ -n "$header_file" && -e "$header_file" ]] && ! command rm -f -- "$header_file"; then
+      cleanup_status=1
+    fi
+    if [[ -n "$temp_dir" && -d "$temp_dir" ]] && ! command rmdir -- "$temp_dir"; then
+      cleanup_status=1
+    fi
+    if (( cleanup_status != 0 )); then
+      print -u2 -- "vault_http_get: failed to remove temporary credential files"
+    fi
+    return "$cleanup_status"
+  }
+
+  if [[ -z "$url" || -z "$token" ]]; then
+    print -u2 -- "vault_http_get: URL and token are required"
+    return 1
+  fi
+
+  temp_dir=$(mktemp -d "$temp_root/dotfiles-vault.XXXXXX") || return 1
+  header_file="$temp_dir/header"
+  trap cleanup_vault_http_temp EXIT
+  trap 'trap - EXIT; cleanup_vault_http_temp; exit 130' HUP INT TERM
+  if ! (umask 077 && print -r -- "X-Vault-Token: $token" > "$header_file"); then
+    return 1
+  fi
+
+  curl --fail --silent --show-error --request GET --header "@$header_file" "$url" || curl_status=$?
+
+  trap - EXIT
+  cleanup_vault_http_temp || cleanup_status=$?
+  trap - HUP INT TERM
+
+  if (( curl_status != 0 )); then
+    return "$curl_status"
+  fi
+  return "$cleanup_status"
+)
+
 # Return success when a symlink already points to the expected target.
 symlink_points_to() {
   local link_path="${1:-}"

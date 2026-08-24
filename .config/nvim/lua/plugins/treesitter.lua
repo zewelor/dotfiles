@@ -1,9 +1,6 @@
 -- nvim-treesitter — Tree-sitter parsers and queries (Neovim 0.11+)
-local has_nvim_011 = vim.g.dotfiles_has_nvim_011 == true
-
 return {
   "nvim-treesitter/nvim-treesitter",
-  enabled = has_nvim_011,
   lazy = false,
   build = ":TSUpdate",
   config = function()

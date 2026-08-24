@@ -9,6 +9,22 @@ Some examples here:
 git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
 ```
 
+`make base` installs the core packages and Zinit, but does not install `mise`.
+The desktop profile bootstraps the official standalone `mise` into
+`~/.local/bin/mise` via `make mise`, using a versioned release installer whose
+SHA-256 is pinned in `Makefile`. Server installs do not require `mise`; when it
+is present, `update-all` can self-update the installed binary. Renovate checks
+the bootstrap monthly and updates the release version together with the
+installer's SHA-256. `.zshenv` exposes mise and its shims through a static
+`PATH` without prompt or directory-change hooks. Zinit only manages shell
+plugins and the small intentional CLI exceptions. `./install` asks once before
+applying all successful Stow dry-runs. For automation, set both values
+explicitly:
+
+```bash
+DOTFILES_PROFILE=server DOTFILES_STOW_APPLY=1 ./install
+```
+
 ## Health Checks & Testing
 
 Use the built-in health checks and regression test suite before or after bigger changes:
@@ -44,6 +60,8 @@ DOTFILES_ALLOW_NON_ZSH_SHELL=1 ./install
 **Font locations**:
 
 - **Current user** (default): `~/.local/share/fonts/`
+- The tracked JetBrains Mono Nerd Font set contains only `Regular`, `Bold`,
+  `Italic`, and `BoldItalic`. `make update-fonts` preserves that four-style set.
 
 ## Local customizations
 
@@ -51,10 +69,19 @@ Local customization can be done by putting files in the ~/.zshrc.d/ directory. T
 
 ## Terminal emulators
 
-- `alacritty` and `foot` can coexist; this repo does not force a full migration.
-- `foot` is installed as an optional desktop package together with `foot-terminfo`.
-- Existing `alacritty` config remains intact, so you can switch per launch instead of per machine.
-- New `foot` config lives in `~/.config/foot/foot.ini` and mirrors the current font, theme, clipboard, and keybinding workflow as closely as possible.
+- Foot is the only managed terminal emulator and the KDE default.
+- Its configuration lives in `~/.config/foot/foot.ini` and uses the transparent Catppuccin Latte theme.
+- On desktop installs, `./install` offers to install `foot` with `foot-terminfo` when it is missing.
+
+## Summarize
+
+- `.summarize/config.json` is a seed, not a Stow package. Summarize rewrites
+  `~/.summarize/config.json` during `refresh-free`, so the runtime copy must be a
+  regular user-owned file.
+- `./install` migrates the old repository symlink once, preserves an existing
+  runtime-owned config, and creates new copies with mode `0600`.
+- `summarize-refresh-free` refreshes OpenRouter free models and keeps
+  `cli/agy` as the first fallback candidate.
 
 ## rclone NAS mount (desktop only)
 
@@ -393,271 +420,7 @@ To switch the accent, replace the theme file/config reference with the desired a
 
 ## Neovim config (lazy.nvim)
 
-Minimal, modern Neovim configuration optimized for fast terminal editing.
-Full Neovim docs, keymaps and workflow examples live in [`.config/nvim/README.md`](./.config/nvim/README.md).
-
-### Neovim installation
-
-```bash
-make install  # Uses stow to symlink .config/nvim → ~/.config/nvim
-nvim          # On the first launch, lazy.nvim installs automatically
-```
-
-After the first launch:
-
-1. Lazy.nvim automatically installs all plugins
-2. Blink.cmp compiles native components (Rust)
-
-### Configuration structure
-
-```text
-.config/nvim/
-├── init.lua                    # Entry point (loads lazy + options)
-├── lua/
-│   ├── config/
-│   │   ├── lazy.lua           # Bootstrap lazy.nvim, leader keys
-│   │   └── options.lua        # All vim.opt settings
-│   └── plugins/               # Plugins (auto-imported by lazy.nvim)
-│       ├── blink.lua          # Completion engine
-│       ├── gitsigns.lua       # Partial git staging + blame
-│       ├── mini-icons.lua     # Icons (lightweight alternative to nvim-web-devicons)
-│       ├── neotree.lua        # File explorer (sidebar)
-│       ├── catppuccin.lua     # Colorscheme (light theme)
-│       └── which-key.lua      # Keybinding hints (popup menu)
-```
-
----
-
-## 🔌 Plugins and usage
-
-### **lazy.nvim** — Plugin manager
-
-- **Repo**: [folke/lazy.nvim](https://github.com/folke/lazy.nvim)
-- **Purpose**: Modern plugin manager with lazy-loading and automatic updates
-- **Commands**:
-  - `:Lazy` — open the dashboard with the plugin list
-  - `:Lazy sync` — update all plugins
-  - `:Lazy clean` — remove unused plugins
-
-**Leader key**: `Space` (set in `lazy.lua`)
-
----
-
-### **blink.cmp** — Completion engine
-
-- **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
-- **Purpose**: Fast, modern autocompletion (Rust + Lua)
-- **Sources**: LSP, path, snippets, buffer
-- **Keymaps** (preset: `default`):
-  - `Ctrl-Space` — open completion menu or docs
-  - `Ctrl-n` / `Ctrl-p` or `↑` / `↓` — navigate items
-  - `Ctrl-y` — accept selected completion
-  - `Ctrl-e` — close menu
-  - `Tab` / `Shift-Tab` — navigate snippets (when active)
-
-**Fuzzy matching**: Rust implementation (falls back to Lua if Rust is unavailable)
-
----
-
-### **neo-tree.nvim** — File explorer
-
-- **Repo**: [nvim-neo-tree/neo-tree.nvim](https://github.com/nvim-neo-tree/neo-tree.nvim)
-- **Purpose**: Modern file explorer with a tree view (successor to NERDTree)
-- **Dependencies**: mini.icons (file/folder icons)
-- **Keymaps** (neo-tree defaults):
-  - `:Neotree` — open sidebar
-  - `:Neotree toggle` — toggle sidebar
-  - In the sidebar:
-    - `Enter` — open file/folder
-    - `a` — add new file
-    - `d` — delete file
-    - `r` — rename
-    - `?` — help (full keymap list)
-
----
-
-### **mini.icons** — Icon provider
-
-- **Repo**: [nvim-mini/mini.icons](https://github.com/nvim-mini/mini.icons)
-- **Purpose**: Lightweight alternative to nvim-web-devicons (fewer dependencies, faster)
-- **Features**:
-  - Icons for files, folders, LSP, diagnostics
-  - Mock for nvim-web-devicons (backward compatible)
-  - Used by: neo-tree, which-key
-- **Requirements**: Nerd Font in your terminal
-
----
-
-### **which-key.nvim** — Keybinding hints
-
-- **Repo**: [folke/which-key.nvim](https://github.com/folke/which-key.nvim)
-- **Purpose**: Shows available keybindings in a popup as you start a key sequence
-- **Usage**:
-  - Press `Space` (leader) → wait ~200ms → a menu appears with available options
-  - `<Space>?` — show all keybindings for the current buffer
-- **Preset**: `modern` (v3.x)
-- **Icons**: set to ASCII. Mapping icons disabled (`icons.mappings = false`), labels adjusted (e.g., `Space` → `SPC`, `Tab` → `TAB`, arrows → `Left/Right/Up/Down`) and simple separators (breadcrumb `>`, separator `->`, group empty). This avoids missing glyphs even without a Nerd Font. If you want full NF icons back, remove these overrides in `which-key.lua`.
-
-**How it works**: When you press the leader key or another prefix (e.g., `g`, `z`), which-key shows all available continuations with descriptions. You don’t have to memorize every mapping! 🎯
-
----
-
-## ⌨️ Custom keymaps
-
-**Leader key**: `Space`
-
-💡 **Tip**: Press `Space` and wait — **which-key** will show everything available!
-
-### Leader mappings (Space + key)
-
-#### Help & Keybindings
-
-- `<Space>?` — Show all keybindings for the current buffer (which-key)
-
-#### File Explorer & Navigation
-
-- `<Space>e` — Toggle Neo-tree (open/close file explorer)
-- `<Space>o` — Focus Neo-tree (jump to explorer)
-
-#### Save & Quit
-
-- `<Space>w` — Save file (`:w`)
-- `<Space>q` — Quit (`:q`)
-- `<Space>Q` — Quit all without saving (`:qa!`)
-
-#### Windows (Splits)
-
-- `<Space>sv` — Vertical split (`:vsplit`)
-- `<Space>sh` — Horizontal split (`:split`)
-- `<Space>sc` — Close current window (`:close`)
-
-### Non-leader mappings
-
-#### Window navigation
-
-- `Ctrl+h` — Go to the left window
-- `Ctrl+j` — Go to the bottom window
-- `Ctrl+k` — Go to the top window
-- `Ctrl+l` — Go to the right window
-
-#### Resize windows
-
-- `Ctrl+↑` — Increase height
-- `Ctrl+↓` — Decrease height
-- `Ctrl+←` — Decrease width
-- `Ctrl+→` — Increase width
-
-#### Indent in Visual mode
-
-- `<` — Indent left (keeps selection)
-- `>` — Indent right (keeps selection)
-
-#### Toggles & saving
-
-- `Ctrl+N` twice — Cycle line numbers: off → absolute → relative
-- `Ctrl+S` — Save file in Normal and Insert mode (`:w`)
-
-**Full list**: see `.config/nvim/lua/config/keymaps.lua`
-
----
-
-## ⚙️ Core Options (lua/config/options.lua)
-
-Key editor settings:
-
-| Option | Value | Description |
-|-------|---------|------|
-| `number` | `true` | Line numbers (absolute on the current line) |
-| `relativenumber` | `true` | Relative numbers (easier jumps like `5j`, `10k`) |
-| `clipboard` | `"unnamedplus"` | Shared clipboard with the OS (requires `xclip` or `wl-clipboard`) |
-| `expandtab` | `true` | Use spaces instead of tabs |
-| `shiftwidth` | `2` | Autoindent width (2 spaces) |
-| `ignorecase` + `smartcase` | `true` | Case-insensitive search unless uppercase used |
-| `undofile` | `true` | Persistent undo (history survives restarts) |
-| `splitright` / `splitbelow` | `true` | New splits on the right/bottom |
-
-**Full list**: see `.config/nvim/lua/config/options.lua`
-
----
-
-## 🚀 Quick Start
-
-### Basic workflow
-
-1. **Open a file**:
-
-   ```bash
-   nvim file.txt
-   ```
-
-2. **File explorer** (neo-tree):
-
-   ```vim
-   :Neotree toggle
-   ```
-
-3. **Editing with autocompletion**:
-   - INSERT mode → start typing
-   - `Ctrl-Space` → open completion menu
-   - `Ctrl-n/p` → select an item
-   - `Ctrl-y` → accept
-
-4. **Update plugins**:
-
-   ```vim
-   :Lazy sync
-   ```
-
----
-
-## 📦 Extending the configuration
-
-### Adding a new plugin
-
-1. Create a new file in `lua/plugins/`, e.g., `telescope.lua`:
-
-   ```lua
-   return {
-     'nvim-telescope/telescope.nvim',
-     dependencies = { 'nvim-lua/plenary.nvim' },
-     config = function()
-       -- Your configuration
-     end,
-   }
-   ```
-
-2. Restart Neovim → Lazy.nvim will automatically install the plugin
-
-### Adding LSP (later)
-
-When you need LSP for specific languages:
-
-```bash
-# Add to lua/plugins/lsp.lua
-return {
-  'neovim/nvim-lspconfig',
-  dependencies = { 'williamboman/mason.nvim' },
-  -- ... configuration
-}
-```
-
----
-
-## 🐛 Troubleshooting
-
-### Blink.cmp doesn’t show suggestions
-
-```vim
-:Lazy sync            " Update plugins
-:checkhealth blink    " Check health
-```
-
----
-
-## 📚 Further resources
-
-- [lazy.nvim docs](https://github.com/folke/lazy.nvim)
-- [blink.cmp docs](https://github.com/saghen/blink.cmp)
-- [neo-tree wiki](https://github.com/nvim-neo-tree/neo-tree.nvim/wiki)
-- [mini.icons](https://github.com/nvim-mini/mini.icons)
-- [Nerd Fonts](https://www.nerdfonts.com/)
+The configuration requires Neovim 0.11+ and tracks `lazy-lock.json` for
+reproducible plugin versions. The canonical Neovim structure, plugin list,
+keymaps and workflows live in
+[`.config/nvim/README.md`](./.config/nvim/README.md).

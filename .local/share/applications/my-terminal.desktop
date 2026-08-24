@@ -1,5 +1,5 @@
 [Desktop Entry]
-Exec=/home/omen/bin/my_default_terminal_emulator
+Exec=foot
 Name=My terminal
 NoDisplay=false
 StartupNotify=false

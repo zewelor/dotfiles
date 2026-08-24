@@ -1,6 +1,4 @@
-.config/nvim/lazy-lock.json
 .tmp/
 .nvimlog
 .antigravitycli/*.json
 .config/mise/config.local.toml
-

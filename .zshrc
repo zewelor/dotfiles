@@ -9,13 +9,13 @@ if [ -f "$HOME/.zshrc.d/profile.zsh" ]; then
   source "$HOME/.zshrc.d/profile.zsh"
 fi
 
+if [[ "${DOTFILES_PROFILE:-server}" != "desktop" && "${DOTFILES_PROFILE:-server}" != "server" ]]; then
+  print -u2 -- "zshrc: Invalid DOTFILES_PROFILE '${DOTFILES_PROFILE}'"
+  return 1
+fi
+
 is_desktop() {
-  local profile="${DOTFILES_PROFILE:-server}"
-  if [[ "$profile" != "desktop" && "$profile" != "server" ]]; then
-    echo "zshrc: Invalid DOTFILES_PROFILE '$profile'. Assuming 'server'." >&2
-    return 1
-  fi
-  [[ "$profile" == "desktop" ]]
+  [[ "${DOTFILES_PROFILE:-server}" == "desktop" ]]
 }
 
 is_interactive() {
@@ -234,20 +234,6 @@ function cdls() {
 zinit light-mode wait"2" lucid from"gh-r" sbin"just" \
   atclone"JUST_COMPLETE=zsh ./just > _just" atpull"%atclone" \
   for @casey/just
-
-if is_desktop; then
-  zinit light-mode as'program' \
-      bpick"mise-*$(_ghr_linux).tar.gz" \
-      pick'mise/bin/mise' \
-      from'gh-r' for \
-      @jdx/mise
-
-  zinit light-mode from"gh-r" as"program" \
-    atclone"./opencode completion > _opencode; echo 'compdef _opencode_yargs_completions oc' >> _opencode" atpull"%atclone" \
-    bpick"opencode-$(_ghr_linux)$([[ $(_ghr_linux) == linux-x64 && -r /proc/cpuinfo ]] && ! grep -qi 'avx2' /proc/cpuinfo 2>/dev/null && echo '-baseline').tar.gz" \
-    pick"opencode" \
-    for @anomalyco/opencode
-fi
 
 if has "tmuxinator" || (has "mise" && mise which tmuxinator &>/dev/null); then
   mux() {
@@ -486,11 +472,14 @@ function update () {
 }
 
 function update-all () {
-  # Determine target non-root user for user-scoped updates
-  # Prefer the invoking sudo user, otherwise fall back to UID 1000 or current user
+  local -a failures=()
+
+  # Determine the non-root owner of user-scoped package state.
   local target_user
   if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
     target_user="${SUDO_USER}"
+  elif (( EUID != 0 )); then
+    target_user="$(id -un)"
   else
     target_user="$(id -nu 1000 2>/dev/null)"
     if [[ -z "${target_user}" ]]; then
@@ -512,6 +501,7 @@ function update-all () {
     echo "[apt] System package maintenance complete"
   else
     echo "[apt] System package maintenance failed"
+    failures+=(apt)
   fi
 
   if has "flatpak"; then
@@ -521,16 +511,18 @@ function update-all () {
       echo "[flatpak] Update complete"
     else
       echo "[flatpak] Update failed"
+      failures+=(flatpak)
     fi
   fi
 
   if has "snap"; then
     echo
     echo "[snap] Refreshing snaps"
-    if snap refresh; then
+    if sudo snap refresh; then
       echo "[snap] Refresh complete"
     else
       echo "[snap] Refresh failed"
+      failures+=(snap)
     fi
   fi
 
@@ -546,6 +538,7 @@ function update-all () {
       echo "[zinit] Update complete"
     else
       echo "[zinit] Update failed (exit ${_ec}) try running: 'sudo -H -u ${target_user} zsh -lc \"${zinit_command}\"' to see details."
+      failures+=(zinit)
     fi
   else
     echo
@@ -559,14 +552,26 @@ function update-all () {
       echo "[pipx] Upgrade complete"
     else
       echo "[pipx] Upgrade failed"
+      failures+=(pipx)
     fi
   fi
 
   # Build an explicit PATH for user-scoped tool updates.
   # This avoids relying on interactive shell initialization when running via sudo.
-  local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/share/mise/bin:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:${target_home}/.zinit/plugins/jdx---mise/mise/bin:/usr/local/bin:/usr/bin:/bin"
+  local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:/usr/local/bin:/usr/bin:/bin"
+  local target_zshrc_path="${target_home}/.zshrc"
+  local resolved_target_zshrc
+  resolved_target_zshrc=$(readlink -f "$target_zshrc_path") || {
+    echo "[mise] Cannot resolve target dotfiles repository from $target_zshrc_path."
+    return 1
+  }
+  local target_mise_config_dir="${resolved_target_zshrc:h}/.config/mise"
+  if [[ ! -f "$target_mise_config_dir/config.toml" ]]; then
+    echo "[mise] Target config not found: $target_mise_config_dir/config.toml"
+    return 1
+  fi
   run_for_target_user () {
-    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" sh -lc "${1}"
+    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" sh -lc "${1}"
   }
 
   target_user_has () {
@@ -577,6 +582,15 @@ function update-all () {
   local mise_command='mise upgrade'
   echo
   if target_user_has "mise"; then
+    echo "[mise] Updating mise"
+    if run_for_target_user 'mise self-update -y --no-plugins' >/dev/null 2>&1; then
+      echo "[mise] Self-update complete"
+    else
+      local _mise_self_ec=$?
+      echo "[mise] Self-update failed (exit ${_mise_self_ec})"
+      failures+=(mise-self-update)
+    fi
+
     echo "[mise] Upgrading mise tools"
     run_for_target_user "${mise_command}" >/dev/null 2>&1
     local _mise_ec=$?
@@ -584,12 +598,17 @@ function update-all () {
       echo "[mise] Update complete"
       # Cleanup old versions of tools to save space.
       echo "[mise] Pruning old tool versions"
-      run_for_target_user 'mise prune -y' >/dev/null 2>&1
+      if ! run_for_target_user 'mise prune -y' >/dev/null 2>&1; then
+        echo "[mise] Prune failed"
+        failures+=(mise-prune)
+      fi
     else
       echo "[mise] Update failed (exit ${_mise_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"${mise_command}\"' to see details."
+      failures+=(mise)
     fi
   else
     echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
+    is_desktop && failures+=(mise-missing)
   fi
 
   # Update Neovim plugins via Lazy.nvim
@@ -601,23 +620,11 @@ function update-all () {
     else
       local _nvim_ec=$?
       echo "[nvim] Plugin update failed (exit ${_nvim_ec}) try running: 'nvim --headless -c "Lazy! sync" -c "qa"' to see details."
+      failures+=(nvim)
     fi
   else
     echo
     echo "[nvim] Skipping Neovim plugin update: nvim not found for user '${target_user}'."
-  fi
-
-  if target_user_has "npm"; then
-    echo
-    echo "[npm] Updating global npm packages"
-    if run_for_target_user 'NPM_CONFIG_LOGLEVEL=error npm update -g'; then
-      echo "[npm] Update complete"
-    else
-      echo "[npm] Update failed"
-    fi
-  else
-    echo
-    echo "[npm] Skipping npm update: npm not found for user '${target_user}'."
   fi
 
   if target_user_has "npx"; then
@@ -628,11 +635,21 @@ function update-all () {
     else
       local _skills_ec=$?
       echo "[skills] Update failed (exit ${_skills_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"npx --yes skills update\"' to see details."
+      failures+=(skills)
     fi
   else
     echo
     echo "[skills] Skipping skills update: npx not found for user '${target_user}'."
   fi
+
+  if (( ${#failures[@]} )); then
+    echo
+    echo "update-all completed with failures: ${(j:, :)failures}" >&2
+    return 1
+  fi
+
+  echo
+  echo "update-all completed successfully."
 }
 
 # Git
@@ -641,6 +658,7 @@ if has "git"; then
 
   alias gst='git status'
   alias ga='git add'
+  alias gan='git add -N'
   alias gd='git diff'
   alias grbm='git rebase `git_main_branch`'
   alias gco='git checkout'
@@ -726,7 +744,7 @@ if has "git"; then
   }
 
   function gcmmpoa () {
-    git commit -m "$1" "$@[2,-1]" -a -u && git pull ; git push -u origin
+    git commit -m "$1" "$@[2,-1]" -a -u && git pull && git push -u origin
   }
 fi
 
@@ -940,18 +958,19 @@ export_on_demand_env() {
     read -rs "VAULT_TOKEN?Please enter your Vault token: "
     echo
   fi
+  typeset -g +x VAULT_TOKEN
 
   # Define Vault URL for the specific on-demand secret
   VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data/on_demand"
 
   # Fetch the secret from Vault
-  response=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X GET "$VAULT_URL") || {
+  response=$(vault_http_get "$VAULT_URL" "$VAULT_TOKEN") || {
     echo "Failed to fetch secret for '$ENV_NAME' from Vault." >&2
     return 1
   }
 
   # Extract the value of the specified environment variable using jq
-  value=$(echo "$response" | jq -r ".data.data.\"$ENV_NAME\"") || {
+  value=$(print -r -- "$response" | jq -er --arg env_name "$ENV_NAME" '.data.data[$env_name] // empty') || {
     echo "Failed to parse the secret data for '$ENV_NAME'." >&2
     return 1
   }
@@ -1022,34 +1041,15 @@ if has "mise"; then
     mise use -p "$target_cfg" "${args[@]}"
   }
 
-  _mise_activate_now() {
-    local shell_code
-
-    shell_code="$(mise activate zsh)" || return
-    eval "$shell_code" || return
-    shell_code="$(mise hook-env -s zsh)" || return
-    eval "$shell_code"
-  }
-
   if is_interactive; then
-    # Activate lazily, but refresh PATH before later precmd hooks use mise tools.
-    _mise_lazy_init() {
-      _mise_activate_now || return
-      _mise_setup_completions
-      (( $+functions[_mise_setup_completions] )) && add-zsh-hook precmd _mise_setup_completions
-      add-zsh-hook -d precmd _mise_lazy_init
-      unfunction _mise_lazy_init _mise_activate_now
-    }
-    add-zsh-hook precmd _mise_lazy_init
-
-    # Run after mise activation; retry on precmd only if compdef is still delayed.
+    # Retry on precmd only when compdef is still delayed by Zinit.
     _mise_setup_completions() {
       (( $+functions[compdef] )) || return
 
       add-zsh-hook -d precmd _mise_setup_completions
       local completion_cache_dir="${ZSH_CACHE_DIR}/completions"
-      local -a cli_completion_tools=(sourcetap bird gog)
-      local tool command_path completion_file completion_temp_file
+      local -a cli_completion_tools=(sourcetap bird gog opencode)
+      local tool command_path completion_file completion_temp_file generation_status
 
       for tool in "${cli_completion_tools[@]}"; do
         command_path="$(whence -p "$tool")" || continue
@@ -1058,7 +1058,13 @@ if has "mise"; then
         if [[ ! -s "$completion_file" || ! "$completion_file" -nt "$command_path" ]]; then
           # Generate separately so a failed CLI cannot corrupt the working cache.
           completion_temp_file="${completion_cache_dir}/.${tool}.$$.tmp"
-          if ! "$command_path" completion zsh >| "$completion_temp_file" \
+          if [[ "$tool" == "opencode" ]]; then
+            "$command_path" completion >| "$completion_temp_file"
+          else
+            "$command_path" completion zsh >| "$completion_temp_file"
+          fi
+          generation_status=$?
+          if (( generation_status != 0 )) \
             || [[ ! -s "$completion_temp_file" ]] \
             || ! command mv -f -- "$completion_temp_file" "$completion_file"; then
             # Discard failed output and keep the previous completion untouched.
@@ -1067,15 +1073,18 @@ if has "mise"; then
         fi
 
         [[ -s "$completion_file" ]] || continue
-        autoload -Uz "_${tool}"
-        compdef "_${tool}" "$tool"
+        if [[ "$tool" == "opencode" ]]; then
+          source "$completion_file"
+          compdef _opencode_yargs_completions opencode oc
+        else
+          autoload -Uz "_${tool}"
+          compdef "_${tool}" "$tool"
+        fi
       done
       unfunction _mise_setup_completions
     }
-  else
-    # Non-interactive shells do not reach precmd, so activate mise immediately.
-    _mise_activate_now || return
-    unfunction _mise_activate_now
+    _mise_setup_completions
+    (( $+functions[_mise_setup_completions] )) && add-zsh-hook precmd _mise_setup_completions
   fi
 fi
 

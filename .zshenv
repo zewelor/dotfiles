@@ -7,3 +7,10 @@ fpath=( /usr/lib/python3/dist-packages/argcomplete/bash_completion.d "${fpath[@]
 
 export MISE_CONFIG_DIR="${HOME}/dotfiles/.config/mise"
 
+# Keep mise available without installing precmd/chpwd activation hooks.
+path=(
+  "$HOME/.local/bin"
+  "$HOME/.local/share/mise/shims"
+  $path
+)
+typeset -U path

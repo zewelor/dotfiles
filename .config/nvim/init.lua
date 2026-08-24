@@ -1,8 +1,8 @@
 -- Bootstrap lazy.nvim and core configuration
 
--- For Neovim < 0.11: mock missing vim.lsp.enable (auto-removes on upgrade)
-if vim.version().minor < 11 then
-  vim.lsp.enable = function() end
+-- This configuration relies on Neovim's native LSP API introduced in 0.11.
+if vim.fn.has("nvim-0.11") ~= 1 then
+  error("This configuration requires Neovim 0.11 or newer")
 end
 
 require("config.lazy")

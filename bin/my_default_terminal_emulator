@@ -1,4 +1,0 @@
-#!/usr/bin/env sh
-# Single place to switch the preferred terminal emulator later.
-# exec alacritty "$@"
-exec foot "$@"
