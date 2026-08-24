@@ -211,7 +211,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 brew install anomalyco/opencode/opencode
 
 # Lub z repozytorium dotfiles przez mise
-cd ~/dotfiles && mise install github:anomalyco/opencode
+cd ~/dotfiles && mise install opencode
 ```
 
 **Ważne**: Uruchom `opencode` z flagą `--port` aby udostępnić serwer dla Neovim:

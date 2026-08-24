@@ -338,15 +338,6 @@ setup_mise_desktop_tools() {
     echo "GitHub CLI is unavailable or unauthenticated; GitHub API rate limits may apply."
   fi
 
-  # Upstream publishes a baseline x64 build for CPUs without AVX2.
-  if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]] \
-    && { [[ ! -r /proc/cpuinfo ]] || ! grep -qim1 '\<avx2\>' /proc/cpuinfo; }; then
-    local local_config="$BASE_DIR/.config/mise/config.local.toml"
-    print_banner "Selecting the baseline OpenCode build for this CPU..."
-    MISE_CONFIG_DIR="$BASE_DIR/.config/mise" "$MISE_BIN" use --yes --path "$local_config" \
-      'github:anomalyco/opencode[asset_pattern=opencode-linux-x64-baseline.tar.gz]@latest'
-  fi
-
   MISE_CONFIG_DIR="$BASE_DIR/.config/mise" "$MISE_BIN" install
 
   path=("$HOME_DIR/.local/share/mise/shims" "$HOME_DIR/.local/bin" $path)

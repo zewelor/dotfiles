@@ -123,9 +123,15 @@ Rules:
       mv "${tmpfile}.limited" "$tmpfile"
     fi
 
+    if ! has "opencode"; then
+      echo "Error: 'opencode' command is not available in PATH. Run 'mise install' to install it." >&2
+      rm -f "$tmpfile"
+      return 1
+    fi
+
     # Generate commit message
     # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output
-    command cat "$tmpfile" | opencode run --pure -m google/gemini-flash-lite-latest "$prompt" 2>/dev/null
+    command cat "$tmpfile" | opencode run --pure -m google/gemini-flash-lite-latest "$prompt"
     local result=$?
 
     rm -f "$tmpfile"
@@ -227,8 +233,7 @@ Rules:
 }
 
 gsumpo() {
-  gsum "$@" && git pull
-  git push -u origin
+  gsum "$@" && git pull && git push -u origin
 }
 
 gsumpoa() {

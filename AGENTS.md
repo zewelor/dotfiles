@@ -254,7 +254,7 @@ Wszystkie pliki konfiguracyjne są zarządzane za pomocą GNU Stow:
 - `@yt-dlp/yt-dlp` (`yt-dlp`) — uses mise registry shorthand `yt-dlp`.
 - `@steipete/summarize` (`summarize`) — managed via `mise` (`npm` backend; not in registry).
 - `@zewelor/sourcetap` (`sourcetap`) — uses `mise` GitHub backend as a standalone user-owned CLI with GitHub Releases.
-- `@anomalyco/opencode` (`opencode`) — uses the `mise` GitHub backend; `install` persists the upstream `-baseline` asset override in `config.local.toml` on Linux x86_64 CPUs without AVX2.
+- `@anomalyco/opencode` (`opencode`) — uses the `mise` registry shorthand `opencode`; no per-CPU asset override is maintained.
 - `@atuinsh/atuin` (`atuin`) — zostaje w `zinit` (intentional exception: shell init/completions).
 - `starship/starship` (`starship`) — zostaje w `zinit` (intentional exception: shell init/completions).
 
