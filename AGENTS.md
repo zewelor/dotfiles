@@ -36,6 +36,11 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
 
 ## Delegowanie (MUST)
 
+- Szeroki research internetowy wymagający wielu niezależnych zapytań,
+  przejrzenia licznych źródeł lub równoległego zbadania kilku wątków domyślnie
+  deleguj jednemu lub kilku read-only subagentom. Pojedynczego, szybkiego
+  sprawdzenia nie deleguj. Główny agent odpowiada za ocenę źródeł, syntezę
+  wyników i ponowną weryfikację kluczowych ustaleń.
 - Subagenci nie zmieniają indeksu ani historii Git, nie publikują zmian, nie
   odczytują sekretów i nie mutują `$HOME` ani systemu. Nie uruchamiają
   `./install`, Stow bez dry-run, `mise use -g`, `:Lazy sync` ani instalacji lub
