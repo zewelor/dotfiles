@@ -129,12 +129,17 @@ Rules:
       return 1
     fi
 
-    # Generate commit message
-    # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output
-    command cat "$tmpfile" | opencode run --pure -m google/gemini-flash-lite-latest "$prompt"
+    # Generate commit message while keeping successful runs quiet.
+    # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output.
+    local error_file="${tmpfile}.stderr"
+    command cat "$tmpfile" | opencode run --pure -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
     local result=$?
 
-    rm -f "$tmpfile"
+    if [ "$result" -ne 0 ] && [ -s "$error_file" ]; then
+      command cat "$error_file" >&2
+    fi
+
+    rm -f "$tmpfile" "$error_file"
     return $result
   }
 
