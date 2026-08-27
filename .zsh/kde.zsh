@@ -1,5 +1,7 @@
 if [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]]; then
   # Define KDE-specific aliases
+  alias afk="loginctl lock-session && sleep 0.5 && kscreen-doctor --dpms off"
+
   if [ -n "$DISPLAY" ]; then
     alias rekde="kquitapp5 plasmashell || killall plasmashell && kstart5 plasmashell"
   fi
