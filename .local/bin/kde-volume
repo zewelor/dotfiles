@@ -3,111 +3,82 @@
 
 set -euo pipefail
 
-print_usage() {
-  local script_name="${0##*/}"
-  cat <<USAGE
-Usage:
-  $script_name <sink> <action>
-  $script_name <action>         (uses default sink)
-  $script_name list             (list available sinks)
+SINK="${1:-}"
+ACTION="${2:-}"
 
-Actions:
-  +N% / -N%     Increase / decrease volume (e.g. +5%, -5%)
-  N%            Set exact volume (e.g. 50%, 100%)
-  toggle        Toggle mute
-  mute          Mute sink
-  unmute        Unmute sink
+# Allow running with single arg for default sink (e.g. kde-volume +5%)
+if [[ -z "$ACTION" && -n "$SINK" && "$SINK" =~ ^(\+|\-|[0-9]|toggle|mute) ]]; then
+  ACTION="$SINK"
+  SINK="@DEFAULT_SINK@"
+fi
 
-Examples:
-  $script_name +5%
-  $script_name vban-portosanto +5%
-  $script_name vban-portosanto -5%
-  $script_name vban-portosanto toggle
-  $script_name list
-USAGE
-}
-
-list_sinks() {
-  local default_sink
-  default_sink="$(pactl get-default-sink 2>/dev/null || true)"
-  echo "Default sink: ${default_sink:-<unknown>}"
-  echo ""
-  echo "Available sinks:"
-  pactl list short sinks | while read -r id name _rest; do
-    local is_def=""
-    if [[ "$name" == "$default_sink" ]]; then
-      is_def=" [DEFAULT]"
-    fi
-    local vol
-    vol="$(pactl get-sink-volume "$name" 2>/dev/null | grep -oE '[0-9]+%' | head -1 || echo '?')"
-    local mute
-    mute="$(pactl get-sink-mute "$name" 2>/dev/null | awk '{print $2}' || echo '?')"
-    printf "  - %-45s (ID: %-6s Vol: %4s Muted: %-3s)%s\n" "$name" "$id" "$vol" "$mute" "$is_def"
-  done
-}
-
-if [[ $# -eq 0 ]]; then
-  print_usage
+if [[ -z "$SINK" || -z "$ACTION" ]]; then
+  echo "Usage: $0 <sink> <+5%|-5%|toggle>"
   exit 1
 fi
 
-case "$1" in
-  -h|--help|help)
-    print_usage
-    exit 0
-    ;;
-  -l|--list|list)
-    list_sinks
-    exit 0
-    ;;
-esac
-
-SINK=""
-ACTION=""
-
-if [[ $# -eq 1 ]]; then
-  SINK="@DEFAULT_SINK@"
-  ACTION="$1"
-elif [[ $# -ge 2 ]]; then
-  SINK="$1"
-  ACTION="$2"
-fi
+# Normalize escaped percent signs (e.g. from KDE .desktop files)
+ACTION="${ACTION//%%/%}"
+VOLUME_ACTION=""
 
 case "$ACTION" in
-  toggle|mute-toggle)
+  toggle)
     pactl set-sink-mute "$SINK" toggle
     ;;
-  mute)
-    pactl set-sink-mute "$SINK" 1
+  +*%|-*%)
+    if [[ ! "$ACTION" =~ ^([+-])([0-9]+)%$ ]]; then
+      echo "Invalid relative volume: $ACTION" >&2
+      exit 1
+    fi
+
+    VOLUME_ACTION="${BASH_REMATCH[2]}%${BASH_REMATCH[1]}"
     ;;
-  unmute)
-    pactl set-sink-mute "$SINK" 0
-    ;;
-  +*|-*|[0-9]*%|[0-9]*)
-    pactl set-sink-volume "$SINK" "$ACTION"
+  [0-9]*%)
+    if [[ ! "$ACTION" =~ ^([0-9]+)%$ ]]; then
+      echo "Invalid absolute volume: $ACTION" >&2
+      exit 1
+    fi
+
+    VOLUME_ACTION="${BASH_REMATCH[1]}%"
     ;;
   *)
-    echo "Error: Unknown action '$ACTION'" >&2
-    print_usage >&2
+    echo "Unknown action: $ACTION" >&2
     exit 1
     ;;
 esac
 
-VOL=$(pactl get-sink-volume "$SINK" \
-  | grep -oE '[0-9]+%' \
-  | head -1 \
-  | tr -d '%')
+if [[ -n "$VOLUME_ACTION" ]]; then
+  SINK_NAME="$SINK"
+  [[ "$SINK_NAME" == "@DEFAULT_SINK@" ]] && SINK_NAME=$(pactl get-default-sink)
+  SINK_ID=$(pactl list short sinks | awk -v sink="$SINK_NAME" '$2 == sink { print $1; exit }')
+  if [[ -z "$SINK_ID" ]]; then
+    echo "Sink not found: $SINK" >&2
+    exit 1
+  fi
 
+  wpctl set-volume --limit 1.0 "$SINK_ID" "$VOLUME_ACTION"
+fi
+
+VOL=$(pactl get-sink-volume "$SINK" | grep -oE '[0-9]+%' | head -1 | tr -d '%')
 MUTED=$(pactl get-sink-mute "$SINK" | awk '{print $2}')
 
 if [[ "$MUTED" == "yes" ]]; then
   OSD_VOL=0
+  ICON="audio-volume-muted"
 else
   OSD_VOL="$VOL"
+  ICON="audio-volume-high"
 fi
 
-if command -v qdbus6 >/dev/null 2>&1; then
-  qdbus6 org.kde.plasmashell /org/kde/osdService org.kde.osdService.volumeChanged "$OSD_VOL" >/dev/null 2>&1 || true
-elif command -v qdbus >/dev/null 2>&1; then
-  qdbus org.kde.plasmashell /org/kde/osdService org.kde.osdService.volumeChanged "$OSD_VOL" >/dev/null 2>&1 || true
+LABEL="$SINK"
+[[ "$SINK" == "@DEFAULT_SINK@" ]] && LABEL=""
+
+# Trigger KDE Plasma OSD
+QDBUS=$(command -v qdbus6 || command -v qdbus || true)
+if [[ -n "$QDBUS" ]]; then
+  if [[ -n "$LABEL" ]]; then
+    "$QDBUS" org.kde.plasmashell /org/kde/osdService org.kde.osdService.mediaPlayerVolumeChanged "$OSD_VOL" "$LABEL" "$ICON" >/dev/null 2>&1 || true
+  else
+    "$QDBUS" org.kde.plasmashell /org/kde/osdService org.kde.osdService.volumeChanged "$OSD_VOL" 100 >/dev/null 2>&1 || true
+  fi
 fi
