@@ -691,23 +691,6 @@ setup_vim() {
   vim +PlugInstall +qall
 }
 
-# Function to restore Neovim plugins from the tracked lazy.nvim lockfile.
-setup_nvim_plugins() {
-  local nvim_log
-  nvim_log=$(mktemp -t install-nvim-restore.XXXXXX)
-
-  print_banner "Restoring Neovim plugins from lazy-lock.json..."
-  if nvim --headless -c 'Lazy! restore' -c 'qa' >"$nvim_log" 2>&1; then
-    rm -f "$nvim_log"
-    return
-  fi
-
-  echo "Neovim lazy restore failed; output follows:" >&2
-  cat "$nvim_log" >&2
-  rm -f "$nvim_log"
-  return 1
-}
-
 # Function to configure installation profile (Desktop vs Server)
 configure_profile() {
   local profile_file="$HOME_DIR/.zshrc.d/profile.zsh"
@@ -926,7 +909,6 @@ run_installation() {
     nvim_version=$(nvim --version | head -n1 | grep -oE 'v[0-9]+\.[0-9]+' | sed 's/v//')
     autoload -Uz is-at-least
     if is-at-least "0.11" "$nvim_version"; then
-      setup_nvim_plugins
       nvim_installed=true
 
       echo "Configuring Neovim as default editor..."

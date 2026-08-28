@@ -38,17 +38,18 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 ├── ftdetect/
 │   ├── just.lua          # Filetype detection dla Justfile
 │   └── sshconfig.lua     # Filetype detection dla ~/.ssh/config.d/*
-├── after/
-│   └── ftplugin/
-│       ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
-│       ├── go.lua         # Nadpisy dla Go
-│       ├── just.lua       # Commentstring (#) dla Justfile
-│       ├── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
-│       └── tmuxinator.lua # Nadpisy dla tmuxinator
-└── lazy-lock.json           # Śledzony lockfile wersji pluginów
+└── after/
+    └── ftplugin/
+        ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
+        ├── go.lua         # Nadpisy dla Go
+        ├── just.lua       # Commentstring (#) dla Justfile
+        ├── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
+        └── tmuxinator.lua # Nadpisy dla tmuxinator
 ```
 
-`lazy-lock.json` jest śledzony przez Git, aby instalacje na różnych hostach zaczynały od tego samego zestawu wersji pluginów. `./install` odtwarza przypięte wersje przez `:Lazy restore`; `:Lazy sync` / `update-all` służy do świadomej aktualizacji lockfile.
+`lazy-lock.json` jest stanem lokalnym maszyny i znajduje się w katalogu
+`stdpath("state")` Neovima (zwykle `~/.local/state/nvim/`). Aktualizacje
+pluginów nie zmieniają dzięki temu repozytorium dotfiles.
 
 ## ⚙️ Core Options
 
@@ -502,13 +503,12 @@ stow -n -v -d .config -t ~/.config nvim
 # Zastosuj linkowanie konfiguracji przez GNU Stow
 stow -v -d .config -t ~/.config nvim
 
-# Uruchom Neovim - brakujące pluginy zainstalują się z wersji w lockfile
+# Uruchom Neovim - brakujące pluginy zainstalują się automatycznie
 nvim
 ```
 
-Pełny `./install` uruchamia dodatkowo `:Lazy restore`, aby przywrócić wszystkie
-pluginy do wersji zapisanych w `lazy-lock.json`. `:Lazy sync` jest zarezerwowane
-dla świadomej aktualizacji pluginów i lockfile.
+Pełny `./install` linkuje konfigurację, ale nie instaluje ani nie aktualizuje
+pluginów Neovima. Robi to lazy.nvim przy pierwszym uruchomieniu edytora.
 
 Przy pierwszym uruchomieniu:
 
@@ -542,11 +542,14 @@ Przy pierwszym uruchomieniu:
 
 ## 🔍 Troubleshooting
 
-### Pluginy nie odpowiadają wersjom z lockfile
+### Przywrócenie lokalnych wersji pluginów
 
 ```vim
 :Lazy restore
 ```
+
+Polecenie korzysta z lokalnego lockfile'a tej maszyny; jego wersje nie są
+synchronizowane przez repozytorium dotfiles.
 
 ### Kwadraty / brak ikon (Neo-tree, menu autouzupełniania)
 

@@ -28,6 +28,8 @@ require("lazy").setup({
   spec = {
     { import = "plugins" },
   },
+  -- Keep machine-local plugin state outside the Stow-managed configuration.
+  lockfile = vim.fn.stdpath("state") .. "/lazy-lock.json",
   -- automatically check for plugin updates
   checker = {
     enabled = true,

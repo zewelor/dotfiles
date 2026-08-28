@@ -420,7 +420,8 @@ To switch the accent, replace the theme file/config reference with the desired a
 
 ## Neovim config (lazy.nvim)
 
-The configuration requires Neovim 0.11+ and tracks `lazy-lock.json` for
-reproducible plugin versions. The canonical Neovim structure, plugin list,
+The configuration requires Neovim 0.11+. Plugin revisions are machine-local;
+lazy.nvim stores its runtime lockfile under Neovim's state directory instead of
+the Stow-managed configuration. The canonical Neovim structure, plugin list,
 keymaps and workflows live in
 [`.config/nvim/README.md`](./.config/nvim/README.md).
