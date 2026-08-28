@@ -802,10 +802,9 @@ run_installation() {
   install_with_stow -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
 
   # Interactive prompts first (before long-running tasks like font cache)
-  print_banner "Secret environment variables from Vault (optional)"
-  add_secret_envs_from_vault
-
   if is_desktop; then
+    print_banner "Secret environment variables from Vault (optional)"
+    add_secret_envs_from_vault
     setup_rclone
     setup_storagebox_media_mount
   fi
