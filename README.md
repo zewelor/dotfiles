@@ -13,7 +13,9 @@ git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
 The desktop profile bootstraps the official standalone `mise` into
 `~/.local/bin/mise` via `make mise`, using a versioned release installer whose
 SHA-256 is pinned in `Makefile`. Server installs do not require `mise`; when it
-is present, `update-all` can self-update the installed binary. Renovate checks
+is present, `update-all` can self-update the installed binary. The base Stow
+package ignores `.config/mise`; only the desktop installer creates the local
+override and links both mise config files into `~/.config/mise`. Renovate checks
 the bootstrap monthly and updates the release version together with the
 installer's SHA-256. `.zshenv` exposes mise and its shims through a static
 `PATH` without prompt or directory-change hooks. Zinit only manages shell

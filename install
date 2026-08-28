@@ -324,6 +324,33 @@ migrate_retired_managed_links() {
 
 # Function to install desktop-specific tools via mise.
 setup_mise_desktop_tools() {
+  print_banner "Setting up mise configuration..."
+  local mise_config_dir="$BASE_DIR/.config/mise"
+  local local_config="$mise_config_dir/config.local.toml"
+  if [[ ! -f "$local_config" ]]; then
+    touch "$local_config"
+    echo "Created empty local mise config: $local_config"
+  fi
+
+  mkdir -p "$CONFIG_DIR/mise"
+  local config_file
+  local src
+  local dst
+  for config_file in config.toml config.local.toml; do
+    src="$mise_config_dir/$config_file"
+    dst="$CONFIG_DIR/mise/$config_file"
+
+    if [[ -e "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
+      continue
+    fi
+    if [[ -e "$dst" || -L "$dst" ]]; then
+      echo "Error: refusing to replace unmanaged mise config: $dst" >&2
+      return 1
+    fi
+
+    ln -s "$src" "$dst"
+  done
+
   if [[ ! -x "$MISE_BIN" ]]; then
     print_banner "Installing mise for the desktop profile..."
     make -C "$BASE_DIR" mise
@@ -789,14 +816,6 @@ run_installation() {
   setup_private_submodule
   prepare_stow_targets
   migrate_retired_managed_links
-
-  # Ensure the local config file exists so it's ready for machine-specific overrides.
-  local local_config="$BASE_DIR/.config/mise/config.local.toml"
-  if [[ ! -f "$local_config" ]]; then
-    mkdir -p "$(dirname "$local_config")"
-    touch "$local_config"
-    echo "Created empty local mise config: $local_config"
-  fi
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
   install_with_stow -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."

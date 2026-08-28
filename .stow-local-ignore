@@ -12,6 +12,7 @@ Makefile
 .gemini  # stowed separately into ~/.gemini (Gemini/Antigravity keep runtime data there)
 .summarize  # config.json is a seed; Summarize owns and rewrites the runtime copy
 .config/rclone  # generated from template by install script
+.config/mise  # linked explicitly for the desktop profile
 install.d/  # install helper modules/scripts
 .antigravitycli
 .ruby-lsp
