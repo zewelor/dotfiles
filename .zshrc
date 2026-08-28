@@ -193,19 +193,15 @@ alias la='ls -lah'
 alias lt='ls -T'  # tree view
 
 # zoxide - smarter cd with frecency
-zinit light-mode from"gh-r" sbin"zoxide" \
-  atclone"./zoxide init zsh > init.zsh" atpull"%atclone" src"init.zsh" \
-  for @ajeetdsouza/zoxide
+zinit light-mode from"gh-r" sbin"zoxide" for @ajeetdsouza/zoxide
 
-# Override cd to use zoxide when available, fallback to builtin otherwise
-# This prevents errors in non-interactive shells (e.g., Claude Code)
-function cd() {
-  if (( $+functions[__zoxide_z] )); then
+if has "zoxide"; then
+  eval "$(zoxide init zsh)"
+
+  function cd() {
     __zoxide_z "$@"
-  else
-    builtin cd "$@"
-  fi
-}
+  }
+fi
 
 # Interactive directory selection with fzf and zoxide
 # Securely change to a directory chosen from zoxide's database
