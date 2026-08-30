@@ -86,18 +86,20 @@ keymap("n", "gsn", function()
 end, { desc = "Update n_lines (mini.surround)" })
 
 -- Formatting (conform.nvim)
-keymap("n", "<leader>cf", function()
-	local ft = vim.bo.filetype
-	if ft == "eruby.yaml.tmuxinator" then
-		if vim.notify then vim.notify("Tmuxinator YAML with ERB is excluded from formatting", vim.log.levels.INFO, { title = "Conform" }) end
-		return
-	end
-	if ft == "markdown" then
-		if vim.notify then vim.notify("Markdown autoformat is disabled", vim.log.levels.INFO, { title = "Conform" }) end
-		return
-	end
-	require("conform").format({ lsp_format = "fallback" })
-end, { desc = "Format buffer (conform)" })
+if require("config.tooling").enabled() then
+	keymap("n", "<leader>cf", function()
+		local ft = vim.bo.filetype
+		if ft == "eruby.yaml.tmuxinator" then
+			if vim.notify then vim.notify("Tmuxinator YAML with ERB is excluded from formatting", vim.log.levels.INFO, { title = "Conform" }) end
+			return
+		end
+		if ft == "markdown" then
+			if vim.notify then vim.notify("Markdown autoformat is disabled", vim.log.levels.INFO, { title = "Conform" }) end
+			return
+		end
+		require("conform").format({ lsp_format = "fallback" })
+	end, { desc = "Format buffer (conform)" })
+end
 
 -- Git hunks (gitsigns)
 local function stage_selected_hunk()

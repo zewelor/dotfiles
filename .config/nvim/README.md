@@ -14,7 +14,8 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   ├── config/
 │   │   ├── lazy.lua     # Setup lazy.nvim
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
-│   │   └── keymaps.lua  # Wszystkie keybindings
+│   │   ├── keymaps.lua  # Wszystkie keybindings
+│   │   └── tooling.lua  # Wybór pełnego lub uproszczonego trybu
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
@@ -50,6 +51,12 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 `lazy-lock.json` jest stanem lokalnym maszyny i znajduje się w katalogu
 `stdpath("state")` Neovima (zwykle `~/.local/state/nvim/`). Aktualizacje
 pluginów nie zmieniają dzięki temu repozytorium dotfiles.
+
+Jeśli `mise` nie jest dostępne w `PATH`, Neovim działa w uproszczonym trybie:
+nie ładuje Masona, konfiguracji LSP, `conform.nvim` ani auto-installera
+formatterów. Pozostałe funkcje edytora działają normalnie, a brak `mise` nie
+powoduje błędu startu. Dzięki temu ten sam config może być używany np. przez
+`root` bez osobnej instalacji narzędzi deweloperskich.
 
 ## ⚙️ Core Options
 

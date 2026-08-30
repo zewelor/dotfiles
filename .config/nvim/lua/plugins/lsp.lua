@@ -1,21 +1,18 @@
 -- lsp — Language Server Protocol for intelligent code features
+local tooling = require("config.tooling")
 
 -- Resolve a mise-managed binary path (works with `mise activate` PATH, no shims needed).
 -- Some Mason Ruby gem wrappers can keep stale shebangs after a Ruby upgrade, so
 -- Ruby tools must resolve through mise instead of falling back to PATH.
 local function mise_bin(tool, opts)
   opts = opts or {}
-  if opts.prefer_mise then
-    local path = vim.fn.system({ "mise", "which", tool }):gsub("%s+$", "")
-    if vim.v.shell_error == 0 and path ~= "" then
-      return path
-    end
+  if not opts.prefer_mise and vim.fn.executable(tool) == 1 then
+    return tool
+  end
+  if not tooling.enabled() then
     return nil
   end
 
-  if vim.fn.executable(tool) == 1 then
-    return tool
-  end
   local path = vim.fn.system({ "mise", "which", tool }):gsub("%s+$", "")
   if vim.v.shell_error ~= 0 or path == "" then
     return nil
@@ -48,12 +45,14 @@ return {
   -- Mason: LSP server manager
   {
     "williamboman/mason.nvim",
+    cond = tooling.enabled,
     build = ":MasonUpdate",
     opts = {},
   },
   -- Bridge between mason and lspconfig
   {
     "williamboman/mason-lspconfig.nvim",
+    cond = tooling.enabled,
     dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
     opts = {
       ensure_installed = {
@@ -72,6 +71,7 @@ return {
   -- LSP configuration
   {
     "neovim/nvim-lspconfig",
+    cond = tooling.enabled,
     dependencies = { "williamboman/mason-lspconfig.nvim" },
     config = function()
       if vim.fn.exists(':LspInfo') == 0 then
