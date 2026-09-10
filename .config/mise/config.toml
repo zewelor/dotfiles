@@ -26,4 +26,4 @@ minimum_release_age_excludes = [
 ]
 
 [settings.github]
-credential_command = "gh auth token"
+oauth_client_id = "Iv23liMVZDhJCr7NWnEw"
