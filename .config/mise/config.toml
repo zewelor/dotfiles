@@ -27,3 +27,4 @@ minimum_release_age_excludes = [
 
 [settings.github]
 oauth_client_id = "Iv23liMVZDhJCr7NWnEw"
+oauth_export_env = ""
