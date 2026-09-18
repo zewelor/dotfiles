@@ -406,13 +406,13 @@ setup_rclone() {
   # Fetch rclone password from Vault (stored in secret/configs/rclone)
   local vault_url_base="${VAULT_URL%/shell_envs/data}"
   local vault_response
-  vault_response=$(vault_http_get "$vault_url_base/secret/data/configs/rclone" "$VAULT_TOKEN") || {
+  vault_response=$(vault_http_get "$vault_url_base/operator/data/nas" "$VAULT_TOKEN") || {
     echo "Failed to fetch rclone secrets from Vault." >&2
     return 1
   }
 
   local nas_pass
-  nas_pass=$(print -r -- "$vault_response" | jq -er '.data.data.nas_pass // empty') || {
+  nas_pass=$(print -r -- "$vault_response" | jq -er '.data.data.omen_pass // empty') || {
     echo "Failed to parse nas_pass from the Vault response." >&2
     return 1
   }
