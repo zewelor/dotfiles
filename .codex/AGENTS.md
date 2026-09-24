@@ -23,6 +23,13 @@ Do not rely solely on model memory when behavior may be version-sensitive or rec
 - Do not set or export `GIT_PAGER` globally to change agent behavior. Interactive human shells use Git config (`core.pager = delta`) for delta output.
 - Use plain `git diff` only when the user explicitly asks for human-facing pager output.
 
+## Testing
+
+- Never write unit tests after you write code.
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
+- If you must test a system in isolation, first write down all the ways it could fail, then write the code.
+- During development, don't run the full suite of e2e tests; execute them only at the end.
+
 ## Subagent delegation
 
 Use subagents selectively for independent, bounded work when delegation materially improves speed, evidence quality, or main-context clarity. Follow more
