@@ -25,10 +25,15 @@ Do not rely solely on model memory when behavior may be version-sensitive or rec
 
 ## Testing
 
-- Never write unit tests after you write code.
-- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
-- If you must test a system in isolation, first write down all the ways it could fail, then write the code.
-- During development, don't run the full suite of e2e tests; execute them only at the end.
+- Never write unit tests after writing the code.
+- Prefer end-to-end (E2E) tests as the main way to verify complex features.
+- Make E2E tests produce an artifact that can be checked and reproduced.
+- If you need to test a system in isolation, first list all the ways it could fail. Then write the code.
+- For complex features, use realistic E2E scenarios with medium or high complexity. Don’t test only the simplest successful case.
+- Avoid tautological tests that only confirm what the code already says.
+- Avoid tests that only detect whether code changed.
+- For bug fixes, add a regression test only when existing behavior tests leave a real gap.
+- During development, run focused tests. Run the full E2E suite only at the end.
 
 ## Subagent delegation
 
