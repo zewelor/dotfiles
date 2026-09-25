@@ -41,6 +41,15 @@ make verify  # deeper environment drift checks for the current machine
 - `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, and the offline Vault helper suite.
 - `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
 
+### Codex reverse-engineering agents
+
+The desktop Codex setup links `.codex/agents/` into `~/.codex/agents/` with
+Stow. It contains the `reverser` coordinator and `reverser_apk` and
+`reverser_ghidra` specialists. Their skills come from the separate
+`reverser@personal` plugin; Docker Compose and case data stay in the
+`llm_agents/reverser` runtime checkout. Start a new Codex session after linking
+the agents so Codex loads their definitions.
+
 ### Shell requirement (zsh)
 
 The `./install` script aborts if your **login shell** is not `zsh` to avoid the common “installed but nothing changed” confusion when the user stays in `bash` (e.g. on Raspberry Pi OS).
