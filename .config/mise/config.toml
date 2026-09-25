@@ -17,7 +17,6 @@ opencode = "latest"
 "github:zewelor/sourcetap" = { version = "latest", github_attestations = "false" }
 yq = "latest"
 "github:openclaw/gogcli" = "latest"
-codex = "latest"
 
 [settings]
 minimum_release_age_excludes = [
