@@ -1122,8 +1122,8 @@ PROMPT='%F{208}%n%f%F{240}@%f%F{blue}%m%f %F{cyan}%~%f %(?.%F{green}❯%f.%F{red
 
 # Initialize Starship prompt last to avoid recursive ZLE wrappers when using vi-mode/atuin.
 # We also use a guard to prevent multiple initializations if .zshrc is sourced again.
-# Skip Starship entirely when running inside Midnight Commander subshell (MC_SID is set by mc).
-if [[ -z "$STARSHIP_INITIALIZED" && -z "${MC_SID:-}" ]]; then
+# Skip Starship in automation/non-terminal shells, dumb terminals, and Midnight Commander.
+if is_interactive && [[ "${TERM:-dumb}" != dumb && -z "$STARSHIP_INITIALIZED" && -z "${MC_SID:-}" ]]; then
   zinit ice as"command" from"gh-r" \
             atclone"./starship init zsh > init.zsh; ./starship completions zsh > _starship" \
             atpull"%atclone" src"init.zsh"
