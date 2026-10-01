@@ -37,6 +37,8 @@ Do not rely solely on model memory when behavior may be version-sensitive or rec
 
 ## Subagent delegation
 
+Spawn the `architect` agent to review before committing to a large plan, when an error repeats, and before declaring a long task complete; use its findings to guide the next step.
+
 Use subagents selectively for independent, bounded work when delegation materially improves speed, evidence quality, or main-context clarity. Follow more
 specific repository or skill instructions when present.
 
