@@ -54,3 +54,12 @@ edits, and security-sensitive changes with the primary agent.
 
 Each delegated task must have a narrow outcome, exact scope, relevant commands or evidence requirements, and explicit edit permission. Subagents must report
 failures, warnings, relevant evidence, and anything skipped; a bare passed summary is not sufficient.
+
+## Coding style
+
+- Prefer simple, readable, explicit code. Apply YAGNI: add abstractions
+  and configuration only when current requirements justify them.
+- Prefer existing conventions and a single source of truth.
+  Reduce duplication when it improves clarity.
+- Fail fast and loudly on unexpected errors and invalid states.
+  Keep required recovery explicit; never silently hide failures.
