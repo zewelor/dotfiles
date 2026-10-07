@@ -37,23 +37,74 @@ Do not rely solely on model memory when behavior may be version-sensitive or rec
 
 ## Subagent delegation
 
-Spawn the `architect` agent to review before committing to a large plan, when an error repeats, and before declaring a long task complete; use its findings to guide the next step.
+The main agent owns intent, requirements, scope, decomposition, dependencies,
+ordinary technical decisions, integration, final diff inspection, decisive
+validation, and final claims. Freely delegate bounded routine or repetitive work
+to default subagents when this saves main-agent effort or context. Zero subagents
+is also valid; do not spawn to satisfy a quota or offload a single quick command.
 
-Use subagents selectively for independent, bounded work when delegation materially improves speed, evidence quality, or main-context clarity. Follow more
-specific repository or skill instructions when present.
+Use default subagents for general tasks such as log analysis, running checks,
+documentation cleanup, mechanical edits, and bounded evidence collection. These
+tasks need not fit a specialist role. Saving main-agent effort or context is a
+sufficient benefit for routine delegation; no specialist escalation is required.
+Length, difficulty, completion, repeated errors, generic thoroughness, or wanting
+a second opinion alone do not justify specialist escalation or review.
 
-Prefer the smallest useful fan-out, normally one to three subagents. Good candidates include read-only codebase exploration, current documentation or upstream
-research, independent test or log analysis, and focused second-pass review.
+Parallelism is useful but not required: sequential delegation is valid when a
+bounded task saves effort or context, even if the main agent needs its result
+next. Keep tightly coupled reasoning, decisions, and shared edits local. Prefer
+direct searches and checks when handing off would cost more than doing the work.
 
-Do not delegate trivial tasks, one quick command, tightly sequential reasoning, or overlapping edits. Do not create subagents merely to satisfy a quota. Do not
-ask subagents to spawn further subagents unless the user explicitly requests recursive delegation.
+Use named roles when their specialization helps: explorer/researcher for focused
+evidence collection, worker for implementation within its configured scope, and
+reviewer for independent inspection of a stable result when a named security,
+concurrency, migration, regression, or public-contract risk justifies it. Use the
+configured defaults for general tasks rather than selecting worker just because
+the task involves execution. Final verification belongs to the main agent; no
+role is a mandatory lifecycle checkpoint.
 
-Keep the primary agent responsible for requirements, scope, architecture, integration, final diff review, decisive validation, and final conclusions. Prefer
-read-only delegation. Allow edits only for isolated mechanical work in disjoint files, with one active owner per file. Keep commits, pushes, deployments, shared
-edits, and security-sensitive changes with the primary agent.
+Invoke architect only when all three answers are concrete:
+1. What exact architectural decision remains unresolved?
+2. Why do repository conventions, current architecture, documentation, and bounded
+   investigation not resolve it?
+3. Why is it materially risky, expensive, long-lived, or difficult to reverse?
+Include these answers in the assignment. Large plans, repeated errors, finished
+work, and long tasks do not qualify. Debug repeated errors with new evidence and
+checked assumptions; escalate only if a high-impact architectural decision emerges.
 
-Each delegated task must have a narrow outcome, exact scope, relevant commands or evidence requirements, and explicit edit permission. Subagents must report
-failures, warnings, relevant evidence, and anything skipped; a bare passed summary is not sufficient.
+Use at most one broad independent review of a stable result when risk justifies
+it. After fixes, prefer tests and targeted verification of the specific findings,
+normally in the same reviewer. Another broad pass needs a new evidenced risk or
+material scope change; a previous reviewer finding alone does not justify it.
+Bound specialized audit workflows before starting and disclose incomplete proof
+if their requirements cannot be met within that bound. Do not silently omit proof.
+
+Give each delegate a compact capsule: goal; exact scope/ownership and write paths
+(or read-only); relevant context; constraints/non-goals; acceptance criteria;
+validation/evidence; expected output; stop condition. Require files/findings,
+actual check results, blockers, uncertainty, and skipped work, not a transcript.
+Prefer fork_turns="none" where supported. Include current requirements and
+authorizations explicitly; use selected turns only when necessary and full
+history only with a concrete reason. Reuse a child only for the same scope;
+independent review gets a fresh compact context without the primary conclusions.
+
+Use the smallest justified fan-out; the runtime slot count is a ceiling, not a
+target. One active writer per file/ownership area, including the main agent.
+Prefer read-only delegation; allow edits only for isolated mechanical work in
+disjoint files. Keep shared edits with the main agent.
+Account for shared runners, caches, services, Git index, and live state before
+parallel work. Subagents may delegate bounded parts of their assignment when
+useful, under the same scope, permissions, ownership, and specialist-escalation
+rules.
+Keep commits, pushes, deployments, security-sensitive edits, and final integration
+with the main agent. Delegation never expands authorization.
+
+Use configured role models and effort; do not raise effort or invoke Astra just
+because a task is difficult. Check actual child runtime evidence when model or
+permission guarantees matter; role descriptions and TOML are not runtime proof.
+Apply this delegation policy to skill workflows unless the user explicitly
+requests a different bounded orchestration policy; preserve required safety and
+verification evidence and report conflicts rather than inventing completion.
 
 ## Coding style
 
