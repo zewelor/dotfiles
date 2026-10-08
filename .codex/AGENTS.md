@@ -25,15 +25,16 @@ Do not rely solely on model memory when behavior may be version-sensitive or rec
 
 ## Testing
 
-- Never write unit tests after writing the code.
-- Prefer end-to-end (E2E) tests as the main way to verify complex features.
-- Make E2E tests produce an artifact that can be checked and reproduced.
-- If you need to test a system in isolation, first list all the ways it could fail. Then write the code.
-- For complex features, use realistic E2E scenarios with medium or high complexity. Don’t test only the simplest successful case.
-- Avoid tautological tests that only confirm what the code already says.
-- Avoid tests that only detect whether code changed.
-- For bug fixes, add a regression test only when existing behavior tests leave a real gap.
-- During development, run focused tests. Run the full E2E suite only at the end.
+- For behavior changes needing new coverage, use Red/Green/Refactor: define expected behavior and failure cases,
+  write a test and verify it fails on pre-change code for the intended reason; implement the minimum fix, then refactor.
+  If the new test already passes, check whether it exposes a real coverage gap before keeping it.
+- Test observable behavior and realistic failure paths. Avoid tests that mirror implementation, assert source
+  text, or merely detect that code changed. Reuse existing coverage; add a regression test only for a real gap.
+- Prefer E2E tests for complex features, with realistic scenarios of medium or high complexity beyond the simplest
+  happy path and a reproducible artifact. Before testing a system in isolation, identify its failure modes. Use focused tests during development
+  and run the full E2E suite at the end.
+- For documentation, formatting, or other changes without runtime behavior, use relevant syntax, link, or reference
+  checks instead of inventing behavior tests. Report checks actually run and any unverified behavior.
 
 ## Subagent delegation
 
@@ -69,20 +70,17 @@ configured defaults for general tasks rather than selecting worker just because
 the task involves execution. Final verification belongs to the main agent; no
 role is a mandatory lifecycle checkpoint.
 
-Use architect when the user explicitly requests it. For a deeper assessment,
-choose by its purpose: design, scope, responsibilities, boundaries, state
-models, or contracts belong to architect; code correctness belongs to the main
-agent or a risk-justified reviewer. A request for a deeper review alone does not
-choose the role.
-
-The main agent may initiate architectural assessment when it names a concrete
-design question or structural concern and the expected benefit of independent
-judgement. Such assessment may challenge an existing design; it does not require
-an unresolved high-risk decision. Give architect a bounded, read-only assignment
+Use architect when the user explicitly requests it, or when the main agent
+names a concrete design question or structural concern and the expected benefit
+of independent judgement. For a deeper assessment, choose by its purpose:
+design, scope, responsibilities, boundaries, state models, or contracts belong
+to architect; code correctness belongs to the main agent or a risk-justified
+reviewer. A request for a deeper review alone does not choose the role.
+Such assessment may challenge an existing design; it does not require an
+unresolved high-risk decision. Give architect a bounded, read-only assignment
 with concrete questions, current code and requirements. Large plans, repeated
 errors, finished work, and long tasks alone are not triggers. Debug repeated
-errors with new evidence and checked assumptions; involve architect only when
-there is a qualifying architectural question or an explicit request for the role.
+errors with new evidence and checked assumptions.
 
 Use at most one broad independent review of a stable result when risk justifies
 it. After fixes, prefer tests and targeted verification of the specific findings,
@@ -118,6 +116,16 @@ permission guarantees matter; role descriptions and TOML are not runtime proof.
 Apply this delegation policy to skill workflows unless the user explicitly
 requests a different bounded orchestration policy; preserve required safety and
 verification evidence and report conflicts rather than inventing completion.
+
+## Deferred follow-ups
+
+- For verification, confirmation, or cleanup deferred to a future date/event, create or update a Google Task using
+  the `gog` skill; no extra approval. Use the agreed or schedule-derived date; ask if unknown.
+  Do available work now and reuse existing follow-ups.
+- Include a clear title; notes: current state, resources/repository, steps, completion and cleanup prerequisites,
+  canonical links, and verified session ID plus `codex resume <id>` when available.
+- Follow `gog` auth/dry-run/write guidance; read back title/date/notes/status and report the link or failure.
+  A reminder does not authorize destructive work or bypass prerequisites.
 
 ## Coding style
 
