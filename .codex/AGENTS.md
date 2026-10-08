@@ -132,6 +132,7 @@ verification evidence and report conflicts rather than inventing completion.
 - Prefer simple, readable, explicit code. Apply YAGNI: add abstractions
   and configuration only when current requirements justify them.
 - Prefer existing conventions and a single source of truth.
-  Reduce duplication when it improves clarity.
+  Generate schemas from existing types or metadata.
+  Document manual exceptions for tool limits or different contracts.
 - Fail fast and loudly on unexpected errors and invalid states.
   Keep required recovery explicit; never silently hide failures.
