@@ -1044,7 +1044,7 @@ if has "mise"; then
 
       add-zsh-hook -d precmd _mise_setup_completions
       local completion_cache_dir="${ZSH_CACHE_DIR}/completions"
-      local -a cli_completion_tools=(sourcetap bird gog opencode)
+      local -a cli_completion_tools=(sourcetap gog opencode)
       local tool command_path completion_file completion_temp_file generation_status
 
       for tool in "${cli_completion_tools[@]}"; do
