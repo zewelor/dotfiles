@@ -132,7 +132,7 @@ Rules:
     # Generate commit message while keeping successful runs quiet.
     # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output.
     local error_file="${tmpfile}.stderr"
-    command cat "$tmpfile" | opencode run --pure -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
+    command cat "$tmpfile" | opencode run -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
     local result=$?
 
     if [ "$result" -ne 0 ] && [ -s "$error_file" ]; then
