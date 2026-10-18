@@ -4,8 +4,8 @@ BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 ZINIT_COMMIT_SHA=30514edc4a3e67229ce11306061ee92db9558cec
 # renovate: datasource=github-release-attachments depName=jdx/mise versioning=semver-coerced
-MISE_VERSION=v2026.8.10
-MISE_INSTALLER_SHA256=b968bffadf07e0c820481f7c33aab119c814992e11e25d121ce7102bec8d71f1
+MISE_VERSION=v2026.10.12
+MISE_INSTALLER_SHA256=bf200e2f408f7979083e931f1b6365676da88082cffdaeb655b6b422469dab2f
 
 FONT_INSTALLER=$(BASE)/install-font
 HEALTHCHECK=$(BASE)/bin/dotfiles-health-check
