@@ -438,7 +438,7 @@ To switch the accent, replace the theme file/config reference with the desired a
 
 **Projects still using tmuxinator:**
 
-- `cc-workers`, `dottales`, `esphome` (project-exit hooks and docker lifecycle)
+- `dottales`, `esphome` (project-exit hooks and docker lifecycle)
 
 ---
 
