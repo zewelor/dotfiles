@@ -1,9 +1,9 @@
 [tools]
 usage = "latest"
 ruby = "latest"
-"gem:ruby-lsp" = "latest"
+"gem:ruby-lsp" = { version = "latest", source = "https://rubygems.org/" }
 go = "latest"
-"gem:tmuxinator" = "latest"
+"gem:tmuxinator" = { version = "latest", source = "https://rubygems.org/" }
 github-cli = "latest"
 yt-dlp = { version = "latest", rename_exe = "yt-dlp" }
 kubectl = "latest"

@@ -201,6 +201,60 @@ check_mise_bootstrap() {
   fi
 }
 
+check_mise_gem_sources() {
+  local output_file
+  local -a config_files=("$BASE_DIR/.config/mise/config.toml")
+  local local_config="$BASE_DIR/.config/mise/config.local.toml"
+  if [[ -e "$local_config" || -L "$local_config" ]]; then
+    config_files+=("$local_config")
+  fi
+  output_file=$(mktemp -t dotfiles-mise-sources.XXXXXX)
+
+  # Use the system interpreter: invoking a mise shim here can recurse.
+  if /usr/bin/python3 - "${config_files[@]}" >"$output_file" 2>&1 <<'PY'
+from pathlib import Path
+import sys
+from urllib.parse import urlsplit
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    sys.exit("Gem source validation requires system Python 3.11+ (tomllib)")
+
+errors = []
+for filename in sys.argv[1:]:
+    config = Path(filename)
+    try:
+        with config.open("rb") as stream:
+            tools = tomllib.load(stream).get("tools", {})
+    except (OSError, tomllib.TOMLDecodeError):
+        errors.append(f"{config}: cannot read valid TOML")
+        continue
+    for name, spec in tools.items():
+        if not name.startswith("gem:"):
+            continue
+        versions = spec if isinstance(spec, list) else [spec]
+        for version in versions or [None]:
+            source = version.get("source") if isinstance(version, dict) else None
+            try:
+                url = urlsplit(source) if isinstance(source, str) else None
+                valid = url and url.scheme == "https" and url.hostname
+            except ValueError:
+                valid = False
+            if not valid:
+                errors.append(f"{config}: {name} requires an explicit HTTPS source")
+if errors:
+    sys.exit("\n".join(errors))
+PY
+  then
+    pass "Mise gems have explicit HTTPS sources"
+  else
+    fail "Mise gem source validation failed"
+    show_command_output "$output_file"
+  fi
+  rm -f "$output_file"
+}
+
 check_ssh_directories() {
   if [[ -d "$HOME/.ssh/config.d" ]]; then
     pass "~/.ssh/config.d exists"
@@ -327,6 +381,9 @@ fi
 
 print_section "Checking tool availability"
 check_required_tools
+
+print_section "Checking mise gem sources"
+check_mise_gem_sources
 
 print_section "Checking Vault helpers"
 check_vault_helper_tests

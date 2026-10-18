@@ -110,6 +110,7 @@ zinit_update:
 
 test:
 	@zsh "$(BASE)/tests/vault_test.zsh"
+	@/usr/bin/python3 "$(BASE)/tests/mise_sources_test.py"
 
 doctor:
 	@"$(HEALTHCHECK)" doctor

@@ -32,14 +32,26 @@ DOTFILES_PROFILE=server DOTFILES_STOW_APPLY=1 ./install
 Use the built-in health checks and regression test suite before or after bigger changes:
 
 ```bash
-make test    # run offline regression tests directly (zsh tests/vault_test.zsh)
-make doctor  # fast repo-local checks (syntax, stow dry-run, required tools, offline Vault tests)
+make test    # run offline Vault and mise source regression tests
+make doctor  # fast offline checks, including required gem sources
 make verify  # deeper environment drift checks for the current machine
 ```
 
-- `make test` runs the offline regression test suite directly (`zsh tests/vault_test.zsh`) using mocks without contacting a cluster.
-- `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, and the offline Vault helper suite.
+- `make test` runs the offline Vault helper suite and mise source regression tests.
+- `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, mise gem source validation, and the offline Vault helper suite.
 - `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
+
+Every `gem:*` entry in `.config/mise/config.toml` and the optional
+`config.local.toml` must declare an explicit HTTPS `source`, for example:
+
+```toml
+"gem:tmuxinator" = { version = "latest", source = "https://rubygems.org/" }
+```
+
+This avoids automatic `gem sources` discovery during version resolution.
+Validation uses `/usr/bin/python3` with Python 3.11+ (`tomllib`), without
+starting mise or Ruby. It runs when you invoke `make doctor` or `make verify`;
+it does not intercept direct mise commands.
 
 ### Codex reverse-engineering agents
 
