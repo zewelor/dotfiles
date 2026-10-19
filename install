@@ -918,6 +918,9 @@ run_installation() {
 
   fi
 
+  print_banner "Refreshing static shell completions"
+  "$BASE_DIR/bin/update-shell-completions"
+
   local editor_config_file="$HOME_DIR/.zshrc.d/editor.zsh"
   mkdir -p "$HOME_DIR/.zshrc.d"
 

@@ -1,0 +1,32 @@
+#!/bin/zsh
+# Run after installing or upgrading tools, never from shell startup or prompt hooks.
+set -euo pipefail
+
+completion_dir="${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/zinit}/completions"
+mkdir -p -- "$completion_dir"
+temp_file=""
+trap '[[ -z "$temp_file" ]] || rm -f -- "$temp_file"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' HUP TERM
+
+for tool in sourcetap gog opencode workmux; do
+  command_path=$(whence -p "$tool") || continue
+  case "$tool" in
+    opencode) args=(--completions zsh) ;;
+    workmux)  args=(completions zsh) ;;
+    *)        args=(completion zsh) ;;
+  esac
+
+  temp_file=$(mktemp "$completion_dir/.${tool}.XXXXXX")
+  if ! "$command_path" "${args[@]}" > "$temp_file"; then
+    print -u2 -- "Failed to generate $tool completion; keeping the previous file."
+    exit 1
+  fi
+  if [[ ! -s "$temp_file" ]] || ! /bin/zsh -n "$temp_file"; then
+    print -u2 -- "Invalid $tool completion; keeping the previous file."
+    exit 1
+  fi
+  mv -f -- "$temp_file" "$completion_dir/_$tool"
+  temp_file=""
+  print -r -- "Updated $tool completion"
+done

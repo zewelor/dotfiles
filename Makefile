@@ -1,4 +1,4 @@
-.PHONY: all install base mise update-fonts setup packages zinit_update doctor verify skills test
+.PHONY: all install base mise update-fonts setup packages zinit_update doctor verify skills test completions
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -108,9 +108,13 @@ zinit_update:
 	echo "Remember to update root also"
 	zinit update
 
+completions:
+	@"$(BASE)/bin/update-shell-completions"
+
 test:
 	@zsh "$(BASE)/tests/vault_test.zsh"
 	@/usr/bin/python3 "$(BASE)/tests/mise_sources_test.py"
+	@/usr/bin/python3 "$(BASE)/tests/completions_test.py"
 
 doctor:
 	@"$(HEALTHCHECK)" doctor

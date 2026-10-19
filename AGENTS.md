@@ -78,6 +78,14 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
 - Utrzymuj szybki i deterministyczny start shella. Nie dodawaj synchronicznych
   probe'ów sieciowych, generowania cache, `direnv` ani nowych hooków
   prompt/`chpwd`; koszt startupu potwierdzaj pomiarem.
+- Generuj statyczne completions CLI przez `bin/update-shell-completions` po
+  instalacji lub aktualizacji narzędzi. Podłącz ten krok do odpowiedniej
+  ścieżki instalacji i aktualizacji; po ręcznej aktualizacji uruchom go jawnie.
+  Przy starcie Zsh tylko rejestruj gotowe pliki przez `autoload` i `zpcompdef`.
+  Nie uruchamiaj generatorów completion w `.zshrc`, hookach `precmd`/`chpwd`
+  na ścieżce startu shella. Brak cache pozostaw do jawnego odświeżenia.
+  Weryfikuj składnię generatora dla zainstalowanej wersji CLI; po błędzie
+  zachowaj poprzedni plik i zgłoś niepowodzenie odświeżania.
 - Narzędzia, aliasy i completions Kubernetes pozostają lazy-loadowane wewnątrz
   `start-k8s-work()` w `.zsh/kubernetes.zsh`, nie w głównym `.zshrc`.
 - `mise` jest wymagane tylko dla profilu `desktop`; na `server` pozostaje

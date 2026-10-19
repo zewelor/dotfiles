@@ -607,6 +607,18 @@ function update-all () {
     is_desktop && failures+=(mise-missing)
   fi
 
+  echo
+  echo "[completions] Refreshing static shell completions"
+  local -a completion_cache_env=()
+  if [[ "$target_home" == "$HOME" ]]; then
+    completion_cache_env=("ZSH_CACHE_DIR=${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/zinit}")
+  fi
+  if ! sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" \
+    MISE_CONFIG_DIR="${target_mise_config_dir}" "${completion_cache_env[@]}" \
+    "${resolved_target_zshrc:h}/bin/update-shell-completions"; then
+    failures+=(completions)
+  fi
+
   # Update Neovim plugins via Lazy.nvim
   if target_user_has "nvim"; then
     echo
@@ -722,14 +734,6 @@ if has "git"; then
       git push --force-with-lease
     fi
   }
-
-  _workmux_lazy_init() {
-    (( $+functions[compdef] )) || return 0
-    has "workmux" || return 0
-    add-zsh-hook -d precmd _workmux_lazy_init
-    source <(workmux completions zsh)
-  }
-  add-zsh-hook precmd _workmux_lazy_init
 
   function grhco () {
     git reset HEAD $1 && git checkout -- $1
@@ -1036,52 +1040,6 @@ if has "mise"; then
     done
     mise use -p "$target_cfg" "${args[@]}"
   }
-
-  if is_interactive; then
-    # Retry on precmd only when compdef is still delayed by Zinit.
-    _mise_setup_completions() {
-      (( $+functions[compdef] )) || return
-
-      add-zsh-hook -d precmd _mise_setup_completions
-      local completion_cache_dir="${ZSH_CACHE_DIR}/completions"
-      local -a cli_completion_tools=(sourcetap gog opencode)
-      local tool command_path completion_file completion_temp_file generation_status
-
-      for tool in "${cli_completion_tools[@]}"; do
-        command_path="$(whence -p "$tool")" || continue
-        completion_file="${completion_cache_dir}/_${tool}"
-
-        if [[ ! -s "$completion_file" || ! "$completion_file" -nt "$command_path" ]]; then
-          # Generate separately so a failed CLI cannot corrupt the working cache.
-          completion_temp_file="${completion_cache_dir}/.${tool}.$$.tmp"
-          if [[ "$tool" == "opencode" ]]; then
-            "$command_path" completion >| "$completion_temp_file"
-          else
-            "$command_path" completion zsh >| "$completion_temp_file"
-          fi
-          generation_status=$?
-          if (( generation_status != 0 )) \
-            || [[ ! -s "$completion_temp_file" ]] \
-            || ! command mv -f -- "$completion_temp_file" "$completion_file"; then
-            # Discard failed output and keep the previous completion untouched.
-            command rm -f -- "$completion_temp_file"
-          fi
-        fi
-
-        [[ -s "$completion_file" ]] || continue
-        if [[ "$tool" == "opencode" ]]; then
-          source "$completion_file"
-          compdef _opencode_yargs_completions opencode oc
-        else
-          autoload -Uz "_${tool}"
-          compdef "_${tool}" "$tool"
-        fi
-      done
-      unfunction _mise_setup_completions
-    }
-    _mise_setup_completions
-    (( $+functions[_mise_setup_completions] )) && add-zsh-hook precmd _mise_setup_completions
-  fi
 fi
 
 agent_browser_skills_dir="${HOME}/.local/share/mise/installs/npm-agent-browser/latest/lib/node_modules/agent-browser/skill-data"

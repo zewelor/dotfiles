@@ -27,6 +27,18 @@ explicitly:
 DOTFILES_PROFILE=server DOTFILES_STOW_APPLY=1 ./install
 ```
 
+## Shell completions
+
+`./install` and `update-all` run `bin/update-shell-completions` after installing
+or updating tools. It generates static Zsh completions for installed Sourcetap,
+gog, OpenCode, and workmux CLIs. Shell startup only registers cached files;
+it never launches these generators. Failed or invalid output leaves the previous
+completion file intact and returns an error.
+
+After a manual tool install or upgrade (including direct `mise install` or
+`mise upgrade`), run `make -C ~/dotfiles completions`, then open a new shell.
+Missing tools are skipped; missing cache is not generated during shell startup.
+
 ## Health Checks & Testing
 
 Use the built-in health checks and regression test suite before or after bigger changes:
