@@ -748,12 +748,6 @@ if has "git"; then
   }
 fi
 
-
-if is_desktop; then
-  # Bonus
-  alias update_bonus="ssh bonus -t 'cd ~/bonus_docker ; git pull origin'"
-fi
-
 #
 # Utils
 #
