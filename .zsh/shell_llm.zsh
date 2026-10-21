@@ -129,10 +129,10 @@ Rules:
       return 1
     fi
 
-    # Generate commit message while keeping successful runs quiet.
+    # Use a private server for one-shot generation and keep successful runs quiet.
     # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output.
     local error_file="${tmpfile}.stderr"
-    command cat "$tmpfile" | opencode run -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
+    command cat "$tmpfile" | opencode run --standalone -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
     local result=$?
 
     if [ "$result" -ne 0 ] && [ -s "$error_file" ]; then
