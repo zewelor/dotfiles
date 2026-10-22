@@ -431,6 +431,26 @@ To switch the accent, replace the theme file/config reference with the desired a
 
 ---
 
+### Herdr — agent workspaces
+
+`~/.config/herdr/config.toml` is managed by Stow from
+`.config/herdr/config.toml`. The installer keeps `~/.config/herdr` as a real
+directory so logs, sockets, and session snapshots stay outside the repository.
+
+- Prefix: `Ctrl+A`.
+- Return to the last focused pane, including across tabs and workspaces:
+  `Ctrl+A`, then plain `a`. Pressing `Ctrl+A` twice sends a literal `Ctrl+A`
+  to the terminal and cannot be used for this binding.
+- Window title: `Herdr | {terminal_title}`. The active pane supplies
+  the terminal title, so agents that set their conversation title expose it here.
+  See the [Herdr title reference](https://herdr.dev/docs/configuration/#outer-terminal-window-title).
+- Codex sound notifications are disabled in `[ui.sound.agents]` to avoid noisy
+  alerts based on inferred agent state.
+
+After editing the config, run `herdr server reload-config`.
+
+---
+
 ### tmux and tmuxinator — session helpers
 
 - **Repo**: [tmuxinator/tmuxinator](https://github.com/tmuxinator/tmuxinator)

@@ -1,0 +1,16 @@
+onboarding = false
+
+[ui]
+status_indicators = "symbols"
+window_title = "Herdr | {terminal_title}"
+
+[ui.sound.agents]
+codex = "off"
+
+[theme]
+name = "catppuccin-latte"
+auto_switch = false
+
+[keys]
+prefix = "ctrl+a"
+last_pane = "prefix+a"

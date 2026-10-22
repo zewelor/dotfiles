@@ -266,6 +266,7 @@ prepare_stow_targets() {
   mkdir -p \
     "$CONFIG_DIR/Code/User" \
     "$CONFIG_DIR/atuin" \
+    "$CONFIG_DIR/herdr" \
     "$CONFIG_DIR/mc" \
     "$HOME_DIR/.ssh/config.d" \
     "$HOME_DIR/.zshrc.d"
