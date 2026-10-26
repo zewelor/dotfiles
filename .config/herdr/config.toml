@@ -2,8 +2,16 @@ onboarding = false
 
 [ui]
 status_indicators = "symbols"
-# window_title = "{terminal_title}"
-window_title = "{workspace} | {terminal_title}"
+prompt_new_tab_name = false
+window_title = "Herdr: {workspace}"
+# window_title = "{workspace} | {terminal_title}"
+
+[ui.sidebar.spaces]
+rows = [
+  ["state_icon", "workspace"],
+  ["branch", "git_status"],
+  [{ token = "$topic", bold = true, dim = false }],
+]
 
 [ui.sound.agents]
 codex = "off"
@@ -15,3 +23,9 @@ auto_switch = false
 [keys]
 prefix = "ctrl+a"
 last_pane = "prefix+a"
+
+[[keys.command]]
+key = "prefix+d"
+type = "plugin_action"
+command = "persiyanov.reviewr.toggle"
+description = "toggle diff review"
