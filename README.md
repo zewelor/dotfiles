@@ -27,6 +27,12 @@ explicitly:
 DOTFILES_PROFILE=server DOTFILES_STOW_APPLY=1 ./install
 ```
 
+`~/.config` must be a real directory for every account, including root. Linking
+the entire directory into this repository redirects application runtime writes
+into the checkout. The installer rejects an existing directory symlink; repair
+it before installing, preserving individual managed config links and keeping
+runtime files in the account's own configuration directory.
+
 ## Shell completions
 
 `./install` and `update-all` run `bin/update-shell-completions` after installing

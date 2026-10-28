@@ -263,6 +263,11 @@ setup_atuin() {
 # Keep runtime-owned parent directories real so Stow cannot fold them into the repo.
 prepare_stow_targets() {
   print_banner "Preparing runtime-owned Stow targets..."
+  if [[ -L "$CONFIG_DIR" ]]; then
+    echo "Error: $CONFIG_DIR must be a real directory, not a symlink." >&2
+    echo "Replace the directory symlink with individual managed config links before installing." >&2
+    return 1
+  fi
   mkdir -p \
     "$CONFIG_DIR/Code/User" \
     "$CONFIG_DIR/atuin" \
