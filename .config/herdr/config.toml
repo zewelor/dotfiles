@@ -29,3 +29,6 @@ key = "prefix+d"
 type = "plugin_action"
 command = "persiyanov.reviewr.toggle"
 description = "toggle diff review"
+
+[ui.toast]
+delivery = "herdr"
