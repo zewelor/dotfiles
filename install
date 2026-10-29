@@ -285,6 +285,47 @@ prepare_stow_targets() {
   done
 }
 
+# Stow private plugin settings as files, keeping Herdr runtime directories real.
+setup_herdr() {
+  is_desktop || return 0
+
+  print_banner "Configuring Herdr"
+  local plugin_source="$BASE_DIR/prv/.config/herdr/plugins"
+  local config_source="$plugin_source/config"
+  local plugin_target="$CONFIG_DIR/herdr/plugins"
+  local source_dir dir
+
+  if [[ ! -d "$config_source" ]]; then
+    echo "Error: Missing private Herdr plugin configuration: $config_source" >&2
+    return 1
+  fi
+
+  for dir in "$CONFIG_DIR/herdr" "$plugin_target"; do
+    if [[ -L "$dir" ]]; then
+      echo "Error: Herdr runtime directory must not be a symlink: $dir" >&2
+      return 1
+    fi
+    mkdir -p "$dir"
+  done
+  for source_dir in "$config_source" "$config_source"/**/*(/N); do
+    dir="$plugin_target/${source_dir#$plugin_source/}"
+    if [[ -L "$dir" ]]; then
+      echo "Error: Herdr runtime directory must not be a symlink: $dir" >&2
+      return 1
+    fi
+    mkdir -p "$dir"
+  done
+
+  # An existing empty directory disables Herdr Plus's example action seeding.
+  dir="$plugin_target/config/cloudmanic.herdr-plus/quick-actions"
+  if [[ -L "$dir" ]]; then
+    echo "Error: Herdr runtime directory must not be a symlink: $dir" >&2
+    return 1
+  fi
+  mkdir -p "$dir"
+  install_with_stow --no-folding -d "$plugin_source" -t "$plugin_target/config" config
+}
+
 # Remove only dangling links that were created by this repository.
 migrate_retired_managed_links() {
   local alacritty_link="$CONFIG_DIR/alacritty"
@@ -895,6 +936,7 @@ run_installation() {
     print_flatpak_manual_instructions
     print_banner "Stowing private overrides from prv/"
     install_with_stow -d "$BASE_DIR/prv" -t "$HOME_DIR" "."
+    setup_herdr
 
     # Stow user scripts from .local/bin
     if [[ -d "$BASE_DIR/.local/bin" ]]; then

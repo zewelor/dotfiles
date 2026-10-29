@@ -30,5 +30,17 @@ type = "plugin_action"
 command = "persiyanov.reviewr.toggle"
 description = "toggle diff review"
 
+[[keys.command]]
+key = "prefix+shift+o"
+type = "plugin_action"
+command = "cloudmanic.herdr-plus.projects"
+description = "open projects"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "cloudmanic.herdr-plus.quick-actions"
+description = "open quick actions"
+
 [ui.toast]
 delivery = "herdr"
