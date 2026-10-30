@@ -285,7 +285,7 @@ prepare_stow_targets() {
   done
 }
 
-# Stow private plugin settings as files, keeping Herdr runtime directories real.
+# Keep runtime directories real, but link the declarative projects directory.
 setup_herdr() {
   is_desktop || return 0
 
@@ -293,10 +293,20 @@ setup_herdr() {
   local plugin_source="$BASE_DIR/prv/.config/herdr/plugins"
   local config_source="$plugin_source/config"
   local plugin_target="$CONFIG_DIR/herdr/plugins"
+  local projects_source="$config_source/cloudmanic.herdr-plus/projects"
+  local projects_target="$plugin_target/config/cloudmanic.herdr-plus/projects"
   local source_dir dir
 
   if [[ ! -d "$config_source" ]]; then
     echo "Error: Missing private Herdr plugin configuration: $config_source" >&2
+    return 1
+  fi
+  if [[ ! -d "$projects_source" ]]; then
+    echo "Error: Missing private Herdr projects directory: $projects_source" >&2
+    return 1
+  fi
+  if [[ -e "$projects_target" && ! -L "$projects_target" ]]; then
+    echo "Error: Herdr projects path must be absent or a managed symlink: $projects_target" >&2
     return 1
   fi
 
@@ -308,6 +318,7 @@ setup_herdr() {
     mkdir -p "$dir"
   done
   for source_dir in "$config_source" "$config_source"/**/*(/N); do
+    [[ "$source_dir" == "$projects_source" || "$source_dir" == "$projects_source/"* ]] && continue
     dir="$plugin_target/${source_dir#$plugin_source/}"
     if [[ -L "$dir" ]]; then
       echo "Error: Herdr runtime directory must not be a symlink: $dir" >&2
@@ -323,7 +334,8 @@ setup_herdr() {
     return 1
   fi
   mkdir -p "$dir"
-  install_with_stow --no-folding -d "$plugin_source" -t "$plugin_target/config" config
+
+  install_with_stow -d "$plugin_source" -t "$plugin_target/config" config
 }
 
 # Remove only dangling links that were created by this repository.

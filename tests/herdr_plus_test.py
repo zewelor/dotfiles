@@ -40,13 +40,37 @@ class HerdrPlusTest(unittest.TestCase):
         for _ in range(2):
             result = self.run_install()
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertTrue(self.target.is_symlink())
+            self.assertTrue(self.target.parent.is_symlink())
             self.assertEqual(self.target.resolve(), self.source)
             self.assertTrue((self.config / "quick-actions").is_dir())
             generated = self.config / "cloudmanic-state.json"
             generated.write_text("{}")
             self.assertFalse((self.source.parents[2] / generated.name).exists())
         self.assertFalse(self.config.is_symlink())
+
+    def test_new_project_is_visible_without_reinstall(self):
+        result = self.run_install()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        added = self.source.with_name("r3x.toml")
+        added.write_text('name = "r3x"\n')
+        self.assertEqual((self.config / "projects/r3x.toml").read_text(), added.read_text())
+
+    def test_foreign_projects_directory_link_is_preserved(self):
+        foreign = self.root / "foreign-projects"
+        foreign.mkdir()
+        self.config.mkdir(parents=True)
+        self.target.parent.symlink_to(foreign, target_is_directory=True)
+        self.assertNotEqual(self.run_install().returncode, 0)
+        self.assertEqual(self.target.parent.resolve(), foreign)
+        self.assertEqual(list(foreign.iterdir()), [])
+
+    def test_real_projects_directory_is_rejected_without_changes(self):
+        self.target.parent.mkdir(parents=True)
+        local = self.target.with_name("local.toml")
+        local.write_text('name = "local"\n')
+        self.assertNotEqual(self.run_install().returncode, 0)
+        self.assertEqual(local.read_text(), 'name = "local"\n')
+        self.assertEqual(list(self.target.parent.iterdir()), [local])
 
     def test_server_does_not_link_private_config(self):
         self.source.unlink()
