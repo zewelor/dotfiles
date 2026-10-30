@@ -23,7 +23,7 @@ auto_switch = false
 [keys]
 prefix = "ctrl+a"
 last_pane = "prefix+a"
-next_tab = ["prefix+n", "prefix+space"]
+next_tab = ["prefix+n", "prefix+space", "prefix+ctrl+space"]
 
 [[keys.command]]
 key = "prefix+d"
