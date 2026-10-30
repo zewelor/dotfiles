@@ -115,6 +115,7 @@ test:
 	@zsh "$(BASE)/tests/vault_test.zsh"
 	@/usr/bin/python3 "$(BASE)/tests/mise_sources_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/completions_test.py"
+	@/usr/bin/python3 "$(BASE)/tests/update_all_test.py"
 
 doctor:
 	@"$(HEALTHCHECK)" doctor
