@@ -567,7 +567,8 @@ function update-all () {
     return 1
   fi
   run_for_target_user () {
-    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" sh -lc "${1}"
+    # sudo -H sets HOME but keeps the caller's working directory, possibly /root.
+    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" sh -lc "cd \"\$HOME\" || exit; ${1}"
   }
 
   target_user_has () {
@@ -599,7 +600,7 @@ function update-all () {
         failures+=(mise-prune)
       fi
     else
-      echo "[mise] Update failed (exit ${_mise_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"${mise_command}\"' to see details."
+      echo "[mise] Update failed (exit ${_mise_ec}); retry as '${target_user}' from '${target_home}': ${mise_command}"
       failures+=(mise)
     fi
   else
@@ -642,7 +643,7 @@ function update-all () {
       echo "[skills] Update complete"
     else
       local _skills_ec=$?
-      echo "[skills] Update failed (exit ${_skills_ec}) try running: 'sudo -H -u ${target_user} env PATH=\"${user_tool_env_path}\" sh -lc \"npx --yes skills update\"' to see details."
+      echo "[skills] Update failed (exit ${_skills_ec}); retry as '${target_user}' from '${target_home}': npx --yes skills update --global"
       failures+=(skills)
     fi
   else
