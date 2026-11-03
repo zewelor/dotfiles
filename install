@@ -580,14 +580,6 @@ setup_user_systemd_units() {
     )
   fi
 
-  # Daily Briefing is scheduled by R3x. Keep the desktop units for manual rollback.
-  # Restore this block only after disabling the R3x schedule to avoid duplicate reports.
-  # if [[ -x "$HOME_DIR/bin/daily_briefing/run.sh" ]] \
-  #   && [[ -f "$CONFIG_DIR/systemd/user/daily-briefing.service" ]] \
-  #   && [[ -f "$CONFIG_DIR/systemd/user/daily-briefing.timer" ]]; then
-  #   enable_now_units+=("daily-briefing.timer")
-  # fi
-
   if (( ${#enable_units[@]} == 0 )) && (( ${#enable_now_units[@]} == 0 )); then
     return
   fi

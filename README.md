@@ -56,7 +56,7 @@ make verify  # deeper environment drift checks for the current machine
 ```
 
 - `make test` runs offline tests for Vault helpers, mise sources, shell completions,
-  and the `update-all` user command runner.
+  the `update-all` user command runner, and the temporary Codex workspace.
 - `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, mise gem source validation, and the offline Vault helper suite.
 - `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
 
@@ -106,6 +106,10 @@ DOTFILES_ALLOW_NON_ZSH_SHELL=1 ./install
   `Italic`, and `BoldItalic`. `make update-fonts` preserves that four-style set.
 
 ## Local customizations
+
+`cdxtmp` creates a temporary directory, changes the current shell into it, and
+starts Codex. After Codex exits, the shell stays there and session files remain
+available; remove the directory manually when it is no longer needed.
 
 Local customization can be done by putting files in the ~/.zshrc.d/ directory. These files will be sourced by the main .zshrc file.
 
@@ -291,21 +295,6 @@ sudo systemctl daemon-reload
 - Put public jobs in `.config/systemd/user/` and private jobs in `prv/.config/systemd/user/`.
 - Register units in `install` via `setup_user_systemd_units()` so `./install` reloads `systemd --user` and enables them automatically.
 - Use `Persistent=true` in timers when a missed run should fire on the next login/resume instead of being skipped.
-
-### Daily briefing timer
-
-- Script: `prv/bin/daily_briefing/run.sh`
-- Units: `prv/.config/systemd/user/daily-briefing.service` and `prv/.config/systemd/user/daily-briefing.timer`
-- Schedule: every day at `07:00`
-- Catch-up behavior: if the laptop was asleep or you were logged out at `07:00`, `Persistent=true` makes the missed run execute when the user session comes back.
-
-Useful commands:
-
-```bash
-systemctl --user status daily-briefing.timer
-systemctl --user list-timers daily-briefing.timer
-journalctl --user -u daily-briefing.service -f
-```
 
 ## Benchmarking / Profiling
 

@@ -116,6 +116,7 @@ test:
 	@/usr/bin/python3 "$(BASE)/tests/mise_sources_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/completions_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/update_all_test.py"
+	@/usr/bin/python3 "$(BASE)/tests/shell_llm_test.py"
 
 doctor:
 	@"$(HEALTHCHECK)" doctor

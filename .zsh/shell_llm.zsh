@@ -37,7 +37,10 @@ _llm_tmp() {
 }
 
 cdxtmp() {
-  _llm_tmp codex "-C" "$@"
+  # Keep the shell and session files in the workspace after Codex exits.
+  local tmpdir="$(mktemp -d)" || return 1
+  builtin cd -- "$tmpdir" || return 1
+  codex "$@"
 }
 
 octmp() {

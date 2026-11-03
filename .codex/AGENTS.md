@@ -134,5 +134,6 @@ verification evidence and report conflicts rather than inventing completion.
 - Prefer existing conventions and a single source of truth.
   Generate schemas from existing types or metadata.
   Document manual exceptions for tool limits or different contracts.
+- Name new read-only database users and roles `<app>_ro`, for example `app_ro`, instead of `<app>_reader`. Preserve externally required names; rename existing deployed roles only when explicitly requested.
 - Fail fast and loudly on unexpected errors and invalid states.
   Keep required recovery explicit; never silently hide failures.
