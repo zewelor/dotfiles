@@ -70,11 +70,11 @@ ensure_symlink_target() {
   local link_path="${2:-}"
 
   [[ -n "$target_path" && -n "$link_path" ]] || return 1
-  mkdir -p "${link_path:h}"
-
   if symlink_points_to "$link_path" "$target_path"; then
     return 0
   fi
+
+  mkdir -p "${link_path:h}" || return 1
 
   if [[ -e "$link_path" || -L "$link_path" ]]; then
     rm -f "$link_path"

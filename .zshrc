@@ -983,7 +983,9 @@ for file in $HOME/.zsh/*.zsh; do
   # echo "Bindkey `bindkey |grep 'R'`"
 done
 
-if is_desktop && is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " " -f 1 | rev` ; then
+# Keep the libc compatibility check without spawning a text-processing pipeline.
+if is_desktop && glibc_version=$(getconf GNU_LIBC_VERSION) &&
+  is-at-least '2.32' "${glibc_version##* }"; then
   zinit light-mode as"program" from"gh-r" \
     bpick"$(
       emulate -L zsh
@@ -1003,6 +1005,8 @@ if is_desktop && is-at-least '2.32' `getconf GNU_LIBC_VERSION | rev | cut -d " "
 else
   zinit light-mode for joshskidmore/zsh-fzf-history-search
 fi
+
+unset glibc_version
 
 # Local includes
 if [[ -d "$HOME/.zshrc.d" ]]; then

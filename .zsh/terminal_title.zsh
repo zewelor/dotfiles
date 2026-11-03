@@ -10,31 +10,18 @@ autoload -Uz add-zsh-hook
 # Minimal: always send OSC 2; limit to 40 chars
 typeset -g ZSH_TITLE_MAX=${ZSH_TITLE_MAX-40}
 
-# Use a user@hostname prefix when the session is remote.
-_title_terminal_session_prefix() {
-  [[ -n "${SSH_CONNECTION:-}${SSH_CLIENT:-}" ]] || return 0
-  local host
-  host=${HOSTNAME:-}
-  if [[ -z "$host" ]]; then
-    if host_tmp=$(hostname -s 2>/dev/null); then
-      host=$host_tmp
-    fi
-  fi
-  [[ -n "$host" ]] || return 0
-  printf '%s@%s: ' "${LOGNAME:-${USER}}" "$host"
-}
-
 _title_terminal() {
   emulate -L zsh
   [[ -t 1 ]] || return 0
   [[ -n "${TMUX:-}" ]] && return 0   # skip when inside tmux (pane_title managed by tmux)
   local input="$1"
   # Expand prompt escapes (e.g. %~)
-  local expanded
-  expanded=$(print -P -- "$input")
-  local prefix
-  prefix=$(_title_terminal_session_prefix)
-  expanded="${prefix}${expanded}"
+  local expanded="${(%)input}"
+  if [[ -n "${SSH_CONNECTION:-}${SSH_CLIENT:-}" ]]; then
+    # HOST is supplied by zsh; match hostname -s when HOSTNAME is not exported.
+    local host="${HOSTNAME:-${HOST%%.*}}"
+    [[ -n "$host" ]] && expanded="${LOGNAME:-${USER}}@${host}: ${expanded}"
+  fi
   # Truncate to max length with ascii ellipsis
   local max=$ZSH_TITLE_MAX
   if (( max > 0 && ${#expanded} > max )); then

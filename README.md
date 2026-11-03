@@ -45,6 +45,18 @@ After a manual tool install or upgrade (including direct `mise install` or
 `mise upgrade`), run `make -C ~/dotfiles completions`, then open a new shell.
 Missing tools are skipped; missing cache is not generated during shell startup.
 
+## Shell startup
+
+Terminal titles expand Zsh prompt escapes and resolve the remote hostname using
+shell parameters. Existing completion-cache directories and matching SSH-agent
+symlinks are reused without running `mkdir`. The desktop glibc compatibility
+check uses shell string expansion; unsupported libc checks retain the existing
+fzf history fallback. Vi mode, Atuin, Starship, zoxide and deferred plugins keep
+their existing initialization order.
+
+See [the startup profiling report](docs/shell-startup-profile.md) for measurements
+and verification limits.
+
 ## Health Checks & Testing
 
 Use the built-in health checks and regression test suite before or after bigger changes:
@@ -56,7 +68,8 @@ make verify  # deeper environment drift checks for the current machine
 ```
 
 - `make test` runs offline tests for Vault helpers, mise sources, shell completions,
-  the `update-all` user command runner, and the temporary Codex workspace.
+  the `update-all` user command runner, the temporary Codex workspace, and shell
+  startup helpers.
 - `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, mise gem source validation, and the offline Vault helper suite.
 - `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
 
