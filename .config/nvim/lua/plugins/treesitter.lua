@@ -1,6 +1,8 @@
 -- nvim-treesitter — Tree-sitter parsers and queries (Neovim 0.11+)
 return {
   "nvim-treesitter/nvim-treesitter",
+  -- Server profiles use built-in syntax highlighting without parser compilation.
+  enabled = vim.env.DOTFILES_PROFILE == "desktop",
   lazy = false,
   build = ":TSUpdate",
   config = function()

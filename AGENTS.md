@@ -90,6 +90,12 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
   `start-k8s-work()` w `.zsh/kubernetes.zsh`, nie w głównym `.zshrc`.
 - `mise` jest wymagane tylko dla profilu `desktop`; na `server` pozostaje
   opcjonalne, dopóki konkretny use case nie uzasadni zmiany polityki.
+- Profil `server` ma pozostać lekki: preferuj gotowe binarki i minimalne
+  zależności. Przed dodaniem toolchainu, pakietów deweloperskich lub kompilacji
+  na serwerze (także przez pluginy i automatyczne aktualizacje) wyraźnie zgłoś
+  użytkownikowi ten koszt, wskaż zależności i lżejszą alternatywę oraz uzyskaj
+  jego jawną zgodę na taki zakres. Nie dodawaj ich jako ukrytej zależności
+  wspólnej konfiguracji.
 - Nowe standalone CLI dodawaj domyślnie przez `mise`. Zinit służy pluginom
   shellowym i świadomym wyjątkom wymagającym integracji z shellem.
 - CLI instalowane wyjątkowo przez Zinit wystawiaj przez `sbin`, nie przez

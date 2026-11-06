@@ -5,6 +5,11 @@ Some examples here:
 
 ## Installation
 
+The `server` profile uses prebuilt CLI binaries and does not require
+`build-essential` or `autoconf`.
+Its Neovim configuration uses standard syntax highlighting and the default
+Telescope sorter, without compiling Tree-sitter parsers or `fzf-native`.
+
 ```bash
 git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
 ```

@@ -58,6 +58,13 @@ formatterów. Pozostałe funkcje edytora działają normalnie, a brak `mise` nie
 powoduje błędu startu. Dzięki temu ten sam config może być używany np. przez
 `root` bez osobnej instalacji narzędzi deweloperskich.
 
+Profil `server` nie ładuje `nvim-treesitter` ani `telescope-fzf-native`, nawet
+gdy kompilator jest dostępny. Korzysta ze standardowego podświetlania składni
+i sortera Telescope, bez kompilacji parserów i natywnego rozszerzenia FZF.
+Te dodatki są włączane tylko przy `DOTFILES_PROFILE=desktop`; brak tej zmiennej
+oznacza lekki wariant, tak jak domyślny profil shella. Reguła jest niezależna
+od obecności `mise`.
+
 ## ⚙️ Core Options
 
 Główne opcje edytora (z `lua/config/options.lua`):
@@ -146,7 +153,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Keymaps**:
   - `<Space>ff` — Szukaj plików przez Telescope (`find_files`)
   - `<Space>fg` — Szukaj w treści z ripgrep (`live_grep`)
-- **Dodatkowe info**: Automatycznie używa `fd` jeśli dostępne oraz ładuje rozszerzenie `telescope-fzf-native` gdy dostępne `make`
+- **Dodatkowe info**: Automatycznie używa `fd` jeśli dostępne. Rozszerzenie `telescope-fzf-native` ładuje tylko w profilu `desktop`, gdy dostępne jest `make`; jego budowanie wymaga kompilatora C. Profil `server` używa standardowego sortera.
 
 ---
 
@@ -302,6 +309,7 @@ opencode --port
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
 - **Wymagania**: Neovim 0.11+.
+- **Profil**: Tylko `DOTFILES_PROFILE=desktop`. Na `server` i bez ustawionego profilu plugin oraz jego build `:TSUpdate` są wyłączone.
 - **Auto-install**: Brakujące parsery (lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm, go) są instalowane automatycznie przy pierwszym starcie. Wymaga kompilacji (gcc/clang).
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery

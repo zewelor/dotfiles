@@ -24,7 +24,6 @@ APT_PACKAGES_CORE= \
 	ca-certificates \
 	fontconfig \
 	unzip \
-	autoconf \
 	tmux \
 	zsh \
 	fd-find \

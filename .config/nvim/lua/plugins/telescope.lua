@@ -1,4 +1,6 @@
 -- telescope.nvim provides a fuzzy finder for files, buffers, and more
+local use_native = vim.env.DOTFILES_PROFILE == "desktop" and vim.fn.executable("make") == 1
+
 return {
   "nvim-telescope/telescope.nvim",
   cmd = "Telescope",
@@ -7,9 +9,8 @@ return {
     {
       "nvim-telescope/telescope-fzf-native.nvim",
       build = "make",
-      cond = function()
-        return vim.fn.executable("make") == 1
-      end,
+      -- Keep server profiles free of native compilation dependencies.
+      enabled = use_native,
     },
   },
   config = function()
@@ -25,6 +26,8 @@ return {
     end
 
     telescope.setup(opts)
-    pcall(telescope.load_extension, "fzf")
+    if use_native then
+      pcall(telescope.load_extension, "fzf")
+    end
   end,
 }
