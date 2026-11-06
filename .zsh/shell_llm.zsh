@@ -133,9 +133,11 @@ Rules:
     fi
 
     # Use a private server for one-shot generation and keep successful runs quiet.
+    # Disable Herdr integration reports and isolate the process from foreground detection;
+    # --wait preserves the OpenCode exit status.
     # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output.
     local error_file="${tmpfile}.stderr"
-    command cat "$tmpfile" | opencode run --standalone -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
+    command cat "$tmpfile" | HERDR_ENV=0 setsid --wait opencode run --standalone -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
     local result=$?
 
     if [ "$result" -ne 0 ] && [ -s "$error_file" ]; then
