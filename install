@@ -121,13 +121,13 @@ require_zsh_login_shell() {
 
 # Ask once before applying any Stow package during this install run.
 configure_stow_apply() {
-  if [[ "${DOTFILES_STOW_APPLY:-}" == "1" ]]; then
+  if [[ "${DOTFILES_STOW_CONFIRM_APPLY:-}" == "1" ]]; then
     STOW_APPLY=true
     return
   fi
 
   if ! is_interactive; then
-    echo "Error: Non-interactive installs require DOTFILES_STOW_APPLY=1." >&2
+    echo "Error: Non-interactive installs require DOTFILES_STOW_CONFIRM_APPLY=1." >&2
     return 1
   fi
 

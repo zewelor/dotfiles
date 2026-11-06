@@ -29,7 +29,7 @@ applying all successful Stow dry-runs. For automation, set both values
 explicitly:
 
 ```bash
-DOTFILES_PROFILE=server DOTFILES_STOW_APPLY=1 ./install
+DOTFILES_PROFILE=server DOTFILES_STOW_CONFIRM_APPLY=1 ./install
 ```
 
 `~/.config` must be a real directory for every account, including root. Linking
