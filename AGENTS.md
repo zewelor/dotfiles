@@ -101,12 +101,15 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
 - CLI instalowane wyjątkowo przez Zinit wystawiaj przez `sbin`, nie przez
   `as"program"` i `pick`. Annexy Zinit ładuj synchronicznie, aby parser znał
   `sbin` od początku.
-- `MISE_CONFIG_DIR` wskazuje bezpośrednio repozytorium
-  `${HOME}/dotfiles/.config/mise`. `.zshenv` dodaje binarkę i shims do
-  statycznego `PATH`; nie dodawaj `mise activate` ani hooków odświeżających env.
-- Ustawienia maszynowe należą do ignorowanego
-  `.config/mise/config.local.toml`. Przed zmianą składni lub backendu sprawdź
-  aktualną dokumentację mise oraz bieżący config i live CLI.
+- Instalator i `update-all` używają `~/.config/mise` użytkownika docelowego,
+  niezależnie od `MISE_CONFIG_DIR` wywołującego. Na desktopie instalator linkuje
+  konfigurację z repozytorium; na serwerze opcjonalnym mise i jego konfiguracją
+  zarządza Ansible. `.zshenv` dodaje binarkę i shims do statycznego `PATH`;
+  nie dodawaj `mise activate` ani hooków odświeżających env.
+- Ustawienia maszynowe profilu `desktop` należą do ignorowanego
+  `.config/mise/config.local.toml`. Narzędzia serwera deklaruj w inventory
+  Ansible przez `*_mise_tools__to_merge`. Przed zmianą składni lub backendu
+  sprawdź aktualną dokumentację mise oraz bieżący config i live CLI.
 
 ## Wygląd
 

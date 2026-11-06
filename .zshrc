@@ -492,6 +492,52 @@ function update-all () {
     return 1
   fi
 
+  # Build an explicit PATH and mise config path for target-user commands.
+  local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:/usr/local/bin:/usr/bin:/bin"
+  local target_mise_config_dir="${target_home}/.config/mise"
+  run_for_target_user () {
+    # sudo -H sets HOME but keeps the caller's working directory, possibly /root.
+    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" sh -lc "cd \"\$HOME\" || exit; ${1}"
+  }
+
+  target_user_has () {
+    run_for_target_user "command -v ${1} >/dev/null 2>&1"
+  }
+
+  target_user_profile () {
+    local profile
+    local profile_command
+    profile_command="unset DOTFILES_PROFILE
+if [[ -f \"\$HOME/.zshrc.d/profile.zsh\" ]]; then
+  source \"\$HOME/.zshrc.d/profile.zsh\" || exit \$?
+  print -r -- \"\${DOTFILES_PROFILE-}\"
+else
+  print -r -- server
+fi"
+    profile=$(run_for_target_user "zsh -f -c '${profile_command}'") || {
+      echo "[mise] Failed to read profile for target user '${target_user}'." >&2
+      return 1
+    }
+
+    case "${profile}" in
+      desktop|server)
+        print -r -- "${profile}"
+        ;;
+      *)
+        echo "[mise] Invalid DOTFILES_PROFILE '${profile}' for target user '${target_user}' (expected desktop or server)." >&2
+        return 1
+        ;;
+    esac
+  }
+
+  local target_profile
+  target_profile=$(target_user_profile) || return 1
+
+  if [[ "${target_profile}" == desktop && ! -f "${target_mise_config_dir}/config.toml" ]]; then
+    echo "[mise] Target config not found: ${target_mise_config_dir}/config.toml" >&2
+    return 1
+  fi
+
   echo "[apt] Running system package maintenance"
   if update; then
     echo "[apt] System package maintenance complete"
@@ -552,60 +598,47 @@ function update-all () {
     fi
   fi
 
-  # Build an explicit PATH for user-scoped tool updates.
-  # This avoids relying on interactive shell initialization when running via sudo.
-  local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:/usr/local/bin:/usr/bin:/bin"
   local target_zshrc_path="${target_home}/.zshrc"
   local resolved_target_zshrc
   resolved_target_zshrc=$(readlink -f "$target_zshrc_path") || {
     echo "[mise] Cannot resolve target dotfiles repository from $target_zshrc_path."
     return 1
   }
-  local target_mise_config_dir="${resolved_target_zshrc:h}/.config/mise"
-  if [[ ! -f "$target_mise_config_dir/config.toml" ]]; then
-    echo "[mise] Target config not found: $target_mise_config_dir/config.toml"
-    return 1
-  fi
-  run_for_target_user () {
-    # sudo -H sets HOME but keeps the caller's working directory, possibly /root.
-    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" sh -lc "cd \"\$HOME\" || exit; ${1}"
-  }
-
-  target_user_has () {
-    run_for_target_user "command -v ${1} >/dev/null 2>&1"
-  }
-
-  # Update mise-managed tools for the target user.
+  # Update mise-managed tools on desktop; server tool versions are managed separately.
   local mise_command='mise upgrade'
   echo
   if target_user_has "mise"; then
-    echo "[mise] Updating mise"
-    if run_for_target_user 'mise self-update -y --no-plugins' >/dev/null 2>&1; then
-      echo "[mise] Self-update complete"
-    else
-      local _mise_self_ec=$?
-      echo "[mise] Self-update failed (exit ${_mise_self_ec})"
-      failures+=(mise-self-update)
-    fi
+    if [[ "${target_profile}" == desktop ]]; then
+      echo "[mise] Updating mise"
+      if run_for_target_user 'mise self-update -y --no-plugins' >/dev/null 2>&1; then
+        echo "[mise] Self-update complete"
+      else
+        local _mise_self_ec=$?
+        echo "[mise] Self-update failed (exit ${_mise_self_ec})"
+        failures+=(mise-self-update)
+      fi
 
-    echo "[mise] Upgrading mise tools"
-    run_for_target_user "${mise_command}" >/dev/null 2>&1
-    local _mise_ec=$?
-    if (( _mise_ec == 0 )); then
-      echo "[mise] Update complete"
-      # Cleanup old versions of tools to save space.
-      echo "[mise] Pruning old tool versions"
-      if ! run_for_target_user 'mise prune -y' >/dev/null 2>&1; then
-        echo "[mise] Prune failed"
-        failures+=(mise-prune)
+      echo "[mise] Upgrading mise tools"
+      run_for_target_user "${mise_command}" >/dev/null 2>&1
+      local _mise_ec=$?
+      if (( _mise_ec == 0 )); then
+        echo "[mise] Update complete"
+        # Cleanup old versions of tools to save space.
+        echo "[mise] Pruning old tool versions"
+        if ! run_for_target_user 'mise prune -y' >/dev/null 2>&1; then
+          echo "[mise] Prune failed"
+          failures+=(mise-prune)
+        fi
+      else
+        echo "[mise] Update failed (exit ${_mise_ec}); retry as '${target_user}' from '${target_home}': ${mise_command}"
+        failures+=(mise)
       fi
     else
-      echo "[mise] Update failed (exit ${_mise_ec}); retry as '${target_user}' from '${target_home}': ${mise_command}"
-      failures+=(mise)
+      echo "[mise] Skipping mise update: server version and tools are managed separately."
     fi
   else
     echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
-    is_desktop && failures+=(mise-missing)
+    [[ "${target_profile}" == desktop ]] && failures+=(mise-missing)
   fi
 
   echo

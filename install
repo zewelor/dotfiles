@@ -9,6 +9,8 @@ SCRIPT_DIR="$(cd "$(dirname "${(%):-%x}")" && pwd)"
 BASE_DIR="$SCRIPT_DIR"
 HOME_DIR="$HOME"
 CONFIG_DIR="$HOME_DIR/.config"
+# Keep all installer steps on the linked config, regardless of the caller's override.
+export MISE_CONFIG_DIR="$CONFIG_DIR/mise"
 MISE_BIN="$HOME_DIR/.local/bin/mise"
 STOW_APPLY=false
 
@@ -424,7 +426,7 @@ setup_mise_desktop_tools() {
     echo "GitHub CLI is unavailable or unauthenticated; GitHub API rate limits may apply."
   fi
 
-  MISE_CONFIG_DIR="$BASE_DIR/.config/mise" "$MISE_BIN" install
+  "$MISE_BIN" install
 
   path=("$HOME_DIR/.local/share/mise/shims" "$HOME_DIR/.local/bin" $path)
   typeset -U path

@@ -77,6 +77,22 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
         self.assertTrue((self.home / "custom-cache/completions/_opencode").exists())
         self.assertFalse(self.cache.exists())
 
+    def test_installer_completions_use_target_mise_config(self):
+        self.tool("opencode", '''printf '%s\\n' "$MISE_CONFIG_DIR" >> "$CALLS"
+printf '%s\\n' '#compdef opencode' '_opencode() { :; }'
+''')
+        self.env["MISE_CONFIG_DIR"] = str(self.home / "caller-config")
+        # Exercise installer initialization without applying any installation steps.
+        initialization = (ROOT / "install").read_text().split("# Source shared helper")[0]
+        result = subprocess.run(
+            ["/usr/bin/zsh", "-f", "-c", initialization + '\n"$1"',
+             "test", str(ROOT / "bin/update-shell-completions")],
+            cwd=self.home, env=self.env, text=True, capture_output=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.log.read_text().splitlines(), [str(self.home / ".config/mise")])
+        self.assertTrue((self.cache / "_opencode").exists())
+
     def test_loading_cached_completions_never_executes_tools(self):
         self.cache.mkdir(parents=True)
         for tool in TOOLS:
