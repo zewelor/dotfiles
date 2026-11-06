@@ -141,6 +141,37 @@ source "$1/.zsh/zstyle.zsh"
 ''', temp)
             self.assertNotEqual(result.returncode, 0)
 
+    def test_agent_browser_uses_desktop_browser_and_preserves_override(self):
+        for profile, browser, override, expected in [
+            ("desktop", "/usr/bin/brave-origin-stable", "", "/usr/bin/brave-origin-stable"),
+            ("desktop", "/usr/bin/brave-origin-stable --incognito", "", "/usr/bin/brave-origin-stable"),
+            ("desktop", "/usr/bin/brave-origin-stable", "/opt/custom/chrome", "/opt/custom/chrome"),
+            ("desktop", "", "", "unset"),
+            ("server", "/usr/bin/brave-origin-stable", "", "unset"),
+        ]:
+            with self.subTest(profile=profile, browser=browser, override=override):
+                result = self.run_zsh('''unset BROWSER AGENT_BROWSER_EXECUTABLE_PATH
+profile=$2
+resolved_browser=$3
+is_desktop() { [[ "$profile" == desktop ]]; }
+resolve_browser_cmd() { print -r -- "$resolved_browser"; }
+[[ -z "$4" ]] || export AGENT_BROWSER_EXECUTABLE_PATH="$4"
+source "$1/.zsh/webapps.zsh"
+/usr/bin/zsh -f -c 'print -r -- "${BROWSER:-unset}|${AGENT_BROWSER_EXECUTABLE_PATH:-unset}"'
+''', profile, browser, override)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), f"{browser or 'unset'}|{expected}")
+
+        result = self.run_zsh('''unset AGENT_BROWSER_EXECUTABLE_PATH
+export BROWSER=/usr/bin/brave-origin-stable
+is_desktop() { return 0; }
+resolve_browser_cmd() { return 1; }
+source "$1/.zsh/webapps.zsh"
+/usr/bin/zsh -f -c 'print -r -- "${AGENT_BROWSER_EXECUTABLE_PATH:-unset}"'
+''')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "/usr/bin/brave-origin-stable")
+
     def test_title_expands_home_directory(self):
         result = self.title('cd "$HOME" >/dev/null', '%~')
         self.assertEqual(result, osc_title("~"))

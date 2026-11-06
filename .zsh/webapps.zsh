@@ -3,6 +3,11 @@ if [[ -z "$BROWSER" ]]; then
   export BROWSER="$(resolve_browser_cmd)"
 fi
 
+# agent-browser needs the executable path rather than the browser command's flags.
+if is_desktop && [[ -n "$BROWSER" && -z "${AGENT_BROWSER_EXECUTABLE_PATH:-}" ]]; then
+  export AGENT_BROWSER_EXECUTABLE_PATH="${BROWSER%% *}"
+fi
+
 # Create a desktop launcher for a web app
 web2app() {
   emulate -L zsh
