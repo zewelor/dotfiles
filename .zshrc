@@ -182,9 +182,6 @@ zinit light-mode from"gh-r" sbin"bat" mv"bat-*/bat -> bat" for @sharkdp/bat
 # A viewer for git and diff output
 zinit light-mode from"gh-r" sbin"delta" mv"delta-*/delta -> delta" for @dandavison/delta
 
-# A more intuitive version of du written in rust.
-zinit light-mode from"gh-r" sbin"dust" mv"dust-*/dust -> dust" for @bootandy/dust
-
 # eza - modern ls replacement with icons and git integration
 zinit light-mode from"gh-r" sbin"eza" for @eza-community/eza
 alias l='ls -1a'
