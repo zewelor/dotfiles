@@ -65,9 +65,10 @@ fi
 FINAL_CANDIDATES=""
 typeset -F size_val
 for model in ${(f)CANDIDATES}; do
-    # Proste wyciagniecie liczby przed B/b za pomoca grep/sed
-    size=$(echo "$model" | grep -oEi "[0-9.]+[BbTt]" | grep -oEi "[0-9.]+" | head -n 1)
-    unit=$(echo "$model" | grep -oEi "[BbTt]" | head -n 1 | tr "[:upper:]" "[:lower:]")
+    # Read the number and unit from the same match, not the provider name.
+    size_token=$(echo "$model" | grep -oEi "[0-9.]+[BbTt]" | head -n 1)
+    size="${size_token%[BbTt]}"
+    unit="${(L)size_token[-1]}"
 
     if [[ -n "$size" ]]; then
         size_val=$size
