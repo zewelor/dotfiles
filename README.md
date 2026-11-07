@@ -491,7 +491,7 @@ plugin checkouts and runtime state remain outside Git. The `server` profile
 does not link private plugin settings.
 
 Press `Ctrl+A`, then `Shift+O` to choose a project, or `Ctrl+A`, then
-`Shift+A` for Quick Actions. The existing Reviewr binding is `Ctrl+A`, then `d`.
+`Shift+A` for Quick Actions.
 Press `Ctrl+A`, then `Space`, `Ctrl+Space` or `n` to switch to the next tab.
 Opening the GitOps project creates a workspace with `agent` and `shell` tabs.
 The empty `quick-actions` directory prevents the plugin from adding example

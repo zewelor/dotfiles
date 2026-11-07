@@ -25,11 +25,5 @@ prefix = "ctrl+a"
 last_pane = "prefix+a"
 next_tab = ["prefix+n", "prefix+space", "prefix+ctrl+space"]
 
-[[keys.command]]
-key = "prefix+d"
-type = "plugin_action"
-command = "persiyanov.reviewr.toggle"
-description = "toggle diff review"
-
 [ui.toast]
 delivery = "herdr"
