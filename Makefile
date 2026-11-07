@@ -37,8 +37,7 @@ APT_PACKAGES_CORE= \
 
 APT_PACKAGES_OPTIONAL= \
 	lazygit \
-	duf \
-	skopeo
+	duf
 
 all: base setup
 
