@@ -189,6 +189,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Cel**: Lżejsza integracja GitHub Copilot przez natywny klient LSP Neovima, bez źródła `blink.cmp`.
 - **Tryb pracy**: Auto-sugestie są włączone dla zwykłych plików kodu, ale z opóźnieniem `500ms`; panel, `blink.cmp` source i next-edit suggestions są wyłączone.
 - **Wyłączone filetype'y**: `markdown`, `text`, `yaml`, `gitcommit`, `gitrebase`, `help`.
+- **Wyłączone pliki**: `.env` i warianty `.env.*`, np. `.env.local` oraz `.env.production`.
 - **Wymagania**: Neovim 0.11+ i Node.js 22+.
 - **Profil**: Tylko `desktop`; na `server` i bez profilu plugin oraz jego skróty są wyłączone.
 - **Keymaps**:

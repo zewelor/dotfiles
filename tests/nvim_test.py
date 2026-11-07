@@ -72,6 +72,26 @@ class NeovimTest(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_copilot_excludes_env_files(self):
+        self.run_lua("""
+local should_attach = require('plugins.copilot').opts.should_attach
+local cases = {
+  { '/project/.env', false },
+  { '/project/config/.env.local', false },
+  { '/project/.env.production', false },
+  { '/project/.envrc', true },
+  { '/project/environment.sh', true },
+  { '/project/.env/config.sh', true },
+}
+for _, case in ipairs(cases) do
+  local buf = vim.api.nvim_create_buf(true, false)
+  vim.api.nvim_buf_set_name(buf, case[1])
+  local allowed = should_attach(buf, vim.api.nvim_buf_get_name(buf))
+  assert(allowed == case[2], case[1] .. ': unexpected Copilot attachment decision')
+  vim.api.nvim_buf_delete(buf, { force = true })
+end
+""", "desktop")
+
     def test_profiles_with_and_without_mise(self):
         for profile in (None, "server", "desktop"):
             for mise in (False, True):

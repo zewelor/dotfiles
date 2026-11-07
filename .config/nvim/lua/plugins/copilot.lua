@@ -36,8 +36,11 @@ return {
 			gitrebase = false,
 			help = false,
 		},
-		should_attach = function(bufnr)
-			return vim.bo[bufnr].buflisted
+		should_attach = function(bufnr, bufname)
+			local filename = vim.fn.fnamemodify(bufname, ":t")
+			return filename ~= ".env"
+				and not filename:match("^%.env%.")
+				and vim.bo[bufnr].buflisted
 				and vim.bo[bufnr].buftype == ""
 				and vim.api.nvim_buf_line_count(bufnr) < 5000
 		end,
