@@ -91,6 +91,8 @@ if [[ -z "$FINAL_CANDIDATES" ]]; then
     exit 0
 fi
 
+FINAL_CANDIDATES="${FINAL_CANDIDATES%$'\n'}"
+
 echo "Znaleziono kandydatow:"
 echo "$FINAL_CANDIDATES" | sed 's/^/- /'
 echo "----------------------------------------------------"
