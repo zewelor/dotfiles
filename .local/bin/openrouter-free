@@ -17,7 +17,7 @@ fi
 typeset -g +x OPENROUTER_API_KEY
 
 # Narzedzia
-for cmd in curl jq bc; do
+for cmd in curl jq; do
     if ! command -v $cmd &> /dev/null; then
         echo "\033[31mBlad: Brak narzedzia $cmd. Zainstaluj go.\033[0m"
         exit 1
@@ -63,19 +63,19 @@ fi
 
 # Teraz filtrujemy rozmiar w oddzielnym kroku
 FINAL_CANDIDATES=""
+typeset -F size_val
 for model in ${(f)CANDIDATES}; do
     # Proste wyciagniecie liczby przed B/b za pomoca grep/sed
     size=$(echo "$model" | grep -oEi "[0-9.]+[BbTt]" | grep -oEi "[0-9.]+" | head -n 1)
     unit=$(echo "$model" | grep -oEi "[BbTt]" | head -n 1 | tr "[:upper:]" "[:lower:]")
 
     if [[ -n "$size" ]]; then
+        size_val=$size
         if [[ "$unit" == "t" ]]; then
-            size_val=$(echo "$size * 1000" | bc)
-        else
-            size_val="$size"
+            size_val=$(( size_val * 1000 ))
         fi
 
-        if (( $(echo "$size_val >= $MIN_SIZE" | bc -l) )); then
+        if (( size_val >= MIN_SIZE )); then
             FINAL_CANDIDATES+="$model"$'\n'
         fi
     else
@@ -116,7 +116,8 @@ for model in "${candidate_list[@]}"; do
         end=$(date +%s.%N)
 
         if [[ "$resp" == "200" ]]; then
-            latency=$(echo "$end - $start" | bc)
+            typeset -F 9 latency
+            latency=$(( end - start ))
             echo "$latency:$model" >> "$RESULTS_FILE"
             echo "\033[32mOK\033[0m - $model (${latency}s)"
         else

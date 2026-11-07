@@ -32,8 +32,7 @@ APT_PACKAGES_CORE= \
 	btop \
 	jq \
 	stow \
-	ripgrep \
-	bc
+	ripgrep
 
 APT_PACKAGES_OPTIONAL= \
 	lazygit \
