@@ -1,9 +1,9 @@
 -- mason-tool-installer — auto-install formatters and linters
-local tooling = require("config.tooling")
+local profile = require("config.profile")
 
 return {
   "WhoIsSethDaniel/mason-tool-installer.nvim",
-  cond = tooling.enabled,
+  cond = profile.is_desktop,
   dependencies = { "williamboman/mason.nvim" },
   event = "VeryLazy",
   opts = {

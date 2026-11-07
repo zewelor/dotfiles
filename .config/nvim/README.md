@@ -15,7 +15,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── lazy.lua     # Setup lazy.nvim
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   ├── keymaps.lua  # Wszystkie keybindings
-│   │   └── tooling.lua  # Wybór pełnego lub uproszczonego trybu
+│   │   └── profile.lua  # Jawny wybór profilu desktop
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
@@ -52,11 +52,16 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 `stdpath("state")` Neovima (zwykle `~/.local/state/nvim/`). Aktualizacje
 pluginów nie zmieniają dzięki temu repozytorium dotfiles.
 
-Jeśli `mise` nie jest dostępne w `PATH`, Neovim działa w uproszczonym trybie:
-nie ładuje Masona, konfiguracji LSP, `conform.nvim` ani auto-installera
-formatterów. Pozostałe funkcje edytora działają normalnie, a brak `mise` nie
-powoduje błędu startu. Dzięki temu ten sam config może być używany np. przez
-`root` bez osobnej instalacji narzędzi deweloperskich.
+Pełny zestaw deweloperski jest włączany tylko przez
+`DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): Mason, LSP, `conform.nvim`, auto-installer
+formatterów oraz integracje Copilot i OpenCode wraz z ich skrótami.
+Profil `server` i brak profilu korzystają z uproszczonego trybu, również gdy
+`mise` jest dostępne w `PATH`. Instalacja mise dla pojedynczego CLI nie
+włącza narzędzi deweloperskich edytora.
+
+Desktop nie wymaga mise do uruchomienia Masona i pozostałych LSP. Wyjątkiem
+jest Ruby LSP: startuje tylko wtedy, gdy mise jest dostępne i potrafi rozwiązać
+`ruby-lsp`. Copilot nadal wymaga Node.js 22+, a OpenCode swojego CLI.
 
 Profil `server` nie ładuje `nvim-treesitter` ani `telescope-fzf-native`, nawet
 gdy kompilator jest dostępny. Korzysta ze standardowego podświetlania składni
@@ -185,6 +190,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Tryb pracy**: Auto-sugestie są włączone dla zwykłych plików kodu, ale z opóźnieniem `500ms`; panel, `blink.cmp` source i next-edit suggestions są wyłączone.
 - **Wyłączone filetype'y**: `markdown`, `text`, `yaml`, `gitcommit`, `gitrebase`, `help`.
 - **Wymagania**: Neovim 0.11+ i Node.js 22+.
+- **Profil**: Tylko `desktop`; na `server` i bez profilu plugin oraz jego skróty są wyłączone.
 - **Keymaps**:
   - `<M-]>` w Insert — Pobierz / pokaż następną sugestię
   - `<M-[>` w Insert — Poprzednia sugestia
@@ -202,6 +208,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 - **Repo**: [nickjvandyke/opencode.nvim](https://github.com/nickjvandyke/opencode.nvim)
 - **Cel**: Integracja z opencode AI assistant — edytorowo-świadome research, review i requesty
 - **Wymagania**: Zainstalowany `opencode` CLI (patrz sekcja "Instalacja opencode CLI" poniżej)
+- **Profil**: Tylko `desktop`; na `server` i bez profilu plugin oraz jego skróty są wyłączone.
 - **Integracja**: Używa snacks.nvim dla lepszego UI (input + picker)
 - **Context placeholders**: `@this` (zaznaczenie/kursor), `@buffer`, `@diagnostics`, `@diff`, itp.
 - **Komendy**:
@@ -344,6 +351,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 **Konfiguracja API**:
 - **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
+- **Jawna lista**: `mason_servers` w `lua/plugins/lsp.lua` jest wspólną listą instalacji, konfiguracji i aktywacji LSP Masona. Wcześniej zainstalowane serwery spoza tej listy nie są automatycznie włączane; ich pliki pozostają na dysku.
 - **Neovim <0.11**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
 - **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which`; standalone `mise` jest dostępne z `.zshenv`, bez `mise activate` i hooków zmiany katalogu. Jeśli `mise` nie rozwiąże `ruby-lsp`, klient nie startuje zamiast używać potencjalnie przestarzałego wrappera Masona z `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
 
@@ -352,7 +360,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `:MasonInstall <server>` — Zainstaluj serwer
 - `:LspInfo` — Info o aktywnych serwerach
 
-**Cleanup — usuń zbędne serwery z Masona** (po zmianach w configu):
+**Opcjonalny cleanup — usuń nieużywane serwery z Masona** (nie jest wymagany do ich wyłączenia):
 ```vim
 :MasonUninstall basedpyright jsonls yamlls bashls dockerls docker_compose_language_service
 ```

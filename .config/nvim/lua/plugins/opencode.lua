@@ -2,6 +2,7 @@
 -- https://github.com/nickjvandyke/opencode.nvim
 return {
   "nickjvandyke/opencode.nvim",
+  cond = require("config.profile").is_desktop,
   version = "*",
   dependencies = {
     {

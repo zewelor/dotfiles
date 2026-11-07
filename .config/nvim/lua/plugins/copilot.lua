@@ -1,6 +1,7 @@
 -- copilot.lua - GitHub Copilot integration with lightweight inline suggestions
 return {
 	"zbirenbaum/copilot.lua",
+	cond = require("config.profile").is_desktop,
 	cmd = "Copilot",
 	event = "InsertEnter",
 	opts = {

@@ -1,5 +1,5 @@
 -- conform.nvim — formatting engine (format-on-save)
-local tooling = require("config.tooling")
+local profile = require("config.profile")
 
 local function rubocop_project_root(bufnr)
   local root = vim.fs.root(bufnr, ".rubocop.yml")
@@ -13,7 +13,7 @@ end
 
 return {
   "stevearc/conform.nvim",
-  cond = tooling.enabled,
+  cond = profile.is_desktop,
   event = { "BufReadPre", "BufNewFile" },
   opts = {
     notify_no_formatters = false,

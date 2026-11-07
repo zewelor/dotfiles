@@ -86,7 +86,7 @@ keymap("n", "gsn", function()
 end, { desc = "Update n_lines (mini.surround)" })
 
 -- Formatting (conform.nvim)
-if require("config.tooling").enabled() then
+if require("config.profile").is_desktop() then
 	keymap("n", "<leader>cf", function()
 		local ft = vim.bo.filetype
 		if ft == "eruby.yaml.tmuxinator" then
@@ -209,41 +209,43 @@ vim.api.nvim_create_autocmd("LspAttach", {
 -- OPENCODE KEYMAPS (AI Assistant integration)
 -- ============================================================================
 
--- Ask opencode with current context (visual selection or cursor position)
-keymap({ "n", "x" }, "<leader>oa", function()
-  require("opencode").ask("@this: ", { submit = true })
-end, { desc = "Ask opencode (with context)" })
+if require("config.profile").is_desktop() then
+	-- Ask opencode with current context (visual selection or cursor position)
+	keymap({ "n", "x" }, "<leader>oa", function()
+		require("opencode").ask("@this: ", { submit = true })
+	end, { desc = "Ask opencode (with context)" })
 
--- Select and execute opencode action/prompt
-keymap({ "n", "x" }, "<leader>ox", function()
-  require("opencode").select()
-end, { desc = "Execute opencode action" })
+	-- Select and execute opencode action/prompt
+	keymap({ "n", "x" }, "<leader>ox", function()
+		require("opencode").select()
+	end, { desc = "Execute opencode action" })
 
--- Toggle opencode terminal
-keymap({ "n", "t" }, "<leader>ot", function()
-  require("opencode").toggle()
-end, { desc = "Toggle opencode" })
+	-- Toggle opencode terminal
+	keymap({ "n", "t" }, "<leader>ot", function()
+		require("opencode").toggle()
+	end, { desc = "Toggle opencode" })
 
--- Scroll opencode output
-keymap("n", "<S-C-u>", function()
-  require("opencode").command("session.half.page.up")
-end, { desc = "Scroll opencode up" })
-keymap("n", "<S-C-d>", function()
-  require("opencode").command("session.half.page.down")
-end, { desc = "Scroll opencode down" })
+	-- Scroll opencode output
+	keymap("n", "<S-C-u>", function()
+		require("opencode").command("session.half.page.up")
+	end, { desc = "Scroll opencode up" })
+	keymap("n", "<S-C-d>", function()
+		require("opencode").command("session.half.page.down")
+	end, { desc = "Scroll opencode down" })
 
--- ============================================================================
--- COPILOT KEYMAPS (manual inline suggestions)
--- ============================================================================
+	-- ============================================================================
+	-- COPILOT KEYMAPS (manual inline suggestions)
+	-- ============================================================================
 
-local function copilot_suggestion(action)
-	return function()
-		vim.cmd("Copilot suggestion " .. action)
+	local function copilot_suggestion(action)
+		return function()
+			vim.cmd("Copilot suggestion " .. action)
+		end
 	end
-end
 
-keymap("i", "<M-]>", copilot_suggestion("next"), { desc = "Copilot next suggestion" })
-keymap("i", "<M-[>", copilot_suggestion("prev"), { desc = "Copilot previous suggestion" })
-keymap("i", "<M-l>", copilot_suggestion("accept"), { desc = "Copilot accept suggestion" })
-keymap("i", "<C-]>", copilot_suggestion("dismiss"), { desc = "Copilot dismiss suggestion" })
-keymap("n", "<leader>ct", copilot_suggestion("toggle_auto_trigger"), { desc = "Toggle Copilot auto-trigger" })
+	keymap("i", "<M-]>", copilot_suggestion("next"), { desc = "Copilot next suggestion" })
+	keymap("i", "<M-[>", copilot_suggestion("prev"), { desc = "Copilot previous suggestion" })
+	keymap("i", "<M-l>", copilot_suggestion("accept"), { desc = "Copilot accept suggestion" })
+	keymap("i", "<C-]>", copilot_suggestion("dismiss"), { desc = "Copilot dismiss suggestion" })
+	keymap("n", "<leader>ct", copilot_suggestion("toggle_auto_trigger"), { desc = "Toggle Copilot auto-trigger" })
+end
