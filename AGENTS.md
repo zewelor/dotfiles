@@ -15,6 +15,10 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
 - Główny `git status` może ukrywać zmianę submodułu przez
   `diff.ignoreSubmodules=all`. Przed handoffem lub publikacją porównaj jawnie
   `git rev-parse HEAD:prv` z `git -C prv rev-parse HEAD`.
+- Zewnętrzne submoduły dostarczające pluginy lub motywy deklaruj z
+  `shallow = true` w `.gitmodules`; wersję przypinaj gitlinkiem repo nadrzędnego.
+  Pełną historię pobieraj tylko, gdy wymaga jej zadanie. Ta zasada nie dotyczy
+  prywatnego repozytorium `prv/`.
 - Publiczne konfiguracje współdzielone przez desktop i serwery należą do
   głównego repo. Prywatne dane i konfiguracje tylko dla profilu `desktop`
   należą do `prv/`; instalator linkuje `prv/` wyłącznie dla tego profilu.

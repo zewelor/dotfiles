@@ -112,6 +112,9 @@ set -ag status-right "#{E:@catppuccin_status_session}"
 
 Managed via `dotfiles_update` alias (runs `git submodule update --recursive --remote`).
 
+New clones use shallow history, as declared in `.gitmodules`. All theme files
+remain available; only Git history is limited.
+
 ## Docs
 
 Upstream catppuccin tmux docs:
