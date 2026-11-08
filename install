@@ -49,6 +49,33 @@ print_banner() {
   printf "\n%s\n%s\n%s\n" "$line" "$title" "$line"
 }
 
+# Refuse linked or non-directory components below the user's home.
+require_real_directory_path() {
+  local target="$1" prefix="${HOME_DIR%/}/" dir="${HOME_DIR%/}" component relative
+  if [[ "$target" != "$prefix"* || "$target" == "$prefix" ]]; then
+    echo "Error: directory path must be below $HOME_DIR: $target" >&2
+    return 1
+  fi
+  relative="${target#"$prefix"}"
+  local -a components=("${(@s:/:)relative}")
+  for component in "${components[@]}"; do
+    if [[ "$component" == "." || "$component" == ".." ]]; then
+      echo "Error: directory path contains . or ..: $target" >&2
+      return 1
+    fi
+    dir="${dir%/}/$component"
+    if [[ -L "$dir" || ( -e "$dir" && ! -d "$dir" ) ]]; then
+      echo "Error: $dir must be a real directory." >&2
+      printf 'Inspect the path:\n  ls -ld -- %q\n' "$dir" >&2
+      if [[ -L "$dir" ]]; then
+        printf 'Inspect the link target:\n  readlink -- %q\n' "$dir" >&2
+      fi
+      echo "Inspect the path and preserve local files before replacing it with a directory." >&2
+      return 1
+    fi
+  done
+}
+
 # Initialize ANSI colors (if supported). Respect NO_COLOR.
 init_colors() {
   if ! is_tty_stdout; then
@@ -207,10 +234,7 @@ add_secret_envs_from_vault() {
   fi
 
   local secrets_dir="$HOME_DIR/.zshrc.d"
-  if [[ -L "$secrets_dir" || ( -e "$secrets_dir" && ! -d "$secrets_dir" ) ]]; then
-    echo "Error: $secrets_dir must be a real directory." >&2
-    return 1
-  fi
+  require_real_directory_path "$secrets_dir" || return 1
 
   printf '\nOpen Vault: %s\n' "${VAULT_URL%/shell_envs/data}"
   printf "Sign in with OIDC, click your profile icon in the top-right corner,\n"
@@ -304,18 +328,12 @@ setup_atuin() {
   print_banner "Setting up Atuin configuration..."
   local src="$BASE_DIR/.config/atuin/config.toml"
   local dst="$CONFIG_DIR/atuin/config.toml"
-  local dir
 
   [[ -f "$src" ]] || {
     echo "Error: Atuin configuration is missing: $src" >&2
     return 1
   }
-  for dir in "$CONFIG_DIR" "$CONFIG_DIR/atuin"; do
-    if [[ -L "$dir" || ( -e "$dir" && ! -d "$dir" ) ]]; then
-      echo "Error: $dir must be a real directory." >&2
-      return 1
-    fi
-  done
+  require_real_directory_path "$CONFIG_DIR/atuin" || return 1
   if [[ -L "$dst" && "$dst" -ef "$src" ]]; then
     return
   fi
@@ -457,15 +475,30 @@ setup_mise_desktop_tools() {
   print_banner "Setting up mise configuration..."
   local mise_config_dir="$BASE_DIR/.config/mise"
   local local_config="$mise_config_dir/config.local.toml"
+  local config_file src dst resolved_dst resolved_src
+
+  require_real_directory_path "$CONFIG_DIR/mise" || return 1
+
+  # Check both destinations before creating either link.
+  for config_file in config.toml config.local.toml; do
+    src="$mise_config_dir/$config_file"
+    dst="$CONFIG_DIR/mise/$config_file"
+    if [[ -L "$dst" ]] && resolved_dst=$(readlink -f "$dst") && \
+      resolved_src=$(readlink -f "$src") && [[ "$resolved_dst" == "$resolved_src" ]]; then
+      continue
+    fi
+    if [[ -e "$dst" || -L "$dst" ]]; then
+      echo "Error: refusing to replace unmanaged mise config: $dst" >&2
+      return 1
+    fi
+  done
+
   if [[ ! -f "$local_config" ]]; then
     touch "$local_config"
     echo "Created empty local mise config: $local_config"
   fi
 
   mkdir -p "$CONFIG_DIR/mise"
-  local config_file
-  local src
-  local dst
   for config_file in config.toml config.local.toml; do
     src="$mise_config_dir/$config_file"
     dst="$CONFIG_DIR/mise/$config_file"
@@ -525,6 +558,7 @@ setup_rclone() {
 
   local rclone_dir="$CONFIG_DIR/rclone"
   local target="$rclone_dir/rclone.conf"
+  require_real_directory_path "$rclone_dir" || return 1
   mkdir -p "$rclone_dir"
 
   # Use existing VAULT_TOKEN or prompt for one
