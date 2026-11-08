@@ -22,7 +22,6 @@ FONT_INSTALLER="$BASE_DIR/install-font"
 
 # Common paths and URLs.
 VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
-VAULT_KEYS=("envs.zsh")
 # Never let a caller-exported Vault token cross child-process boundaries.
 typeset -g +x VAULT_TOKEN
 
@@ -207,30 +206,83 @@ add_secret_envs_from_vault() {
     return
   fi
 
+  local secrets_dir="$HOME_DIR/.zshrc.d"
+  if [[ -L "$secrets_dir" || ( -e "$secrets_dir" && ! -d "$secrets_dir" ) ]]; then
+    echo "Error: $secrets_dir must be a real directory." >&2
+    return 1
+  fi
+
+  printf '\nOpen Vault: %s\n' "${VAULT_URL%/shell_envs/data}"
+  printf "Sign in with OIDC, click your profile icon in the top-right corner,\n"
+  printf "and select 'Copy token'.\n"
   read -rs "VAULT_TOKEN?Please provide your Vault token: "
   echo
 
   # Ensure restrictive permissions for secrets directory
-  (umask 077 && mkdir -p "$HOME_DIR/.zshrc.d")
-  chmod 700 "$HOME_DIR/.zshrc.d"
+  (umask 077 && mkdir -p "$secrets_dir")
+  chmod 700 "$secrets_dir"
 
-  for key in "${VAULT_KEYS[@]}"; do
-    echo "Fetching data for key: $key"
+  () {
+    local target_file="$HOME_DIR/.zshrc.d/envs.zsh" temp_file vault_response mapping
+    local vault_base="${VAULT_URL%/shell_envs/data}"
+    local -a fields reserved_names
+    local -a mappings=(
+      'secret/auth/feedway|api_token|FEEDWAY_API_TOKEN'
+      'secret/auth/sourcetap|MCP_AUTH_TOKEN|SOURCETAP_MCP_TOKEN'
+    )
+    for mapping in "${mappings[@]}"; do
+      fields=("${(@s:|:)mapping}")
+      reserved_names+=("$fields[3]")
+    done
 
-    local vault_response
-    vault_response=$(vault_http_get "$VAULT_URL/$key" "$VAULT_TOKEN") || {
-      echo "Failed to fetch data for $key from Vault." >&2
+    if [[ -d "$target_file" ]]; then
+      echo "Error: $target_file must not be a directory or a link to one." >&2
+      return 1
+    fi
+    temp_file=$(umask 077; mktemp "$HOME_DIR/.zshrc.d/.envs.zsh.XXXXXXXX") || return 1
+    trap "trap - HUP INT TERM; rm -f -- ${(q)temp_file}" EXIT
+    trap 'rm -f -- "$temp_file"; exit 129' HUP
+    trap 'rm -f -- "$temp_file"; exit 130' INT
+    trap 'rm -f -- "$temp_file"; exit 143' TERM
+    print -r -- '# Generated with install script from dotfiles' '# shell_envs/envs.zsh' > "$temp_file"
+
+    vault_response=$(vault_http_get "$VAULT_URL/envs.zsh" "$VAULT_TOKEN") || {
+      echo 'Failed to fetch shell_envs/envs.zsh from Vault.' >&2
+      return 1
+    }
+    # Validate names and reject duplicates before emitting shell-quoted values.
+    print -r -- "$vault_response" | jq -er '
+      $ARGS.positional as $reserved | .data.data | if type != "object" or length == 0 then error("expected a nonempty object")
+      elif any(to_entries[]; (.key | test("^[A-Za-z_][A-Za-z0-9_]*$") | not) or
+        (.key as $name | $reserved | index($name) != null) or
+        (.value | type != "string" or contains("\u0000"))) then error("invalid or duplicate environment variable")
+      else to_entries[] | "export " + .key + "=" + (.value | @sh) end
+    ' --args "${reserved_names[@]}" >> "$temp_file" || {
+      echo 'Invalid environment variables in shell_envs/envs.zsh.' >&2
       return 1
     }
 
-    local target_file="$HOME_DIR/.zshrc.d/$key"
-    echo "# Generated with install script from dotfiles" > "$target_file"
-    # Use @sh for safe quoting to prevent injection from special characters
-    print -r -- "$vault_response" | jq -er '.data.data | to_entries[] | "export " + .key + "=" + (.value | @sh)' >> "$target_file"
-    chmod 600 "$target_file"
+    for mapping in "${mappings[@]}"; do
+      fields=("${(@s:|:)mapping}")
+      local vault_path="$fields[1]" key="$fields[2]" env_name="$fields[3]"
+      vault_response=$(vault_http_get "$vault_base/${vault_path%%/*}/data/${vault_path#*/}" "$VAULT_TOKEN") || {
+        echo "Failed to fetch $vault_path from Vault." >&2
+        return 1
+      }
+      print -r -- "# $vault_path" >> "$temp_file"
+      print -r -- "$vault_response" | jq -er --arg key "$key" --arg name "$env_name" '
+        .data.data[$key] | if type == "string" and length > 0 and (contains("\u0000") | not)
+        then "export " + $name + "=" + (@sh)
+        else error("missing or empty required field") end
+      ' >> "$temp_file" || {
+        echo "Invalid or missing $key in $vault_path." >&2
+        return 1
+      }
+    done
 
-    echo "Environment variables for $key have been saved to $target_file"
-  done
+    mv -fT -- "$temp_file" "$target_file" || return 1
+    echo "Environment variables have been saved to $target_file"
+  }
 }
 
 # Function to configure Git conflict style based on git version.

@@ -146,6 +146,21 @@ available; remove the directory manually when it is no longer needed.
 
 Local customization can be done by putting files in the ~/.zshrc.d/ directory. These files will be sourced by the main .zshrc file.
 
+On interactive desktop installs, the optional Vault step generates
+`~/.zshrc.d/envs.zsh` from all variables in `shell_envs/envs.zsh` and these
+additional fields:
+
+| Vault path | Field | Environment variable |
+| --- | --- | --- |
+| `secret/auth/feedway` | `api_token` | `FEEDWAY_API_TOKEN` |
+| `secret/auth/sourcetap` | `MCP_AUTH_TOKEN` | `SOURCETAP_MCP_TOKEN` |
+
+The file identifies each source path in a comment. The supplied Vault token
+needs read access to all three paths. Missing fields, duplicate variable names,
+or failed reads leave the previous file unchanged. The local `~/.zshrc.d`
+directory must be a real directory, not a symlink. A new shell reads the
+refreshed values; already running processes retain their existing environment.
+
 ## Terminal emulators
 
 - Foot is the only managed terminal emulator and the KDE default.
