@@ -175,11 +175,19 @@ setup_private_submodule() {
   is_desktop || return 0
 
   print_banner "Updating private desktop submodule"
-  git -C "$BASE_DIR" -c submodule.prv.update=checkout submodule update --init -- prv
-
   local expected_commit
+  local staged_commit
   local actual_commit
   expected_commit=$(git -C "$BASE_DIR" rev-parse HEAD:prv)
+  staged_commit=$(git -C "$BASE_DIR" rev-parse :prv)
+  if [[ "$staged_commit" != "$expected_commit" ]]; then
+    echo "Error: staged prv gitlink $staged_commit differs from the committed gitlink $expected_commit." >&2
+    echo "Inspect the staged change before committing it or removing it from staging:" >&2
+    echo "  git --no-pager diff --cached --ignore-submodules=none --submodule=log -- prv" >&2
+    return 1
+  fi
+
+  git -C "$BASE_DIR" -c submodule.prv.update=checkout submodule update --init -- prv
   actual_commit=$(git -C "$BASE_DIR/prv" rev-parse HEAD)
   if [[ "$actual_commit" != "$expected_commit" ]]; then
     echo "Error: prv is at $actual_commit, expected recorded gitlink $expected_commit." >&2

@@ -113,6 +113,7 @@ test:
 	@/usr/bin/python3 "$(BASE)/tests/vault_envs_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/atuin_setup_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/install_config_safety_test.py"
+	@/usr/bin/python3 "$(BASE)/tests/install_private_gitlink_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/mise_sources_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/completions_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/update_all_test.py"
