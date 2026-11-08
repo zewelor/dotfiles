@@ -302,16 +302,29 @@ configure_git_conflict_style() {
 # Function to setup Atuin configuration.
 setup_atuin() {
   print_banner "Setting up Atuin configuration..."
-  mkdir -p "$CONFIG_DIR/atuin/"
   local src="$BASE_DIR/.config/atuin/config.toml"
   local dst="$CONFIG_DIR/atuin/config.toml"
+  local dir
 
-  # Skip if already correctly linked
-  if [[ -e "$dst" ]] && [[ "$(readlink -f "$dst")" == "$(readlink -f "$src")" ]]; then
+  [[ -f "$src" ]] || {
+    echo "Error: Atuin configuration is missing: $src" >&2
+    return 1
+  }
+  for dir in "$CONFIG_DIR" "$CONFIG_DIR/atuin"; do
+    if [[ -L "$dir" || ( -e "$dir" && ! -d "$dir" ) ]]; then
+      echo "Error: $dir must be a real directory." >&2
+      return 1
+    fi
+  done
+  if [[ -L "$dst" && "$dst" -ef "$src" ]]; then
     return
   fi
-
-  ln -sfn "$src" "$dst"
+  if [[ -e "$dst" || -L "$dst" ]]; then
+    echo "Error: refusing to replace unmanaged Atuin config: $dst" >&2
+    return 1
+  fi
+  mkdir -p "$CONFIG_DIR/atuin"
+  ln -s "$src" "$dst"
 }
 
 # Keep runtime-owned parent directories real so Stow cannot fold them into the repo.

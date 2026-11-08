@@ -53,6 +53,10 @@ Existing directory links elsewhere are not automatically migrated. On servers,
 keep mise configuration local and let Ansible manage it; the base package
 still excludes mise and does not create its directory.
 
+Atuin setup on desktop requires real `~/.config` and `~/.config/atuin`
+directories. It preserves existing local configuration and stops if it is not
+the managed link; migrate that configuration before retrying the installer.
+
 ## Shell completions
 
 `./install` and `update-all` run `bin/update-shell-completions` after installing
