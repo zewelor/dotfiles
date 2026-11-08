@@ -5,6 +5,8 @@ docs
 .git
 .gitmodules
 Makefile
+^/\.pytest_cache  # local test cache; never stow into $HOME
+^/\.nvimlog  # Neovim runtime log; never stow into $HOME
 .*\.md
 .local
 .codex  # stowed separately into ~/.codex (Codex keeps runtime data there)

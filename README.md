@@ -44,6 +44,15 @@ into the checkout. The installer rejects an existing directory symlink; repair
 it before installing, preserving individual managed config links and keeping
 runtime files in the account's own configuration directory.
 
+For the base Stow package, `--no-folding` creates real directories and links
+individual managed files. Before linking, the installer rejects existing
+directory symlinks under the repository's `.config` tree, including mise.
+For an older installation, preserve local runtime files, replace directory
+links with real directories, and link the managed files before retrying.
+Existing directory links elsewhere are not automatically migrated. On servers,
+keep mise configuration local and let Ansible manage it; the base package
+still excludes mise and does not create its directory.
+
 ## Shell completions
 
 `./install` and `update-all` run `bin/update-shell-completions` after installing

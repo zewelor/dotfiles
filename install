@@ -265,11 +265,15 @@ setup_atuin() {
 # Keep runtime-owned parent directories real so Stow cannot fold them into the repo.
 prepare_stow_targets() {
   print_banner "Preparing runtime-owned Stow targets..."
-  if [[ -L "$CONFIG_DIR" ]]; then
-    echo "Error: $CONFIG_DIR must be a real directory, not a symlink." >&2
-    echo "Replace the directory symlink with individual managed config links before installing." >&2
-    return 1
-  fi
+  local source_dir target_dir
+  for source_dir in "$BASE_DIR/.config" "$BASE_DIR"/.config/**/*(/DN); do
+    target_dir="$HOME_DIR/${source_dir#"$BASE_DIR"/}"
+    if [[ -L "$target_dir" || ( -e "$target_dir" && ! -d "$target_dir" ) ]]; then
+      echo "Error: $target_dir must be a real directory, not a symlink or file." >&2
+      echo "Preserve local runtime files and replace directory links with individual managed file links before installing." >&2
+      return 1
+    fi
+  done
   mkdir -p \
     "$CONFIG_DIR/Code/User" \
     "$CONFIG_DIR/atuin" \
@@ -873,7 +877,7 @@ run_installation() {
   migrate_retired_managed_links
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
-  install_with_stow -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
+  install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
 
   # Interactive prompts first (before long-running tasks like font cache)
   if is_desktop; then

@@ -115,6 +115,7 @@ test:
 	@/usr/bin/python3 "$(BASE)/tests/update_all_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/shell_llm_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/shell_startup_test.py"
+	@/usr/bin/python3 "$(BASE)/tests/stow_targets_test.py"
 	@/usr/bin/python3 "$(BASE)/tests/nvim_test.py"
 
 doctor:
