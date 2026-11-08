@@ -7,24 +7,6 @@ if has "kubectl"; then
 
   zpcompdef _kubectl kubectl
 
-  # Open a mounted pod path with a bare neovim via ephemeral debug container.
-  nvim_pod() {
-    local input="${1:-}"
-    local app="${input%%/*}"
-    local script="$HOME/.zsh/kubernetes/nvim-pod.zsh"
-
-    if typeset -f _title_terminal_cmd >/dev/null 2>&1; then
-      _title_terminal_cmd "nvim_pod $app"
-    fi
-
-    if [[ ! -r "$script" ]]; then
-      printf 'nvim_pod helper script not found: %s\n' "$script" >&2
-      return 1
-    fi
-
-    zsh "$script" "$@"
-  }
-
   function start-k8s-work() {
     alias k="kubectl"
     alias kmurder="kubectl delete pod --grace-period=0 --force"
