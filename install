@@ -353,6 +353,25 @@ setup_atuin() {
   ln -s "$src" "$dst"
 }
 
+# Keep application-owned Flatpak directories outside the private checkout.
+prepare_private_flatpak_targets() {
+  print_banner "Preparing private Flatpak targets..."
+  local source_dir
+  local source_root="$BASE_DIR/prv/.var/app"
+  local -a source_dirs=()
+  require_real_directory_path "$HOME_DIR/.var/app" || return 1
+  if [[ -d "$source_root" ]]; then
+    source_dirs=("$source_root"/**/*(/DN))
+  fi
+  for source_dir in "${source_dirs[@]}"; do
+    require_real_directory_path "$HOME_DIR/.var/app/${source_dir#"$source_root"/}" || return 1
+  done
+  mkdir -p "$HOME_DIR/.var/app"
+  for source_dir in "${source_dirs[@]}"; do
+    mkdir -p "$HOME_DIR/.var/app/${source_dir#"$source_root"/}"
+  done
+}
+
 # Keep runtime-owned parent directories real so Stow cannot fold them into the repo.
 prepare_stow_targets() {
   print_banner "Preparing runtime-owned Stow targets..."
@@ -374,12 +393,8 @@ prepare_stow_targets() {
     "$HOME_DIR/.zshrc.d"
 
   is_desktop || return 0
-  mkdir -p "$HOME_DIR/bin" "$HOME_DIR/.var/app"
-
-  local app_dir
-  for app_dir in "$BASE_DIR/prv/.var/app"/*(/N); do
-    mkdir -p "$HOME_DIR/.var/app/${app_dir:t}"
-  done
+  mkdir -p "$HOME_DIR/bin"
+  prepare_private_flatpak_targets
 }
 
 # Keep runtime directories real, but link the declarative projects directory.

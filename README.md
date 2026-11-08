@@ -57,6 +57,11 @@ Atuin setup on desktop requires real `~/.config` and `~/.config/atuin`
 directories. It preserves existing local configuration and stops if it is not
 the managed link; migrate that configuration before retrying the installer.
 
+On desktop, Flatpak directories under `~/.var/app` that match the private
+configuration must be real directories. The installer creates missing ones and
+rejects links so application runtime files stay outside the checkout; managed
+files remain links to the repository.
+
 ## Shell completions
 
 `./install` and `update-all` run `bin/update-shell-completions` after installing
