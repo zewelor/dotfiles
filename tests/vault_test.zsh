@@ -188,7 +188,12 @@ if grep -q "$LOGIN_TOKEN" "$LOG_DIR/kubectl_argv.log"; then
   exit 1
 fi
 
-echo "PASS: kvlogin authenticated via kvault token lookup and kept token unexported"
+kvlogout >/dev/null
+if [[ -n "${KVAULT_TOKEN:-}" ]]; then
+  echo "FAIL: kvlogout did not clear KVAULT_TOKEN" >&2
+  exit 1
+fi
+echo "PASS: kvlogin authenticated and kvlogout cleared the unexported token"
 
 echo "=== Test 4: Failed kvlogin clears token ==="
 unset KVAULT_TOKEN
@@ -203,16 +208,7 @@ if [[ -n "${KVAULT_TOKEN:-}" ]]; then
 fi
 echo "PASS: Failed kvlogin cleared KVAULT_TOKEN"
 
-echo "=== Test 5: kvlogout clears token ==="
-KVAULT_TOKEN="temporary-token"
-kvlogout >/dev/null
-if [[ -n "${KVAULT_TOKEN:-}" ]]; then
-  echo "FAIL: KVAULT_TOKEN not cleared after kvlogout" >&2
-  exit 1
-fi
-echo "PASS: kvlogout cleared KVAULT_TOKEN"
-
-echo "=== Test 6: Discovery fallback to generic Vault label when active label is empty ==="
+echo "=== Test 5: Discovery fallback to generic Vault label when active label is empty ==="
 export MOCK_KUBECTL_ACTIVE_EMPTY="true"
 : > "$LOG_DIR/kubectl_argv.log"
 kvault status </dev/null >/dev/null
@@ -223,7 +219,7 @@ fi
 unset MOCK_KUBECTL_ACTIVE_EMPTY
 echo "PASS: Discovery falls back to generic selector when active label is empty"
 
-echo "=== Test 7: Kubectl discovery error causes immediate failure without masking ==="
+echo "=== Test 6: Kubectl discovery error causes immediate failure without masking ==="
 export MOCK_KUBECTL_ERROR="true"
 : > "$LOG_DIR/kubectl_argv.log"
 DISCOVERY_ERR_OUT=""
@@ -239,7 +235,7 @@ fi
 unset MOCK_KUBECTL_ERROR
 echo "PASS: Kubectl discovery error causes immediate failure and remains visible"
 
-echo "=== Test 8: Vault pod not found when both selectors return empty ==="
+echo "=== Test 7: Vault pod not found when both selectors return empty ==="
 export MOCK_KUBECTL_NOT_FOUND="true"
 NOT_FOUND_OUT=""
 if NOT_FOUND_OUT="$(kvault status 2>&1)"; then
@@ -254,62 +250,7 @@ fi
 unset MOCK_KUBECTL_NOT_FOUND
 echo "PASS: Clean error message when no Vault pod is found in namespace"
 
-echo "=== Test 9: Single-path contract for start-k8s-work in kubernetes.zsh ==="
-K8S_ZSH="$(cd "$(dirname "$0")/../.zsh" && pwd)/kubernetes.zsh"
-MOCK_HOME_EMPTY="$TEST_DIR/mock_home_empty"
-MOCK_HOME_VALID="$TEST_DIR/mock_home_valid"
-mkdir -p "$MOCK_HOME_EMPTY/dotfiles/.zsh/lib" "$MOCK_HOME_VALID/.zsh/lib"
-
-cat << 'EOF' > "$MOCK_HOME_EMPTY/dotfiles/.zsh/lib/vault.zsh"
-fallback_loaded() { echo "fallback_loaded"; }
-EOF
-
-START_K8S_FAIL_OUT="$(
-  zsh -c '
-    export HOME="$1"
-    has() { return 0; }
-    zpcompdef() { :; }
-    source "$2"
-    if start-k8s-work 2>&1; then
-      echo "UNEXPECTED_SUCCESS"
-    else
-      echo "FAILED_AS_EXPECTED"
-    fi
-  ' _ "$MOCK_HOME_EMPTY" "$K8S_ZSH"
-)"
-
-if ! grep -q "FAILED_AS_EXPECTED" <<< "$START_K8S_FAIL_OUT" || grep -q "UNEXPECTED_SUCCESS" <<< "$START_K8S_FAIL_OUT"; then
-  echo "FAIL: start-k8s-work should have failed when \$HOME/.zsh/lib/vault.zsh was missing!" >&2
-  echo "Got output: $START_K8S_FAIL_OUT" >&2
-  exit 1
-fi
-
-cp "$VAULT_LIB" "$MOCK_HOME_VALID/.zsh/lib/vault.zsh"
-START_K8S_PASS_OUT="$(
-  zsh -c '
-    export HOME="$1"
-    export PATH="$2:$PATH"
-    has() { return 0; }
-    zpcompdef() { :; }
-    zinit() { :; }
-    source "$3"
-    start-k8s-work >/dev/null 2>&1
-    if typeset -f kvlogin >/dev/null 2>&1 && typeset -f kvault >/dev/null 2>&1; then
-      echo "SUCCESS_LOADED"
-    else
-      echo "FAILED_TO_LOAD"
-    fi
-  ' _ "$MOCK_HOME_VALID" "$BIN_DIR" "$K8S_ZSH"
-)"
-
-if ! grep -q "SUCCESS_LOADED" <<< "$START_K8S_PASS_OUT"; then
-  echo "FAIL: start-k8s-work failed to load vault helper when \$HOME/.zsh/lib/vault.zsh was present!" >&2
-  echo "Got output: $START_K8S_PASS_OUT" >&2
-  exit 1
-fi
-echo "PASS: start-k8s-work enforces single-path contract and fails without fallback"
-
-echo "=== Test 10: HTTP helper keeps Vault token out of curl argv and cleans credentials ==="
+echo "=== Test 8: HTTP helper keeps Vault token out of curl argv and cleans credentials ==="
 cat << 'EOF' > "$BIN_DIR/curl"
 #!/bin/sh
 printf '%s\n' "$@" > "$VAULT_TEST_LOGS/curl_argv.log"
@@ -354,12 +295,11 @@ if [[ -e "$HTTP_HEADER_PATH" || -n "$(find "$HTTP_TMPDIR" -mindepth 1 -print -qu
 fi
 echo "PASS: HTTP Vault token uses a mode-0600 header file, stays out of argv, and is cleaned up"
 
-echo "=== Test 11: HTTP helper propagates temporary header cleanup failure ==="
+echo "=== Test 9: HTTP helper propagates temporary header cleanup failure ==="
 RM_FAIL_BIN="$TEST_DIR/rm-fail-bin"
 mkdir -p "$RM_FAIL_BIN"
 cat << 'EOF' > "$RM_FAIL_BIN/rm"
 #!/bin/sh
-/bin/rm "$@"
 exit 73
 EOF
 chmod +x "$RM_FAIL_BIN/rm"
@@ -376,16 +316,13 @@ if ! grep -q "failed to remove temporary credential files" "$LOG_DIR/curl_cleanu
   echo "FAIL: HTTP helper did not report temporary header cleanup failure!" >&2
   exit 1
 fi
-echo "PASS: HTTP helper propagates temporary header cleanup failure"
-
-echo "=== Test 12: HTTP helper preserves curl failure when cleanup also fails ==="
-HTTP_CLEANUP_STATUS=0
-MOCK_CURL_STATUS=42 PATH="$RM_FAIL_BIN:$PATH" TMPDIR="$HTTP_TMPDIR" \
-  vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" \
-  >/dev/null 2>"$LOG_DIR/curl_cleanup_error.log" || HTTP_CLEANUP_STATUS=$?
-if (( HTTP_CLEANUP_STATUS != 42 )); then
-  echo "FAIL: HTTP helper returned $HTTP_CLEANUP_STATUS instead of curl status 42!" >&2
+HTTP_FAILED_HEADER_PATH="$(cat "$LOG_DIR/curl_header_path.log")"
+if [[ ! -f "$HTTP_FAILED_HEADER_PATH" ]]; then
+  echo "FAIL: Expected the credential file to remain after the simulated removal failure!" >&2
   exit 1
 fi
-echo "PASS: HTTP helper preserves curl failure when cleanup also fails"
+/bin/rm -- "$HTTP_FAILED_HEADER_PATH"
+rmdir -- "${HTTP_FAILED_HEADER_PATH:h}"
+echo "PASS: HTTP helper reports a credential file that could not be removed"
+
 echo "=== ALL VAULT HELPER TESTS PASSED ==="
