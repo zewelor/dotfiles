@@ -34,6 +34,10 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
   zmiennego stanu do zawsze ładowanych instrukcji.
 - Zmieniaj minimalny, celowy zakres i zachowuj istniejący styl oraz komentarze.
   W `install` poprzedzaj każdy większy etap czytelnym `print_banner`.
+- Przy zmianach `install` zachowuj spójność pełnej instalacji, samodzielnych
+  sekcji i `--help`, w tym kolejność etapów. Sekcje, poza wyborem profilu,
+  wymagają zapisanego profilu i sprawdzają swoje zależności przed działaniem.
+  Sekcje desktopowe odmawiają działania na serwerze i przy nieznanym profilu.
 - Skrypty mają działać fail-fast dla komend krytycznych dla logiki. Nie ukrywaj
   ich błędów przez `2>/dev/null || true` ani zgadywany fallback; toleruj brak
   danych tylko wtedy, gdy jest prawidłowym, opcjonalnym stanem.
