@@ -36,6 +36,17 @@ explicitly:
 DOTFILES_PROFILE=server DOTFILES_STOW_CONFIRM_APPLY=1 ./install
 ```
 
+Run `./install --help` or `make install-help` to list individual sections.
+For example, `make install-vault` runs the interactive Vault
+prompts without running the other installation sections. Individual sections
+read the saved profile from `~/.zshrc.d/profile.zsh`; set it first with
+`./install --section profile`. Desktop-only sections refuse the server profile.
+Stow sections retain their dry-run and apply confirmation, and the `ai` section
+requires shared agent commands and skills from the private setup. The `tools`
+section refreshes shell completions after installing tools.
+When present, generated `~/.zshrc.d/profile.zsh` and `editor.zsh` must be
+regular local files; other shell includes may be symlinks.
+
 These dotfiles assume configuration under `~/.config`; relocating it through
 `XDG_CONFIG_HOME` is not supported by the installer or shell helpers.
 `~/.config` must be a real directory for every account, including root. Linking

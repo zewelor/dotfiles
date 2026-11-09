@@ -1,4 +1,4 @@
-.PHONY: all install base mise update-fonts setup packages zinit_update doctor verify skills test completions
+.PHONY: all install install-help force-install-section base mise update-fonts setup packages zinit_update doctor verify skills test completions
 
 BASE=$(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
@@ -41,6 +41,15 @@ APT_PACKAGES_OPTIONAL= \
 all: base setup
 
 install: all
+install-help:
+	@"$(BASE)/install" --help
+
+# Pass section names literally through the shell, including quotes.
+install-%: force-install-section
+	@"$(BASE)/install" --section '$(subst ','"'"',$*)'
+
+force-install-section:
+
 base: packages | $(zinit_script)
 
 mise: $(MISE_BIN)

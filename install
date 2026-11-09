@@ -76,6 +76,21 @@ require_real_directory_path() {
   done
 }
 
+# Refuse links and special files for locally generated configuration.
+require_local_file_path() {
+  local target="$1"
+  require_real_directory_path "${target:h}" || return 1
+  if [[ -L "$target" || ( -e "$target" && ! -f "$target" ) ]]; then
+    echo "Error: $target must be a regular local file." >&2
+    printf 'Inspect the path:\n  ls -ld -- %q\n' "$target" >&2
+    if [[ -L "$target" ]]; then
+      printf 'Inspect the link target:\n  readlink -- %q\n' "$target" >&2
+    fi
+    echo "Preserve local files before replacing the path." >&2
+    return 1
+  fi
+}
+
 # Initialize ANSI colors (if supported). Respect NO_COLOR.
 init_colors() {
   if ! is_tty_stdout; then
@@ -902,6 +917,7 @@ setup_vim() {
 # Function to configure installation profile (Desktop vs Server)
 configure_profile() {
   local profile_file="$HOME_DIR/.zshrc.d/profile.zsh"
+  require_local_file_path "$profile_file" || return 1
   mkdir -p "$HOME_DIR/.zshrc.d"
 
   validate_profile() {
@@ -1044,10 +1060,10 @@ print_flatpak_manual_instructions() {
   done
 }
 
-
 # Configure the editor used by the shell.
 setup_editor() {
   local editor_config_file="$HOME_DIR/.zshrc.d/editor.zsh"
+  require_local_file_path "$editor_config_file" || return 1
   mkdir -p "$HOME_DIR/.zshrc.d"
 
   local nvim_installed=false
@@ -1083,10 +1099,184 @@ export EDITOR=vim
 EOF
     fi
   fi
+
+}
+
+setup_desktop_assets() {
+  # Stow user scripts from .local/bin
+  if [[ -d "$BASE_DIR/.local/bin" ]]; then
+    mkdir -p "$HOME_DIR/.local/bin"
+    print_banner "Stowing scripts into $HOME_DIR/.local/bin"
+    install_with_stow -t "$HOME_DIR/.local/bin" -d "$BASE_DIR/.local/bin" "."
+  fi
+
+  if [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
+    mkdir -p "$HOME_DIR/.local/share"
+    print_banner "Stowing repository fonts into $HOME_DIR/.local/share"
+    install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
+    refresh_font_cache
+  fi
+}
+
+stow_base_dotfiles() {
+  install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
+}
+
+INSTALL_SECTIONS=(
+  'profile|both|Choose and save the installation profile'
+  'base|both|Prepare directories and stow the base configuration'
+  'private|desktop|Set up the private submodule, overrides, and Herdr'
+  'vault|desktop|Configure environment secrets, rclone, and Storage Box'
+  'desktop-assets|desktop|Show Flatpak instructions and stow scripts and fonts'
+  'tools|desktop|Configure Atuin and install desktop tools with mise'
+  'ai|desktop|Configure Codex, OpenCode, Antigravity, and Summarize'
+  'completions|both|Refresh static shell completions'
+  'shell|both|Configure Git conflict style and the editor'
+  'desktop|desktop|Configure terminal shortcuts and user services'
+)
+
+install_help() {
+  printf 'Usage: ./install [--help | --section NAME]\n\nSections (also available through make):\n'
+  local entry
+  local -a parts
+  for entry in "${INSTALL_SECTIONS[@]}"; do
+    parts=("${(@s:|:)entry}")
+    printf '  make install-%-14s %-8s %s\n' "$parts[1]" "$parts[2]" "$parts[3]"
+  done
+  printf '\nWithout arguments, run the full installation. Sections require a saved profile.\n'
+  printf 'Stow sections require confirmation; private requires base, and ai requires private agent resources.\n'
+  printf 'The vault section requires an interactive terminal. Tools also refresh completions.\n'
+}
+
+load_section_profile() {
+  local profile_file="$HOME_DIR/.zshrc.d/profile.zsh"
+  require_local_file_path "$profile_file" || return 1
+  [[ -f "$profile_file" ]] || {
+    echo "Error: no saved profile in $profile_file; run ./install --section profile first." >&2
+    return 1
+  }
+  DOTFILES_PROFILE=$(unset DOTFILES_PROFILE; source "$profile_file" >/dev/null || exit 1; print -r -- "${DOTFILES_PROFILE:-}") || {
+    echo "Error: could not read profile from $profile_file." >&2
+    return 1
+  }
+  case "$DOTFILES_PROFILE" in
+    desktop|server) export DOTFILES_PROFILE ;;
+    *) echo "Error: invalid saved profile in $profile_file." >&2; return 1 ;;
+  esac
+}
+
+run_selected_section() {
+  if (( $# == 1 )) && [[ "$1" == --help || "$1" == -h ]]; then
+    install_help
+    return
+  fi
+  if (( $# != 2 )) || [[ "$1" != --section || -z "$2" ]]; then
+    echo 'Error: use ./install --help or ./install --section NAME.' >&2
+    return 1
+  fi
+
+  local section="$2" entry allowed=''
+  local -a parts
+  for entry in "${INSTALL_SECTIONS[@]}"; do
+    parts=("${(@s:|:)entry}")
+    [[ "$parts[1]" == "$section" ]] && allowed="$parts[2]"
+  done
+  if [[ -z "$allowed" ]]; then
+    echo "Error: unknown section '$section'; use ./install --help." >&2
+    return 1
+  fi
+  if [[ "$section" == profile ]]; then
+    configure_profile
+    return
+  fi
+  load_section_profile || return 1
+  if [[ "$allowed" == desktop && "$DOTFILES_PROFILE" != desktop ]]; then
+    echo "Error: section '$section' requires the desktop profile; current profile is '$DOTFILES_PROFILE'." >&2
+    return 1
+  fi
+  if [[ "$section" == vault ]] && ! is_interactive; then
+    echo "Error: section 'vault' requires an interactive terminal." >&2
+    return 1
+  fi
+  if [[ "$section" == ai ]] && [[ ! -d "$HOME_DIR/.agents/commands" || ! -d "$HOME_DIR/.agents/skills" ]]; then
+    echo 'Error: shared agent commands or skills are missing; set up the private section first.' >&2
+    return 1
+  fi
+  if [[ "$section" == private ]] && [[ ! -d "$CONFIG_DIR" || -L "$CONFIG_DIR" || ! -d "$HOME_DIR/.var/app" ]]; then
+    echo 'Error: base runtime directories are missing; run the base section first.' >&2
+    return 1
+  fi
+  if [[ "$section" == private ]]; then
+    require_real_directory_path "$HOME_DIR/.var/app" || return 1
+  fi
+
+  case "$section" in
+    base)
+      init_colors
+      require_zsh_login_shell
+      configure_stow_apply
+      prepare_stow_targets
+      migrate_retired_managed_links
+      print_banner "Stowing base dotfiles into $HOME_DIR"
+      stow_base_dotfiles
+      ;;
+    private)
+      configure_stow_apply
+      setup_private_submodule
+      prepare_private_flatpak_targets
+      print_banner 'Stowing private overrides from prv/'
+      install_with_stow -d "$BASE_DIR/prv" -t "$HOME_DIR" .
+      setup_herdr
+      ;;
+    vault)
+      print_banner 'Secret environment variables from Vault (optional)'
+      add_secret_envs_from_vault
+      setup_rclone
+      setup_storagebox_media_mount
+      ;;
+    desktop-assets)
+      configure_stow_apply
+      print_flatpak_manual_instructions
+      setup_desktop_assets
+      ;;
+    tools)
+      setup_atuin
+      setup_mise_desktop_tools
+      print_banner 'Refreshing static shell completions'
+      "$BASE_DIR/bin/update-shell-completions"
+      ;;
+    ai)
+      configure_stow_apply
+      setup_codex
+      setup_opencode
+      setup_antigravity_cli
+      setup_summarize
+      ;;
+    completions)
+      print_banner 'Refreshing static shell completions'
+      "$BASE_DIR/bin/update-shell-completions"
+      ;;
+    shell)
+      require_local_file_path "$HOME_DIR/.zshrc.d/editor.zsh" || return 1
+      print_banner 'Checking Git conflict style'
+      configure_git_conflict_style
+      setup_editor
+      ;;
+    desktop)
+      require_real_directory_path "$CONFIG_DIR" || return 1
+      setup_terminal_emulator
+      setup_kde_terminal_shortcut
+      setup_user_systemd_units
+      ;;
+  esac
 }
 
 # Main installation routine that coordinates all tasks.
 run_installation() {
+  if (( $# )); then
+    run_selected_section "$@"
+    return
+  fi
   configure_profile
 
   init_colors
@@ -1097,7 +1287,7 @@ run_installation() {
   migrate_retired_managed_links
 
   print_banner "Stowing base dotfiles into $HOME_DIR"
-  install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
+  stow_base_dotfiles
 
   # Interactive prompts first (before long-running tasks like font cache)
   if is_desktop; then
@@ -1114,19 +1304,8 @@ run_installation() {
     install_with_stow -d "$BASE_DIR/prv" -t "$HOME_DIR" "."
     setup_herdr
 
-    # Stow user scripts from .local/bin
-    if [[ -d "$BASE_DIR/.local/bin" ]]; then
-      mkdir -p "$HOME_DIR/.local/bin"
-      print_banner "Stowing scripts into $HOME_DIR/.local/bin"
-      install_with_stow -t "$HOME_DIR/.local/bin" -d "$BASE_DIR/.local/bin" "."
-    fi
+    setup_desktop_assets
 
-    if [[ -d "$BASE_DIR/.local/share/fonts" ]]; then
-      mkdir -p "$HOME_DIR/.local/share"
-      print_banner "Stowing repository fonts into $HOME_DIR/.local/share"
-      install_with_stow -t "$HOME_DIR/.local/share" -d "$BASE_DIR/.local/share" "."
-      refresh_font_cache
-    fi
   fi
 
   print_banner "Checking Git conflict style"
@@ -1241,4 +1420,4 @@ setup_terminal_emulator() {
   esac
 }
 
-run_installation
+run_installation "$@"
