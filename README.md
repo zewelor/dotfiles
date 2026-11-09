@@ -98,6 +98,8 @@ make verify  # deeper environment drift checks for the current machine
 
 - `make test` automatically discovers `*_test.zsh` and `*_test.py` files in
   `tests/`, as well as `prv/tests/` when the private submodule is available.
+  Some Stow integration tests create real links in temporary test directories;
+  they do not apply the configuration to your home directory.
 - `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, mise gem source validation, and the offline Vault helper suite.
 - `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
 
