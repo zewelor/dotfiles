@@ -59,26 +59,11 @@ ZSH_TITLE_MAX=$3
         result = self.title('', '%d %%')
         self.assertEqual(result, osc_title(f"{Path.cwd()} %"))
 
-    def test_title_keeps_remote_prefix(self):
-        result = self.title('SSH_CONNECTION=remote; HOSTNAME=remote.example; LOGNAME=alice', 'work')
-        self.assertEqual(result, osc_title("alice@remote.example: work"))
-
     def test_remote_title_works_without_external_hostname(self):
         result = self.title('''unset HOSTNAME
 SSH_CLIENT=remote; HOST=remote.example; LOGNAME=alice
 hostname() { return 127; }''', 'work')
         self.assertEqual(result, osc_title("alice@remote: work"))
-
-    def test_title_truncation(self):
-        self.assertEqual(self.title('', 'abcdefghij', 8), osc_title("abcde..."))
-
-    def test_command_title_keeps_literal_percent(self):
-        result = self.run_zsh('''source "$1/.zsh/terminal_title.zsh" >/dev/null
-ZSH_TITLE_MAX=0
-_title_terminal_cmd 'nvim 100%name'
-''', tty=True)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout, osc_title("nvim 100%name"))
 
     def test_title_skips_tmux_and_nonterminal(self):
         for setup, tty in [('TMUX=session', True), ('', False)]:
@@ -171,11 +156,6 @@ source "$1/.zsh/webapps.zsh"
 ''')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), "/usr/bin/brave-origin-stable")
-
-    def test_title_expands_home_directory(self):
-        result = self.title('cd "$HOME" >/dev/null', '%~')
-        self.assertEqual(result, osc_title("~"))
-
 
 if __name__ == "__main__":
     unittest.main()

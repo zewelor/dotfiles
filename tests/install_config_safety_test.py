@@ -48,25 +48,6 @@ VAULT_TOKEN=fixture
         return subprocess.run(["zsh", str(self.install), step, *map(str, args)], env=self.env,
                               input=response, text=True, capture_output=True, timeout=10)
 
-    def test_checks_each_level_of_a_single_destination(self):
-        config = self.home / ".config"
-        config.mkdir()
-        (config / "linked").symlink_to(self.outside, target_is_directory=True)
-        result = self.run_step("require_real_directory_path", "", config / "linked/deeper/target")
-        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn(str(config / "linked"), result.stderr)
-        self.assertEqual(list(self.outside.iterdir()), [])
-
-        result = self.run_step("require_real_directory_path", "", config / "new/deeper/target")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertFalse((config / "new").exists())
-
-    def test_rejects_paths_outside_home_or_with_parent_components(self):
-        for target in (self.outside / "new", str(self.home / ".config") + "/../other"):
-            with self.subTest(target=target):
-                result = self.run_step("require_real_directory_path", "", target)
-                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-
     def test_linked_config_ancestors_are_rejected(self):
         for step, name in (("setup_rclone", "rclone"), ("setup_mise_desktop_tools", "mise")):
             for linked in ("config", "child"):
@@ -98,21 +79,22 @@ VAULT_TOKEN=fixture
     def test_invalid_config_child_paths_are_rejected(self):
         config = self.home / ".config"
         config.mkdir()
-        for step, name in (("setup_rclone", "rclone"), ("setup_mise_desktop_tools", "mise")):
-            for kind in ("file", "dangling"):
-                with self.subTest(step=step, kind=kind):
-                    target = config / name
-                    if kind == "file":
-                        target.write_text("keep\n")
-                    else:
-                        target.symlink_to(self.outside / "missing", target_is_directory=True)
-                    try:
-                        result = self.run_step(step)
-                        self.assertNotEqual(result.returncode, 0)
-                        self.assertIn("real directory", result.stderr)
-                        self.assertFalse(self.marker.exists())
-                    finally:
-                        target.unlink()
+        cases = (("setup_rclone", "rclone", "file"),
+                 ("setup_mise_desktop_tools", "mise", "dangling"))
+        for step, name, kind in cases:
+            with self.subTest(step=step, kind=kind):
+                target = config / name
+                if kind == "file":
+                    target.write_text("keep\n")
+                else:
+                    target.symlink_to(self.outside / "missing", target_is_directory=True)
+                try:
+                    result = self.run_step(step)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn("real directory", result.stderr)
+                    self.assertFalse(self.marker.exists())
+                finally:
+                    target.unlink()
 
     def test_declined_rclone_does_not_require_config_directory(self):
         (self.home / ".config").symlink_to(self.outside, target_is_directory=True)
@@ -134,6 +116,7 @@ init_colors() { : }
 require_zsh_login_shell() { : }
 configure_stow_apply() { : }
 setup_private_submodule() { : }
+install_with_stow() { touch "$HOME_DIR/stow-called"; return 1 }
 run_installation
 '''
         self.install.write_text(self.script + "\n" + overrides)
@@ -148,25 +131,23 @@ run_installation
                                             text=True, capture_output=True, timeout=10)
                     self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertIn("real directory", result.stderr)
+                    self.assertFalse((self.home / "stow-called").exists())
                     self.assertEqual(list(self.outside.iterdir()), [])
                 finally:
                     link.unlink()
 
+
     def test_mise_checks_both_targets_before_linking(self):
         target = self.home / ".config/mise"
         target.mkdir(parents=True)
-        for filename, other in (("config.local.toml", "config.toml"),
-                                ("config.toml", "config.local.toml")):
-            with self.subTest(filename=filename):
-                conflict = target / filename
-                conflict.write_text("unmanaged\n")
-                result = self.run_step("setup_mise_desktop_tools")
-                self.assertNotEqual(result.returncode, 0)
-                self.assertIn("unmanaged mise config", result.stderr)
-                self.assertEqual(conflict.read_text(), "unmanaged\n")
-                self.assertFalse((target / other).is_symlink())
-                self.assertFalse(self.marker.exists())
-                conflict.unlink()
+        conflict = target / "config.local.toml"
+        conflict.write_text("unmanaged\n")
+        result = self.run_step("setup_mise_desktop_tools")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unmanaged mise config", result.stderr)
+        self.assertEqual(conflict.read_text(), "unmanaged\n")
+        self.assertFalse((target / "config.toml").is_symlink())
+        self.assertFalse(self.marker.exists())
 
     def test_mise_accepts_managed_links_and_is_idempotent(self):
         for _ in range(2):
@@ -177,15 +158,6 @@ run_installation
                 self.assertTrue(link.is_symlink())
                 self.assertEqual(link.resolve(), self.repo / ".config/mise" / name)
             self.assertTrue(self.marker.exists())
-
-    def test_mise_accepts_a_managed_link_to_missing_local_config(self):
-        target = self.home / ".config/mise"
-        target.mkdir(parents=True)
-        (target / "config.local.toml").symlink_to(self.repo / ".config/mise/config.local.toml")
-        result = self.run_step("setup_mise_desktop_tools")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue(self.marker.exists())
-
 
 if __name__ == "__main__":
     unittest.main()

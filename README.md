@@ -96,9 +96,8 @@ make doctor  # fast offline checks, including required gem sources
 make verify  # deeper environment drift checks for the current machine
 ```
 
-- `make test` runs offline tests for Vault helpers, mise sources, shell completions,
-  the `update-all` user command runner, the temporary Codex workspace, and shell
-  startup helpers.
+- `make test` automatically discovers `*_test.zsh` and `*_test.py` files in
+  `tests/`, as well as `prv/tests/` when the private submodule is available.
 - `make doctor` is meant to stay fast and offline; it runs syntax checks, stow dry-runs, tool availability, mise gem source validation, and the offline Vault helper suite.
 - `make verify` runs all `make doctor` checks plus interactive shell startup and local workstation state verification.
 

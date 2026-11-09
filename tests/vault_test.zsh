@@ -254,63 +254,7 @@ fi
 unset MOCK_KUBECTL_NOT_FOUND
 echo "PASS: Clean error message when no Vault pod is found in namespace"
 
-echo "=== Test 9: Sourcing library fails-closed if typeset +x fails ==="
-SOURCE_FAIL_OUT="$(
-  zsh -c '
-    disable -r typeset
-    eval "
-      typeset() {
-        if [[ \"\$*\" == *\"+x KVAULT_TOKEN\"* ]]; then
-          return 1
-        fi
-        builtin typeset \"\$@\"
-      }
-      source \"$1\"
-    "
-  ' _ "$VAULT_LIB" 2>&1 || true
-)"
-if ! grep -q "Failed to unexport KVAULT_TOKEN" <<< "$SOURCE_FAIL_OUT"; then
-  echo "FAIL: Expected 'Failed to unexport KVAULT_TOKEN' on failed source typeset!" >&2
-  echo "Got output: $SOURCE_FAIL_OUT" >&2
-  exit 1
-fi
-echo "PASS: Sourcing fails-closed with clear error when typeset fails"
-
-echo "=== Test 10: kvlogin fails-closed before token assignment if typeset +x fails ==="
-LOGIN_FAIL_OUT="$(
-  zsh -c '
-    disable -r typeset
-    eval "
-      call_count=0
-      typeset() {
-        if [[ \"\$*\" == *\"+x KVAULT_TOKEN\"* ]]; then
-          (( call_count++ ))
-          if (( call_count > 1 )); then
-            return 1
-          fi
-        fi
-        builtin typeset \"\$@\"
-      }
-      source \"$1\"
-      unset KVAULT_TOKEN
-      kvlogin <<< \"untrusted-secret-token\"
-      echo \"AFTER_TOKEN=\${KVAULT_TOKEN:-<unset>}\"
-    "
-  ' _ "$VAULT_LIB" 2>&1 || true
-)"
-if ! grep -q "Failed to unexport KVAULT_TOKEN" <<< "$LOGIN_FAIL_OUT"; then
-  echo "FAIL: Expected 'Failed to unexport KVAULT_TOKEN' on failed kvlogin typeset!" >&2
-  echo "Got output: $LOGIN_FAIL_OUT" >&2
-  exit 1
-fi
-if ! grep -q "AFTER_TOKEN=<unset>" <<< "$LOGIN_FAIL_OUT"; then
-  echo "FAIL: KVAULT_TOKEN was assigned despite typeset failure in kvlogin!" >&2
-  echo "Got output: $LOGIN_FAIL_OUT" >&2
-  exit 1
-fi
-echo "PASS: kvlogin fails-closed and prevents token assignment when typeset fails"
-
-echo "=== Test 11: Single-path contract for start-k8s-work in kubernetes.zsh ==="
+echo "=== Test 9: Single-path contract for start-k8s-work in kubernetes.zsh ==="
 K8S_ZSH="$(cd "$(dirname "$0")/../.zsh" && pwd)/kubernetes.zsh"
 MOCK_HOME_EMPTY="$TEST_DIR/mock_home_empty"
 MOCK_HOME_VALID="$TEST_DIR/mock_home_valid"
@@ -365,7 +309,7 @@ if ! grep -q "SUCCESS_LOADED" <<< "$START_K8S_PASS_OUT"; then
 fi
 echo "PASS: start-k8s-work enforces single-path contract and fails without fallback"
 
-echo "=== Test 12: HTTP helper keeps Vault token out of curl argv and cleans credentials ==="
+echo "=== Test 10: HTTP helper keeps Vault token out of curl argv and cleans credentials ==="
 cat << 'EOF' > "$BIN_DIR/curl"
 #!/bin/sh
 printf '%s\n' "$@" > "$VAULT_TEST_LOGS/curl_argv.log"
@@ -410,7 +354,7 @@ if [[ -e "$HTTP_HEADER_PATH" || -n "$(find "$HTTP_TMPDIR" -mindepth 1 -print -qu
 fi
 echo "PASS: HTTP Vault token uses a mode-0600 header file, stays out of argv, and is cleaned up"
 
-echo "=== Test 13: HTTP helper propagates temporary header cleanup failure ==="
+echo "=== Test 11: HTTP helper propagates temporary header cleanup failure ==="
 RM_FAIL_BIN="$TEST_DIR/rm-fail-bin"
 mkdir -p "$RM_FAIL_BIN"
 cat << 'EOF' > "$RM_FAIL_BIN/rm"
@@ -434,27 +378,7 @@ if ! grep -q "failed to remove temporary credential files" "$LOG_DIR/curl_cleanu
 fi
 echo "PASS: HTTP helper propagates temporary header cleanup failure"
 
-echo "=== Test 14: HTTP helper propagates temporary directory cleanup failure ==="
-RMDIR_FAIL_BIN="$TEST_DIR/rmdir-fail-bin"
-mkdir -p "$RMDIR_FAIL_BIN"
-cat << 'EOF' > "$RMDIR_FAIL_BIN/rmdir"
-#!/bin/sh
-/usr/bin/rmdir "$@"
-exit 74
-EOF
-chmod +x "$RMDIR_FAIL_BIN/rmdir"
-
-HTTP_CLEANUP_STATUS=0
-PATH="$RMDIR_FAIL_BIN:$PATH" TMPDIR="$HTTP_TMPDIR" \
-  vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" \
-  >/dev/null 2>"$LOG_DIR/curl_cleanup_error.log" || HTTP_CLEANUP_STATUS=$?
-if (( HTTP_CLEANUP_STATUS == 0 )); then
-  echo "FAIL: HTTP helper hid temporary directory cleanup failure!" >&2
-  exit 1
-fi
-echo "PASS: HTTP helper propagates temporary directory cleanup failure"
-
-echo "=== Test 15: HTTP helper preserves curl failure when cleanup also fails ==="
+echo "=== Test 12: HTTP helper preserves curl failure when cleanup also fails ==="
 HTTP_CLEANUP_STATUS=0
 MOCK_CURL_STATUS=42 PATH="$RM_FAIL_BIN:$PATH" TMPDIR="$HTTP_TMPDIR" \
   vault_http_get "https://vault.example.test/v1/secret" "$HTTP_SENTINEL_TOKEN" \

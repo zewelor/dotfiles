@@ -111,7 +111,7 @@ sudo() {
 target_user=fixture
 target_home="$TEST_TARGET_HOME"
 user_tool_env_path=/usr/bin:/bin
-target_mise_config_dir="$target_home/dotfiles/.config/mise"
+target_mise_config_dir="$target_home/.config/mise"
 # Replace only the privilege boundary, preserving the caller's working directory.
 sudo() {
   [[ "$1" == -H && "$2" == -u && "$3" == fixture ]] || return 90
@@ -131,7 +131,7 @@ sudo() {
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.splitlines(), [
             str(self.home), str(self.home),
-            str(self.home / "dotfiles/.config/mise"),
+            str(self.home / ".config/mise"),
         ])
 
     def test_missing_home_prevents_command_execution(self):
@@ -139,22 +139,6 @@ sudo() {
         result = self.run_command('printf "command executed\\n"')
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
-
-    def test_command_failure_is_preserved(self):
-        result = self.run_command("exit 23")
-        self.assertEqual(result.returncode, 23, result.stderr)
-
-    def test_server_mise_is_managed_separately_and_completions_use_target_home(self):
-        result = self.run_update_all(
-            "desktop", "server", mise_installed=True
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("managed separately", result.stdout)
-        self.assertFalse(self.mise_log.exists())
-        self.assertEqual(
-            self.completion_log.read_text().splitlines(),
-            [f"{self.home}/.config/mise"],
-        )
 
     def test_server_without_mise_succeeds_without_a_mise_config(self):
         result = self.run_update_all(
@@ -165,20 +149,6 @@ sudo() {
         self.assertEqual(
             self.completion_log.read_text().splitlines(),
             [f"{self.home}/.config/mise"],
-        )
-
-    def test_desktop_mise_still_updates_and_prunes_using_target_home_config(self):
-        result = self.run_update_all(
-            "server", "desktop", mise_installed=True, config_exists=True
-        )
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(
-            self.mise_log.read_text().splitlines(),
-            [
-                f"self-update -y --no-plugins|{self.home}/.config/mise",
-                f"upgrade|{self.home}/.config/mise",
-                f"prune -y|{self.home}/.config/mise",
-            ],
         )
 
     def test_desktop_without_mise_fails_even_when_caller_is_server(self):

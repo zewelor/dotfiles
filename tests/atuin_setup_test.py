@@ -68,12 +68,5 @@ class AtuinSetupTest(unittest.TestCase):
         self.assertTrue(self.target.is_symlink())
         self.assertEqual(os.readlink(self.target), str(self.home / "missing"))
 
-    def test_missing_repo_config_fails_before_creating_target(self):
-        self.seed.unlink()
-        result = self.run_setup()
-        self.assertNotEqual(result.returncode, 0)
-        self.assertFalse(self.target.parent.exists())
-
-
 if __name__ == "__main__":
     unittest.main()

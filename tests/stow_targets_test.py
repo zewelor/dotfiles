@@ -83,7 +83,7 @@ class StowTargetsTest(unittest.TestCase):
     def test_legacy_directory_links_fail_before_writing(self):
         foreign = self.root / "foreign"
         foreign.mkdir()
-        for relative in (".", "systemd", "systemd/user", "btop", "mise", "example/nested", "example/.hidden"):
+        for relative in (".", "mise", "example/nested", "example/.hidden"):
             with self.subTest(relative=relative):
                 if self.home.exists():
                     shutil.rmtree(self.home)

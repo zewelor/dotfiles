@@ -109,19 +109,14 @@ completions:
 	@"$(BASE)/bin/update-shell-completions"
 
 test:
-	@zsh "$(BASE)/tests/vault_test.zsh"
-	@/usr/bin/python3 "$(BASE)/tests/vault_envs_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/atuin_setup_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/install_config_safety_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/install_private_gitlink_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/flatpak_targets_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/mise_sources_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/completions_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/update_all_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/shell_llm_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/shell_startup_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/stow_targets_test.py"
-	@/usr/bin/python3 "$(BASE)/tests/nvim_test.py"
+	@for test in "$(BASE)"/tests/*_test.zsh; do zsh "$$test" || exit $$?; done
+	@/usr/bin/python3 -m unittest discover -f -s "$(BASE)/tests" -p '*_test.py'
+	@if [ -d "$(BASE)/prv/tests" ]; then \
+		for test in "$(BASE)"/prv/tests/*_test.zsh; do \
+			[ -f "$$test" ] || continue; zsh "$$test" || exit $$?; \
+		done; \
+		/usr/bin/python3 -m unittest discover -f -s "$(BASE)/prv/tests" -p '*_test.py'; \
+	fi
 
 doctor:
 	@"$(HEALTHCHECK)" doctor

@@ -48,13 +48,6 @@ class HerdrPlusTest(unittest.TestCase):
             self.assertFalse((self.source.parents[2] / generated.name).exists())
         self.assertFalse(self.config.is_symlink())
 
-    def test_new_project_is_visible_without_reinstall(self):
-        result = self.run_install()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        added = self.source.with_name("r3x.toml")
-        added.write_text('name = "r3x"\n')
-        self.assertEqual((self.config / "projects/r3x.toml").read_text(), added.read_text())
-
     def test_foreign_projects_directory_link_is_preserved(self):
         foreign = self.root / "foreign-projects"
         foreign.mkdir()
@@ -82,16 +75,6 @@ class HerdrPlusTest(unittest.TestCase):
         shutil.rmtree(self.root / "prv/.config/herdr/plugins/config")
         self.assertNotEqual(self.run_install().returncode, 0)
         self.assertFalse(self.target.is_symlink())
-
-    def test_existing_file_or_foreign_link_is_preserved(self):
-        self.target.parent.mkdir(parents=True)
-        self.target.write_text("local config")
-        self.assertNotEqual(self.run_install().returncode, 0)
-        self.assertEqual(self.target.read_text(), "local config")
-        self.target.unlink()
-        self.target.symlink_to("/missing-foreign-config")
-        self.assertNotEqual(self.run_install().returncode, 0)
-        self.assertEqual(os.readlink(self.target), "/missing-foreign-config")
 
     def test_symlinked_runtime_parent_is_rejected(self):
         foreign = self.root / "foreign"

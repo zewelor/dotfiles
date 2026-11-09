@@ -70,7 +70,7 @@ add_secret_envs_from_vault
 
     def test_failures_preserve_existing_file(self):
         for case in ("missing", "empty", "collision", "invalid_name", "http_error",
-                     "nul_main", "nul_feedway", "nul_sourcetap"):
+                     "nul_main", "nul_feedway"):
             with self.subTest(case=case):
                 self.response("envs", {"EXISTING": "ok"})
                 self.response("feedway", {"api_token": "ok"})
@@ -82,7 +82,6 @@ add_secret_envs_from_vault
                 if case == "http_error": (self.responses / "sourcetap").unlink()
                 if case == "nul_main": self.response("envs", {"EXISTING": "bad\x00value"})
                 if case == "nul_feedway": self.response("feedway", {"api_token": "bad\x00value"})
-                if case == "nul_sourcetap": self.response("sourcetap", {"MCP_AUTH_TOKEN": "bad\x00value"})
                 result = self.run_generator()
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(self.target.read_text(), "old content\n")

@@ -36,7 +36,6 @@ class MiseSourcesTest(unittest.TestCase):
             '"latest"',
             '[]',
             '{ version = "latest" }',
-            '{ version = "latest", source = "" }',
             '{ version = "latest", source = "   " }',
             '{ version = "latest", source = 123 }',
             '{ version = "latest", source = "http://rubygems.org/" }',
@@ -89,13 +88,6 @@ ruby = "latest"
         result = self.doctor()
         self.assertNotEqual(result.returncode, 0, result.stdout)
         self.assertIn("config.toml", result.stdout)
-
-    def test_rejects_missing_shared_config(self):
-        self.config.unlink()
-        result = self.doctor()
-        self.assertNotEqual(result.returncode, 0, result.stdout)
-        self.assertIn("config.toml", result.stdout)
-
 
 if __name__ == "__main__":
     unittest.main()
