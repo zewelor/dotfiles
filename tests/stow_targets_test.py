@@ -18,6 +18,8 @@ class StowTargetsTest(unittest.TestCase):
         self.root = Path(self.temp.name)
         self.repo = self.root / "repo"
         self.home = self.root / "home"
+        self.env = {**os.environ, "HOME": str(self.home), "ZDOTDIR": str(self.home),
+                    "XDG_CONFIG_HOME": str(self.home / ".config")}
         (self.repo / ".zsh").mkdir(parents=True)
         shutil.copy(ROOT / ".zsh/helpers.zsh", self.repo / ".zsh/helpers.zsh")
         shutil.copy(ROOT / ".stow-local-ignore", self.repo / ".stow-local-ignore")
@@ -47,7 +49,7 @@ class StowTargetsTest(unittest.TestCase):
     def run_install(self, profile="server"):
         return subprocess.run(
             ["zsh", str(self.repo / "install")],
-            env={**os.environ, "DOTFILES_PROFILE": profile},
+            env={**self.env, "DOTFILES_PROFILE": profile}, cwd=self.repo,
             capture_output=True, text=True, timeout=20,
         )
 

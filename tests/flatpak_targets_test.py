@@ -18,6 +18,8 @@ class FlatpakTargetsTest(unittest.TestCase):
         root = Path(self.tmp.name)
         self.repo = root / "repo"
         self.home = root / "home"
+        self.env = {**os.environ, "HOME": str(self.home), "ZDOTDIR": str(self.home),
+                    "XDG_CONFIG_HOME": str(self.home / ".config")}
         (self.repo / ".zsh").mkdir(parents=True)
         shutil.copy(ROOT / ".zsh/helpers.zsh", self.repo / ".zsh/helpers.zsh")
         self.source = self.repo / "prv/.var/app/com.example.App/config/App"
@@ -30,7 +32,7 @@ class FlatpakTargetsTest(unittest.TestCase):
     def run_prepare(self, profile="desktop"):
         return subprocess.run(
             ["zsh", str(self.repo / "install")],
-            env={**os.environ, "HOME": str(self.home), "DOTFILES_PROFILE": profile},
+            env={**self.env, "DOTFILES_PROFILE": profile}, cwd=self.repo,
             capture_output=True, text=True, timeout=10,
         )
 
@@ -40,7 +42,7 @@ class FlatpakTargetsTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             result = subprocess.run(
                 ["stow", "-d", str(self.repo / "prv"), "-t", str(self.home), "."],
-                capture_output=True, text=True, timeout=10,
+                env=self.env, cwd=self.repo, capture_output=True, text=True, timeout=10,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             for directory in (self.target, self.target.parent, self.target.parent.parent):

@@ -16,6 +16,9 @@ class HerdrPlusTest(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="dotfiles-herdr-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        self.home = self.root / "home"
+        self.env = {**os.environ, "HOME": str(self.home), "ZDOTDIR": str(self.home),
+                    "XDG_CONFIG_HOME": str(self.home / ".config")}
         (self.root / ".zsh").mkdir()
         shutil.copy(REPO / ".zsh/helpers.zsh", self.root / ".zsh/helpers.zsh")
         script = (REPO / "install").read_text()
@@ -32,7 +35,7 @@ class HerdrPlusTest(unittest.TestCase):
     def run_install(self, profile="desktop"):
         return subprocess.run(
             ["zsh", str(self.root / "install")],
-            env={**os.environ, "DOTFILES_PROFILE": profile},
+            env={**self.env, "DOTFILES_PROFILE": profile}, cwd=self.root,
             text=True, capture_output=True,
         )
 
