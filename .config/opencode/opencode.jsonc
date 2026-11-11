@@ -8,7 +8,7 @@
     "-opencode.provider.vllm",
   ],
   "formatter": true,
-  "disabled_providers": ["openrouter", "perplexity", "groq", "opencode-go", "pioneer"],
+  "disabled_providers": ["openrouter", "perplexity", "groq", "pioneer"],
   // "small_model": "github-copilot/gpt-5-mini",
   // "small_model": "opencode-go/deepseek-v4-flash",
   "small_model": "google/gemini-flash-lite-latest",
