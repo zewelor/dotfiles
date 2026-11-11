@@ -137,3 +137,10 @@ verification evidence and report conflicts rather than inventing completion.
 - Name new read-only database users and roles `<app>_ro`, for example `app_ro`, instead of `<app>_reader`. Preserve externally required names; rename existing deployed roles only when explicitly requested.
 - Fail fast and loudly on unexpected errors and invalid states.
   Keep required recovery explicit; never silently hide failures.
+
+## Linear issue labels
+
+- Every issue must have a label identifying its project or area. When creating or updating an issue, inspect team and workspace labels and related issues; apply the existing project label using its exact name. If the issue clearly spans multiple projects or areas, apply each relevant label.
+- If the project or area is unclear, or its label is missing or ambiguous, ask the user which label to use or whether to create one. Do not guess or automatically create labels.
+- Add an existing type label such as `Bug`, `Improvement`, or `Feature` when it clearly fits. Leave it unset when none applies; ask if the choice is ambiguous.
+- A Linear project is a separate field and does not replace the project label. Assign a Linear project when the user requests it or an existing project clearly covers the work; do not create one merely to categorize an issue.
