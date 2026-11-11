@@ -2,7 +2,9 @@ prv
 install.*
 bin
 docs
+tests
 .git
+.gitignore
 .gitmodules
 Makefile
 ^/\.pytest_cache  # local test cache; never stow into $HOME
