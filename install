@@ -701,6 +701,12 @@ setup_user_systemd_units() {
     )
   fi
 
+  if [[ -f "$CONFIG_DIR/systemd/user/docker-prune.timer" ]] && has "/usr/bin/docker"; then
+    enable_now_units+=(
+      "docker-prune.timer"
+    )
+  fi
+
   if (( ${#enable_units[@]} == 0 )) && (( ${#enable_now_units[@]} == 0 )); then
     return
   fi

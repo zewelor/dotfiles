@@ -363,6 +363,7 @@ sudo systemctl daemon-reload
 - Put public jobs in `.config/systemd/user/` and private jobs in `prv/.config/systemd/user/`.
 - Register units in `install` via `setup_user_systemd_units()` so `./install` reloads `systemd --user` and enables them automatically.
 - Use `Persistent=true` in timers when a missed run should fire on the next login/resume instead of being skipped.
+- `docker-prune.timer` / `docker-prune.service`: Runs monthly (`*-*-01 03:00:00`) to prune unused Docker images, stopped containers, unused networks, and build cache. The `until=336h` filter uses creation time for images, containers, and networks, so an old container stopped recently can be removed with its writable layer. Enabled by the desktop installer when `/usr/bin/docker` and the user systemd manager are available.
 
 ## Benchmarking / Profiling
 
