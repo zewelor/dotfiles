@@ -155,9 +155,6 @@ setup_storagebox_media_mount() { touch "$HOME_DIR/storagebox-ran" }
 vault_http_get() { print -r -- '{"data":{"data":{"omen_pass":"fixture"}}}' }
 VAULT_TOKEN=fixture
 ''')
-        atuin = repo / ".config/atuin/config.toml"
-        atuin.parent.mkdir(parents=True)
-        atuin.write_text("managed\n")
         template = repo / ".config/rclone/rclone.conf.template"
         template.parent.mkdir(parents=True)
         template.write_text("pass = {{nas_pass}}\n")
@@ -188,10 +185,6 @@ VAULT_TOKEN=fixture
                     self.assertEqual(list(foreign.iterdir()), [sentinel])
                     self.assertFalse((self.home / "storagebox-ran").exists())
                     self.assertFalse((self.home / "mise-ran").exists())
-                    if section == "tools":
-                        managed = config / "atuin/config.toml"
-                        self.assertTrue(managed.is_symlink())
-                        self.assertEqual(managed.resolve(), atuin)
                 finally:
                     link.unlink()
 
@@ -203,8 +196,11 @@ setup_private_submodule() { return 0 }
 setup_herdr() { return 0 }
 install_with_stow() { stow -n -v "$@" }
 ''')
-        (self.home / ".config").mkdir()
+        (self.home / ".config/atuin").mkdir(parents=True)
         (self.home / ".var/app").mkdir(parents=True)
+        atuin = repo / "prv/.config/atuin/config.toml"
+        atuin.parent.mkdir(parents=True)
+        atuin.write_text("fixture\n")
         config = repo / "prv/.var/app/com.example.App/config/App/prefs.ini"
         config.parent.mkdir(parents=True)
         config.write_text("managed\n")
@@ -281,7 +277,6 @@ install_with_stow() { stow -n -v "$@" }
 setup_herdr() { return 0 }
 setup_desktop_assets() { return 0 }
 configure_git_conflict_style() { return 0 }
-setup_atuin() { return 0 }
 setup_mise_desktop_tools() { return 0 }
 setup_codex() { return 0 }
 setup_opencode() { return 0 }
@@ -292,6 +287,9 @@ setup_terminal_emulator() { return 0 }
 setup_kde_terminal_shortcut() { return 0 }
 setup_user_systemd_units() { return 0 }
 ''')
+        atuin = repo / "prv/.config/atuin/config.toml"
+        atuin.parent.mkdir(parents=True)
+        atuin.write_text("fixture\n")
         config = repo / "prv/.var/app/com.example.App/config/App/prefs.ini"
         config.parent.mkdir(parents=True)
         config.write_text("managed\n")
@@ -351,6 +349,67 @@ kwriteconfig6() { touch "$CONFIG_DIR/kde-write" }
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertIn(message, result.stderr)
                 self.assertFalse((repo / "pwn").exists())
+
+    def test_private_section_creates_real_atuin_directory(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_private_submodule() { return 0 }
+prepare_private_flatpak_targets() { return 0 }
+setup_herdr() { return 0 }
+''')
+        (self.home / ".var/app").mkdir(parents=True)
+        atuin_dir = self.home / ".config/atuin"
+        atuin_dir.parent.mkdir(parents=True)
+        source = repo / "prv/.config/atuin/config.toml"
+        source.parent.mkdir(parents=True)
+        source.write_text("fixture\n")
+        env = {**self.env, "DOTFILES_STOW_CONFIRM_APPLY": "1"}
+        foreign = self.home / "foreign"
+        foreign.mkdir()
+        atuin_dir.symlink_to(foreign, target_is_directory=True)
+        conflict = subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
+                                  env=env, cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertNotEqual(conflict.returncode, 0, conflict.stdout + conflict.stderr)
+        self.assertEqual(list(foreign.iterdir()), [])
+        atuin_dir.unlink()
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
+                                env=env, cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(atuin_dir.is_dir())
+        self.assertFalse(atuin_dir.is_symlink())
+        self.assertEqual((atuin_dir / "config.toml").resolve(), source)
+        (atuin_dir / "history.db").write_text("runtime\n")
+        self.assertFalse((source.parent / "history.db").exists())
+
+    def test_private_section_stows_atuin_without_replacing_local_config(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_private_submodule() { return 0 }
+prepare_private_flatpak_targets() { return 0 }
+setup_herdr() { return 0 }
+''')
+        (self.home / ".var/app").mkdir(parents=True)
+        target = self.home / ".config/atuin/config.toml"
+        target.parent.mkdir(parents=True)
+        target.write_text("local\n")
+        source = repo / "prv/.config/atuin/config.toml"
+        source.parent.mkdir(parents=True)
+        source.write_text("managed\n")
+        env = {**self.env, "DOTFILES_STOW_CONFIRM_APPLY": "1"}
+
+        def run_private():
+            return subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
+                                  env=env, cwd=repo, text=True, capture_output=True, timeout=10)
+
+        conflict = run_private()
+        self.assertNotEqual(conflict.returncode, 0, conflict.stdout + conflict.stderr)
+        self.assertEqual(target.read_text(), "local\n")
+        target.unlink()
+        for _ in range(2):
+            result = run_private()
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue(target.is_symlink())
+            self.assertEqual(target.resolve(), source)
 
 
 if __name__ == "__main__":

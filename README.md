@@ -64,9 +64,8 @@ Existing directory links elsewhere are not automatically migrated. On servers,
 keep mise configuration local and let Ansible manage it; the base package
 still excludes mise and does not create its directory.
 
-Atuin setup on desktop requires real `~/.config` and `~/.config/atuin`
-directories. It preserves existing local configuration and stops if it is not
-the managed link; migrate that configuration before retrying the installer.
+Atuin configuration on desktop lives in `prv/.config/atuin/config.toml`
+and is stowed from `prv/`. Themes live in `.config/atuin/themes/` in the base repo.
 
 On desktop, Flatpak directories under `~/.var/app` that match the private
 configuration must be real directories. The installer creates missing ones and
@@ -490,7 +489,7 @@ Most tools in this repo use Catppuccin **Latte** as the base flavor. Some tools 
 - **Tools that support accents**:
   - `lazygit` — `.config/lazygit/config.yml`
   - `lazydocker` — `.config/jesseduffield/lazydocker/config.yml`
-  - `atuin` — `.config/atuin/config.toml` + theme file in `.config/atuin/themes/`
+  - `atuin` — `prv/.config/atuin/config.toml` + theme file in `.config/atuin/themes/`
 
 To switch the accent, replace the theme file/config reference with the desired accent name. For example, for `atuin` change `catppuccin-latte-blue` → `catppuccin-latte-mauve` (and ensure the matching theme file exists).
 

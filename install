@@ -346,28 +346,6 @@ configure_git_conflict_style() {
   fi
 }
 
-# Function to setup Atuin configuration.
-setup_atuin() {
-  print_banner "Setting up Atuin configuration..."
-  local src="$BASE_DIR/.config/atuin/config.toml"
-  local dst="$CONFIG_DIR/atuin/config.toml"
-
-  [[ -f "$src" ]] || {
-    echo "Error: Atuin configuration is missing: $src" >&2
-    return 1
-  }
-  require_real_directory_path "$CONFIG_DIR/atuin" || return 1
-  if [[ -L "$dst" && "$dst" -ef "$src" ]]; then
-    return
-  fi
-  if [[ -e "$dst" || -L "$dst" ]]; then
-    echo "Error: refusing to replace unmanaged Atuin config: $dst" >&2
-    return 1
-  fi
-  mkdir -p "$CONFIG_DIR/atuin"
-  ln -s "$src" "$dst"
-}
-
 # Keep application-owned Flatpak directories outside the private checkout.
 prepare_private_flatpak_targets() {
   print_banner "Preparing private Flatpak targets..."
@@ -1119,7 +1097,7 @@ setup_desktop_assets() {
 }
 
 stow_base_dotfiles() {
-  install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".config/atuin/config.toml" --ignore ".gitignore" --ignore "tests" "."
+  install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".gitignore" --ignore "tests" "."
 }
 
 INSTALL_SECTIONS=(
@@ -1128,7 +1106,7 @@ INSTALL_SECTIONS=(
   'private|desktop|Set up the private submodule, overrides, and Herdr'
   'vault|desktop|Configure environment secrets, rclone, and Storage Box'
   'desktop-assets|desktop|Show Flatpak instructions and stow scripts and fonts'
-  'tools|desktop|Configure Atuin and install desktop tools with mise'
+  'tools|desktop|Install desktop tools with mise'
   'ai|desktop|Configure Codex, OpenCode, Antigravity, and Summarize'
   'completions|both|Refresh static shell completions'
   'shell|both|Configure Git conflict style and the editor'
@@ -1224,6 +1202,8 @@ run_selected_section() {
       configure_stow_apply
       setup_private_submodule
       prepare_private_flatpak_targets
+      # Prevent Stow from folding the runtime directory into the checkout.
+      mkdir -p "$CONFIG_DIR/atuin"
       print_banner 'Stowing private overrides from prv/'
       install_with_stow -d "$BASE_DIR/prv" -t "$HOME_DIR" .
       setup_herdr
@@ -1240,7 +1220,6 @@ run_selected_section() {
       setup_desktop_assets
       ;;
     tools)
-      setup_atuin
       setup_mise_desktop_tools
       print_banner 'Refreshing static shell completions'
       "$BASE_DIR/bin/update-shell-completions"
@@ -1312,7 +1291,6 @@ run_installation() {
   configure_git_conflict_style
 
   if is_desktop; then
-    setup_atuin
     setup_mise_desktop_tools
     setup_codex
     setup_opencode
