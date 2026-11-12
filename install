@@ -887,10 +887,10 @@ setup_antigravity_cli() {
 }
 
 # Seed Summarize once while leaving its runtime-written config unmanaged.
-setup_summarize() {
+setup_summarize() (
   local target_dir="$HOME_DIR/.summarize"
   local config_file="$target_dir/config.json"
-  local seed_file="$BASE_DIR/.summarize/config.json"
+  local seed_file="$BASE_DIR/prv/.summarize/config.json"
 
   print_banner "Setting up Summarize configuration..."
   if [[ -L "$target_dir" || ( -e "$target_dir" && ! -d "$target_dir" ) ]]; then
@@ -904,58 +904,37 @@ setup_summarize() {
     return 1
   fi
 
-  install_summarize_seed() (
-    local config_tmp=""
-    cleanup_summarize_seed() {
-      [[ -z "$config_tmp" || ! -e "$config_tmp" ]] || rm -f -- "$config_tmp"
-    }
-    trap cleanup_summarize_seed EXIT
-    trap 'exit 129' HUP
-    trap 'exit 130' INT
-    trap 'exit 143' TERM
-
-    config_tmp=$(mktemp "$target_dir/.config.json.XXXXXX")
-    command install -m 600 "$seed_file" "$config_tmp"
-    mv -f -- "$config_tmp" "$config_file"
-    config_tmp=""
-  )
-
-  if [[ -L "$config_file" ]]; then
-    local linked_file
-    linked_file=$(readlink -f "$config_file") || {
-      echo "ERROR: Cannot resolve Summarize config link: $config_file" >&2
-      unfunction install_summarize_seed
-      return 1
-    }
-    if [[ "$linked_file" != "$(readlink -f "$seed_file")" ]]; then
-      echo "ERROR: $config_file points outside this dotfiles repository." >&2
-      echo "Move or fix it manually, then re-run ./install." >&2
-      unfunction install_summarize_seed
-      return 1
-    fi
-
-    install_summarize_seed
-    unfunction install_summarize_seed
-    echo "Replaced the old managed link with a runtime-owned Summarize config."
-    return 0
+  if [[ -L "$config_file" || ( -e "$config_file" && ! -f "$config_file" ) ]]; then
+    echo "ERROR: Summarize config must be a regular file, not a link or directory: $config_file" >&2
+    return 1
   fi
 
-  if [[ -e "$config_file" ]]; then
-    if [[ ! -f "$config_file" ]]; then
-      echo "ERROR: Summarize config must be a regular file: $config_file" >&2
-      unfunction install_summarize_seed
+  if [[ -f "$config_file" ]]; then
+    local config_mode
+    config_mode=$(stat -c '%a' -- "$config_file")
+    if [[ -L "$config_file" || ! -f "$config_file" ]]; then
+      echo "ERROR: Summarize config changed during setup: $config_file" >&2
+      return 1
+    fi
+    if [[ "$config_mode" != 600 ]]; then
+      echo "ERROR: Summarize config must have mode 0600: $config_file" >&2
+      printf 'Set permissions manually: chmod 600 -- %q\n' "$config_file" >&2
       return 1
     fi
     echo "Keeping existing runtime-owned Summarize config: $config_file"
-    chmod 600 "$config_file"
-    unfunction install_summarize_seed
     return 0
   fi
 
-  install_summarize_seed
-  unfunction install_summarize_seed
+  local config_tmp
+  config_tmp=$(mktemp "$target_dir/.config.json.XXXXXX")
+  trap 'rm -f -- "$config_tmp"' EXIT
+  trap 'exit 129' HUP
+  trap 'exit 130' INT
+  trap 'exit 143' TERM
+  command install -m 600 "$seed_file" "$config_tmp"
+  ln -T -- "$config_tmp" "$config_file"
   echo "Seeded runtime-owned Summarize config at $config_file"
-}
+)
 
 
 # Function to setup Vim autoload directories and plugins.
@@ -1196,7 +1175,7 @@ install_help() {
     printf '  make install-%-14s %-8s %s\n' "$parts[1]" "$parts[2]" "$parts[3]"
   done
   printf '\nWithout arguments, run the full installation. Sections require a saved profile.\n'
-  printf 'Stow sections require confirmation; private requires base, desktop requires private units, and ai requires private agent resources.\n'
+  printf 'Stow sections require confirmation; private requires base, desktop requires private units, and ai requires private agent resources and the Summarize seed.\n'
   printf 'The vault section requires an interactive terminal. Tools also refresh completions.\n'
 }
 
@@ -1252,6 +1231,10 @@ run_selected_section() {
   fi
   if [[ "$section" == ai ]] && [[ ! -d "$HOME_DIR/.agents/commands" || ! -d "$HOME_DIR/.agents/skills" ]]; then
     echo 'Error: shared agent commands or skills are missing; set up the private section first.' >&2
+    return 1
+  fi
+  if [[ "$section" == ai && ! -f "$BASE_DIR/prv/.summarize/config.json" ]]; then
+    echo 'Error: the Summarize seed is missing; set up the private section first.' >&2
     return 1
   fi
   if [[ "$section" == private ]] && [[ ! -d "$CONFIG_DIR" || -L "$CONFIG_DIR" || ! -d "$HOME_DIR/.var/app" ]]; then

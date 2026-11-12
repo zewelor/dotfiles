@@ -83,6 +83,24 @@ class InstallSectionsTest(unittest.TestCase):
                 self.assertIn("first", result.stderr)
                 self.assertEqual(list(self.home.iterdir()), [self.home / ".zshrc.d"])
 
+    def test_ai_section_requires_summarize_seed_before_any_setup(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+configure_stow_apply() { touch "$HOME_DIR/stow-ran" }
+setup_codex() { touch "$HOME_DIR/codex-ran" }
+setup_opencode() { touch "$HOME_DIR/opencode-ran" }
+setup_antigravity_cli() { touch "$HOME_DIR/agy-ran" }
+setup_summarize() { touch "$HOME_DIR/summarize-ran" }
+''')
+        for name in ("commands", "skills"):
+            (self.home / ".agents" / name).mkdir(parents=True)
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "ai"],
+                                env=self.env, cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("private", result.stderr)
+        for name in ("stow", "codex", "opencode", "agy", "summarize"):
+            self.assertFalse((self.home / f"{name}-ran").exists())
+
     def make_fixture(self, extra):
         repo = self.home / "fixture"
         (repo / ".zsh").mkdir(parents=True, exist_ok=True)

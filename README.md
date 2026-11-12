@@ -195,11 +195,14 @@ refreshed values; already running processes retain their existing environment.
 
 ## Summarize
 
-- `.summarize/config.json` is a seed, not a Stow package. Summarize rewrites
+- `prv/.summarize/config.json` is a desktop seed, not a Stow package. Summarize rewrites
   `~/.summarize/config.json` during `refresh-free`, so the runtime copy must be a
   regular user-owned file.
-- `./install` migrates the old repository symlink once, preserves an existing
-  runtime-owned config, and creates new copies with mode `0600`.
+- `./install` preserves an existing regular config with mode `0600` and creates
+  new copies with that mode. It rejects config symlinks and other permissions;
+  resolve them manually first.
+- New copies default to Codex CLI with `gpt-6-luna` and `xhigh` reasoning;
+  Antigravity CLI is enabled as an alternative.
 - `summarize-refresh-free` places enabled CLI providers in their configured order
   before the refreshed OpenRouter candidates. If the default model selects an
   enabled CLI provider, it keeps that specific model in the candidate list.
