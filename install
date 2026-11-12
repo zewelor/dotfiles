@@ -365,6 +365,17 @@ prepare_private_flatpak_targets() {
   done
 }
 
+# Keep desktop application state out of the private checkout.
+prepare_private_stow_targets() {
+  local dir
+  prepare_private_flatpak_targets
+  for dir in "$CONFIG_DIR/atuin/themes" "$CONFIG_DIR/foot" "$CONFIG_DIR/systemd/user"; do
+    require_real_directory_path "$dir" || return 1
+    mkdir -p "$dir"
+    require_real_directory_path "$dir" || return 1
+  done
+}
+
 # Keep runtime-owned parent directories real so Stow cannot fold them into the repo.
 prepare_stow_targets() {
   print_banner "Preparing runtime-owned Stow targets..."
@@ -379,7 +390,6 @@ prepare_stow_targets() {
   done
   mkdir -p \
     "$CONFIG_DIR/Code/User" \
-    "$CONFIG_DIR/atuin" \
     "$CONFIG_DIR/herdr" \
     "$CONFIG_DIR/mc" \
     "$HOME_DIR/.ssh/config.d" \
@@ -387,7 +397,7 @@ prepare_stow_targets() {
 
   is_desktop || return 0
   mkdir -p "$HOME_DIR/bin"
-  prepare_private_flatpak_targets
+  prepare_private_stow_targets
 }
 
 # Link modern btop configuration; older btop versions need a local copy.
@@ -1186,7 +1196,7 @@ install_help() {
     printf '  make install-%-14s %-8s %s\n' "$parts[1]" "$parts[2]" "$parts[3]"
   done
   printf '\nWithout arguments, run the full installation. Sections require a saved profile.\n'
-  printf 'Stow sections require confirmation; private requires base, and ai requires private agent resources.\n'
+  printf 'Stow sections require confirmation; private requires base, desktop requires private units, and ai requires private agent resources.\n'
   printf 'The vault section requires an interactive terminal. Tools also refresh completions.\n'
 }
 
@@ -1265,9 +1275,7 @@ run_selected_section() {
     private)
       configure_stow_apply
       setup_private_submodule
-      prepare_private_flatpak_targets
-      # Prevent Stow from folding the runtime directory into the checkout.
-      mkdir -p "$CONFIG_DIR/atuin"
+      prepare_private_stow_targets
       print_banner 'Stowing private overrides from prv/'
       install_with_stow -d "$BASE_DIR/prv" -t "$HOME_DIR" .
       setup_herdr
@@ -1307,6 +1315,13 @@ run_selected_section() {
       ;;
     desktop)
       require_real_directory_path "$CONFIG_DIR" || return 1
+      local unit
+      for unit in docker-prune.service docker-prune.timer rclone-nas.service rclone-sleep-handler.service; do
+        if [[ ! -f "$CONFIG_DIR/systemd/user/$unit" ]]; then
+          echo "Error: missing private user unit $unit; run the private section first." >&2
+          return 1
+        fi
+      done
       setup_terminal_emulator
       setup_kde_terminal_shortcut
       setup_user_systemd_units

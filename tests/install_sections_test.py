@@ -290,6 +290,10 @@ setup_user_systemd_units() { return 0 }
         atuin = repo / "prv/.config/atuin/config.toml"
         atuin.parent.mkdir(parents=True)
         atuin.write_text("fixture\n")
+        for name in ("atuin/themes/theme.toml", "foot/foot.ini", "systemd/user/example.service"):
+            source = repo / "prv/.config" / name
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("fixture\n")
         config = repo / "prv/.var/app/com.example.App/config/App/prefs.ini"
         config.parent.mkdir(parents=True)
         config.write_text("managed\n")
@@ -301,6 +305,11 @@ setup_user_systemd_units() { return 0 }
             self.assertTrue(target.is_dir())
             self.assertFalse(target.is_symlink())
         self.assertNotIn("LINK: .var/app/com.example.App/config =>", result.stderr)
+        for name in ("atuin/themes", "foot", "systemd/user"):
+            target = self.home / ".config" / name
+            self.assertTrue(target.is_dir(), name)
+            self.assertFalse(target.is_symlink(), name)
+            self.assertNotIn(f"LINK: .config/{name} =>", result.stderr)
 
     def test_vault_section_stops_after_rclone_failure(self):
         self.profile("desktop")
@@ -333,6 +342,117 @@ kwriteconfig6() { touch "$CONFIG_DIR/kde-write" }
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("must be a real directory", result.stderr)
         self.assertEqual(list(foreign.iterdir()), [])
+
+    def test_desktop_section_requires_private_units_before_changes(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_terminal_emulator() { touch "$HOME_DIR/terminal-ran" }
+setup_kde_terminal_shortcut() { touch "$HOME_DIR/kde-ran" }
+setup_user_systemd_units() { touch "$HOME_DIR/units-ran" }
+''')
+        (self.home / ".config").mkdir()
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "desktop"],
+                                env=self.env, cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("private", result.stderr)
+        for name in ("terminal-ran", "kde-ran", "units-ran"):
+            self.assertFalse((self.home / name).exists())
+
+        unit_dir = self.home / ".config/systemd/user"
+        unit_dir.mkdir(parents=True)
+        for name in ("docker-prune.service", "docker-prune.timer", "rclone-nas.service",
+                     "rclone-sleep-handler.service"):
+            (unit_dir / name).write_text("fixture\n")
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "desktop"],
+                                env=self.env, cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.home / "units-ran").exists())
+
+    def test_private_section_keeps_desktop_runtime_directories_local(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_private_submodule() { return 0 }
+prepare_private_flatpak_targets() { return 0 }
+setup_herdr() { return 0 }
+''')
+        (self.home / ".config").mkdir()
+        (self.home / ".var/app").mkdir(parents=True)
+        relative_files = ("atuin/config.toml", "atuin/themes/catppuccin-latte-blue.toml",
+                          "foot/foot.ini", "foot/catppuccin-latte.ini",
+                          "systemd/user/docker-prune.timer", "systemd/user/docker-prune.service",
+                          "systemd/user/rclone-nas.service", "systemd/user/rclone-sleep-handler.service")
+        for name in relative_files:
+            source = repo / "prv/.config" / name
+            source.parent.mkdir(parents=True, exist_ok=True)
+            source.write_text("fixture\n")
+        env = {**self.env, "DOTFILES_STOW_CONFIRM_APPLY": "1"}
+
+        def run_private():
+            return subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
+                                  env=env, cwd=repo, text=True, capture_output=True, timeout=10)
+
+        result = run_private()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for directory in ("atuin", "atuin/themes", "foot", "systemd", "systemd/user"):
+            target = self.home / ".config" / directory
+            self.assertTrue(target.is_dir(), directory)
+            self.assertFalse(target.is_symlink(), directory)
+        for name in relative_files:
+            target = self.home / ".config" / name
+            self.assertTrue(target.is_symlink(), name)
+            self.assertEqual(target.resolve(), repo / "prv/.config" / name)
+        for name in ("atuin/themes/runtime.theme", "foot/runtime.ini", "systemd/user/docker.service"):
+            target = self.home / ".config" / name
+            target.write_text("runtime\n")
+            self.assertFalse((repo / "prv/.config" / name).exists())
+        repeated = run_private()
+        self.assertEqual(repeated.returncode, 0, repeated.stdout + repeated.stderr)
+
+    def test_private_section_rejects_directory_link_created_during_preparation(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_private_submodule() { return 0 }
+prepare_private_flatpak_targets() {
+  ln -s "$(realpath --relative-to="$CONFIG_DIR" "$BASE_DIR/prv/.config/foot")" "$CONFIG_DIR/foot"
+}
+setup_herdr() { return 0 }
+''')
+        (self.home / ".config").mkdir()
+        (self.home / ".var/app").mkdir(parents=True)
+        source = repo / "prv/.config/foot/foot.ini"
+        source.parent.mkdir(parents=True)
+        source.write_text("fixture\n")
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
+                                env={**self.env, "DOTFILES_STOW_CONFIRM_APPLY": "1"},
+                                cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.home / ".config/foot").is_symlink())
+        self.assertFalse((source.parent / "runtime.ini").exists())
+
+    def test_private_section_rejects_directory_link_created_during_mkdir(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_private_submodule() { return 0 }
+prepare_private_flatpak_targets() { return 0 }
+setup_herdr() { return 0 }
+mkdir() {
+  if [[ "$1" == -p && "$2" == "$CONFIG_DIR/foot" ]]; then
+    ln -s "$(realpath --relative-to="$CONFIG_DIR" "$BASE_DIR/prv/.config/foot")" "$CONFIG_DIR/foot"
+  fi
+  command mkdir "$@"
+}
+''')
+        (self.home / ".config").mkdir()
+        (self.home / ".var/app").mkdir(parents=True)
+        source = repo / "prv/.config/foot/foot.ini"
+        source.parent.mkdir(parents=True)
+        source.write_text("fixture\n")
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
+                                env={**self.env, "DOTFILES_STOW_CONFIRM_APPLY": "1"},
+                                cwd=repo, text=True, capture_output=True, timeout=10)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.home / ".config/foot").is_symlink())
+        self.assertFalse((source.parent / "runtime.ini").exists())
 
     def test_make_targets_route_to_installer_even_when_a_target_file_exists(self):
         repo = self.make_fixture("")

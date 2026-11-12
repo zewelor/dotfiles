@@ -31,12 +31,10 @@ class StowTargetsTest(unittest.TestCase):
         self.env["PATH"] = f"{fake_bin}{os.pathsep}{os.environ['PATH']}"
         shutil.copy(ROOT / ".zsh/helpers.zsh", self.repo / ".zsh/helpers.zsh")
         shutil.copy(ROOT / ".stow-local-ignore", self.repo / ".stow-local-ignore")
-        for name in ("systemd/user/rclone-nas.service", "btop/btop.conf",
-                     "btop/themes/catppuccin_latte.theme", "mise/config.toml"):
+        for name in ("btop/btop.conf", "btop/themes/catppuccin_latte.theme", "mise/config.toml"):
             target = self.repo / ".config" / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(ROOT / ".config" / name, target)
-        self.units = self.repo / ".config/systemd/user"
         self.seed = self.repo / ".config/btop/btop.conf"
         self.config = self.home / ".config"
         sample = self.repo / ".config/example/nested/managed.conf"
@@ -63,13 +61,18 @@ class StowTargetsTest(unittest.TestCase):
         )
 
     def check_runtime_files(self, profile):
+        units = self.config / "systemd/user"
+        units.mkdir(parents=True)
+        (units / "docker.service").write_text("[Service]\n")
+        wants = units / "default.target.wants"
+        wants.mkdir()
+        (wants / "docker.service").symlink_to(units / "docker.service")
         result = self.run_install(profile)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for relative in ("systemd/user", "btop", "example/nested"):
             self.assertFalse((self.config / relative).is_symlink(), relative)
         self.assertFalse((self.config / "mise").exists())
-        service = self.config / "systemd/user/rclone-nas.service"
-        self.assertEqual(service.resolve(), self.units / service.name)
+        self.assertFalse((units / "rclone-nas.service").exists())
         local = self.config / "btop/btop.conf"
         self.assertFalse(local.is_symlink())
         expected = self.seed.read_text().replace('cpu_graph_upper = "Auto"', 'cpu_graph_upper = "total"')
@@ -78,11 +81,6 @@ class StowTargetsTest(unittest.TestCase):
         self.assertEqual(stat.S_IMODE(local.stat().st_mode), 0o600)
         local.write_text('cpu_graph_upper = "total"\ncpu_graph_lower = "total"\n')
         self.seed.write_text("new defaults\n")
-        units = self.config / "systemd/user"
-        (units / "docker.service").write_text("[Service]\n")
-        wants = units / "default.target.wants"
-        wants.mkdir()
-        (wants / "docker.service").symlink_to(units / "docker.service")
         (self.config / "btop/btop.log").write_text("runtime log\n")
         (self.config / "example/nested/runtime.json").write_text("{}\n")
         repeated = self.run_install(profile)
@@ -98,6 +96,26 @@ class StowTargetsTest(unittest.TestCase):
 
     def test_desktop_runtime_files_stay_outside_checkout(self):
         self.check_runtime_files("desktop")
+
+    def test_server_base_does_not_link_desktop_files(self):
+        files = ("atuin/themes/catppuccin-latte-blue.toml", "foot/foot.ini",
+                 "foot/catppuccin-latte.ini", "systemd/user/docker-prune.service",
+                 "systemd/user/docker-prune.timer", "systemd/user/rclone-nas.service",
+                 "systemd/user/rclone-sleep-handler.service")
+        for name in files:
+            public_source = ROOT / ".config" / name
+            if public_source.is_file():
+                target = self.repo / ".config" / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(public_source, target)
+            private_fixture = self.repo / "prv/.config" / name
+            private_fixture.parent.mkdir(parents=True, exist_ok=True)
+            private_fixture.write_text("fixture\n")
+        result = self.run_install("server")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for name in files:
+            self.assertFalse((self.config / name).exists(), name)
+        self.assertFalse((self.config / "atuin").exists())
 
     def test_legacy_directory_links_fail_before_writing(self):
         foreign = self.root / "foreign"
@@ -156,7 +174,7 @@ fi
                 self.assertEqual(list(local.iterdir()), [])
                 self.assertEqual(list(foreign.iterdir()), [])
                 self.assertEqual(list(local.parent.glob('.btop.conf.*')), [])
-                self.assertFalse((self.config / "systemd/user/rclone-nas.service").exists())
+                self.assertFalse((self.config / "example/nested/managed.conf").exists())
 
     def test_btop_config_link_is_rejected_without_changing_target(self):
         local = self.config / "btop/btop.conf"
@@ -170,7 +188,7 @@ fi
                     self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
                     self.assertTrue(local.is_symlink())
                     self.assertEqual(self.seed.read_bytes(), original)
-                    self.assertFalse((self.config / "systemd/user/rclone-nas.service").exists())
+                    self.assertFalse((self.config / "example/nested/managed.conf").exists())
                 finally:
                     local.unlink()
 

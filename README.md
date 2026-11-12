@@ -65,8 +65,13 @@ before retrying. Adding an ignore rule does not stop writes through an existing
 link. On servers, keep mise configuration local and let Ansible manage it; the
 base package still excludes mise and does not create its directory.
 
-Atuin configuration on desktop lives in `prv/.config/atuin/config.toml`
-and is stowed from `prv/`. Themes live in `.config/atuin/themes/` in the base repo.
+Atuin configuration and its theme live in `prv/.config/atuin/` and are stowed
+only for the desktop profile. The theme directory remains a real directory.
+The private section also links Foot configuration and desktop user units; run it
+before `make install-desktop`.
+When upgrading from the old public locations, inspect and remove the old managed
+file links before running the private section. Stow stops on those stale links;
+it does not replace them automatically.
 
 On desktop, Flatpak directories under `~/.var/app` that match the private
 configuration must be real directories. The installer creates missing ones and
@@ -185,7 +190,7 @@ refreshed values; already running processes retain their existing environment.
 ## Terminal emulators
 
 - Foot is the only managed terminal emulator and the KDE default.
-- Its configuration lives in `~/.config/foot/foot.ini` and uses the transparent Catppuccin Latte theme.
+- Its configuration is stowed from `prv/.config/foot/` to `~/.config/foot/` and uses the transparent Catppuccin Latte theme.
 - On desktop installs, `./install` offers to install `foot` with `foot-terminfo` when it is missing.
 
 ## Summarize
@@ -222,7 +227,7 @@ Also ensure `user_allow_other` is enabled in `/etc/fuse.conf` for the `--allow-o
 | File | Description |
 |------|-------------|
 | `.config/rclone/rclone.conf.template` | Template in git (without password) |
-| `.config/systemd/user/rclone-nas.service` | Systemd service (stow symlinks it) |
+| `prv/.config/systemd/user/rclone-nas.service` | Desktop systemd service (stow symlinks it) |
 | `~/.config/rclone/rclone.conf` | Generated config (with password, not in git) |
 
 ### Testing
@@ -360,8 +365,8 @@ sudo systemctl daemon-reload
 
 ## Scheduled user jobs
 
-- Repo-managed scheduled jobs live in `~/.config/systemd/user/` and are synced by `stow` like the rest of the dotfiles.
-- Put public jobs in `.config/systemd/user/` and private jobs in `prv/.config/systemd/user/`.
+- Desktop user units live in `prv/.config/systemd/user/` and are stowed to `~/.config/systemd/user/`.
+- Manage server jobs separately through Ansible.
 - Register units in `install` via `setup_user_systemd_units()` so `./install` reloads `systemd --user` and enables them automatically.
 - Use `Persistent=true` in timers when a missed run should fire on the next login/resume instead of being skipped.
 - `docker-prune.timer` / `docker-prune.service`: Runs monthly (`*-*-01 03:00:00`) to prune unused Docker images, stopped containers, unused networks, and build cache. The `until=336h` filter uses creation time for images, containers, and networks, so an old container stopped recently can be removed with its writable layer. Enabled by the desktop installer when `/usr/bin/docker` and the user systemd manager are available.
@@ -502,7 +507,7 @@ Most tools in this repo use Catppuccin **Latte** as the base flavor. Some tools 
 - **Tools that support accents**:
   - `lazygit` — `.config/lazygit/config.yml`
   - `lazydocker` — `.config/jesseduffield/lazydocker/config.yml`
-  - `atuin` — `prv/.config/atuin/config.toml` + theme file in `.config/atuin/themes/`
+  - `atuin` — `prv/.config/atuin/config.toml` + theme file in `prv/.config/atuin/themes/`
 
 To switch the accent, replace the theme file/config reference with the desired accent name. For example, for `atuin` change `catppuccin-latte-blue` → `catppuccin-latte-mauve` (and ensure the matching theme file exists).
 
