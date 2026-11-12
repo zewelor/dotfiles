@@ -200,8 +200,9 @@ refreshed values; already running processes retain their existing environment.
   regular user-owned file.
 - `./install` migrates the old repository symlink once, preserves an existing
   runtime-owned config, and creates new copies with mode `0600`.
-- `summarize-refresh-free` refreshes OpenRouter free models and keeps
-  `cli/agy` as the first fallback candidate.
+- `summarize-refresh-free` places enabled CLI providers in their configured order
+  before the refreshed OpenRouter candidates. If the default model selects an
+  enabled CLI provider, it keeps that specific model in the candidate list.
 
 ## rclone NAS mount (desktop only)
 

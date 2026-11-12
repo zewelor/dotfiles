@@ -8,22 +8,28 @@ for command_name in summarize jq; do
     fi
 done
 
-# 1. Odswiez darmowe modele (to zastapi kandydatow w sekcji free)
+# Refresh the OpenRouter candidates, then prioritize enabled CLI providers.
 summarize refresh-free
 
-# 2. Wstaw 'cli/agy' z powrotem na sam poczatek listy kandydatow w sekcji 'free'
 CONFIG="$HOME/.summarize/config.json"
 
 if [ -f "$CONFIG" ]; then
     TMP_CONFIG=$(mktemp "${CONFIG}.XXXXXX")
     trap '[[ -z "${TMP_CONFIG:-}" ]] || rm -f -- "$TMP_CONFIG"' EXIT
     trap 'exit 130' HUP INT TERM
-    # Wstawia cli/agy na poczatek, usuwajac ewentualne duplikaty z dalszej czesci listy
-    jq '.models.free.rules[0].candidates = ["cli/agy"] + (.models.free.rules[0].candidates | map(select(. != "cli/agy")))' "$CONFIG" > "$TMP_CONFIG"
-    mv -f -- "$TMP_CONFIG" "$CONFIG"
+    jq '
+        (if (.model | type) == "string" then .model
+         elif (.model | type) == "object" and (.model.name | type) != "string" and (.model.id | type) == "string" then .model.id
+         else "" end | gsub("^\\s+|\\s+$"; "")) as $model |
+        (.cli.enabled // [] | map("cli/" + (ascii_downcase | gsub("^\\s+|\\s+$"; ""))) |
+         reduce .[] as $cli ([]; if index($cli) then . else . + [$cli] end) |
+         map(. as $cli | if $model == $cli or ($model | startswith($cli + "/")) then $model else $cli end)) as $cli |
+        .models.free.rules[0].candidates |= ($cli + (. - $cli))
+    ' "$CONFIG" > "$TMP_CONFIG"
+    mv -fT -- "$TMP_CONFIG" "$CONFIG"
     TMP_CONFIG=""
 
-    echo "Modele odswiezone. Antigravity CLI zostalo ustawione jako priorytet."
+    echo "Modele odswiezone."
 else
     echo "Blad: Nie znaleziono pliku konfiguracyjnego $CONFIG"
     exit 1
