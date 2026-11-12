@@ -17,12 +17,18 @@ git clone https://github.com/zewelor/dotfiles && cd dotfiles && make install
 `make base` installs the core packages and Zinit, but does not install `mise`.
 The desktop profile bootstraps the official standalone `mise` into
 `~/.local/bin/mise` via `make mise`, using a versioned release installer whose
-SHA-256 is pinned in `Makefile`. Server installs do not require `mise`; when it
-is present, `update-all` skips mise self-updates, tool upgrades, and pruning so
-Ansible can own the server version and pinned tools. The installer and
+SHA-256 is pinned in `Makefile`. Server installs do not require `mise`; Ansible
+manages it and its configuration on opted-in hosts. When both mise and that
+configuration exist, `update-all` upgrades server tools within their declared
+versions: `latest` advances, while exact pins stay pinned. It does not self-update
+mise, prune server tools, or rewrite configuration. The installer and
 `update-all` always use `~/.config/mise` for the target user, independently of
-the calling shell's `MISE_CONFIG_DIR`. Manual mise commands can still use an
-explicit `MISE_CONFIG_DIR`. The base Stow package ignores `.config/mise`;
+the calling shell's `MISE_CONFIG_DIR`. Server updates read only the managed
+`~/.config/mise/config.toml` from the target user's home, ignoring home-level
+and system overrides. Linked server config files or directories must be repaired
+manually before updating. Desktop updates include `config.local.toml`. The server `mise-local`
+helper refuses changes because server tools are declared in Ansible inventory.
+The base Stow package ignores `.config/mise`;
 only the desktop installer creates the local override and links both mise
 config files into `~/.config/mise`. Renovate
 checks the bootstrap monthly and updates the release version together with the

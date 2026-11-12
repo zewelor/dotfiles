@@ -492,9 +492,10 @@ function update-all () {
   # Build an explicit PATH and mise config path for target-user commands.
   local user_tool_env_path="${target_home}/.local/share/mise/shims:${target_home}/.local/bin:${target_home}/.zinit/polaris/bin:/usr/local/bin:/usr/bin:/bin"
   local target_mise_config_dir="${target_home}/.config/mise"
+  local -a target_mise_policy=()
   run_for_target_user () {
     # sudo -H sets HOME but keeps the caller's working directory, possibly /root.
-    sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" sh -lc "cd \"\$HOME\" || exit; ${1}"
+    sudo -H -u "${target_user}" env -u MISE_GLOBAL_CONFIG_FILE -u MISE_CEILING_PATHS PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" "${target_mise_policy[@]}" sh -lc "cd \"\$HOME\" || exit; ${1}"
   }
 
   target_user_has () {
@@ -529,6 +530,28 @@ fi"
 
   local target_profile
   target_profile=$(target_user_profile) || return 1
+
+  if [[ "${target_profile}" == server ]]; then
+    local config_dir
+    for config_dir in "${target_home}/.config" "${target_mise_config_dir}"; do
+      if [[ -L "$config_dir" || ( -e "$config_dir" && ! -d "$config_dir" ) ]]; then
+        echo "[mise] Server config requires a real directory: $config_dir" >&2
+        return 1
+      fi
+    done
+    local config_file="${target_mise_config_dir}/config.toml"
+    if [[ -L "$config_file" || ( -e "$config_file" && ! -f "$config_file" ) ]]; then
+      echo "[mise] Server config must be a regular file: $config_file" >&2
+      return 1
+    fi
+    # A TOML path below /dev/null cannot exist, so no system config can be loaded.
+    target_mise_policy=(
+      "MISE_GLOBAL_CONFIG_FILE=${target_mise_config_dir}/config.toml"
+      "MISE_SYSTEM_CONFIG_FILE=/dev/null/mise.toml"
+      "MISE_CEILING_PATHS=${target_home}"
+      "MISE_SELF_UPDATE_AUTO=false"
+    )
+  fi
 
   if [[ "${target_profile}" == desktop && ! -f "${target_mise_config_dir}/config.toml" ]]; then
     echo "[mise] Target config not found: ${target_mise_config_dir}/config.toml" >&2
@@ -601,37 +624,42 @@ fi"
     echo "[mise] Cannot resolve target dotfiles repository from $target_zshrc_path."
     return 1
   }
-  # Update mise-managed tools on desktop; server tool versions are managed separately.
+  # Respect declared tool versions; Ansible owns the server mise binary and config.
   local mise_command='mise upgrade'
+  if [[ "${target_profile}" == server ]]; then
+    mise_command+=' --global --no-prune'
+  fi
   echo
   if target_user_has "mise"; then
-    if [[ "${target_profile}" == desktop ]]; then
-      echo "[mise] Updating mise"
-      if run_for_target_user 'mise self-update -y --no-plugins' >/dev/null 2>&1; then
-        echo "[mise] Self-update complete"
-      else
-        local _mise_self_ec=$?
-        echo "[mise] Self-update failed (exit ${_mise_self_ec})"
-        failures+=(mise-self-update)
+    if [[ "${target_profile}" == server && ! -f "${target_mise_config_dir}/config.toml" ]]; then
+      echo "[mise] Skipping tool updates: server config not found at ${target_mise_config_dir}/config.toml."
+    else
+      if [[ "${target_profile}" == desktop ]]; then
+        echo "[mise] Updating mise"
+        if run_for_target_user 'mise self-update -y --no-plugins' >/dev/null 2>&1; then
+          echo "[mise] Self-update complete"
+        else
+          local _mise_self_ec=$?
+          echo "[mise] Self-update failed (exit ${_mise_self_ec})"
+          failures+=(mise-self-update)
+        fi
       fi
 
       echo "[mise] Upgrading mise tools"
-      run_for_target_user "${mise_command}" >/dev/null 2>&1
-      local _mise_ec=$?
-      if (( _mise_ec == 0 )); then
+      if run_for_target_user "${mise_command}" >/dev/null 2>&1; then
         echo "[mise] Update complete"
-        # Cleanup old versions of tools to save space.
-        echo "[mise] Pruning old tool versions"
-        if ! run_for_target_user 'mise prune -y' >/dev/null 2>&1; then
-          echo "[mise] Prune failed"
-          failures+=(mise-prune)
+        if [[ "${target_profile}" == desktop ]]; then
+          echo "[mise] Pruning old tool versions"
+          if ! run_for_target_user 'mise prune -y' >/dev/null 2>&1; then
+            echo "[mise] Prune failed"
+            failures+=(mise-prune)
+          fi
         fi
       else
-        echo "[mise] Update failed (exit ${_mise_ec}); retry as '${target_user}' from '${target_home}': ${mise_command}"
+        local _mise_ec=$?
+        echo "[mise] Update failed (exit ${_mise_ec}); retry update-all for '${target_user}'."
         failures+=(mise)
       fi
-    else
-      echo "[mise] Skipping mise update: server version and tools are managed separately."
     fi
   else
     echo "[mise] Skipping mise update: mise not found for user '${target_user}'."
@@ -644,8 +672,8 @@ fi"
   if [[ "$target_home" == "$HOME" ]]; then
     completion_cache_env=("ZSH_CACHE_DIR=${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/zinit}")
   fi
-  if ! sudo -H -u "${target_user}" env PATH="${user_tool_env_path}" \
-    MISE_CONFIG_DIR="${target_mise_config_dir}" "${completion_cache_env[@]}" \
+  if ! sudo -H -u "${target_user}" env -u MISE_GLOBAL_CONFIG_FILE -u MISE_CEILING_PATHS PATH="${user_tool_env_path}" \
+    MISE_CONFIG_DIR="${target_mise_config_dir}" "${target_mise_policy[@]}" "${completion_cache_env[@]}" \
     "${resolved_target_zshrc:h}/bin/update-shell-completions"; then
     failures+=(completions)
   fi
@@ -1049,6 +1077,10 @@ fi
 if has "mise"; then
   # Helper function to target config.local.toml for machine-specific tools
   mise-local() {
+    if ! is_desktop; then
+      echo "[mise-local] Server tools are managed in Ansible inventory." >&2
+      return 1
+    fi
     local target_cfg="${MISE_CONFIG_DIR:-$HOME/.config/mise}/config.local.toml"
 
     # If inside a project directory (contains project-specific mise or tool configs), print a friendly reminder
