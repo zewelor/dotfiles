@@ -110,7 +110,9 @@ set -ag status-right "#{E:@catppuccin_status_session}"
 └── catppuccin/tmux     # Theme
 ```
 
-Managed via `dotfiles_update` alias (runs `git submodule update --recursive --remote`).
+`dotfiles_update` initializes submodules at their recorded commits using their
+configured update policies. The private submodule is skipped by default and
+managed separately by the installer on desktop.
 
 New clones use shallow history, as declared in `.gitmodules`. All theme files
 remain available; only Git history is limited.
