@@ -38,6 +38,12 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
   sekcji i `--help`, w tym kolejność etapów. Sekcje, poza wyborem profilu,
   wymagają zapisanego profilu i sprawdzają swoje zależności przed działaniem.
   Sekcje desktopowe odmawiają działania na serwerze i przy nieznanym profilu.
+- Przy operacjach na plikach w `install` i helperach najpierw ustal, czy cel
+  oznacza konkretny plik czy katalog oraz czy wolno go zastąpić. Wymuszaj ten
+  kontrakt opcjami komendy w chwili zapisu, np. `ln -T` dla konkretnej ścieżki
+  pliku. Wstępne sprawdzenie nie chroni przed zmianą celu przed zapisem.
+  Przy zmianie takiej operacji sprawdź także konflikt powstający między kontrolą
+  a zapisem; konflikt ma być widoczny, bez nadpisania niezarządzanych danych.
 - Skrypty mają działać fail-fast dla komend krytycznych dla logiki. Nie ukrywaj
   ich błędów przez `2>/dev/null || true` ani zgadywany fallback; toleruj brak
   danych tylko wtedy, gdy jest prawidłowym, opcjonalnym stanem.
