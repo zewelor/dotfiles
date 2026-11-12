@@ -654,11 +654,12 @@ fi"
   if target_user_has "nvim"; then
     echo
     echo "[nvim] Updating Lazy.nvim plugins"
-    if run_for_target_user 'nvim --headless -c "Lazy! sync" -c "qa"' >/dev/null 2>&1; then
+    local nvim_command="env DOTFILES_PROFILE=${target_profile} nvim --headless -c \"Lazy! sync\" -c \"qa\""
+    if run_for_target_user "${nvim_command}" >/dev/null 2>&1; then
       echo "[nvim] Plugin update complete"
     else
       local _nvim_ec=$?
-      echo "[nvim] Plugin update failed (exit ${_nvim_ec}) try running: 'nvim --headless -c "Lazy! sync" -c "qa"' to see details."
+      echo "[nvim] Plugin update failed (exit ${_nvim_ec}) try running: '${nvim_command}' to see details."
       failures+=(nvim)
     fi
   else

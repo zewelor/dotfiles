@@ -48,12 +48,16 @@ class UpdateAllTests(unittest.TestCase):
             profile_file.write_text(f'export DOTFILES_PROFILE="{target_profile}"\n')
 
         self.mise_log = self.base / "mise.log"
+        self.nvim_log = self.base / "nvim.log"
         tool_bin = self.home / ".local/bin"
         tool_bin.mkdir(parents=True)
         for tool in ("nvim", "npx"):
             stub = tool_bin / tool
             stub.write_text("#!/bin/sh\nexit 0\n")
             stub.chmod(0o755)
+        (tool_bin / "nvim").write_text(
+            '#!/bin/sh\nprintf "%s\\n" "${DOTFILES_PROFILE-unset}" >> "$TEST_NVIM_LOG"\n'
+        )
         if mise_installed:
             mise_bin = tool_bin / "mise"
             mise_bin.write_text(
@@ -88,7 +92,7 @@ update() { return 0; }
 sudo() {
   [[ "$1" == -H && "$2" == -u && "$3" == fixture ]] || return 90
   shift 3
-  HOME="$TEST_TARGET_HOME" "$@"
+  HOME="$TEST_TARGET_HOME" /usr/bin/env -u DOTFILES_PROFILE "$@"
 }
 '''
         return subprocess.run(
@@ -98,6 +102,7 @@ sudo() {
                 env,
                 TEST_TARGET_HOME=str(self.home),
                 TEST_MISE_LOG=str(self.mise_log),
+                TEST_NVIM_LOG=str(self.nvim_log),
                 TEST_COMPLETION_LOG=str(self.completion_log),
                 SUDO_USER="fixture",
                 DOTFILES_PROFILE=caller_profile,
@@ -146,10 +151,23 @@ sudo() {
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Skipping mise update", result.stdout)
+        self.assertEqual(self.nvim_log.read_text().splitlines(), ["server"])
         self.assertEqual(
             self.completion_log.read_text().splitlines(),
             [f"{self.home}/.config/mise"],
         )
+
+    def test_nvim_uses_target_desktop_profile_after_sudo_clears_environment(self):
+        result = self.run_update_all(
+            "server", "desktop", mise_installed=True, config_exists=True
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.nvim_log.read_text().splitlines(), ["desktop"])
+
+    def test_nvim_uses_target_server_profile_after_sudo_clears_environment(self):
+        result = self.run_update_all("desktop", "server", mise_installed=False)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(self.nvim_log.read_text().splitlines(), ["server"])
 
     def test_desktop_without_mise_fails_even_when_caller_is_server(self):
         result = self.run_update_all(

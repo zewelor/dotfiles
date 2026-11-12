@@ -52,6 +52,9 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 `stdpath("state")` Neovima (zwykle `~/.local/state/nvim/`). Aktualizacje
 pluginów nie zmieniają dzięki temu repozytorium dotfiles.
 
+`update-all` przekazuje Neovimowi profil zapisany w `~/.zshrc.d/profile.zsh`
+użytkownika docelowego (domyślnie `server`, gdy pliku brak).
+
 Pełny zestaw deweloperski jest włączany tylko przez
 `DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): Mason, LSP, `conform.nvim`, auto-installer
 formatterów oraz integracje Copilot i OpenCode wraz z ich skrótami.
