@@ -34,7 +34,7 @@ class InstallConfigSafetyTest(unittest.TestCase):
         mise.chmod(0o755)
         self.env = {**os.environ, "HOME": str(self.home)}
         self.script = (ROOT / "install").read_text().rsplit("\nrun_installation", 1)[0]
-        overrides = '''
+        self.overrides = '''
 is_interactive() { return 0 }
 has() { return 1 }
 vault_http_get() { print -r -- '{"data":{"data":{"omen_pass":"fixture"}}}' }
@@ -42,7 +42,7 @@ VAULT_TOKEN=fixture
 "$@"
 '''
         self.install = self.repo / "fixture-install"
-        self.install.write_text(self.script + "\n" + overrides)
+        self.install.write_text(self.script + "\n" + self.overrides)
 
     def run_step(self, step, response="y\n", *args):
         return subprocess.run(["zsh", str(self.install), step, *map(str, args)], env=self.env,
@@ -103,11 +103,125 @@ VAULT_TOKEN=fixture
         self.assertEqual(list(self.outside.iterdir()), [])
 
     def test_rclone_writes_to_real_directory(self):
+        template = self.repo / ".config/rclone/rclone.conf.template"
+        template.write_text("[remote]\npass = {{nas_pass}}\ntype = sftp\n")
         result = self.run_step("setup_rclone")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         target = self.home / ".config/rclone/rclone.conf"
-        self.assertEqual(target.read_text(), "pass = fixture\n")
+        self.assertEqual(target.read_text(), "[remote]\npass = fixture\ntype = sftp\n")
         self.assertEqual(target.stat().st_mode & 0o777, 0o600)
+
+    def test_rclone_invalid_templates_preserve_existing_config(self):
+        target = self.home / ".config/rclone/rclone.conf"
+        target.parent.mkdir(parents=True)
+        template = self.repo / ".config/rclone/rclone.conf.template"
+        for content in ("no placeholder\n", "pass = {{nas_pass}}\n" * 2):
+            with self.subTest(template=content):
+                target.write_text("previous config\n")
+                template.write_text(content)
+                result = self.run_step("setup_rclone")
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("Expected exactly one", result.stderr)
+                self.assertNotIn("rclone config generated", result.stdout)
+                self.assertEqual(target.read_text(), "previous config\n")
+                self.assertEqual(list(target.parent.iterdir()), [target])
+
+    def test_rclone_command_failures_preserve_existing_config(self):
+        target = self.home / ".config/rclone/rclone.conf"
+        target.parent.mkdir(parents=True)
+        fake_bin = self.home / "bin"
+        fake_bin.mkdir()
+        self.env["PATH"] = f"{fake_bin}{os.pathsep}{os.environ['PATH']}"
+        for command in ("mktemp", "chmod", "mv"):
+            with self.subTest(command=command):
+                target.write_text("previous config\n")
+                executable = fake_bin / command
+                executable.write_text(f"#!/bin/sh\necho 'injected {command} failure' >&2\nexit 73\n")
+                executable.chmod(0o755)
+                try:
+                    result = self.run_step("setup_rclone")
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn(f"injected {command} failure", result.stderr)
+                    self.assertNotIn("rclone config generated", result.stdout)
+                    self.assertEqual(target.read_text(), "previous config\n")
+                    self.assertEqual(list(target.parent.iterdir()), [target])
+                finally:
+                    executable.unlink()
+
+    def test_rclone_write_failure_preserves_existing_config(self):
+        target = self.home / ".config/rclone/rclone.conf"
+        target.parent.mkdir(parents=True)
+        target.write_text("previous config\n")
+        template = self.repo / ".config/rclone/rclone.conf.template"
+        template.write_text("[remote]\npass = {{nas_pass}}\ntype = sftp\n")
+        commands = '''
+print() {
+  if [[ "$#" == 3 && "$3" == 'pass = fixture' ]]; then
+    echo 'injected write failure' >&2
+    return 74
+  fi
+  builtin print "$@"
+}
+'''
+        self.install.write_text(self.script + "\n" + commands + self.overrides)
+        result = self.run_step("setup_rclone")
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("injected write failure", result.stderr)
+        self.assertNotIn("rclone config generated", result.stdout)
+        self.assertEqual(target.read_text(), "previous config\n")
+        self.assertEqual(list(target.parent.iterdir()), [target])
+
+    def test_rclone_directory_target_is_rejected(self):
+        target = self.home / ".config/rclone/rclone.conf"
+        target.mkdir(parents=True)
+        sentinel = target / "keep"
+        sentinel.write_text("unmanaged\n")
+        result = self.run_step("setup_rclone")
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("rclone config generated", result.stdout)
+        self.assertEqual(sentinel.read_text(), "unmanaged\n")
+        self.assertEqual(list(target.iterdir()), [sentinel])
+        self.assertEqual(list(target.parent.iterdir()), [target])
+
+    def test_rclone_target_links_are_rejected(self):
+        target = self.home / ".config/rclone/rclone.conf"
+        target.parent.mkdir(parents=True)
+        sentinel = self.outside / "config"
+        sentinel.write_text("unmanaged\n")
+        for source in (sentinel, self.outside, self.outside / "missing"):
+            with self.subTest(source=source):
+                target.symlink_to(source)
+                try:
+                    result = self.run_step("setup_rclone")
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertNotIn("rclone config generated", result.stdout)
+                    self.assertTrue(target.is_symlink())
+                    self.assertEqual(target.readlink(), source)
+                    self.assertEqual(sentinel.read_text(), "unmanaged\n")
+                    self.assertEqual(list(target.parent.iterdir()), [target])
+                    self.assertEqual(list(self.outside.iterdir()), [sentinel])
+                finally:
+                    target.unlink()
+
+    def test_rclone_directory_created_during_publication_is_rejected(self):
+        target = self.home / ".config/rclone/rclone.conf"
+        fake_bin = self.home / "bin"
+        fake_bin.mkdir()
+        executable = fake_bin / "mv"
+        executable.write_text('''#!/bin/sh
+mkdir "$HOME/.config/rclone/rclone.conf" || exit
+printf 'unmanaged\\n' > "$HOME/.config/rclone/rclone.conf/keep" || exit
+exec /usr/bin/mv "$@"
+''')
+        executable.chmod(0o755)
+        self.env["PATH"] = f"{fake_bin}{os.pathsep}{os.environ['PATH']}"
+        result = self.run_step("setup_rclone")
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("rclone config generated", result.stdout)
+        sentinel = target / "keep"
+        self.assertEqual(sentinel.read_text(), "unmanaged\n")
+        self.assertEqual(list(target.iterdir()), [sentinel])
+        self.assertEqual(list(target.parent.iterdir()), [target])
 
     def test_full_install_preflight_rejects_linked_config_directories(self):
         overrides = '''

@@ -240,6 +240,11 @@ Also ensure `user_allow_other` is enabled in `/etc/fuse.conf` for the `--allow-o
 | `prv/.config/systemd/user/rclone-nas.service` | Desktop systemd service (stow symlinks it) |
 | `~/.config/rclone/rclone.conf` | Generated config (with password, not in git) |
 
+The generated configuration has mode `0600`. Its parent directories must be real
+directories, and an existing configuration must be a regular local file.
+Failed reads, rendering, or publication preserve the previous configuration and
+remove the temporary file. A directory at the final file path is rejected.
+
 ### Testing
 
 ```bash

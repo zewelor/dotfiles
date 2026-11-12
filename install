@@ -642,7 +642,7 @@ setup_rclone() {
 
   local rclone_dir="$CONFIG_DIR/rclone"
   local target="$rclone_dir/rclone.conf"
-  require_real_directory_path "$rclone_dir" || return 1
+  require_local_file_path "$target" || return 1
   mkdir -p "$rclone_dir"
 
   # Use existing VAULT_TOKEN or prompt for one
@@ -689,10 +689,9 @@ setup_rclone() {
 
     while IFS= read -r line || [[ -n "$line" ]]; do
       if [[ "$line" == "pass = {{nas_pass}}" ]]; then
-        print -r -- "pass = $secret"
-      else
-        print -r -- "$line"
+        line="pass = $secret"
       fi
+      print -r -- "$line" || return 1
     done < "$source_file" > "$output_file"
   }
 
@@ -706,11 +705,11 @@ setup_rclone() {
     trap 'exit 130' INT
     trap 'exit 143' TERM
 
-    target_tmp=$(mktemp "$rclone_dir/.rclone.conf.XXXXXX")
-    chmod 600 "$target_tmp"
-    render_rclone_config "$template" "$target_tmp" "$nas_pass"
-    mv -f -- "$target_tmp" "$target"
-    target_tmp=""
+    # ERR_EXIT is disabled in this conditional; propagate each failure explicitly.
+    target_tmp=$(mktemp "$rclone_dir/.rclone.conf.XXXXXX") || exit 1
+    chmod 600 "$target_tmp" || exit 1
+    render_rclone_config "$template" "$target_tmp" "$nas_pass" || exit 1
+    mv -fT -- "$target_tmp" "$target" || exit 1
   ); then
     unfunction render_rclone_config
     return 1
