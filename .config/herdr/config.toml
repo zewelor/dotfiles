@@ -8,9 +8,17 @@ window_title = "Herdr: {workspace}"
 
 [ui.sidebar.spaces]
 rows = [
-  ["state_icon", "workspace"],
-  ["branch", "git_status"],
-  [{ token = "$topic", bold = true, dim = false }],
+  [
+    "state_icon",
+    "workspace",
+  ],
+  [
+    "branch",
+    "git_status",
+  ],
+  [
+    { token = "$topic", bold = true, dim = false },
+  ],
 ]
 
 [ui.sound.agents]
