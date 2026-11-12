@@ -509,7 +509,6 @@ migrate_retired_managed_links() {
   local alacritty_link="$CONFIG_DIR/alacritty"
   local terminal_wrapper_link="$HOME_DIR/bin/my_default_terminal_emulator"
   local podrun_link="$HOME_DIR/bin/podrun"
-
   if [[ ! -L "$alacritty_link" && ! -L "$terminal_wrapper_link" && ! -L "$podrun_link" ]]; then
     return 0
   fi
@@ -544,8 +543,6 @@ migrate_retired_managed_links() {
   remove_retired_stow_link "$podrun_link" "$BASE_DIR/bin/podrun"
   unfunction remove_retired_stow_link
 }
-
-
 
 # Function to install desktop-specific tools via mise.
 setup_mise_desktop_tools() {
@@ -1105,7 +1102,6 @@ print_flatpak_manual_instructions() {
   done
 }
 
-# Configure the editor used by the shell.
 setup_editor() {
   local editor_config_file="$HOME_DIR/.zshrc.d/editor.zsh"
   require_local_file_path "$editor_config_file" || return 1
