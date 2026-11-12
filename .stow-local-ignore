@@ -17,6 +17,7 @@ Makefile
 .summarize  # config.json is a seed; Summarize owns and rewrites the runtime copy
 .config/rclone  # generated from template by install script
 .config/mise  # linked explicitly for the desktop profile
+^/\.config/btop/btop\.conf  # linked or copied explicitly for the btop version
 install.d/  # install helper modules/scripts
 .antigravitycli
 .ruby-lsp

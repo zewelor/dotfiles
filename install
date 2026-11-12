@@ -390,6 +390,67 @@ prepare_stow_targets() {
   prepare_private_flatpak_targets
 }
 
+# Link modern btop configuration; older btop versions need a local copy.
+setup_btop() {
+  print_banner "Setting up btop configuration..."
+  local target_dir="$CONFIG_DIR/btop"
+  local config_file="$target_dir/btop.conf"
+  local seed_file="$BASE_DIR/.config/btop/btop.conf"
+  local version filter=''
+
+  if ! version=$(btop --version | sed -nE '
+    1 {
+      s/\x1b\[[0-9;]*m//g
+      s/^btop version: ([0-9]+\.[0-9]+\.[0-9]+)$/\1/p
+    }
+  ') || [[ -z "$version" ]]; then
+    echo "Error: cannot determine a stable btop version." >&2
+    return 1
+  fi
+  autoload -Uz is-at-least
+  require_real_directory_path "$target_dir" || return 1
+  if [[ ! -f "$seed_file" ]]; then
+    echo "Error: btop configuration seed is missing: $seed_file" >&2
+    return 1
+  fi
+
+  # btop 1.4.6 added the option to disable writes when exiting.
+  if is-at-least 1.4.6 "$version"; then
+    if ! awk '
+      /^[[:space:]]*save_config_on_exit[[:space:]]*=/ {
+        count++
+        if ($0 ~ /^[[:space:]]*save_config_on_exit[[:space:]]*=[[:space:]]*false[[:space:]]*$/) valid++
+      }
+      END { exit !(count == 1 && valid == 1) }
+    ' "$seed_file"; then
+      echo "Error: $seed_file must set save_config_on_exit = false exactly once." >&2
+      return 1
+    fi
+    [[ -L "$config_file" && "$config_file" -ef "$seed_file" ]] && return 0
+    mkdir -p "$target_dir"
+    ln -sT -- "$seed_file" "$config_file"
+    return
+  fi
+
+  require_local_file_path "$config_file" || return 1
+  [[ -f "$config_file" ]] && return 0
+
+  # Versions before 1.3 do not support Auto for the CPU graphs.
+  if ! is-at-least 1.3.0 "$version"; then
+    filter='s/^([[:space:]]*cpu_graph_(upper|lower)[[:space:]]*=[[:space:]]*)("Auto"|Auto)([[:space:]]*(#.*)?)$/\1"total"\4/'
+  fi
+
+  mkdir -p "$target_dir"
+  (
+    local config_tmp
+    config_tmp=$(mktemp "$target_dir/.btop.conf.XXXXXX")
+    trap 'rm -f -- "$config_tmp"' EXIT
+    sed -E "$filter" "$seed_file" > "$config_tmp"
+    # Publish without replacing a configuration created since the initial check.
+    ln -T -- "$config_tmp" "$config_file"
+  )
+}
+
 # Keep runtime directories real, but link the declarative projects directory.
 setup_herdr() {
   is_desktop || return 0
@@ -1103,6 +1164,7 @@ setup_desktop_assets() {
 }
 
 stow_base_dotfiles() {
+  setup_btop
   install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".gitignore" --ignore "tests" "."
 }
 

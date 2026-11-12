@@ -475,10 +475,21 @@ zi proj          # Browse directories matching "proj"
 
 **Config**:
 
-- `~/.config/btop/btop.conf` — managed by dotfiles (stow)
+- `~/.config/btop/btop.conf` — for btop 1.4.6 and later, a link to the shared
+  configuration with `save_config_on_exit = false`. Changing that option in
+  btop's menu can still write through the link into the checkout.
+- For older btop versions, the installer creates a local copy once and preserves
+  later local changes. Repository updates do not automatically update that copy.
+  Before btop 1.3.0, `Auto` CPU graph settings are replaced with `total` in the
+  initial copy for compatibility.
 - `~/.config/btop/themes/catppuccin_latte.theme` — default theme
 
 To change flavor, replace the theme file in `~/.config/btop/themes/` and update `color_theme` in `~/.config/btop/btop.conf`.
+
+The installer refuses to replace an existing local config with a link, or a link
+with a local copy. Preserve and migrate the config explicitly when changing
+btop versions. A downgrade can write through an existing link before the next
+installer run; migrate it before starting the older btop.
 
 ---
 
