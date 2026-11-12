@@ -129,8 +129,14 @@ verification evidence and report conflicts rather than inventing completion.
 
 ## Coding style
 
-- Prefer simple, readable, explicit code. Apply YAGNI: add abstractions
-  and configuration only when current requirements justify them.
+- From the start of implementation, choose the simplest readable, explicit
+  solution that meets the requirements. Apply YAGNI: add abstractions and
+  configuration only when current requirements justify them.
+- Before adding custom logic or validation, inspect existing helpers and the
+  documented behavior of standard commands. Reuse behavior that already enforces
+  the requirement; add checks only for missing guarantees. Preserve required
+  safety and visible failures when removing duplication. Moving code to another
+  file alone does not simplify its logic.
 - Prefer existing conventions and a single source of truth.
   Generate schemas from existing types or metadata.
   Document manual exceptions for tool limits or different contracts.
