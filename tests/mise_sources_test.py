@@ -17,7 +17,7 @@ class MiseSourcesTest(unittest.TestCase):
         self.repo = Path(self.temp.name)
         shutil.copytree(ROOT / ".zsh", self.repo / ".zsh")
         for name in ("bin/dotfiles-health-check", "tests/vault_test.zsh",
-                     ".zshrc", "install", "install-font", ".stow-local-ignore"):
+                     ".zshenv", ".zshrc", "install", "install-font", ".stow-local-ignore"):
             target = self.repo / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / name, target)

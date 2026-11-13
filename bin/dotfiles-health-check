@@ -90,20 +90,36 @@ current_profile() {
 }
 
 check_script_syntax() {
-  local output_file script
+  local output_file script first_line script_label
+  local -i syntax_failed=0
   local -a script_paths
   output_file=$(mktemp -t dotfiles-syntax.XXXXXX)
 
-  script_paths=("$BASE_DIR/install" "$BASE_DIR/install-font" "$BASE_DIR/.zshrc")
-  for script in "$BASE_DIR"/.zsh/**/*.zsh; do
+  script_paths=("$BASE_DIR/install" "$BASE_DIR/install-font" "$BASE_DIR/.zshenv" "$BASE_DIR/.zshrc")
+  for script in "$BASE_DIR"/.zsh/**/*.zsh(.N); do
     script_paths+=("$script")
   done
+  for script in "$BASE_DIR"/.zsh/**/*.sh(.N) "$BASE_DIR"/bin/*(.N); do
+    first_line=""
+    IFS= read -r first_line <"$script" || [[ -n "$first_line" ]]
+    if [[ "$first_line" == '#!'*zsh* ]]; then
+      script_paths+=("$script")
+    fi
+  done
 
-  if zsh -n "${script_paths[@]}" >"$output_file" 2>&1; then
-    pass "Shell scripts pass syntax check"
-  else
-    fail "Shell syntax check failed"
+  for script in "${script_paths[@]}"; do
+    script_label=${script#"$BASE_DIR"/}
+    if zsh -n "$script" >"$output_file" 2>&1; then
+      continue
+    fi
+
+    syntax_failed=1
+    fail "Shell syntax check failed: $script_label"
     show_command_output "$output_file"
+  done
+
+  if (( syntax_failed == 0 )); then
+    pass "Shell scripts pass syntax check"
   fi
 
   rm -f "$output_file"
