@@ -1,0 +1,80 @@
+#!/bin/zsh
+# Explicit plugin/tool maintenance, always in the target user's home.
+set -euo pipefail
+
+repo_dir="${0:A:h:h}"
+if (( $# != 2 )) || [[ "$1" != plugins || "$2" != (install|update) ]]; then
+  print -u2 'Usage: maintain-neovim plugins install|update'
+  exit 1
+fi
+stage="$1"
+mode="$2"
+
+unset DOTFILES_PROFILE
+if [[ -f "$HOME/.zshrc.d/profile.zsh" ]]; then
+  source "$HOME/.zshrc.d/profile.zsh"
+else
+  DOTFILES_PROFILE=server
+fi
+case "${DOTFILES_PROFILE:-}" in
+  desktop|server) export DOTFILES_PROFILE ;;
+  *) print -u2 'Error: invalid saved Neovim profile.'; exit 1 ;;
+esac
+if [[ "$DOTFILES_PROFILE" != desktop && "$mode" == install ]]; then
+  print -u2 'Error: Neovim tool preparation requires a saved desktop profile.'
+  exit 1
+fi
+
+export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.zinit/polaris/bin:/usr/local/bin:/usr/bin:/bin"
+export MISE_CONFIG_DIR="$HOME/.config/mise"
+export MISE_AUTO_INSTALL=false
+unset MISE_GLOBAL_CONFIG_FILE MISE_CEILING_PATHS
+export XDG_CONFIG_HOME="$HOME/.config" XDG_DATA_HOME="$HOME/.local/share"
+export XDG_STATE_HOME="$HOME/.local/state" XDG_CACHE_HOME="$HOME/.cache"
+export NVIM_APPNAME=nvim
+cd -- "$HOME"
+
+if [[ ! -f "$HOME/.config/nvim/init.lua" ]]; then
+  print -u2 'Error: Neovim base configuration is missing; run make install-base first.'
+  exit 1
+fi
+for tool in nvim git curl tar gzip unzip timeout; do
+  if ! command -v "$tool" >/dev/null; then
+    print -u2 -- "Error: Neovim maintenance requires $tool."
+    exit 1
+  fi
+done
+version_output=$(nvim --version)
+nvim_version="${version_output%%$'\n'*}"
+nvim_version="${nvim_version#NVIM v}"
+autoload -Uz is-at-least
+if [[ "$nvim_version" != <->.<->* ]] || ! is-at-least 0.11 "$nvim_version"; then
+  print -u2 'Error: Neovim >= 0.11 is required.'
+  exit 1
+fi
+
+if [[ "$DOTFILES_PROFILE" == desktop ]]; then
+  if [[ ! -f "$MISE_CONFIG_DIR/config.toml" ]]; then
+    print -u2 'Error: desktop mise configuration is missing; run make install-tools first.'
+    exit 1
+  fi
+  # The desktop plugin set also builds fzf-native with make and a C compiler.
+  for tool in mise make cc; do
+    if ! command -v "$tool" >/dev/null; then
+      print -u2 -- "Error: desktop Neovim requires $tool; prepare desktop dependencies first."
+      exit 1
+    fi
+  done
+fi
+
+# Bound the entire process as well as individual registry/package operations.
+if timeout --signal=TERM --kill-after=10s 15m \
+  nvim --headless -u NONE -i NONE -n -l "$repo_dir/.config/nvim/maintain.lua" "$stage" "$mode"; then
+  exit 0
+else
+  exit_code=$?
+  if (( exit_code == 124 || exit_code == 137 )); then
+    print -u2 -- "Error: Neovim $stage maintenance timed out after 15 minutes."
+  fi
+  exit "$exit_code"
+fi

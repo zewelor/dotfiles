@@ -7,13 +7,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
   local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
   if vim.v.shell_error ~= 0 then
-    vim.api.nvim_echo({
-      { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
-      { out, "WarningMsg" },
-      { "\nPress any key to exit..." },
-    }, true, {})
-    vim.fn.getchar()
-    os.exit(1)
+    error("Failed to clone lazy.nvim:\n" .. out)
   end
 end
 vim.opt.rtp:prepend(lazypath)
@@ -30,9 +24,11 @@ require("lazy").setup({
   },
   -- Keep machine-local plugin state outside the Stow-managed configuration.
   lockfile = vim.fn.stdpath("state") .. "/lazy-lock.json",
+  -- Streaming headless output skips Lazy's task error recording for failed processes.
+  headless = { process = not vim.g.dotfiles_maintenance },
   -- automatically check for plugin updates
   checker = {
-    enabled = true,
+    enabled = not vim.g.dotfiles_maintenance,
     frequency = 604800 -- check every week
   },
   performance = {

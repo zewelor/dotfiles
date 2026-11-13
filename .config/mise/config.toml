@@ -17,6 +17,20 @@ opencode = "latest"
 yq = "latest"
 "github:openclaw/gogcli" = "latest"
 
+# Neovim defaults: prebuilt releases except the two Go tools.
+"aqua:mrjosh/helm-ls" = "latest" # Helm LSP
+"aqua:astral-sh/ruff" = "latest" # Python LSP, linting and formatting
+"aqua:tamasfe/taplo" = "latest" # TOML LSP and formatting
+"aqua:artempyanykh/marksman" = "latest" # Markdown LSP
+"go:golang.org/x/tools/gopls" = { version = "latest", install_env = { GOTOOLCHAIN = "local" } } # Go LSP
+"go:golang.org/x/tools/cmd/goimports" = { version = "latest", install_env = { GOTOOLCHAIN = "local" } } # Go imports and gofmt formatting
+"aqua:mvdan/gofumpt" = "latest" # Stricter Go formatting
+"aqua:JohnnyMorganz/StyLua" = "latest" # Lua formatting
+"aqua:mvdan/sh" = "latest" # sh/bash/Zsh formatting (>=3.13.1)
+"aqua:oxc-project/oxc/oxfmt" = "latest" # Native JS/TS/JSON/CSS/GraphQL formatting, no npm
+"aqua:dprint/dprint" = "latest" # Project-configured formatting (>=0.64.3)
+"aqua:google/yamlfmt" = "latest" # Default YAML formatting
+
 [settings]
 minimum_release_age_excludes = [
   "github:zewelor/sourcetap",

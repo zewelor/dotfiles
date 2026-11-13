@@ -75,8 +75,7 @@ local function binary_for(dirname, deadline)
     return run({ mise, "-C", dirname, "which", "dprint", "--tool", "dprint@" .. request.version },
       dirname, deadline, true), "mise"
   end
-  -- Mason owns the default; do not accidentally execute a stale mise shim.
-  return require("mason.settings").current.install_root_dir .. "/bin/dprint", "mason"
+  error("No mise dprint version is configured", 0)
 end
 
 local function resolve(bufnr, trigger, deadline)
@@ -86,6 +85,8 @@ local function resolve(bufnr, trigger, deadline)
     plan.kind, plan.reason = "skip", "Project formatting requires the desktop profile"
   elseif ft == "eruby.yaml.tmuxinator" or (trigger == "save" and ft == "dockerfile") then
     plan.kind, plan.reason = "skip", "This filetype is excluded from formatting"
+  elseif ft == "ruby" and #require("conform").list_formatters_for_buffer(bufnr) == 0 then
+    plan.kind, plan.reason = "skip", "No project RuboCop; rubyfmt is available only through explicit formatting"
   elseif project_types[ft] then
     local filename = vim.api.nvim_buf_get_name(bufnr)
     if filename == "" then
@@ -106,7 +107,7 @@ local function resolve(bufnr, trigger, deadline)
       end
       local output = run({ plan.command, "--version" }, plan.cwd, deadline)
       local version = vim.version.parse(output:match("^dprint%s+(%S+)") or "")
-      if not version or not vim.version.ge(version, { 0, 64, 3 }) then
+      if not version or not vim.version.ge(version, require("config.tools").minimum_versions.dprint) then
         error("dprint >= 0.64.3 is required; selected " .. plan.command .. " reported: " .. output, 0)
       end
       plan.version = tostring(version)
@@ -143,8 +144,11 @@ local function operation(bufnr, trigger, dispatch)
       local opts = { bufnr = bufnr, async = false, timeout_ms = remaining(deadline), lsp_format = "fallback" }
       if plan.kind == "project" then
         opts.formatters, opts.lsp_format = { "project_dprint" }, "never"
+      elseif vim.bo[bufnr].filetype == "go" then
+        opts.lsp_format = "never"
       end
-      require("conform").format(opts)
+      -- Native LSP formatting parameters use the current buffer, even with an explicit bufnr.
+      vim.api.nvim_buf_call(bufnr, function() require("conform").format(opts) end)
     elseif dispatch and trigger == "manual" then
       vim.notify(plan.reason, vim.log.levels.INFO, { title = "Format" })
     end

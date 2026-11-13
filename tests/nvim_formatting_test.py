@@ -25,8 +25,12 @@ ROOT = Path(__file__).resolve().parents[1]
 NVIM = shutil.which("nvim")
 LAZY = Path.home() / ".local/share/nvim/lazy"
 CONFORM = LAZY / "conform.nvim"
+MASON_BIN = LAZY.parent / "mason/bin"
+MASON_GOFUMPT = MASON_BIN / "gofumpt"
+MASON_GOIMPORTS = MASON_BIN / "goimports"
 REAL_DPRINT = os.environ.get("DOTFILES_TEST_DPRINT")
 REAL_DPRINT_PLUGIN = os.environ.get("DOTFILES_TEST_DPRINT_PLUGIN")
+REAL_OXFMT = os.environ.get("DOTFILES_TEST_OXFMT")
 
 FIXTURE = r'''#!{python}
 import json
@@ -64,7 +68,13 @@ if name == "mise":
         print(os.environ.get("FMT_TEST_MISE_JSON", "[]"))
         raise SystemExit(0)
     if "which" in args:
-        print(os.environ.get("FMT_TEST_MISE_BINARY", ""))
+        binary = args[args.index("which") + 1]
+        binaries = json.loads(os.environ.get("FMT_TEST_MISE_BINARIES", "{}"))
+        path = binaries.get(binary)
+        if not path:
+            print("fixture mise has no configured binary: " + binary, file=sys.stderr)
+            raise SystemExit(9)
+        print(path)
         raise SystemExit(0)
     raise SystemExit(2)
 
@@ -103,6 +113,14 @@ if "dprint" in name:
     raise SystemExit(2)
 
 source = sys.stdin.read()
+if name == "oxfmt" and args:
+    if "--stdin-filepath" in args:
+        sys.stdout.write("formatted:oxfmt:" + source)
+        raise SystemExit(0)
+    filename = Path(args[-1])
+    source = filename.read_text(encoding="utf-8")
+    filename.write_text("formatted:oxfmt:" + source, encoding="utf-8")
+    raise SystemExit(0)
 sys.stdout.write("formatted:" + name + ":" + source)
 '''
 
@@ -135,6 +153,11 @@ end
 
 @unittest.skipUnless(NVIM, "Neovim is not installed")
 class NeovimFormattingTest(unittest.TestCase):
+    MISE_BINARIES = (
+        "dprint", "gofumpt", "goimports", "oxfmt", "ruff", "shfmt",
+        "stylua", "taplo", "yamlfmt",
+    )
+
     @classmethod
     def setUpClass(cls):
         output = subprocess.check_output([NVIM, "--version"], text=True, timeout=5)
@@ -153,7 +176,7 @@ class NeovimFormattingTest(unittest.TestCase):
         path.chmod(0o755)
 
     @classmethod
-    def install_local_dprint(cls, root, *, name="dprint"):
+    def install_local_binary(cls, root, *, name="dprint"):
         target = root / "node_modules/.bin" / name
         cls.write_fixture(target)
         return target
@@ -163,28 +186,28 @@ class NeovimFormattingTest(unittest.TestCase):
             temp = Path(directory)
             bin_dir = temp / "bin"
             bin_dir.mkdir()
-            for name in ("mise", "dprint", "oxfmt", "yamlfmt"):
-                self.write_fixture(bin_dir / name)
-            mason_root = temp / "mason"
-            mason_binary = mason_root / "bin/dprint"
-            self.write_fixture(mason_binary)
+            self.write_fixture(bin_dir / "mise")
+            tool_dir = temp / "mise-tools"
+            binaries = {}
+            for name in self.MISE_BINARIES:
+                binary = tool_dir / name
+                self.write_fixture(binary)
+                binaries[name] = str(binary)
             log_path = temp / "calls.jsonl"
             env = {
                 "HOME": str(temp),
                 "PATH": str(bin_dir),
                 "DOTFILES_PROFILE": profile,
                 "FMT_TEST_LOG": str(log_path),
-                "FMT_TEST_MASON_ROOT": str(mason_root),
                 "FMT_TEST_MISE_JSON": "[]",
-                "FMT_TEST_MISE_BINARY": str(bin_dir / "managed-dprint"),
+                "FMT_TEST_MISE_BINARIES": json.dumps(binaries),
                 "XDG_CONFIG_HOME": str(temp / "xdg_config_home"),
                 "XDG_DATA_HOME": str(temp / "xdg_data_home"),
                 "XDG_STATE_HOME": str(temp / "xdg_state_home"),
                 "XDG_CACHE_HOME": str(temp / "xdg_cache_home"),
             }
-            self.write_fixture(bin_dir / "managed-dprint")
             if prepare:
-                env.update(prepare(temp, bin_dir, mason_root))
+                env.update(prepare(temp, bin_dir, tool_dir))
             if extra_env:
                 env.update(extra_env)
 
@@ -193,8 +216,6 @@ class NeovimFormattingTest(unittest.TestCase):
                 "package.path = " + json.dumps(str(ROOT / ".config/nvim/lua/?.lua") + ";")
                 + " .. package.path\n"
                 + "vim.opt.rtp:append(" + json.dumps(str(CONFORM)) + ")\n"
-                + "package.loaded['mason.settings'] = { current = { install_root_dir = "
-                + "vim.env.FMT_TEST_MASON_ROOT } }\n"
                 + LUA_SETUP + "\n" + code,
                 encoding="utf-8",
             )
@@ -215,6 +236,14 @@ class NeovimFormattingTest(unittest.TestCase):
     def calls_named(calls, name):
         return [call for call in calls if call["name"] == name]
 
+    @classmethod
+    def mise_which_calls(cls, calls, binary):
+        return [
+            call for call in cls.calls_named(calls, "mise")
+            if "which" in call["args"]
+            and call["args"][call["args"].index("which") + 1] == binary
+        ]
+
     @staticmethod
     def dprint_calls(calls, first_arg):
         return [
@@ -223,20 +252,18 @@ class NeovimFormattingTest(unittest.TestCase):
         ]
 
     def test_project_routing_uses_buffer_roots_and_clears_only_mise_override(self):
-        def prepare(temp, bin_dir, _mason):
+        def prepare(temp, _bin_dir, _tools):
             root_a = temp / "project-a"
             root_b = temp / "project-b"
             root_a.mkdir(parents=True)
             (root_a / "dprint.json").write_text('{"plugins":["fixture"]}', encoding="utf-8")
             (root_b / ".config").mkdir(parents=True)
             (root_b / ".config/dprint.jsonc").write_text('{"plugins":["fixture"]}', encoding="utf-8")
-            self.install_local_dprint(root_a)
-            managed = bin_dir / "managed-dprint"
+            self.install_local_binary(root_a)
             return {
                 "FMT_PROJECT_A": str(root_a),
                 "FMT_PROJECT_B": str(root_b),
                 "FMT_TEST_MISE_JSON": '[{"tool":"dprint","version":"0.64.3","installed":true}]',
-                "FMT_TEST_MISE_BINARY": str(managed),
             }
 
         calls = self.run_nvim(r'''
@@ -250,14 +277,14 @@ assert(vim.api.nvim_get_current_buf() == b, 'formatting a non-current buffer cha
 assert(buffer_text(a):match('^formatted:dprint:'))
 local plan = formatting.format(b, 'manual')
 assert(plan and plan.kind == 'project')
-assert(buffer_text(b):match('^formatted:managed%-dprint:'))
+assert(buffer_text(b):match('^formatted:dprint:'))
 
 vim.g.mapleader = ' '
 require('config.keymaps')
 local format_map = vim.fn.maparg(' cf', 'n', false, true)
 assert(type(format_map.callback) == 'function', 'manual format mapping is missing')
 format_map.callback()
-assert(buffer_text(b):match('^formatted:managed%-dprint:'))
+assert(buffer_text(b):match('^formatted:dprint:'))
 ''', prepare=prepare, extra_env={
             "MISE_DPRINT_VERSION": "inherited-parent-override",
             "FMT_TEST_SENTINEL": "preserved-value",
@@ -266,7 +293,7 @@ assert(buffer_text(b):match('^formatted:managed%-dprint:'))
         self.assertEqual(len(self.dprint_calls(calls, "fmt")), 3)
         project_calls = self.dprint_calls(calls, "fmt")
         local_invocations = [call for call in project_calls if call["program"].endswith("project-a/node_modules/.bin/dprint")]
-        managed_invocations = [call for call in project_calls if call["program"].endswith("managed-dprint")]
+        managed_invocations = [call for call in project_calls if call["program"].endswith("mise-tools/dprint")]
         self.assertEqual(len(local_invocations), 1)
         self.assertEqual(len(managed_invocations), 2)
         mise_calls = self.calls_named(calls, "mise")
@@ -298,7 +325,7 @@ assert(buffer_text(b):match('^formatted:managed%-dprint:'))
             type_root = temp / "all-types"
             type_root.mkdir(parents=True)
             (type_root / "dprint.json").write_text('{"plugins":["fixture"]}', encoding="utf-8")
-            self.install_local_dprint(type_root)
+            self.install_local_binary(type_root)
             expected_configs.append(str(type_root / "dprint.json"))
             for index, (filetype, filename) in enumerate(types):
                 cases.append({"path": str(type_root / f"{index}-{filename}"), "filetype": filetype})
@@ -308,7 +335,7 @@ assert(buffer_text(b):match('^formatted:managed%-dprint:'))
                 config = root / config_name
                 config.parent.mkdir(parents=True, exist_ok=True)
                 config.write_text('{"plugins":["fixture"]}', encoding="utf-8")
-                self.install_local_dprint(root)
+                self.install_local_binary(root)
                 configs.append({"path": str(root / f"candidate-{index}.js"), "config": str(config)})
                 expected_configs.append(str(config))
             return {
@@ -349,7 +376,7 @@ end
             excluded = temp / "excluded-project"
             (excluded / "dprint.json").parent.mkdir(parents=True)
             (excluded / "dprint.json").write_text("EXCLUDE_YAML", encoding="utf-8")
-            self.install_local_dprint(excluded)
+            self.install_local_binary(excluded)
             return {"FMT_DEFAULT_ROOT": str(root), "FMT_EXCLUDED_ROOT": str(excluded)}
 
         calls = self.run_nvim(r'''
@@ -389,7 +416,7 @@ local unnamed_plan = formatting.format(unnamed, 'manual')
 assert(unnamed_plan and unnamed_plan.kind == 'skip')
 assert(buffer_text(unnamed) == 'before')
 
-for filetype, expected in pairs({ lua = 'stylua', python = 'ruff_format', ruby = 'rubyfmt' }) do
+for filetype, expected in pairs({ lua = 'stylua', python = 'ruff_format' }) do
   local buf = make_buffer(root .. '/default.' .. filetype, filetype, 'before')
   local names = conform.list_formatters_for_buffer(buf)
   assert(vim.tbl_contains(names, expected), filetype .. ': previous default formatter changed')
@@ -401,6 +428,31 @@ end
         self.assertEqual(len(self.dprint_calls(calls, "fmt")), 1)
         self.assertEqual(len(self.dprint_calls(calls, "resolved-config")), 1)
         self.assertEqual(len(self.dprint_calls(calls, "--version")), 1)
+
+    def test_project_local_oxfmt_precedes_mise_and_receives_full_filename(self):
+        expected_filename = []
+
+        def prepare(temp, _bin_dir, _tools):
+            root = temp / "project-with-local-oxfmt"
+            root.mkdir()
+            self.install_local_binary(root, name="oxfmt")
+            expected_filename.append(str(root / "src/component.tsx"))
+            return {"FMT_LOCAL_OXFMT_ROOT": str(root)}
+
+        calls = self.run_nvim(r'''
+local formatting = setup_conform()
+local root = vim.env.FMT_LOCAL_OXFMT_ROOT
+local filename = root .. '/src/component.tsx'
+local buf = make_buffer(filename, 'typescriptreact', 'before')
+assert(formatting.format(buf, 'manual'), 'project-local oxfmt was skipped')
+assert(buffer_text(buf) == 'formatted:oxfmt:before')
+''', prepare=prepare)
+
+        local_calls = self.calls_named(calls, "oxfmt")
+        self.assertEqual(len(local_calls), 1)
+        self.assertTrue(local_calls[0]["program"].endswith("node_modules/.bin/oxfmt"))
+        self.assertEqual(local_calls[0]["args"], ["--stdin-filepath", expected_filename[0]])
+        self.assertEqual(self.mise_which_calls(calls, "oxfmt"), [])
 
     def test_failures_leave_buffers_unchanged_and_release_active_plan(self):
         markers = {
@@ -418,7 +470,7 @@ end
                 root = temp / name
                 root.mkdir(parents=True)
                 (root / config_name).write_text(content, encoding="utf-8")
-                binary = self.install_local_dprint(root)
+                binary = self.install_local_binary(root)
                 if name == "old":
                     roots["old_binary"] = str(binary)
                 roots[name] = str(root)
@@ -528,23 +580,23 @@ assert(saw_reentrancy, 'reentrant formatting rejection was not visible')
 
         self.assertEqual(len(self.dprint_calls(calls, "fmt")), 2)
 
-    def test_empty_mise_selection_uses_configured_mason_binary(self):
-        def prepare(temp, _bin_dir, _mason):
-            root = temp / "mason-project"
+    def test_empty_mise_selection_fails_without_a_mason_fallback(self):
+        def prepare(temp, _bin_dir, _tools):
+            root = temp / "unconfigured-project"
             root.mkdir(parents=True)
             (root / "dprint.json").write_text('{"plugins":["fixture"]}', encoding="utf-8")
-            return {"FMT_MASON_PROJECT": str(root), "FMT_TEST_MISE_JSON": "[]"}
+            return {"FMT_UNCONFIGURED_PROJECT": str(root), "FMT_TEST_MISE_JSON": "[]"}
 
         calls = self.run_nvim(r'''
 local formatting = setup_conform()
-local root = vim.env.FMT_MASON_PROJECT
+local root = vim.env.FMT_UNCONFIGURED_PROJECT
 local buf = make_buffer(root .. '/data.json', 'json', 'before')
 local plan = formatting.format(buf, 'manual')
-assert(plan and plan.kind == 'project')
-assert(buffer_text(buf):match('^formatted:dprint:'))
+assert(plan == nil, 'missing mise dprint selection silently fell back')
+assert(buffer_text(buf) == 'before', 'missing dprint selection changed the buffer')
 ''', prepare=prepare)
 
-        self.assertTrue(any(call["program"].endswith("/mason/bin/dprint") for call in self.dprint_calls(calls, "fmt")))
+        self.assertEqual(self.dprint_calls(calls, "fmt"), [])
         self.assertTrue(any("ls" in call["args"] for call in self.calls_named(calls, "mise")))
 
     def test_server_profile_skips_without_running_any_cli(self):
@@ -568,6 +620,253 @@ assert(plan and plan.kind == 'skip')
 assert(not package.loaded['conform'], 'server formatting loaded Conform')
 ''', profile="server", prepare=prepare)
         self.assertEqual(calls, [])
+
+    def test_ruby_without_project_is_manual_only(self):
+        def prepare(temp, bin_dir, _mason):
+            self.write_fixture(bin_dir / "rubyfmt")
+            root = temp / "ruby"
+            root.mkdir()
+            return {"FMT_RUBY_ROOT": str(root)}
+
+        calls = self.run_nvim(r'''
+local formatting, spec, conform = setup_conform()
+local buf = make_buffer(vim.env.FMT_RUBY_ROOT .. '/scratch.rb', 'ruby', 'before')
+local messages = {}
+vim.notify = function(message) messages[#messages + 1] = message end
+local get_clients = vim.lsp.get_clients
+vim.lsp.get_clients = function() error('Ruby outside RuboCop must not use LSP formatting') end
+assert(spec.opts.format_on_save(buf) == nil)
+assert(buffer_text(buf) == 'before', 'standalone Ruby was autoformatted')
+local plan = formatting.format(buf, 'manual')
+assert(plan and plan.kind == 'skip', 'shared manual action should explain the missing project formatter')
+vim.lsp.get_clients = get_clients
+conform.format({ bufnr = buf, formatters = { 'rubyfmt' }, lsp_format = 'never' })
+assert(buffer_text(buf):match('^formatted:rubyfmt:'), 'optional explicit rubyfmt did not run')
+''', prepare=prepare)
+        self.assertEqual(len(self.calls_named(calls, "rubyfmt")), 1)
+
+    def test_global_defaults_resolve_mise_tools_at_the_buffer_directory(self):
+        cases = [
+            ("lua", "lua/main.lua", ["stylua"]),
+            ("python", "python/main.py", ["ruff"]),
+            ("toml", "config/settings.toml", ["taplo"]),
+            ("sh", "scripts/run.sh", ["shfmt"]),
+            ("bash", "scripts/run.bash", ["shfmt"]),
+            ("zsh", "scripts/run.zsh", ["shfmt"]),
+            ("javascript", "web/main.js", ["oxfmt"]),
+            ("typescript", "web/app.ts", ["oxfmt"]),
+            ("json", "data/settings.json", ["oxfmt"]),
+            ("css", "web/site.css", ["oxfmt"]),
+            ("graphql", "web/schema.graphql", ["oxfmt"]),
+            ("yaml", "deploy/app.yaml", ["yamlfmt"]),
+            ("go", "cmd/main.go", ["goimports", "gofumpt"]),
+        ]
+
+        expected_paths = {}
+
+        def prepare(temp, _bin_dir, _tools):
+            root = temp / "default-tools"
+            root.mkdir()
+            for filetype, filename, binaries in cases:
+                expected_paths[filetype] = (str(root / Path(filename).parent), binaries)
+            return {"FMT_DEFAULT_TOOLS_ROOT": str(root), "FMT_DEFAULT_TOOLS": json.dumps(cases)}
+
+        calls = self.run_nvim(r'''
+local formatting = setup_conform()
+local root = vim.env.FMT_DEFAULT_TOOLS_ROOT
+for _, case in ipairs(vim.json.decode(vim.env.FMT_DEFAULT_TOOLS)) do
+  local filename = root .. '/' .. case[2]
+  local buf = make_buffer(filename, case[1], 'before')
+  local plan = formatting.format(buf, 'manual')
+  assert(plan and plan.kind == 'default', case[1] .. ': default formatting was skipped')
+  local expected = 'formatted:' .. case[3][#case[3]] .. ':'
+  if case[1] == 'go' then expected = 'formatted:gofumpt:formatted:goimports:' end
+  assert(buffer_text(buf):sub(1, #expected) == expected,
+    case[1] .. ': wrong formatter chain: ' .. buffer_text(buf))
+end
+''', prepare=prepare)
+
+        expected = {}
+        for filetype, _filename, _binaries in cases:
+            target_dir, binaries = expected_paths[filetype]
+            for binary in binaries:
+                expected.setdefault(binary, []).append(target_dir)
+        for binary, target_dirs in expected.items():
+            resolved = self.mise_which_calls(calls, binary)
+            self.assertGreaterEqual(len(resolved), len(target_dirs), f"mise did not resolve {binary} for each buffer")
+            actual = [call["args"] for call in resolved]
+            for target in target_dirs:
+                self.assertIn(["-C", target, "which", binary], actual)
+
+        formatter_calls = [call for call in calls if call["name"] in self.MISE_BINARIES and call["name"] != "dprint"]
+        self.assertEqual(
+            [call["name"] for call in formatter_calls],
+            [binary for _ft, _filename, binaries in cases for binary in binaries],
+        )
+
+    def test_project_rubocop_keeps_binstub_and_bundle_routes(self):
+        def prepare(temp, bin_dir, _mason):
+            self.write_fixture(bin_dir / "bundle")
+            for name in ("binstub", "bundled"):
+                root = temp / name
+                root.mkdir()
+                (root / ".rubocop.yml").write_text("AllCops: {}\n")
+                (root / "Gemfile").write_text('gem "rubocop"\n')
+                if name == "binstub":
+                    self.write_fixture(root / "bin/rubocop")
+            return {}
+
+        calls = self.run_nvim(r'''
+local formatting = setup_conform()
+for _, name in ipairs({ 'binstub', 'bundled' }) do
+  local buf = make_buffer(vim.env.HOME .. '/' .. name .. '/app.rb', 'ruby', 'before')
+  assert(formatting.format(buf, 'save'), 'project Ruby formatting was skipped')
+  local program = name == 'binstub' and 'rubocop' or 'bundle'
+  assert(buffer_text(buf) == 'formatted:' .. program .. ':before')
+end
+''', prepare=prepare)
+        self.assertEqual(len(self.calls_named(calls, "rubocop")), 1)
+        self.assertEqual(self.calls_named(calls, "bundle")[0]["args"][:2], ["exec", "rubocop"])
+
+    @unittest.skipUnless(MASON_GOIMPORTS.is_file() and MASON_GOFUMPT.is_file() and shutil.which("go"),
+                         "existing Mason goimports/gofumpt binaries and Go are required")
+    def test_real_goimports_and_gofumpt_preserve_imports_and_style(self):
+        # Read an existing toolchain directly; querying mise would resolve unrelated
+        # newly declared tools and attempt network/cache writes in the user's HOME.
+        go = Path(os.environ.get("DOTFILES_TEST_GO", str(Path.home() / ".local/share/mise/installs/go/latest/bin/go")))
+        if not go.is_file():
+            self.skipTest("set DOTFILES_TEST_GO to an existing Go executable")
+
+        def prepare(temp, bin_dir, tool_dir):
+            root = temp / "go-project"
+            root.mkdir()
+            (root / "go.mod").write_text("module example.test/formatting\n\ngo 1.20\n", encoding="utf-8")
+            binaries = {
+                name: str(tool_dir / name)
+                for name in self.MISE_BINARIES
+            }
+            binaries.update({"goimports": str(MASON_GOIMPORTS), "gofumpt": str(MASON_GOFUMPT)})
+            return {
+                "PATH": str(bin_dir) + ":" + str(go.parent) + ":/usr/bin:/bin",
+                "FMT_TEST_MISE_BINARIES": json.dumps(binaries),
+                "FMT_GO_ROOT": str(root), "GOPROXY": "off", "GOSUMDB": "off", "GOTOOLCHAIN": "local",
+                "GOPATH": str(temp / "gopath"), "GOCACHE": str(temp / "gocache"),
+            }
+
+        calls = self.run_nvim(r'''
+local formatting, spec = setup_conform()
+local root = vim.env.FMT_GO_ROOT
+local source = {
+  'package main', '', 'import (', '    "os"', ')', '',
+  'func main( ){', 'fmt.Println("ready")', 'fmt.Println("again")', '}',
+}
+local filename = root .. '/main.go'
+vim.fn.writefile(source, filename)
+local buf = make_buffer(filename, 'go', '')
+vim.api.nvim_buf_set_lines(buf, 0, -1, false, source)
+local other = make_buffer(root .. '/other.go', 'text', 'untouched')
+vim.api.nvim_set_current_buf(other)
+vim.lsp.get_clients = function() return {} end
+local original = table.concat(source, '\n')
+local expected = 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("ready")\n\tfmt.Println("again")\n}'
+assert(formatting.format(buf, 'manual'), 'real Go formatter chain failed')
+assert(buffer_text(buf) == expected, 'goimports/gofumpt output changed imports or style:\n' .. buffer_text(buf))
+assert(table.concat(vim.fn.readfile(filename), '\n') == original, 'manual format wrote the source file')
+assert(vim.api.nvim_get_current_buf() == other and buffer_text(other) == 'untouched')
+assert(formatting.format(buf, 'manual'), 'already formatted Go failed')
+assert(buffer_text(buf) == expected, 'Go formatting is not idempotent')
+vim.api.nvim_buf_set_lines(buf, 0, -1, false, source)
+vim.api.nvim_buf_call(buf, function() vim.cmd('write!') end)
+assert(table.concat(vim.fn.readfile(filename), '\n') == expected, 'save skipped goimports/gofumpt')
+''', prepare=prepare, timeout=45)
+
+        self.assertGreaterEqual(len(self.mise_which_calls(calls, "goimports")), 3)
+        self.assertGreaterEqual(len(self.mise_which_calls(calls, "gofumpt")), 3)
+        for binary in ("goimports", "gofumpt"):
+            self.assertTrue(all(call["args"] == ["-C", calls[0]["args"][1], "which", binary]
+                                for call in self.mise_which_calls(calls, binary)))
+
+    @unittest.skipUnless(REAL_OXFMT, "set DOTFILES_TEST_OXFMT to an existing native oxfmt binary")
+    def test_real_native_oxfmt_formats_five_types_without_touching_sources(self):
+        oxfmt = Path(REAL_OXFMT).resolve()
+        if not oxfmt.is_file() or not os.access(oxfmt, os.X_OK):
+            self.skipTest("configured native oxfmt binary is unavailable")
+
+        samples = [
+            ("javascript", "main.js", 'const value={name:"Ada",tags:["go","lua"]};console.log(value)\n'),
+            ("typescript", "app.ts", 'type User={name:string;age:number};const user:User={name:"Ada",age:37};console.log(user)\n'),
+            ("json", "data.json", '{"name":"Ada","tags":["go","lua"]}\n'),
+            ("css", "site.css", 'body{color:red;background-color:#fff}\n'),
+            ("graphql", "schema.graphql", 'query User($id:ID!){user(id:$id){id name}}\n'),
+        ]
+        original_files = []
+
+        def prepare(temp, bin_dir, tool_dir):
+            root = temp / "oxfmt-project"
+            root.mkdir()
+            cases = []
+            for filetype, filename, source in samples:
+                path = root / filename
+                path.write_text(source, encoding="utf-8")
+                original_files.append(str(path))
+                cases.append({"filetype": filetype, "filename": str(path)})
+
+            wrapper = tool_dir / "native-oxfmt"
+            wrapper.write_text(
+                f"#!{sys.executable}\n"
+                "import json, os, sys\n"
+                "entry = {'program': sys.argv[0], 'name': 'native-oxfmt', 'args': sys.argv[1:], 'cwd': os.getcwd()}\n"
+                "with open(os.environ['FMT_TEST_LOG'], 'a', encoding='utf-8') as stream:\n"
+                "    stream.write(json.dumps(entry) + '\\n')\n"
+                "binary = os.environ['FMT_OXFMT_BINARY']\n"
+                "os.execvpe(binary, [binary, *sys.argv[1:]], os.environ)\n",
+                encoding="utf-8",
+            )
+            wrapper.chmod(0o755)
+            binaries = json.loads(os.environ.get("FMT_TEST_MISE_BINARIES", "{}"))
+            binaries["oxfmt"] = str(wrapper)
+            return {
+                "PATH": str(bin_dir),
+                "FMT_TEST_MISE_BINARIES": json.dumps(binaries),
+                "FMT_OXFMT_CASES": json.dumps(cases),
+                "FMT_OXFMT_BINARY": str(oxfmt),
+            }
+
+        calls = self.run_nvim(r'''
+local formatting = setup_conform()
+assert(vim.fn.exepath('node') == '', 'native oxfmt test unexpectedly found Node on PATH')
+local other = make_buffer(vim.env.HOME .. '/unrelated.txt', 'text', 'untouched')
+vim.api.nvim_set_current_buf(other)
+for _, case in ipairs(vim.json.decode(vim.env.FMT_OXFMT_CASES)) do
+  local original = table.concat(vim.fn.readfile(case.filename), '\n')
+  local buf = make_buffer(case.filename, case.filetype, '')
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.fn.readfile(case.filename))
+  assert(formatting.format(buf, 'manual'), case.filetype .. ': native formatter was not selected')
+  local formatted = buffer_text(buf)
+  assert(formatted ~= original, case.filetype .. ': native oxfmt did not change the fixture')
+  assert(table.concat(vim.fn.readfile(case.filename), '\n') == original,
+    case.filetype .. ': manual format changed the source file')
+  assert(#vim.fn.glob(vim.fs.dirname(case.filename) .. '/.conform.*', false, true) == 0,
+    case.filetype .. ': Conform left a temporary file behind')
+  assert(formatting.format(buf, 'manual'), case.filetype .. ': second native format failed')
+  assert(buffer_text(buf) == formatted, case.filetype .. ': native oxfmt output is not idempotent')
+  assert(table.concat(vim.fn.readfile(case.filename), '\n') == original,
+    case.filetype .. ': repeated manual format changed the source file')
+  assert(#vim.fn.glob(vim.fs.dirname(case.filename) .. '/.conform.*', false, true) == 0,
+    case.filetype .. ': repeated formatting left a temporary file behind')
+end
+assert(vim.api.nvim_get_current_buf() == other and buffer_text(other) == 'untouched')
+''', prepare=prepare)
+
+        resolved = self.mise_which_calls(calls, "oxfmt")
+        self.assertGreaterEqual(len(resolved), 10)
+        expected_dir = Path(original_files[0]).parent
+        self.assertTrue(all(call["args"] == ["-C", str(expected_dir), "which", "oxfmt"] for call in resolved))
+        self.assertEqual(len(original_files), 5)
+        native_calls = self.calls_named(calls, "native-oxfmt")
+        self.assertEqual(len(native_calls), 10)
+        self.assertTrue(all(len(call["args"]) == 1 and ".conform." in call["args"][0]
+                            for call in native_calls), "oxfmt was not passed Conform's temporary filename")
 
     @unittest.skipUnless(REAL_DPRINT and REAL_DPRINT_PLUGIN, "set local dprint and plugin paths for real E2E")
     def test_optional_real_dprint_yaml_plugin(self):

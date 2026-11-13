@@ -10,21 +10,22 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 .config/nvim/
 ├── README.md              # Dokumentacja konfiguracji
 ├── init.lua              # Entry point - ładuje wszystko
+├── maintain.lua          # Jawne headless utrzymanie pluginów
 ├── lua/
 │   ├── config/
 │   │   ├── lazy.lua     # Setup lazy.nvim
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   ├── keymaps.lua  # Wszystkie keybindings
 │   │   ├── formatting.lua # Wspólna polityka formatowania projektu
-│   │   └── profile.lua  # Jawny wybór profilu desktop
+│   │   ├── profile.lua  # Jawny wybór profilu desktop
+│   │   └── tools.lua    # Lista LSP i resolver binarek mise
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
 │   │   ├── copilot.lua              # GitHub Copilot (lightweight inline suggestions)
-│   │   ├── lsp.lua                  # LSP + mason (language servers)
-│   │   ├── mason-tool-installer.lua # Auto-installer narzędzi (formattery)
+│   │   ├── lsp.lua                  # Natywny LSP; Mason tylko do ręcznych dodatków
 │   │   ├── mini-align.lua           # Wyrównywanie tekstu
 │   │   ├── mini-icons.lua           # Ikony plików
 │   │   ├── mini-pairs.lua           # Autopairs
@@ -57,15 +58,18 @@ pluginów nie zmieniają dzięki temu repozytorium dotfiles.
 użytkownika docelowego (domyślnie `server`, gdy pliku brak).
 
 Pełny zestaw deweloperski jest włączany tylko przez
-`DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): Mason, LSP, `conform.nvim`, auto-installer
-formatterów oraz integracje Copilot i OpenCode wraz z ich skrótami.
-Profil `server` i brak profilu korzystają z uproszczonego trybu, również gdy
-`mise` jest dostępne w `PATH`. Instalacja mise dla pojedynczego CLI nie
-włącza narzędzi deweloperskich edytora.
+`DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): natywny LSP,
+`conform.nvim` oraz integracje Copilot i OpenCode wraz z ich skrótami.
+LSP i formatery rozwiązuje mise w kontekście katalogu projektu. Profil `server`
+i brak profilu korzystają z uproszczonego trybu, również gdy `mise` jest
+dostępne w `PATH`; sam mise dla pojedynczego CLI nie włącza narzędzi edytora.
 
-Desktop nie wymaga mise do uruchomienia Masona i pozostałych LSP. Wyjątkiem
-jest Ruby LSP: startuje tylko wtedy, gdy mise jest dostępne i potrafi rozwiązać
-`ruby-lsp`. Copilot nadal wymaga Node.js 22+, a OpenCode swojego CLI.
+Desktop wymaga mise i konfiguracji z zadeklarowanymi narzędziami. Ruby LSP jest
+rozwiązywany przez mise razem z pozostałymi serwerami. Domyślny Oxfmt jest
+natywną binarką mise, więc utrzymywany zestaw LSP i formatterów nie wymaga
+Node.js ani npm. Projektowy `node_modules/.bin/oxfmt` ma pierwszeństwo i może
+wymagać Node.js zgodnie z konfiguracją projektu. Pluginy kompilowane lokalnie
+również wymagają make i kompilatora C.
 
 Profil `server` nie ładuje `nvim-treesitter` ani `telescope-fzf-native`, nawet
 gdy kompilator jest dostępny. Korzysta ze standardowego podświetlania składni
@@ -286,11 +290,14 @@ opencode --port
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
 - **Zapis i `<Space>cf`** korzystają z jednej polityki. Dla YAML (również obecnych podtypów), JS/TS/React, JSON/JSONC/JSON5, CSS, GraphQL i Markdown najbliższa konfiguracja dprint decyduje, czy plugin obsługuje plik. Samo istnienie konfiguracji nie wystarcza. Wspierane nazwy to `dprint.json`, `dprint.jsonc`, `.dprint.json`, `.dprint.jsonc` i warianty `.config/dprint.json(c)`.
 - **Dprint 0.64.3+**: wybrana binarka jest sprawdzana przed użyciem. `resolved-config --file` rozpoznaje obsługę pliku, a `fmt --stdin` z pełną ścieżką respektuje `includes`, `excludes` i `.gitignore`. Wykluczone pliki pozostają bez zmian. Brak pluginu, również przez negatywne `associations`, pozwala użyć formattera domyślnego; Markdown bez pluginu jest pomijany.
-- **Wybór binarki**: istniejące lokalne `node_modules/.bin/dprint`, następnie efektywna deklaracja mise w katalogu bufora (także globalna), a Mason dopiero po potwierdzonym braku deklaracji. Niezainstalowana lub niejednoznaczna deklaracja mise oraz brak resolvera są błędem, bez przejścia na inną wersję. Nie walidujemy manifestów ani lockfile npm. Zapytania mise pomijają odziedziczone `MISE_DPRINT_VERSION`, zachowując resztę środowiska i reguły zaufania. Narzędzia nie są instalowane przy formatowaniu.
-- **Domyślne formatery**: Lua przez `stylua`, Python przez `ruff_format`, TOML przez `taplo`, Go przez `goimports` i `gofumpt`, sh/bash przez `shfmt`, Zsh przez `beautysh`, YAML przez `yamlfmt`, JS/TS/JSON/CSS/GraphQL przez `oxfmt`. Ruby zachowuje reguły opisane poniżej.
+- **Wybór binarki**: dla dprint najpierw używane jest lokalne `node_modules/.bin/dprint`, potem efektywna deklaracja mise w katalogu bufora (także globalna). Dla Oxfmt pierwszeństwo ma projektowe `node_modules/.bin/oxfmt`, potem natywna binarka mise. Pozostałe utrzymywane binarki są rozwiązywane przez mise w katalogu projektu. Niezainstalowana lub niejednoznaczna deklaracja mise oraz brak resolvera są błędem, bez przejścia na inną wersję. Nie walidujemy manifestów ani lockfile npm. Zapytania mise pomijają odziedziczone `MISE_DPRINT_VERSION`, zachowując resztę środowiska i reguły zaufania. Narzędzia nie są instalowane przy formatowaniu.
+- **Oxfmt**: projektowa binarka zachowuje Conformowy stdin i nazwę pliku. Domyślna natywna binarka mise nie obsługuje stdin, więc Conform formatuje tymczasowy plik obok bufora i odczytuje zmieniony wynik. Tymczasowa nazwa może zmienić dopasowanie konfiguracji lub reguł ignorowania zależnych od nazwy pliku; to ograniczenie dotyczy natywnej ścieżki.
+- **Domyślne formatery**: Lua przez `stylua`, Python przez `ruff_format`, TOML przez `taplo`, Go przez `goimports`, a następnie `gofumpt`, sh/bash oraz Zsh przez `shfmt` (dla Zsh jawnie `-ln zsh`, wymagane >= 3.13.1), YAML przez `yamlfmt`, JS/TS/JSON/CSS/GraphQL przez natywne `oxfmt`.
+- **Go**: Conform wykonuje `goimports`, po nim `gofumpt`, z binarkami rozwiązanymi przez mise w katalogu bufora. Procesy formatterów współdzielą timeout Conform 2000 ms; osobne zapytania `mise which` mają limit 1000 ms każde. Błędy i timeout są widoczne; formatowanie nie przechodzi na gopls.
+- **Zsh**: sprawdzony shfmt 3.13.1 nie obsługuje całej składni Zsh, np. `${~pattern}`. Błąd parsera jest widoczny i nie zmienia bufora; nie przechodzimy automatycznie na inny formatter. Publiczne pliki shella przeszły kontrolę składni po formatowaniu; nie wykonujemy masowego reformatowania repozytorium.
 - **Wyłączenia**: Dockerfile bez autoformatowania przy zapisie; `eruby.yaml.tmuxinator` bez formatowania również ręcznie. Nienazwany bufor z grupy projektowej wymaga najpierw nadania nazwy.
-- **Błędy i czas**: jeden synchroniczny budżet 2000 ms obejmuje rozwiązywanie narzędzia i formatowanie. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
-- **Ruby**: dla projektów RuboCop conform uruchamia repo-local `bin/rubocop`, jeśli istnieje; w przeciwnym razie używa dostępnego `rubocop`. Cache RuboCopa trafia do `tmp/rubocop`.
+- **Błędy i czas**: dla projektowego dprint jeden synchroniczny budżet 2000 ms obejmuje wybór i formatowanie. Domyślne formatery mają timeout Conform 2000 ms, a każde osobne rozwiązywanie przez mise limit 1000 ms. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
+- **Ruby**: dla projektów z `.rubocop.yml` i Gemfile Conform uruchamia repo-local `bin/rubocop`, jeśli istnieje; w przeciwnym razie `bundle exec rubocop`. Cache RuboCopa trafia do `tmp/rubocop`. Poza tym kontraktem zapis i `<Space>cf` nie formatują Ruby, również przez LSP; rubyfmt pozostaje ręcznym dodatkiem opisanym poniżej.
 - **Diagnostyka**: `:FormatInfo` pokazuje bieżącą decyzję, źródło binarki, wersję, konfigurację i cwd, bez formatowania. `:ConformInfo` pozostaje informacją o dostępności domyślnych narzędzi i logach; nie odtwarza ostatniego wyboru projektowego. Brak domyślnego formattera nadal nie pokazuje popupu.
 - **Keymaps**:
   - `<Space>cf` — Format buffer
@@ -324,10 +331,63 @@ poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
 
 ---
 
-### **mason-tool-installer.nvim** — Auto-instalacja narzędzi
+### Narzędzia Neovim — jawne utrzymanie przez mise
 
-- **Repo**: [WhoIsSethDaniel/mason-tool-installer.nvim](https://github.com/WhoIsSethDaniel/mason-tool-installer.nvim)
-- **Cel**: Automatycznie instaluje formatery używane przez conform (`stylua`, `shfmt`, `beautysh`, `ruff`, `taplo`, `oxfmt`, `dprint`, `yamlfmt`, `rubyfmt`, `goimports`, `gofumpt`), LSPs (`gopls`) i np. `hadolint`. `rubyfmt` zostaje fallbackiem dla Ruby poza projektami RuboCop.
+`.config/mise/config.toml` jest jedynym źródłem narzędzi, backendów i wersji.
+`lua/config/tools.lua` określa aktywne serwery LSP, resolver działający w katalogu
+bufora oraz progi wersji używane przez konfigurację edytora. Utrzymywany zestaw
+obejmuje 12 narzędzi: pięć serwerów LSP i siedem formatterów. Ruff i
+Taplo są wspólne dla LSP i formatowania. `gem:ruby-lsp` pozostaje istniejącym
+narzędziem mise poza tą dwunastką.
+
+| Narzędzie mise | Użycie |
+|---|---|
+| helm_ls | LSP `helm_ls` |
+| ruff | LSP `ruff` i Conform `ruff_format` |
+| taplo | LSP `taplo` i Conform TOML |
+| marksman | LSP `marksman` |
+| gopls | LSP Go |
+| goimports | Organizacja importów Go |
+| gofumpt | Formatowanie Go |
+| stylua | Formatowanie Lua |
+| shfmt | Formatowanie sh/bash/Zsh |
+| oxfmt | Natywne formatowanie JS/TS/JSON/CSS/GraphQL, bez npm |
+| dprint | Projektowe formatowanie, gdy projekt nie deklaruje własnej binarki |
+| yamlfmt | Domyślne formatowanie YAML |
+
+Konfiguracja zawiera też `gem:ruby-lsp`, używany przez serwer Ruby. Projektowy
+RuboCop należy do Bundlera i korzysta z Gemfile/lockfile oraz procedury
+aktualizacji projektu. Projektowe `node_modules`, lokalny dprint, mise i pluginy
+dprint pozostają pod kontrolą projektu; globalne utrzymanie nie przegląda repozytoriów.
+R3X korzysta z własnej konfiguracji mise.
+LuaLS nie jest instalowany ani aktywowany; formatowanie Lua przez StyLua pozostaje dostępne.
+
+Wersje bazowe narzędzi Neovim są deklarowane jako `latest` w mise. Dprint musi
+być co najmniej 0.64.3; konfiguracja Zsh wymaga shfmt 3.13.1 lub nowszego ze
+względu na `-ln zsh`. Mise odpowiada za instalację i aktualizację zadeklarowanych
+wersji. Pełna instalacja desktopu uruchamia `mise install` przed przygotowaniem
+pluginów. `make install-neovim` sprawdza najpierw pluginy, a następnie uruchamia
+`mise install` z katalogu domowego użytkownika docelowego. `update-all` używa
+zwykłego etapu `mise upgrade` do aktualizacji tych binarek i osobnego headless
+procesu wyłącznie do pluginów. Zwykły start edytora nie instaluje ani nie
+aktualizuje narzędzi.
+
+Mason pozostaje jako ręczny menedżer opcjonalnych dodatków, z `PATH = "skip"`.
+Nie wpływa na domyślne LSP ani formatery, a instalowane ręcznie paczki nie są
+aktualizowane przez `update-all` ani usuwane przez konfigurację. `:MasonUpdate`
+odświeża rejestr, nie zainstalowane pakiety. Ruby poza projektem RuboCop nie jest
+formatowany automatycznie. `rubyfmt` można zainstalować ręcznie przez Mason i
+uruchomić jawnie, przekazując Conformowi dokładną ścieżkę binarki Masona:
+
+```vim
+:lua local conform = require("conform"); conform.formatters.rubyfmt = { command = require("mason.settings").current.install_root_dir .. "/bin/rubyfmt" }; conform.format({ formatters = { "rubyfmt" }, lsp_format = "never" })
+```
+
+Ta jednorazowa konfiguracja nie dodaje Masona do `PATH` i nie włącza rubyfmt
+przy zapisie ani pod `<Space>cf`. Narzędzia mise nie są instalowane przy
+formatowaniu. Pluginy kompilowane lokalnie wymagają make i kompilatora C; Go jest
+deklarowanym runtime'em dla gopls i goimports. Systemowe zależności przygotowuje
+operator, dotfiles ich nie instalują.
 
 ---
 
@@ -353,8 +413,9 @@ poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
 - **Wymagania**: Neovim 0.11+.
-- **Profil**: Tylko `DOTFILES_PROFILE=desktop`. Na `server` i bez ustawionego profilu plugin oraz jego build `:TSUpdate` są wyłączone.
+- **Profil**: Tylko `DOTFILES_PROFILE=desktop`. Na `server` i bez ustawionego profilu plugin oraz aktualizacja parserów są wyłączone.
 - **Auto-install**: Brakujące parsery (lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm, go) są instalowane automatycznie przy pierwszym starcie. Wymaga kompilacji (gcc/clang).
+- **Utrzymanie headless**: etap pluginów pomija startowy auto-install parserów; build czeka na wynik aktualizacji zainstalowanych parserów (limit 5 minut) i propaguje błąd. Ta polityka parserów jest osobna od utrzymania binarek mise.
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery
   - `:TSInstall <lang>` — Zainstaluj parser dla języka
@@ -373,12 +434,10 @@ poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
 
 Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
-- **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — Menedżer serwerów LSP
-- **mason-lspconfig.nvim**: [williamboman/mason-lspconfig.nvim](https://github.com/williamboman/mason-lspconfig.nvim) — Bridge mason ↔ lspconfig
+- **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — ręczny menedżer opcjonalnych narzędzi; nie dodaje binarek do `PATH`
 - **nvim-lspconfig**: [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) — Konfiguracja LSP
 
 **Zainstalowane serwery**:
-- `lua_ls` — Lua (konfiguracja Neovim)
 - `helm_ls` — Helm charts
 - `ruff` — Python (lightweight LSP + linter + formatter)
 - `taplo` — TOML (lekki skompilowany LSP + formatter)
@@ -387,20 +446,16 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `ruby_lsp` — Ruby (via `mise` + `gem:ruby-lsp`)
 
 **Konfiguracja API**:
-- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; `mason-lspconfig` automatycznie włącza serwery Masona.
-- **Jawna lista**: `mason_servers` w `lua/plugins/lsp.lua` jest wspólną listą instalacji, konfiguracji i aktywacji LSP Masona. Wcześniej zainstalowane serwery spoza tej listy nie są automatycznie włączane; ich pliki pozostają na dysku.
+- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; nie ma mostu `mason-lspconfig` ani automatycznej aktywacji serwerów Masona.
+- **Jawna lista**: `servers` w `lua/config/tools.lua` określa aktywowane serwery. Każdy z nich uruchamia się z binarką rozwiązaną przez mise dla katalogu root projektu; argumenty pochodzą z domyślnej konfiguracji nvim-lspconfig, a proces działa z katalogu root.
+- **Brak fallbacku**: binarki z Masona lub `PATH` nie zastępują deklaracji mise. Nierozwiązywalne lub niezainstalowane narzędzie kończy się widocznym błędem przy uruchamianiu klienta.
 - **Neovim <0.11**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
-- **Ruby**: ścieżka do `ruby-lsp` jest rozwiązywana dynamicznie przez `mise which`; standalone `mise` jest dostępne z `.zshenv`, bez `mise activate` i hooków zmiany katalogu. Jeśli `mise` nie rozwiąże `ruby-lsp`, klient nie startuje zamiast używać potencjalnie przestarzałego wrappera Masona z `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
+- **Ruby**: `ruby-lsp` jest rozwiązywany przez mise. Klient nie korzysta z wrappera Masona ani fallbacku do `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
 
 **Komendy**:
-- `:Mason` — UI menedżera serwerów
-- `:MasonInstall <server>` — Zainstaluj serwer
+- `:Mason` — UI ręcznych dodatków
+- `:MasonInstall <package>` — Zainstaluj opcjonalną paczkę Masona; nie aktywuje jej jako LSP
 - `:LspInfo` — Info o aktywnych serwerach
-
-**Opcjonalny cleanup — usuń nieużywane serwery z Masona** (nie jest wymagany do ich wyłączenia):
-```vim
-:MasonUninstall basedpyright jsonls yamlls bashls dockerls docker_compose_language_service
-```
 
 **Keymaps** (aktywne gdy LSP jest podłączony):
 - `gd` — Go to definition
@@ -554,27 +609,35 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 ## 🛠️ Instalacja
 
 ```bash
-# Przejdź do repozytorium dotfiles
 cd ~/dotfiles
+# Pełna instalacja desktopu przygotowuje również Neovima po etapie mise.
+make install
 
-# Najpierw sprawdź planowane linki
-stow -n -v -d .config -t ~/.config nvim
+# Istniejący desktop: uzupełnij mise tools i brakujące pluginy Neovima.
+make install-neovim
 
-# Zastosuj linkowanie konfiguracji przez GNU Stow
-stow -v -d .config -t ~/.config nvim
-
-# Uruchom Neovim - brakujące pluginy zainstalują się automatycznie
-nvim
+# Mise aktualizuje zadeklarowane binarki; update-all osobno aktualizuje pluginy.
+update-all
 ```
 
-Pełny `./install` linkuje konfigurację, ale nie instaluje ani nie aktualizuje
-pluginów Neovima. Robi to lazy.nvim przy pierwszym uruchomieniu edytora.
-
-Przy pierwszym uruchomieniu:
-
-1. `lazy.nvim` zainstaluje się automatycznie
-2. Wszystkie pluginy zostaną zainstalowane
-3. Po zakończeniu instalacji zrestartuj Neovim
+Samodzielna sekcja wymaga zapisanego profilu desktop (`make install-profile`),
+konfiguracji bazowej (`make install-base`), konfiguracji mise (`make install-tools`)
+i Neovima >= 0.11. Odmawia działania na server i przy nieznanym profilu.
+`make install-neovim` najpierw sprawdza i uzupełnia pluginy przez
+`bin/maintain-neovim plugins install`, a następnie uruchamia `mise install` w
+katalogu domowym użytkownika docelowego. Pełna instalacja desktopu instaluje
+narzędzia mise wcześniej w etapie `tools`. Przy braku Neovima >= 0.11 pomija
+jego utrzymanie, zachowuje Vim i kontynuuje pozostałe etapy; jawna sekcja
+`make install-neovim` nadal odmawia działania bez wspieranej wersji.
+`update-all` aktualizuje binarki
+przez mise i pluginy w osobnym procesie `bin/maintain-neovim plugins update`;
+nie uruchamia dodatkowego etapu narzędzi Neovim. Server zachowuje lekki zestaw
+pluginów i nie przygotowuje narzędzi Neovima. Zwykły start edytora nadal może
+bootstrapować lazy.nvim i brakujące pluginy.
+Nieudane buildy maintenance zapisuje w `stdpath("state")/pending-plugin-builds.json`.
+Kolejne `install` lub `update` ponawia je także przy istniejącym checkoutcie;
+po udanym buildzie wpis jest usuwany. Sprawne pluginy nie są przebudowywane
+przy kolejnym `install`.
 
 ## 📝 Dodawanie nowego pluginu
 

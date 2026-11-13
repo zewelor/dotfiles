@@ -14,7 +14,6 @@ end
 return {
   "stevearc/conform.nvim",
   cond = profile.is_desktop,
-  dependencies = { "williamboman/mason.nvim" },
   event = { "BufReadPre", "BufNewFile" },
   cmd = { "ConformInfo", "FormatInfo" },
   config = function(_, opts)
@@ -42,7 +41,7 @@ return {
       go = { "goimports", "gofumpt" },
       sh = { "shfmt" },
       bash = { "shfmt" },
-      zsh = { "beautysh" },
+      zsh = { "shfmt" },
 
       javascript = { "oxfmt" },
       javascriptreact = { "oxfmt" },
@@ -74,7 +73,7 @@ return {
           return { "rubocop" }
         end
 
-        return { "rubyfmt" }
+        return {} -- Standalone Ruby formatting is an explicit optional action.
       end,
     },
 
@@ -111,8 +110,40 @@ return {
           env = { RUBOCOP_CACHE_ROOT = "tmp/rubocop" },
         }
       end,
+      stylua = { command = function(_, ctx) return require("config.tools").resolve("stylua", ctx.dirname) end },
+      ruff_format = { command = function(_, ctx) return require("config.tools").resolve("ruff", ctx.dirname) end },
+      taplo = { command = function(_, ctx) return require("config.tools").resolve("taplo", ctx.dirname) end },
+      -- The standalone CLI formats files; stdin support belongs to the npm wrapper.
+      oxfmt = function(bufnr)
+        local dirname = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr)) or vim.fn.getcwd()
+        local find = require("conform.util").find_executable({ "node_modules/.bin/oxfmt" }, "")
+        local local_bin = find(nil, { dirname = dirname })
+        if local_bin ~= "" then
+          -- Project-owned npm tools retain their upstream stdin/filename contract.
+          return { command = local_bin }
+        end
+        return {
+          inherit = false,
+          command = function(_, ctx) return require("config.tools").resolve("oxfmt", ctx.dirname) end,
+          args = { "$FILENAME" },
+          stdin = false,
+          tmpfile_format = ".conform.$RANDOM.$FILENAME",
+          cwd = function(self, ctx)
+            return require("conform.util").root_file({ ".oxfmtrc.json", ".oxfmtrc.jsonc" })(self, ctx)
+          end,
+        }
+      end,
+      yamlfmt = { command = function(_, ctx) return require("config.tools").resolve("yamlfmt", ctx.dirname) end },
+      goimports = { command = function(_, ctx) return require("config.tools").resolve("goimports", ctx.dirname) end },
+      gofumpt = { command = function(_, ctx) return require("config.tools").resolve("gofumpt", ctx.dirname) end },
       shfmt = {
-        append_args = { "-i", "2" },
+        command = function(_, ctx) return require("config.tools").resolve("shfmt", ctx.dirname) end,
+        append_args = function(_, ctx)
+          if vim.bo[ctx.buf].filetype == "zsh" then
+            return { "-i", "2", "-ln", "zsh" }
+          end
+          return { "-i", "2" }
+        end,
       },
     },
   },

@@ -693,7 +693,8 @@ fi"
   if target_user_has "nvim"; then
     echo
     echo "[nvim] Updating Lazy.nvim plugins"
-    local nvim_command="env DOTFILES_PROFILE=${target_profile} nvim --headless -c \"Lazy! sync\" -c \"qa\""
+    local nvim_helper="${resolved_target_zshrc:h}/bin/maintain-neovim"
+    local nvim_command="env DOTFILES_PROFILE=${target_profile} ${(q)nvim_helper} plugins update"
     if run_quietly_on_success run_for_target_user "${nvim_command}"; then
       echo "[nvim] Plugin update complete"
     else

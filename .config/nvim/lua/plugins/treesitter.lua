@@ -4,7 +4,10 @@ return {
   -- Server profiles use built-in syntax highlighting without parser compilation.
   enabled = vim.env.DOTFILES_PROFILE == "desktop",
   lazy = false,
-  build = ":TSUpdate",
+  -- :TSUpdate discards the async result, so a failed build could appear successful.
+  build = function()
+    assert(require("nvim-treesitter.install").update():wait(300000), "Tree-sitter parser update failed")
+  end,
   config = function()
     require("nvim-treesitter").setup({
       -- Install parsers and queries into Neovim's site directory.
@@ -27,7 +30,7 @@ return {
         table.insert(missing, lang)
       end
     end
-    if #missing > 0 then
+    if #missing > 0 and not vim.g.dotfiles_maintenance then
       require("nvim-treesitter").install(missing)
     end
 

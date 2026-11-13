@@ -32,7 +32,7 @@ class UpdateAllTests(unittest.TestCase):
             (ROOT / ".zshrc").read_text(), re.MULTILINE | re.DOTALL,
         ).group()
 
-    def make_update_all_fixture(self, mise_installed, target_profile=None):
+    def make_update_all_fixture(self, mise_installed, target_profile=None, nvim_installed=True):
         if self.home.exists():
             shutil.rmtree(self.home)
         self.home.mkdir()
@@ -61,12 +61,29 @@ class UpdateAllTests(unittest.TestCase):
         self.mise_policy_log = self.base / "mise-policy.log"
         self.mise_system_config_log = self.base / "mise-system-config.log"
         self.nvim_log = self.base / "nvim.log"
+        self.nvim_maintain_log = self.base / "nvim-maintain.log"
         for log in (
             self.completion_log, self.completion_policy_log, self.mise_log,
             self.mise_policy_log, self.mise_system_config_log, self.nvim_log,
+            self.nvim_maintain_log,
             self.base / "mise-auto-update.log",
         ):
             log.unlink(missing_ok=True)
+        self.nvim_maintain_log.touch()
+        maintain_neovim = completion_dir / "maintain-neovim"
+        maintain_neovim.write_text(
+            '#!/bin/sh\n'
+            'printf "%s|%s %s\\n" "${DOTFILES_PROFILE-unset}" "$1" "$2" >> "$TEST_NVIM_MAINTAIN_LOG"\n'
+            'if [ "$1" = plugins ]; then\n'
+            '  printf "%s\\n" "${DOTFILES_PROFILE-unset}" >> "$TEST_NVIM_LOG"\n'
+            'else\n'
+            '  exit 91\n'
+            'fi\n'
+            'printf "nvim stdout\\n"\n'
+            'printf "nvim stderr\\n" >&2\n'
+            'exit "${TEST_NVIM_EXIT:-0}"\n'
+        )
+        maintain_neovim.chmod(0o755)
         zinit_dir = self.home / ".zinit/bin"
         zinit_dir.mkdir(parents=True)
         (zinit_dir / "zinit.zsh").write_text(
@@ -78,15 +95,17 @@ class UpdateAllTests(unittest.TestCase):
         )
         tool_bin = self.home / ".local/bin"
         tool_bin.mkdir(parents=True)
-        for tool in ("nvim", "npx"):
+        tools = ("nvim", "npx") if nvim_installed else ("npx",)
+        for tool in tools:
             stub = tool_bin / tool
             stub.write_text("#!/bin/sh\nexit 0\n")
             stub.chmod(0o755)
-        (tool_bin / "nvim").write_text(
-            '#!/bin/sh\nprintf "%s\\n" "${DOTFILES_PROFILE-unset}" >> "$TEST_NVIM_LOG"\n'
-            'printf "nvim stdout\\n"\nprintf "nvim stderr\\n" >&2\n'
-            'exit "${TEST_NVIM_EXIT:-0}"\n'
-        )
+        if nvim_installed:
+            (tool_bin / "nvim").write_text(
+                '#!/bin/sh\nprintf "%s\\n" "${DOTFILES_PROFILE-unset}" >> "$TEST_NVIM_LOG"\n'
+                'printf "nvim stdout\\n"\nprintf "nvim stderr\\n" >&2\n'
+                'exit "${TEST_NVIM_EXIT:-0}"\n'
+            )
         if mise_installed:
             mise_bin = tool_bin / "mise"
             mise_bin.write_text(
@@ -108,12 +127,13 @@ class UpdateAllTests(unittest.TestCase):
     def run_update_all(
         self, caller_profile, target_profile, mise_installed, config_exists=False,
         caller_config=None,
+        nvim_installed=True,
         upgrade_exit=0,
         config_link=None,
         system_config=None,
         quiet_exits=None,
     ):
-        self.make_update_all_fixture(mise_installed, target_profile)
+        self.make_update_all_fixture(mise_installed, target_profile, nvim_installed)
         if config_exists:
             if target_profile == "server":
                 mise_config = self.home / ".config/mise"
@@ -153,6 +173,9 @@ update() { return 0; }
 sudo() {
   [[ "$1" == -H && "$2" == -u && "$3" == fixture ]] || return 90
   shift 3
+  if [[ "${TEST_NVIM_INSTALLED:-true}" == false && "$*" == *"command -v nvim >/dev/null 2>&1"* ]]; then
+    return 1
+  fi
   HOME="$TEST_TARGET_HOME" /usr/bin/env -u DOTFILES_PROFILE "$@"
 }
 '''
@@ -172,6 +195,8 @@ sudo() {
                 TEST_MISE_PRUNE_EXIT=str((quiet_exits or {}).get("mise-prune", 0)),
                 TEST_NVIM_LOG=str(self.nvim_log),
                 TEST_NVIM_EXIT=str((quiet_exits or {}).get("nvim", 0)),
+                TEST_NVIM_INSTALLED=str(nvim_installed).lower(),
+                TEST_NVIM_MAINTAIN_LOG=str(self.nvim_maintain_log),
                 TEST_COMPLETION_LOG=str(self.completion_log),
                 TEST_COMPLETION_POLICY_LOG=str(self.completion_policy_log),
                 SUDO_USER="fixture",
@@ -275,11 +300,41 @@ sudo() {
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.nvim_log.read_text().splitlines(), ["desktop"])
+        self.assertEqual(self.nvim_maintain_log.read_text().splitlines(), [
+            "desktop|plugins update",
+        ])
 
     def test_nvim_uses_target_server_profile_after_sudo_clears_environment(self):
         result = self.run_update_all("desktop", "server", mise_installed=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(self.nvim_log.read_text().splitlines(), ["server"])
+        self.assertEqual(self.nvim_maintain_log.read_text().splitlines(), [
+            "server|plugins update",
+        ])
+
+    def test_nvim_plugin_failure_propagates_and_does_not_run_a_tool_stage(self):
+        result = self.run_update_all(
+            "server", "desktop", mise_installed=True, config_exists=True,
+            quiet_exits={"nvim": 42},
+        )
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("nvim stdout", result.stdout)
+        self.assertIn("nvim stderr", result.stdout)
+        self.assertIn("[nvim] Plugin update failed (exit 42)", result.stdout)
+        self.assertNotIn("tools update", self.nvim_maintain_log.read_text())
+        self.assertEqual(self.nvim_maintain_log.read_text().splitlines(), [
+            "desktop|plugins update",
+        ])
+
+    def test_desktop_without_nvim_skips_only_plugin_updates(self):
+        result = self.run_update_all(
+            "server", "desktop", mise_installed=True, config_exists=True,
+            nvim_installed=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("[nvim] Skipping Neovim plugin update", result.stdout)
+        self.assertIn("[mise] Upgrading mise tools", result.stdout)
+        self.assertEqual(self.nvim_maintain_log.read_text(), "")
 
     def test_desktop_without_mise_fails_even_when_caller_is_server(self):
         result = self.run_update_all(

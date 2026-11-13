@@ -1,15 +1,7 @@
 -- lsp — Language Server Protocol for intelligent code features
 local profile = require("config.profile")
 
--- One list controls installation, configuration and activation of Mason servers.
-local mason_servers = {
-  "lua_ls",   -- Lua (Neovim configuration)
-  "helm_ls",  -- Helm charts
-  "ruff",     -- Python LSP, linting and formatting
-  "taplo",    -- TOML LSP and formatting
-  "marksman", -- Markdown
-  "gopls",    -- Go
-}
+local servers = require("config.tools").servers
 
 -- Resolve the Ruby tool from mise rather than an old Mason wrapper.
 -- Some Mason Ruby gem wrappers can keep stale shebangs after a Ruby upgrade, so
@@ -33,14 +25,7 @@ end
 -- Build the per-server options shared by the native LSP configurations.
 local function make_server_opts(server)
   local opts = {}
-  if server == "lua_ls" then
-    opts.settings = {
-      Lua = {
-        diagnostics = { globals = { "vim" } },
-        workspace = { checkThirdParty = false },
-      },
-    }
-  elseif server == "helm_ls" then
+  if server == "helm_ls" then
     opts.filetypes = { "helm" }
   elseif server == "ruby_lsp" then
     local path = mise_bin("ruby-lsp", { prefer_mise = true })
@@ -52,29 +37,16 @@ local function make_server_opts(server)
 end
 
 return {
-  -- Mason: LSP server manager
+  -- Mason: optional manual packages, kept outside PATH
   {
     "williamboman/mason.nvim",
     cond = profile.is_desktop,
-    build = ":MasonUpdate",
-    opts = {},
-  },
-  -- Bridge between mason and lspconfig
-  {
-    "williamboman/mason-lspconfig.nvim",
-    cond = profile.is_desktop,
-    dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
-    opts = {
-      ensure_installed = mason_servers,
-      -- Previously installed servers outside this list remain inactive.
-      automatic_enable = mason_servers,
-    },
+    opts = { PATH = "skip" },
   },
   -- LSP configuration
   {
     "neovim/nvim-lspconfig",
     cond = profile.is_desktop,
-    dependencies = { "williamboman/mason-lspconfig.nvim" },
     config = function()
       if vim.fn.exists(':LspInfo') == 0 then
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
@@ -83,9 +55,17 @@ return {
       local extra_servers = { "ruby_lsp" }
 
       -- Neovim 0.11+: configure servers through the native LSP API.
-      -- mason-lspconfig handles vim.lsp.enable() for Mason-managed servers.
-      for _, server in ipairs(mason_servers) do
-        vim.lsp.config(server, make_server_opts(server))
+      for _, server in ipairs(servers) do
+        local opts = make_server_opts(server)
+        local default_command = vim.deepcopy(vim.lsp.config[server].cmd)
+        opts.cmd = function(dispatchers, config)
+          local root = config.root_dir or vim.fn.getcwd()
+          local command = vim.deepcopy(default_command)
+          command[1] = require("config.tools").resolve(command[1], root)
+          return vim.lsp.rpc.start(command, dispatchers, { cwd = root })
+        end
+        vim.lsp.config(server, opts)
+        vim.lsp.enable(server)
       end
       for _, server in ipairs(extra_servers) do
         local opts = make_server_opts(server)

@@ -9,7 +9,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DESKTOP = ("private", "vault", "desktop-assets", "tools", "ai", "desktop")
+DESKTOP = ("private", "vault", "desktop-assets", "tools", "neovim", "ai", "desktop")
 ALL_SECTIONS = ("profile", "base", *DESKTOP, "completions", "shell")
 
 
@@ -134,6 +134,107 @@ setup_herdr() { return 0 }
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("first", result.stderr)
                 self.assertEqual(list(self.home.iterdir()), [self.home / ".zshrc.d"])
+
+    def test_neovim_section_runs_plugins_before_mise_install_and_stops_on_failure(self):
+        self.profile("desktop")
+        self.env["DOTFILES_PROFILE"] = "server"
+        repo = self.make_fixture("")
+        helper = repo / "bin/maintain-neovim"
+        helper.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
+                          'if [ "$1" = plugins ]; then exit "${TEST_PLUGIN_EXIT:-0}"; fi\n')
+        helper.chmod(0o755)
+        mise = self.home / ".local/bin/mise"
+        mise.parent.mkdir(parents=True)
+        mise.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
+                        'exit "${TEST_MISE_EXIT:-0}"\n')
+        mise.chmod(0o755)
+        cases = ((42, 0, 42, ["plugins install"]),
+                 (0, 42, 42, ["plugins install", "install"]),
+                 (0, 0, 0, ["plugins install", "install"]))
+        for plugin_exit, mise_exit, expected_exit, expected_stages in cases:
+            with self.subTest(plugin_exit=plugin_exit, mise_exit=mise_exit):
+                (self.home / "stages").unlink(missing_ok=True)
+                self.env["TEST_PLUGIN_EXIT"] = str(plugin_exit)
+                self.env["TEST_MISE_EXIT"] = str(mise_exit)
+                result = subprocess.run(["zsh", str(repo / "install"), "--section", "neovim"],
+                                        env=self.env, cwd=self.home, text=True,
+                                        capture_output=True, timeout=10)
+                self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
+                self.assertEqual((self.home / "stages").read_text().splitlines(), expected_stages)
+
+    def test_full_install_preserves_vim_fallback_and_propagates_supported_neovim_failures(self):
+        repo = self.make_fixture('''
+configure_profile() { DOTFILES_PROFILE=desktop }
+configure_stow_apply() { STOW_APPLY=true }
+require_zsh_login_shell() { return 0 }
+setup_private_submodule() { return 0 }
+migrate_retired_managed_links() { return 0 }
+stow_base_dotfiles() { return 0 }
+add_secret_envs_from_vault() { return 0 }
+setup_rclone() { return 0 }
+setup_storagebox_media_mount() { return 0 }
+print_flatpak_manual_instructions() { return 0 }
+install_with_stow() { return 0 }
+setup_herdr() { return 0 }
+setup_desktop_assets() { return 0 }
+configure_git_conflict_style() { return 0 }
+setup_mise_desktop_tools() { print mise >> "$HOME_DIR/order" }
+setup_codex() { print codex >> "$HOME_DIR/order" }
+setup_opencode() { print opencode >> "$HOME_DIR/order" }
+setup_antigravity_cli() { print agy >> "$HOME_DIR/order" }
+setup_summarize() { print summarize >> "$HOME_DIR/order" }
+setup_vim() { print vim >> "$HOME_DIR/order" }
+setup_terminal_emulator() { print terminal >> "$HOME_DIR/order" }
+setup_kde_terminal_shortcut() { print kde >> "$HOME_DIR/order" }
+setup_user_systemd_units() { print units >> "$HOME_DIR/order" }
+has() { [[ "$1" == vim || ( "$1" == nvim && "$TEST_NVIM_VERSION" != missing ) ]] }
+nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$TEST_NVIM_VERSION" }
+''')
+        helper = repo / "bin/maintain-neovim"
+        helper.write_text('#!/bin/sh\nprintf "maintenance\n" >> "$HOME/order"\n'
+                          'case "$TEST_NVIM_VERSION" in missing|0.9.5|0.10.4) exit 92;; esac\n'
+                          'exit "${TEST_PLUGIN_EXIT:-0}"\n')
+        helper.chmod(0o755)
+        mise = self.home / ".local/bin/mise"
+        mise.parent.mkdir(parents=True)
+        mise.write_text('#!/bin/sh\nprintf "tools\n" >> "$HOME/order"\n')
+        mise.chmod(0o755)
+        completions = repo / "bin/update-shell-completions"
+        completions.write_text('#!/bin/sh\nprintf "completions\n" >> "$HOME/order"\n')
+        for version, plugin_exit, succeeds in (("missing", 0, True), ("0.9.5", 0, True),
+                                               ("0.10.4", 0, True), ("0.11.0", 0, True),
+                                               ("0.12.0", 42, False), ("broken", 0, False),
+                                               ("invalid", 0, False)):
+            with self.subTest(version=version, plugin_exit=plugin_exit):
+                order = self.home / "order"
+                order.unlink(missing_ok=True)
+                result = subprocess.run(["zsh", str(repo / "install")],
+                                        env={**self.env, "TEST_NVIM_VERSION": version,
+                                             "TEST_PLUGIN_EXIT": str(plugin_exit)},
+                                        cwd=repo, stdin=subprocess.DEVNULL, text=True,
+                                        capture_output=True, timeout=10)
+                stages = order.read_text().splitlines()
+                if not succeeds:
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    if plugin_exit:
+                        self.assertEqual(result.returncode, plugin_exit)
+                    self.assertNotIn("codex", stages)
+                    continue
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                later = ["codex", "opencode", "agy", "summarize", "completions"]
+                modern = version == "0.11.0"
+                expected = ["mise"] + (["maintenance", "tools"] if modern else []) + later
+                expected += ([] if modern else ["vim"]) + ["terminal", "kde", "units"]
+                self.assertEqual(stages, expected)
+                editor = (self.home / ".zshrc.d/editor.zsh").read_text()
+                self.assertIn("export EDITOR=" + ("nvim" if modern else "vim"), editor)
+                if not modern:
+                    order.unlink()
+                    explicit = subprocess.run(["zsh", str(repo / "install"), "--section", "neovim"],
+                                              env={**self.env, "TEST_NVIM_VERSION": version}, cwd=repo,
+                                              stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
+                    self.assertNotEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
+                    self.assertEqual(order.read_text().splitlines(), ["maintenance"])
 
     def test_ai_section_requires_summarize_seed_before_any_setup(self):
         self.profile("desktop")
@@ -347,7 +448,9 @@ install_with_stow() { stow -n -v "$@" }
 setup_herdr() { return 0 }
 setup_desktop_assets() { return 0 }
 configure_git_conflict_style() { return 0 }
-setup_mise_desktop_tools() { return 0 }
+setup_mise_desktop_tools() { print -r -- mise >> "$HOME_DIR/order" }
+supports_neovim_config() { return 0 }
+setup_neovim() { print -r -- neovim >> "$HOME_DIR/order" }
 setup_codex() { return 0 }
 setup_opencode() { return 0 }
 setup_antigravity_cli() { return 0 }
@@ -370,6 +473,7 @@ setup_user_systemd_units() { return 0 }
         result = subprocess.run(["zsh", str(repo / "install")], env=self.env,
                                 cwd=repo, stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.home / "order").read_text().splitlines(), ["mise", "neovim"])
         app_target = self.home / ".var/app/com.example.App"
         for target in (app_target, app_target / "config", app_target / "config/App"):
             self.assertTrue(target.is_dir())
