@@ -16,6 +16,10 @@ additional queries only when the first result is insufficient.
 Do not rely solely on model memory when behavior may be version-sensitive or recently changed. Prefer Context7 over web search for library documentation.
 <!-- context7 -->
 
+## Sandbox and environment
+
+- If a sandbox may hide a resource needed for an authorized task, such as credentials, a tool, or network access, use the required approval mechanism to check outside it before declaring the resource unavailable or asking the user to configure it.
+
 ## Git Output
 
 - For automated analysis, commit-message generation, and command substitutions, use `git --no-pager` for commands that can page or render through delta.
@@ -146,8 +150,8 @@ verification evidence and report conflicts rather than inventing completion.
 
 ## Linear issues
 
-- For repository work, find related Linear issues even if the user did not mention Linear. Before the final response, update affected issues (including parents or dependencies) with the outcome, checks, relevant links, and remaining work or blockers; do not wait for a separate request.
-- Re-read each affected issue and verify all acceptance criteria against current work, including required delivery/runtime checks. If all are met, mark it Done; otherwise keep it open with an accurate status and state the missing evidence or decision. Get the user's approval before relaxing acceptance criteria to close an issue.
+- If the user has identified a Linear issue in this conversation, reconcile its description, checklist and status with the result when wrapping up the agreed scope of work, not after each chat turn. Make only necessary, concise edits to existing information; skip writes if it is already current. Do not append a work history. Add a comment only on explicit request or optionally as a short closing summary. Do not automatically search for or update other issues.
+- Re-read that issue and verify all acceptance criteria against current work, including required delivery/runtime checks. If all are met, mark it Done; otherwise keep it open with an accurate status and state the missing evidence or decision. Get the user's approval before relaxing acceptance criteria to close an issue.
 - Read back the saved update and status. If the write fails or Linear is unavailable, report the failure and pending update in the final response.
 
 - Every issue must have a label identifying its project or area. When creating or updating an issue, inspect team and workspace labels and related issues; apply the existing project label using its exact name. If the issue clearly spans multiple projects or areas, apply each relevant label.
