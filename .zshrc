@@ -498,6 +498,17 @@ function update-all () {
     sudo -H -u "${target_user}" env -u MISE_GLOBAL_CONFIG_FILE -u MISE_CEILING_PATHS PATH="${user_tool_env_path}" MISE_CONFIG_DIR="${target_mise_config_dir}" "${target_mise_policy[@]}" sh -lc "cd \"\$HOME\" || exit; ${1}"
   }
 
+  run_quietly_on_success () {
+    local output exit_code
+    if output=$("$@" 2>&1); then
+      return 0
+    else
+      exit_code=$?
+      print -r -- "${output}"
+      return "${exit_code}"
+    fi
+  }
+
   target_user_has () {
     run_for_target_user "command -v ${1} >/dev/null 2>&1"
   }
@@ -594,7 +605,7 @@ fi"
     local zinit_command="source \"${zinit_script}\"; zinit update -q --all"
     echo
     echo "[zinit] Updating plugins"
-    sudo -H -u "${target_user}" zsh -lc "${zinit_command}" >/dev/null 2>&1
+    run_quietly_on_success sudo -H -u "${target_user}" zsh -lc "${zinit_command}"
     local _ec=$?
     if (( _ec == 0 )); then
       echo "[zinit] Update complete"
@@ -636,7 +647,7 @@ fi"
     else
       if [[ "${target_profile}" == desktop ]]; then
         echo "[mise] Updating mise"
-        if run_for_target_user 'mise self-update -y --no-plugins' >/dev/null 2>&1; then
+        if run_quietly_on_success run_for_target_user 'mise self-update -y --no-plugins'; then
           echo "[mise] Self-update complete"
         else
           local _mise_self_ec=$?
@@ -646,11 +657,11 @@ fi"
       fi
 
       echo "[mise] Upgrading mise tools"
-      if run_for_target_user "${mise_command}" >/dev/null 2>&1; then
+      if run_quietly_on_success run_for_target_user "${mise_command}"; then
         echo "[mise] Update complete"
         if [[ "${target_profile}" == desktop ]]; then
           echo "[mise] Pruning old tool versions"
-          if ! run_for_target_user 'mise prune -y' >/dev/null 2>&1; then
+          if ! run_quietly_on_success run_for_target_user 'mise prune -y'; then
             echo "[mise] Prune failed"
             failures+=(mise-prune)
           fi
@@ -683,7 +694,7 @@ fi"
     echo
     echo "[nvim] Updating Lazy.nvim plugins"
     local nvim_command="env DOTFILES_PROFILE=${target_profile} nvim --headless -c \"Lazy! sync\" -c \"qa\""
-    if run_for_target_user "${nvim_command}" >/dev/null 2>&1; then
+    if run_quietly_on_success run_for_target_user "${nvim_command}"; then
       echo "[nvim] Plugin update complete"
     else
       local _nvim_ec=$?

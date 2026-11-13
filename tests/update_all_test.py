@@ -33,7 +33,12 @@ class UpdateAllTests(unittest.TestCase):
         ).group()
 
     def make_update_all_fixture(self, mise_installed, target_profile=None):
+        if self.home.exists():
+            shutil.rmtree(self.home)
+        self.home.mkdir()
         self.repository = self.base / "dotfiles"
+        if self.repository.exists():
+            shutil.rmtree(self.repository)
         self.repository.mkdir()
         completion_dir = self.repository / "bin"
         completion_dir.mkdir()
@@ -56,6 +61,21 @@ class UpdateAllTests(unittest.TestCase):
         self.mise_policy_log = self.base / "mise-policy.log"
         self.mise_system_config_log = self.base / "mise-system-config.log"
         self.nvim_log = self.base / "nvim.log"
+        for log in (
+            self.completion_log, self.completion_policy_log, self.mise_log,
+            self.mise_policy_log, self.mise_system_config_log, self.nvim_log,
+            self.base / "mise-auto-update.log",
+        ):
+            log.unlink(missing_ok=True)
+        zinit_dir = self.home / ".zinit/bin"
+        zinit_dir.mkdir(parents=True)
+        (zinit_dir / "zinit.zsh").write_text(
+            'function zinit() {\n'
+            '  printf "zinit stdout\\n"\n'
+            '  printf "zinit stderr\\n" >&2\n'
+            '  return "${TEST_ZINIT_EXIT:-0}"\n'
+            '}\n'
+        )
         tool_bin = self.home / ".local/bin"
         tool_bin.mkdir(parents=True)
         for tool in ("nvim", "npx"):
@@ -64,6 +84,8 @@ class UpdateAllTests(unittest.TestCase):
             stub.chmod(0o755)
         (tool_bin / "nvim").write_text(
             '#!/bin/sh\nprintf "%s\\n" "${DOTFILES_PROFILE-unset}" >> "$TEST_NVIM_LOG"\n'
+            'printf "nvim stdout\\n"\nprintf "nvim stderr\\n" >&2\n'
+            'exit "${TEST_NVIM_EXIT:-0}"\n'
         )
         if mise_installed:
             mise_bin = tool_bin / "mise"
@@ -72,7 +94,14 @@ class UpdateAllTests(unittest.TestCase):
                 'printf "%s|%s|%s\\n" "$*" "${MISE_GLOBAL_CONFIG_FILE-unset}" "${MISE_CEILING_PATHS-unset}" >> "$TEST_MISE_POLICY_LOG"\n'
                 'printf "%s\\n" "${MISE_SYSTEM_CONFIG_FILE-unset}" >> "$TEST_MISE_SYSTEM_CONFIG_LOG"\n'
                 'printf "%s\\n" "${MISE_SELF_UPDATE_AUTO-unset}" >> "$TEST_MISE_AUTO_UPDATE_LOG"\n'
-                'if [ "$1" = upgrade ]; then exit "${TEST_MISE_UPGRADE_EXIT:-0}"; fi\n'
+                'case "$1" in\n'
+                '  self-update) stage="mise-self-update"; exit_code="${TEST_MISE_SELF_UPDATE_EXIT:-0}" ;;\n'
+                '  upgrade) stage="mise-upgrade"; exit_code="${TEST_MISE_UPGRADE_EXIT:-0}" ;;\n'
+                '  prune) stage="mise-prune"; exit_code="${TEST_MISE_PRUNE_EXIT:-0}" ;;\n'
+                'esac\n'
+                'printf "%s stdout\\n" "$stage"\n'
+                'printf "%s stderr\\n" "$stage" >&2\n'
+                'exit "$exit_code"\n'
             )
             mise_bin.chmod(0o755)
 
@@ -82,6 +111,7 @@ class UpdateAllTests(unittest.TestCase):
         upgrade_exit=0,
         config_link=None,
         system_config=None,
+        quiet_exits=None,
     ):
         self.make_update_all_fixture(mise_installed, target_profile)
         if config_exists:
@@ -136,8 +166,12 @@ sudo() {
                 TEST_MISE_POLICY_LOG=str(self.mise_policy_log),
                 TEST_MISE_SYSTEM_CONFIG_LOG=str(self.mise_system_config_log),
                 TEST_MISE_AUTO_UPDATE_LOG=str(self.base / "mise-auto-update.log"),
-                TEST_MISE_UPGRADE_EXIT=str(upgrade_exit),
+                TEST_ZINIT_EXIT=str((quiet_exits or {}).get("zinit", 0)),
+                TEST_MISE_SELF_UPDATE_EXIT=str((quiet_exits or {}).get("mise-self-update", 0)),
+                TEST_MISE_UPGRADE_EXIT=str((quiet_exits or {}).get("mise-upgrade", upgrade_exit)),
+                TEST_MISE_PRUNE_EXIT=str((quiet_exits or {}).get("mise-prune", 0)),
                 TEST_NVIM_LOG=str(self.nvim_log),
+                TEST_NVIM_EXIT=str((quiet_exits or {}).get("nvim", 0)),
                 TEST_COMPLETION_LOG=str(self.completion_log),
                 TEST_COMPLETION_POLICY_LOG=str(self.completion_policy_log),
                 SUDO_USER="fixture",
@@ -145,6 +179,47 @@ sudo() {
             ),
             text=True, capture_output=True,
         )
+
+    def assert_quiet_stage_failure(self, stage, exit_code):
+        result = self.run_update_all(
+            "desktop", "desktop", mise_installed=True, config_exists=True,
+            quiet_exits={stage: exit_code},
+        )
+        combined_output = result.stdout + result.stderr
+        self.assertNotEqual(result.returncode, 0, combined_output)
+        self.assertIn(f"{stage} stdout", result.stdout)
+        self.assertIn(f"{stage} stderr", result.stdout)
+        self.assertEqual(result.stdout.count(f"{stage} stdout"), 1)
+        self.assertEqual(result.stdout.count(f"{stage} stderr"), 1)
+        if stage != "mise-prune":
+            diagnostic = {
+                "zinit": "[zinit] Update failed",
+                "mise-self-update": "[mise] Self-update failed",
+                "mise-upgrade": "[mise] Update failed",
+                "nvim": "[nvim] Plugin update failed",
+            }[stage]
+            self.assertIn(f"{diagnostic} (exit {exit_code})", result.stdout)
+        else:
+            self.assertIn("mise-prune", result.stderr)
+
+    def test_quiet_update_stages_hide_success_output(self):
+        result = self.run_update_all(
+            "desktop", "desktop", mise_installed=True, config_exists=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):
+            self.assertNotIn(f"{stage} stdout", result.stdout + result.stderr)
+            self.assertNotIn(f"{stage} stderr", result.stdout + result.stderr)
+
+    def test_quiet_update_stages_show_output_on_failure_exit_1(self):
+        for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):
+            with self.subTest(stage=stage):
+                self.assert_quiet_stage_failure(stage, 1)
+
+    def test_quiet_update_stages_show_output_on_failure_exit_42(self):
+        for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):
+            with self.subTest(stage=stage):
+                self.assert_quiet_stage_failure(stage, 42)
 
     def run_command(self, command):
         return subprocess.run(

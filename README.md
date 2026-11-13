@@ -28,6 +28,9 @@ the calling shell's `MISE_CONFIG_DIR`. Server updates read only the managed
 and system overrides. Linked server config files or directories must be repaired
 manually before updating. Desktop updates include `config.local.toml`. The server `mise-local`
 helper refuses changes because server tools are declared in Ansible inventory.
+Zinit, mise and Neovim updates in `update-all` keep their command output quiet on
+success. On any nonzero exit code, the failed command's combined stdout/stderr
+is printed alongside its failure status; no persistent log files are created.
 The base Stow package ignores `.config/mise`;
 only the desktop installer creates the local override and links both mise
 config files into `~/.config/mise`. Renovate
