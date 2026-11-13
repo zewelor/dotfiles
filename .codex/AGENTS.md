@@ -144,7 +144,11 @@ verification evidence and report conflicts rather than inventing completion.
 - Fail fast and loudly on unexpected errors and invalid states.
   Keep required recovery explicit; never silently hide failures.
 
-## Linear issue labels
+## Linear issues
+
+- For repository work, find related Linear issues even if the user did not mention Linear. Before the final response, update affected issues (including parents or dependencies) with the outcome, checks, relevant links, and remaining work or blockers; do not wait for a separate request.
+- Re-read each affected issue and verify all acceptance criteria against current work, including required delivery/runtime checks. If all are met, mark it Done; otherwise keep it open with an accurate status and state the missing evidence or decision. Get the user's approval before relaxing acceptance criteria to close an issue.
+- Read back the saved update and status. If the write fails or Linear is unavailable, report the failure and pending update in the final response.
 
 - Every issue must have a label identifying its project or area. When creating or updating an issue, inspect team and workspace labels and related issues; apply the existing project label using its exact name. If the issue clearly spans multiple projects or areas, apply each relevant label.
 - If the project or area is unclear, or its label is missing or ambiguous, ask the user which label to use or whether to create one. Do not guess or automatically create labels.
