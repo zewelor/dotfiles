@@ -88,16 +88,7 @@ end, { desc = "Update n_lines (mini.surround)" })
 -- Formatting (conform.nvim)
 if require("config.profile").is_desktop() then
 	keymap("n", "<leader>cf", function()
-		local ft = vim.bo.filetype
-		if ft == "eruby.yaml.tmuxinator" then
-			if vim.notify then vim.notify("Tmuxinator YAML with ERB is excluded from formatting", vim.log.levels.INFO, { title = "Conform" }) end
-			return
-		end
-		if ft == "markdown" then
-			if vim.notify then vim.notify("Markdown autoformat is disabled", vim.log.levels.INFO, { title = "Conform" }) end
-			return
-		end
-		require("conform").format({ lsp_format = "fallback" })
+		require("config.formatting").format(0, "manual")
 	end, { desc = "Format buffer (conform)" })
 end
 

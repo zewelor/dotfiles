@@ -15,6 +15,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── lazy.lua     # Setup lazy.nvim
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   ├── keymaps.lua  # Wszystkie keybindings
+│   │   ├── formatting.lua # Wspólna polityka formatowania projektu
 │   │   └── profile.lua  # Jawny wybór profilu desktop
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
@@ -283,11 +284,43 @@ opencode --port
 
 - **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Autoformat on save**: `lua`, `sh`, `bash`, `zsh`, `python`, `toml`, `yaml`, `json`, `javascript`, `typescript`, `css`, `graphql`, `ruby`, `markdown`, `go` (w JS/TS/JSON/CSS/GraphQL/Markdown automatycznie używa `dprint` jeśli w projekcie znajduje się `dprint.json`; jeśli go brak, dla JS/TS/JSON/CSS/GraphQL używa `oxfmt`, a Markdown pozostawia niesformatowany; `sh`/`bash` przez `shfmt`, `zsh` przez `beautysh`, TOML przez `taplo`, YAML przez `yamlfmt`, Ruby przez `rubocop` w projektach z `Gemfile` i `.rubocop.yml`, poza nimi przez `rubyfmt`; Go przez `goimports` i `gofumpt`; Dockerfile wyłączone)
+- **Zapis i `<Space>cf`** korzystają z jednej polityki. Dla YAML (również obecnych podtypów), JS/TS/React, JSON/JSONC/JSON5, CSS, GraphQL i Markdown najbliższa konfiguracja dprint decyduje, czy plugin obsługuje plik. Samo istnienie konfiguracji nie wystarcza. Wspierane nazwy to `dprint.json`, `dprint.jsonc`, `.dprint.json`, `.dprint.jsonc` i warianty `.config/dprint.json(c)`.
+- **Dprint 0.64.3+**: wybrana binarka jest sprawdzana przed użyciem. `resolved-config --file` rozpoznaje obsługę pliku, a `fmt --stdin` z pełną ścieżką respektuje `includes`, `excludes` i `.gitignore`. Wykluczone pliki pozostają bez zmian. Brak pluginu, również przez negatywne `associations`, pozwala użyć formattera domyślnego; Markdown bez pluginu jest pomijany.
+- **Wybór binarki**: istniejące lokalne `node_modules/.bin/dprint`, następnie efektywna deklaracja mise w katalogu bufora (także globalna), a Mason dopiero po potwierdzonym braku deklaracji. Niezainstalowana lub niejednoznaczna deklaracja mise oraz brak resolvera są błędem, bez przejścia na inną wersję. Nie walidujemy manifestów ani lockfile npm. Zapytania mise pomijają odziedziczone `MISE_DPRINT_VERSION`, zachowując resztę środowiska i reguły zaufania. Narzędzia nie są instalowane przy formatowaniu.
+- **Domyślne formatery**: Lua przez `stylua`, Python przez `ruff_format`, TOML przez `taplo`, Go przez `goimports` i `gofumpt`, sh/bash przez `shfmt`, Zsh przez `beautysh`, YAML przez `yamlfmt`, JS/TS/JSON/CSS/GraphQL przez `oxfmt`. Ruby zachowuje reguły opisane poniżej.
+- **Wyłączenia**: Dockerfile bez autoformatowania przy zapisie; `eruby.yaml.tmuxinator` bez formatowania również ręcznie. Nienazwany bufor z grupy projektowej wymaga najpierw nadania nazwy.
+- **Błędy i czas**: jeden synchroniczny budżet 2000 ms obejmuje rozwiązywanie narzędzia i formatowanie. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
 - **Ruby**: dla projektów RuboCop conform uruchamia repo-local `bin/rubocop`, jeśli istnieje; w przeciwnym razie używa dostępnego `rubocop`. Cache RuboCopa trafia do `tmp/rubocop`.
-- **Notifications**: Brak dostępnego formattera nie pokazuje popupu; szczegóły sprawdzaj przez `:ConformInfo`
+- **Diagnostyka**: `:FormatInfo` pokazuje bieżącą decyzję, źródło binarki, wersję, konfigurację i cwd, bez formatowania. `:ConformInfo` pozostaje informacją o dostępności domyślnych narzędzi i logach; nie odtwarza ostatniego wyboru projektowego. Brak domyślnego formattera nadal nie pokazuje popupu.
 - **Keymaps**:
   - `<Space>cf` — Format buffer
+
+#### Potwierdzona zgodność dprint — 2026-11-13
+
+Sprawdzony zestaw to **dprint 0.64.3 + pretty_yaml 0.6.0**, Neovim 0.11.6,
+Conform `016802d` i mise 2026.11.7. W R3X deklaracja pozostaje `latest`,
+która w tym sprawdzeniu wybierała zainstalowane 0.64.3. To punkt kontrolny
+zgodności, a nie przypięcie wersji projektu ani gwarancja dla przyszłego `latest`.
+
+Testy Neovima przeszły **11/11**, w tym test rzeczywistego CLI i pluginu YAML.
+Osobna próba modułu z prawdziwym mise i konfiguracją R3X potwierdziła wybór
+0.64.3, formatowanie nowego bufora YAML przed pierwszym zapisem, zachowanie
+wykluczeń `workflows/` i `config/database.yml` oraz domyślny plan dla JSON bez
+obsługującego go pluginu. Próby ładowały moduł z repo i nie zapisywały plików
+R3X; nie zastępują podlinkowania nowego modułu i odbioru zwykłej sesji edytora.
+
+Po aktualizacji CLI lub pluginu można powtórzyć [testy formatowania](../../tests/nvim_formatting_test.py)
+z lokalnymi, rzeczywistymi plikami:
+
+```sh
+DOTFILES_TEST_DPRINT=/path/to/dprint \
+DOTFILES_TEST_DPRINT_PLUGIN=/path/to/pretty_yaml-v0.6.0.wasm \
+PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m unittest discover -s tests -p 'nvim*_test.py' -v
+```
+
+Polecenie uruchamiaj z katalogu głównego dotfiles. Bez obu zmiennych test
+rzeczywistego CLI jest pomijany. Testy nie pobierają narzędzi ani pluginów;
+poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
 
 ---
 

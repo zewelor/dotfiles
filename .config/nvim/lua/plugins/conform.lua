@@ -14,30 +14,25 @@ end
 return {
   "stevearc/conform.nvim",
   cond = profile.is_desktop,
+  dependencies = { "williamboman/mason.nvim" },
   event = { "BufReadPre", "BufNewFile" },
+  cmd = { "ConformInfo", "FormatInfo" },
+  config = function(_, opts)
+    require("conform").setup(opts)
+    vim.api.nvim_create_user_command("FormatInfo", function()
+      local plan = require("config.formatting").info(0)
+      if plan then
+        vim.notify(vim.inspect(plan), vim.log.levels.INFO, { title = "FormatInfo" })
+      end
+    end, { desc = "Show the current buffer's formatting decision" })
+  end,
   opts = {
     notify_no_formatters = false,
 
-    -- Disable autoformat for Markdown/Dockerfile (manual formatting still possible).
-    -- Markdown is only autoformatted on save if a dprint.json config file is present.
     format_on_save = function(bufnr)
-      local ft = vim.bo[bufnr].filetype
-      local is_tmuxinator = ft == "eruby.yaml.tmuxinator"
-
-      if ft == "markdown" then
-        local name = vim.api.nvim_buf_get_name(bufnr)
-        local has_dprint = name ~= "" and vim.fs.find({ "dprint.json" }, { path = name, upward = true })[1] ~= nil
-        if not has_dprint then
-          return nil
-        end
-      elseif ft == "dockerfile" or is_tmuxinator then
-        return nil
-      end
-
-      return {
-        timeout_ms = 2000,
-        lsp_format = "fallback",
-      }
+      -- The shared wrapper already formats synchronously; avoid a second dispatch.
+      require("config.formatting").format(bufnr, "save")
+      return nil
     end,
 
     formatters_by_ft = {
@@ -49,12 +44,12 @@ return {
       bash = { "shfmt" },
       zsh = { "beautysh" },
 
-      javascript = { "dprint", "oxfmt", stop_after_first = true },
-      javascriptreact = { "dprint", "oxfmt", stop_after_first = true },
-      typescript = { "dprint", "oxfmt", stop_after_first = true },
-      typescriptreact = { "dprint", "oxfmt", stop_after_first = true },
-      css = { "dprint", "oxfmt", stop_after_first = true },
-      graphql = { "dprint", "oxfmt", stop_after_first = true },
+      javascript = { "oxfmt" },
+      javascriptreact = { "oxfmt" },
+      typescript = { "oxfmt" },
+      typescriptreact = { "oxfmt" },
+      css = { "oxfmt" },
+      graphql = { "oxfmt" },
 
       yaml = function(bufnr)
         local ft = vim.bo[bufnr].filetype
@@ -68,11 +63,11 @@ return {
       ["eruby.yaml.tmuxinator"] = {},
       ["yaml.docker-compose"] = { "yamlfmt" },
 
-      json = { "dprint", "oxfmt", stop_after_first = true },
-      jsonc = { "dprint", "oxfmt", stop_after_first = true },
-      json5 = { "dprint", "oxfmt", stop_after_first = true },
+      json = { "oxfmt" },
+      jsonc = { "oxfmt" },
+      json5 = { "oxfmt" },
 
-      markdown = { "dprint" },
+      markdown = {},
 
       ruby = function(bufnr)
         if rubocop_project_root(bufnr) then
@@ -84,11 +79,9 @@ return {
     },
 
     formatters = {
-      dprint = {
-        condition = function(self, ctx)
-          return vim.fs.find({ "dprint.json" }, { path = ctx.filename, upward = true })[1] ~= nil
-        end,
-      },
+      project_dprint = function(bufnr)
+        return require("config.formatting").project_formatter(bufnr)
+      end,
       rubocop = function(bufnr)
         local root = rubocop_project_root(bufnr)
 
