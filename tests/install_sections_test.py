@@ -67,6 +67,58 @@ class InstallSectionsTest(unittest.TestCase):
         self.assertIn("interactive", result.stderr.lower())
         self.assertEqual(sorted(p.name for p in (self.home / ".zshrc.d").iterdir()), ["profile.zsh"])
 
+    def test_cancelled_full_install_preserves_saved_profile(self):
+        self.profile("server")
+        self.env.update(DOTFILES_PROFILE="desktop", DOTFILES_ALLOW_NON_ZSH_SHELL="1",
+                        DOTFILES_STOW_CONFIRM_APPLY="0")
+        result = self.run_install()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("DOTFILES_STOW_CONFIRM_APPLY", result.stderr)
+        self.assertEqual((self.home / ".zshrc.d/profile.zsh").read_text(),
+                         'export DOTFILES_PROFILE="server"\n')
+
+    def test_failed_shell_preflight_does_not_create_profile(self):
+        repo = self.make_fixture('require_zsh_login_shell() { return 42 }\n')
+        result = subprocess.run(["zsh", str(repo / "install")],
+                                env={**self.env, "DOTFILES_PROFILE": "desktop"},
+                                stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
+        self.assertFalse((self.home / ".zshrc.d").exists())
+
+    def test_saving_unchanged_profile_preserves_existing_file(self):
+        self.profile("server")
+        path = self.home / ".zshrc.d/profile.zsh"
+        original = '# Local profile\nexport DOTFILES_PROFILE="server"\n'
+        path.write_text(original)
+        result = self.run_install("--section", "profile")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(path.read_text(), original)
+
+    def test_make_skills_obeys_private_section_profile_and_confirmation(self):
+        repo = self.make_fixture('''
+setup_private_submodule() { return 0 }
+setup_herdr() { return 0 }
+''')
+        shutil.copy(ROOT / "Makefile", repo / "Makefile")
+        source = repo / "prv/.agents/skills/example/SKILL.md"
+        source.parent.mkdir(parents=True)
+        source.write_text("fixture\n")
+        (self.home / ".config").mkdir()
+        (self.home / ".var/app").mkdir(parents=True)
+        for profile, confirmation in (("server", "1"), ("desktop", "0"), ("desktop", "1")):
+            with self.subTest(profile=profile, confirmation=confirmation):
+                self.profile(profile)
+                result = subprocess.run(["make", "-s", "-C", str(repo), "skills"],
+                                        env={**self.env, "DOTFILES_STOW_CONFIRM_APPLY": confirmation},
+                                        stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
+                target = self.home / ".agents/skills/example/SKILL.md"
+                if profile == "desktop" and confirmation == "1":
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(target.resolve(), source)
+                else:
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertFalse(target.exists())
+
     def test_failed_profile_script_is_not_accepted(self):
         self.profile("desktop")
         (self.home / ".zshrc.d/profile.zsh").write_text('export DOTFILES_PROFILE=desktop\nfalse\n')

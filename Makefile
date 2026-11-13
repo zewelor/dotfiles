@@ -133,9 +133,5 @@ doctor:
 verify:
 	@"$(HEALTHCHECK)" verify
 
-# Refresh private stow links (including prv/.agents -> ~/.agents)
-skills:
-	@echo "========================================"
-	@echo "Refreshing private stow links from prv/..."
-	@echo "========================================"
-	@stow -v -d prv -t "$(HOME)" .
+# Refresh the private package through the installer's profile and Stow checks.
+skills: install-private

@@ -53,6 +53,13 @@ read the saved profile from `~/.zshrc.d/profile.zsh`; set it first with
 Stow sections retain their dry-run and apply confirmation, and the `ai` section
 requires shared agent commands and skills from the private setup. The `tools`
 section refreshes shell completions after installing tools.
+`make skills` runs the same private section, including its saved desktop profile,
+base-directory prerequisites, submodule update, Stow confirmation and Herdr setup.
+Full installation selects a profile in memory and saves it only after the login
+shell check and Stow confirmation. Cancelling before that point leaves the saved
+profile unchanged. `./install --section profile` deliberately saves the selection
+immediately. A profile change selects future behavior; it does not remove existing
+desktop tools or links, and a saved profile is not proof of a completed install.
 When present, generated `~/.zshrc.d/profile.zsh` and `editor.zsh` must be
 regular local files; other shell includes may be symlinks.
 
