@@ -133,8 +133,8 @@ assert(not configured.lua_ls and not enabled.lua_ls, 'retired LuaLS must not be 
 for _, name in ipairs(declared) do
   assert(configured[name] and enabled[name], name .. ': declared native server was not configured and enabled')
 end
-assert(not configured.ruby_lsp and not enabled.ruby_lsp,
-  'Ruby LSP must not start when mise cannot resolve its executable')
+assert(configured.ruby_lsp and enabled.ruby_lsp and type(configured.ruby_lsp.cmd) == 'function',
+  'Ruby LSP must defer mise resolution until a project client starts')
 for name in pairs(enabled) do
   local found = name == 'ruby_lsp'
   for _, declared_name in ipairs(declared) do
@@ -202,7 +202,7 @@ for _, name in ipairs(declared) do
 end
 """, "desktop")
 
-    def test_desktop_without_mise_does_not_start_ruby_lsp(self):
+    def test_desktop_without_mise_reports_ruby_client_start_failure(self):
         self.run_lua("""
 local defaults = {
   lua_ls = { 'lua-language-server' }, helm_ls = { 'helm_ls', 'serve' },
@@ -224,8 +224,11 @@ lsp.config()
 for _, name in ipairs(require('config.tools').servers) do
   assert(configured[name] and enabled[name], name .. ': declared server was skipped without Ruby mise')
 end
-assert(not configured.ruby_lsp)
-assert(not enabled.ruby_lsp, 'Ruby LSP must not start without mise')
+assert(configured.ruby_lsp and enabled.ruby_lsp, 'Ruby LSP configuration must remain lazy')
+local ok, err = pcall(configured.ruby_lsp.cmd, {}, { root_dir = '/projects/ruby' })
+assert(not ok, 'Ruby LSP must not start without mise')
+assert(err:find('mise', 1, true) and err:find('/projects/ruby', 1, true),
+  'missing-mise diagnostic must name the project and cause')
 """, "desktop")
 
     @unittest.skipUnless((LAZY / "nvim-treesitter").is_dir(), "Tree-sitter plugin is not installed")

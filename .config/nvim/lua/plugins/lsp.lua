@@ -1,26 +1,8 @@
 -- lsp — Language Server Protocol for intelligent code features
 local profile = require("config.profile")
 
-local servers = require("config.tools").servers
-
--- Resolve the Ruby tool from mise rather than an old Mason wrapper.
--- Some Mason Ruby gem wrappers can keep stale shebangs after a Ruby upgrade, so
--- Ruby tools must resolve through mise instead of falling back to PATH.
-local function mise_bin(tool, opts)
-  opts = opts or {}
-  if not opts.prefer_mise and vim.fn.executable(tool) == 1 then
-    return tool
-  end
-  if not profile.is_desktop() or vim.fn.executable("mise") ~= 1 then
-    return nil
-  end
-
-  local path = vim.fn.system({ "mise", "which", tool }):gsub("%s+$", "")
-  if vim.v.shell_error ~= 0 or path == "" then
-    return nil
-  end
-  return path
-end
+local tools = require("config.tools")
+local servers = tools.servers
 
 -- Build the per-server options shared by the native LSP configurations.
 local function make_server_opts(server)
@@ -28,9 +10,50 @@ local function make_server_opts(server)
   if server == "helm_ls" then
     opts.filetypes = { "helm" }
   elseif server == "ruby_lsp" then
-    local path = mise_bin("ruby-lsp", { prefer_mise = true })
-    if path then
-      opts.cmd = { path }
+    local failed_roots = {}
+    opts.root_dir = function(bufnr, on_dir)
+      local filename = vim.api.nvim_buf_get_name(bufnr)
+      if filename == "" then
+        return
+      end
+      -- Standalone files use their directory rather than Neovim's startup cwd.
+      local root = vim.fs.root(bufnr, { "Gemfile", ".git" }) or vim.fs.dirname(filename)
+      if not failed_roots[root] then
+        on_dir(root)
+      end
+    end
+    opts.cmd = function(dispatchers, config)
+      local root = config.root_dir
+      local ok, rpc = pcall(function()
+        -- With auto-install disabled, mise exec can otherwise use Ruby from PATH.
+        tools.resolve("ruby", root)
+        local path = tools.resolve("ruby-lsp", root)
+        local on_exit = dispatchers.on_exit
+        dispatchers.on_exit = function(code, signal)
+          -- Native Neovim also ignores SIGTERM from an explicit client stop.
+          if code ~= 0 or (signal ~= 0 and signal ~= 15) then
+            failed_roots[root] = true
+            vim.schedule(function()
+              local message = ("Ruby LSP [%s]: exited with code %s, signal %s; see :LspLog"):format(root, code, signal)
+              vim.notify_once(message, vim.log.levels.ERROR)
+            end)
+          end
+          on_exit(code, signal)
+        end
+        -- mise selects Ruby's environment; Ruby LSP must compose its own bundle.
+        return vim.lsp.rpc.start({
+          vim.fn.exepath("mise"), "-C", root, "exec", "--",
+          vim.fn.exepath("env"), "-u", "BUNDLE_GEMFILE", path,
+        }, dispatchers, {
+          cwd = root,
+          env = { MISE_AUTO_INSTALL = "false" },
+        })
+      end)
+      if not ok then
+        failed_roots[root] = true
+        error("Ruby LSP [" .. root .. "]: " .. rpc, 0)
+      end
+      return rpc
     end
   end
   return opts
@@ -61,19 +84,15 @@ return {
         opts.cmd = function(dispatchers, config)
           local root = config.root_dir or vim.fn.getcwd()
           local command = vim.deepcopy(default_command)
-          command[1] = require("config.tools").resolve(command[1], root)
+          command[1] = tools.resolve(command[1], root)
           return vim.lsp.rpc.start(command, dispatchers, { cwd = root })
         end
         vim.lsp.config(server, opts)
         vim.lsp.enable(server)
       end
       for _, server in ipairs(extra_servers) do
-        local opts = make_server_opts(server)
-        -- Only enable if mise resolved the binary (fail-fast)
-        if opts.cmd and vim.fn.executable(opts.cmd[1]) == 1 then
-          vim.lsp.config(server, opts)
-          vim.lsp.enable(server)
-        end
+        vim.lsp.config(server, make_server_opts(server))
+        vim.lsp.enable(server)
       end
     end,
   },

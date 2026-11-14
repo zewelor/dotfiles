@@ -447,10 +447,13 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 **Konfiguracja API**:
 - **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; nie ma mostu `mason-lspconfig` ani automatycznej aktywacji serwerów Masona.
-- **Jawna lista**: `servers` w `lua/config/tools.lua` określa aktywowane serwery. Każdy z nich uruchamia się z binarką rozwiązaną przez mise dla katalogu root projektu; argumenty pochodzą z domyślnej konfiguracji nvim-lspconfig, a proces działa z katalogu root.
+- **Jawna lista**: `servers` w `lua/config/tools.lua` określa podstawowe aktywowane serwery; Ruby LSP jest konfigurowany osobno. Serwery rozwiązują binarkę przez mise dla katalogu root projektu. Podstawowe serwery zachowują argumenty nvim-lspconfig, a procesy działają z katalogu root.
 - **Brak fallbacku**: binarki z Masona lub `PATH` nie zastępują deklaracji mise. Nierozwiązywalne lub niezainstalowane narzędzie kończy się widocznym błędem przy uruchamianiu klienta.
 - **Neovim <0.11**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
-- **Ruby**: `ruby-lsp` jest rozwiązywany przez mise. Klient nie korzysta z wrappera Masona ani fallbacku do `$PATH`. Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`.
+- **Ruby**: przy tworzeniu klienta sprawdzane są binarki `ruby` i `ruby-lsp` przez mise w katalogu jego projektu. Znaleziony launcher startuje przez `mise -C <root> exec`, z cwd ustawionym na ten sam root; mise dobiera Ruby i środowisko osobno dla każdego projektu lub worktree. Automatyczna instalacja mise jest wyłączona, a brak zadeklarowanego runtime lub launchera jest błędem, bez fallbacku do Masona lub `$PATH`.
+- **Root Ruby**: pierwszeństwo ma katalog z `Gemfile`, następnie `.git` (także plik znacznika worktree). Plik Ruby poza repozytorium używa własnego katalogu i konfiguracji mise obowiązującej w tym katalogu. Nienazwany bufor nie uruchamia klienta. Kolejne pliki tego samego root używają istniejącego klienta; katalog i środowisko procesu Neovima pozostają bez zmian.
+- **Bundle Ruby**: Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. Proces serwera nie dziedziczy `BUNDLE_GEMFILE`, również gdy Neovim został uruchomiony wewnątrz innego bundle. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`. Ta polityka nie wyłącza przygotowania composed bundle przez sam Ruby LSP.
+- **Błędy Ruby**: brak mise, niepoprawny wynik resolvera i nieudany start wskazują root projektu. Nieudany root jest pomijany do końca sesji, aby kolejne bufory nie powtarzały tego samego błędu; po poprawieniu zależności uruchom Neovima ponownie. Szczegóły błędów procesu są w `:LspLog`. Błąd jednego root nie wyłącza innych projektów ani pozostałych LSP. Bez mise konfiguracje desktop nadal są rejestrowane, ale start klientów wymaga mise.
 
 **Komendy**:
 - `:Mason` — UI ręcznych dodatków
