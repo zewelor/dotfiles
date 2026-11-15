@@ -20,6 +20,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── fileline.lua # Otwieranie istniejącego pliku przez plik:linia
 │   │   ├── formatting.lua # Wspólna polityka formatowania projektu
 │   │   ├── profile.lua  # Jawny wybór profilu desktop
+│   │   ├── ruby.lua     # Root Ruby, narzędzia projektu i źródła gemów tylko do odczytu
 │   │   └── tools.lua    # Lista LSP i resolver binarek mise
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
@@ -68,12 +69,14 @@ użytkownika docelowego (domyślnie `server`, gdy pliku brak).
 Pełny zestaw deweloperski jest włączany tylko przez
 `DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): natywny LSP,
 `conform.nvim` oraz integracje Copilot i OpenCode wraz z ich skrótami.
-LSP i formatery rozwiązuje mise w kontekście katalogu projektu. Profil `server`
+Aktywowane projektowe Ruby LSP i dprint mają pierwszeństwo; pozostałe narzędzia
+rozwiązuje mise w kontekście katalogu projektu. Profil `server`
 i brak profilu korzystają z uproszczonego trybu, również gdy `mise` jest
 dostępne w `PATH`; sam mise dla pojedynczego CLI nie włącza narzędzi edytora.
 
-Desktop wymaga mise i konfiguracji z zadeklarowanymi narzędziami. Ruby LSP jest
-rozwiązywany przez mise razem z pozostałymi serwerami. Domyślny Oxfmt jest
+Desktop wymaga mise i konfiguracji z zadeklarowanymi narzędziami. Ruby LSP używa projektowego
+pliku wykonywalnego `ruby-lsp`, gdy został udostępniony przez `PATH` przed startem edytora.
+Pozostałe katalogi Ruby zachowują resolver mise; nie jest on fallbackiem po błędzie wrappera. Domyślny Oxfmt jest
 natywną binarką mise, więc utrzymywany zestaw LSP i formatterów nie wymaga
 Node.js ani npm. Projektowy `node_modules/.bin/oxfmt` ma pierwszeństwo i może
 wymagać Node.js zgodnie z konfiguracją projektu. Pluginy kompilowane lokalnie
@@ -322,14 +325,14 @@ opencode --port
 - **Cel**: Formatowanie plików przez zewnętrzne narzędzia
 - **Zapis i `<Space>cf`** korzystają z jednej polityki. Dla YAML (również obecnych podtypów), JS/TS/React, JSON/JSONC/JSON5, CSS, GraphQL i Markdown najbliższa konfiguracja dprint decyduje, czy plugin obsługuje plik. Samo istnienie konfiguracji nie wystarcza. Wspierane nazwy to `dprint.json`, `dprint.jsonc`, `.dprint.json`, `.dprint.jsonc` i warianty `.config/dprint.json(c)`.
 - **Dprint 0.64.3+**: wybrana binarka jest sprawdzana przed użyciem. `resolved-config --file` rozpoznaje obsługę pliku, a `fmt --stdin` z pełną ścieżką respektuje `includes`, `excludes` i `.gitignore`. Wykluczone pliki pozostają bez zmian. Brak pluginu, również przez negatywne `associations`, pozwala użyć formattera domyślnego; Markdown bez pluginu jest pomijany.
-- **Wybór binarki**: dla dprint najpierw używane jest lokalne `node_modules/.bin/dprint`, potem efektywna deklaracja mise w katalogu bufora (także globalna). Dla Oxfmt pierwszeństwo ma projektowe `node_modules/.bin/oxfmt`, potem natywna binarka mise. Pozostałe utrzymywane binarki są rozwiązywane przez mise w katalogu projektu. Niezainstalowana lub niejednoznaczna deklaracja mise oraz brak resolvera są błędem, bez przejścia na inną wersję. Nie walidujemy manifestów ani lockfile npm. Zapytania mise pomijają odziedziczone `MISE_DPRINT_VERSION`, zachowując resztę środowiska i reguły zaufania. Narzędzia nie są instalowane przy formatowaniu.
+- **Wybór binarki**: dprint z `PATH`, którego ścieżka leży wewnątrz bieżącego projektu, ma pierwszeństwo. Aktywacja środowiska projektu (np. `source dockerized.sh`) należy do użytkownika; edytor nie wykrywa ani nie wywołuje tego skryptu. Samo istnienie wrappera na dysku nie włącza integracji. Wrapper innego projektu jest pomijany. Dalej wybierane jest lokalne `node_modules/.bin/dprint`, a potem efektywna deklaracja mise w katalogu bufora (także globalna). Błąd wybranego narzędzia nie uruchamia innej wersji. Dla Oxfmt pierwszeństwo ma projektowe `node_modules/.bin/oxfmt`, potem natywna binarka mise. Pozostałe utrzymywane binarki są rozwiązywane przez mise w katalogu projektu. Zapytania mise pomijają odziedziczone `MISE_DPRINT_VERSION`, zachowując resztę środowiska i reguły zaufania. Narzędzia nie są instalowane przy formatowaniu.
 - **Oxfmt**: projektowa binarka zachowuje Conformowy stdin i nazwę pliku. Domyślna natywna binarka mise nie obsługuje stdin, więc Conform formatuje tymczasowy plik obok bufora i odczytuje zmieniony wynik. Tymczasowa nazwa może zmienić dopasowanie konfiguracji lub reguł ignorowania zależnych od nazwy pliku; to ograniczenie dotyczy natywnej ścieżki.
 - **Domyślne formatery**: Lua przez `stylua`, Python przez `ruff_format`, TOML przez `taplo`, Go przez `goimports`, a następnie `gofumpt`, sh/bash oraz Zsh przez `shfmt` (dla Zsh jawnie `-ln zsh`, wymagane >= 3.13.1), YAML przez `yamlfmt`, JS/TS/JSON/CSS/GraphQL przez natywne `oxfmt`.
 - **Go**: Conform wykonuje `goimports`, po nim `gofumpt`, z binarkami rozwiązanymi przez mise w katalogu bufora. Procesy formatterów współdzielą timeout Conform 2000 ms; osobne zapytania `mise which` mają limit 1000 ms każde. Błędy i timeout są widoczne; formatowanie nie przechodzi na gopls.
 - **Zsh**: sprawdzony shfmt 3.13.1 nie obsługuje całej składni Zsh, np. `${~pattern}`. Błąd parsera jest widoczny i nie zmienia bufora; nie przechodzimy automatycznie na inny formatter. Publiczne pliki shella przeszły kontrolę składni po formatowaniu; nie wykonujemy masowego reformatowania repozytorium.
 - **Wyłączenia**: Dockerfile bez autoformatowania przy zapisie; `eruby.yaml.tmuxinator` bez formatowania również ręcznie. Nienazwany bufor z grupy projektowej wymaga najpierw nadania nazwy.
-- **Błędy i czas**: dla projektowego dprint jeden synchroniczny budżet 2000 ms obejmuje wybór i formatowanie. Domyślne formatery mają timeout Conform 2000 ms, a każde osobne rozwiązywanie przez mise limit 1000 ms. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
-- **Ruby**: dla projektów z `.rubocop.yml` i Gemfile Conform uruchamia repo-local `bin/rubocop`, jeśli istnieje; w przeciwnym razie `bundle exec rubocop`. Cache RuboCopa trafia do `tmp/rubocop`. Poza tym kontraktem zapis i `<Space>cf` nie formatują Ruby, również przez LSP; rubyfmt pozostaje ręcznym dodatkiem opisanym poniżej.
+- **Błędy i czas**: dla aktywowanego projektowego dprint jeden synchroniczny budżet 10000 ms obejmuje sprawdzenie wersji, konfigurację i formatowanie. Pozostałe projektowe dprint zachowuje budżet 2000 ms; domyślne formatery mają timeout Conform 2000 ms, a każde osobne rozwiązywanie przez mise limit 1000 ms. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
+- **Ruby**: projekty z `.rubocop.yml` i Gemfile korzystają z własnych reguł RuboCop. Aktywowany projektowy `ruby-lsp` obsługuje formatowanie przez gotowego klienta LSP; w pozostałych projektach Conform uruchamia repo-local `bin/rubocop`, jeśli istnieje, albo `bundle exec rubocop`, z cache w `tmp/rubocop`. Jeżeli odziedziczony Ruby lub Bundler należy do innego projektu z Gemfile, formatowanie zgłasza błąd zamiast uruchamiać jego wrapper. Poza tym kontraktem zapis i `<Space>cf` pomijają Ruby; rubyfmt pozostaje ręcznym dodatkiem opisanym poniżej.
 - **Diagnostyka**: `:FormatInfo` pokazuje bieżącą decyzję, źródło binarki, wersję, konfigurację i cwd, bez formatowania. `:ConformInfo` pozostaje informacją o dostępności domyślnych narzędzi i logach; nie odtwarza ostatniego wyboru projektowego. Brak domyślnego formattera nadal nie pokazuje popupu.
 - **Keymaps**:
   - `<Space>cf` — Format buffer
@@ -387,7 +390,7 @@ narzędziem mise poza tą dwunastką.
 | dprint | Projektowe formatowanie, gdy projekt nie deklaruje własnej binarki |
 | yamlfmt | Domyślne formatowanie YAML |
 
-Konfiguracja zawiera też `gem:ruby-lsp`, używany przez serwer Ruby. Projektowy
+Konfiguracja zawiera też `gem:ruby-lsp` dla katalogów Ruby bez aktywowanego projektowego LSP. Projektowy
 RuboCop należy do Bundlera i korzysta z Gemfile/lockfile oraz procedury
 aktualizacji projektu. Projektowe `node_modules`, lokalny dprint, mise i pluginy
 dprint pozostają pod kontrolą projektu; globalne utrzymanie nie przegląda repozytoriów.
@@ -475,17 +478,36 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `taplo` — TOML (lekki skompilowany LSP + formatter)
 - `marksman` — Markdown
 - `gopls` — Go
-- `ruby_lsp` — Ruby (via `mise` + `gem:ruby-lsp`)
+- `ruby_lsp` — Ruby (aktywowany projektowy `ruby-lsp`; poza nim mise)
 
 **Konfiguracja API**:
 - **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; nie ma mostu `mason-lspconfig` ani automatycznej aktywacji serwerów Masona.
 - **Jawna lista**: `servers` w `lua/config/tools.lua` określa podstawowe aktywowane serwery; Ruby LSP jest konfigurowany osobno. Serwery rozwiązują binarkę przez mise dla katalogu root projektu. Podstawowe serwery zachowują argumenty nvim-lspconfig, a procesy działają z katalogu root.
-- **Brak fallbacku**: binarki z Masona lub `PATH` nie zastępują deklaracji mise. Nierozwiązywalne lub niezainstalowane narzędzie kończy się widocznym błędem przy uruchamianiu klienta.
+- **Brak fallbacku**: binarki z Masona lub dowolnego systemowego `PATH` nie zastępują deklaracji mise; wyjątkiem jest jawnie aktywowany projektowy `ruby-lsp` opisany poniżej. Nierozwiązywalne lub niezainstalowane narzędzie kończy się widocznym błędem przy uruchamianiu klienta.
 - **Neovim <0.11**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
-- **Ruby**: przy tworzeniu klienta sprawdzane są binarki `ruby` i `ruby-lsp` przez mise w katalogu jego projektu. Znaleziony launcher startuje przez `mise -C <root> exec`, z cwd ustawionym na ten sam root; mise dobiera Ruby i środowisko osobno dla każdego projektu lub worktree. Automatyczna instalacja mise jest wyłączona, a brak zadeklarowanego runtime lub launchera jest błędem, bez fallbacku do Masona lub `$PATH`.
+- **Projektowy Ruby LSP**: przed startem Neovima aktywuj środowisko projektu, np. `source dockerized.sh`. Edytor wybiera `ruby-lsp` z `PATH` tylko wtedy, gdy ścieżka pliku wykonywalnego należy do root otwartego projektu. Startuje bez dodatkowych argumentów, z cwd i `PWD` ustawionymi na root; wrapper odpowiada za runtime, bundle, transport stdio i zakończenie procesu. Sam plik `dockerized.sh` nie włącza integracji. Neovim czeka do 2000 ms na zwykłe zakończenie LSP. Zmiana środowiska w terminalu nie zmienia już uruchomionego Neovima; dla innego środowiska otwórz nową sesję.
+- **Pozostałe katalogi Ruby**: bez aktywowanego projektowego `ruby-lsp` binarki `ruby` i `ruby-lsp` są sprawdzane przez mise w root i uruchamiane przez `mise -C <root> exec`, z wyłączoną automatyczną instalacją. Błąd aktywowanego wrappera nie przechodzi na mise. Znany problem launchera gema powiązanego z innym Ruby minor pozostaje poza zakresem tej integracji.
 - **Root Ruby**: pierwszeństwo ma katalog z `Gemfile`, następnie `.git` (także plik znacznika worktree). Plik Ruby poza repozytorium używa własnego katalogu i konfiguracji mise obowiązującej w tym katalogu. Nienazwany bufor nie uruchamia klienta. Kolejne pliki tego samego root używają istniejącego klienta; katalog i środowisko procesu Neovima pozostają bez zmian.
-- **Bundle Ruby**: Ruby LSP startuje bez `bundle exec`, bo sam używa composed bundle i nie wymaga `ruby-lsp` w Gemfile projektu. Proces serwera nie dziedziczy `BUNDLE_GEMFILE`, również gdy Neovim został uruchomiony wewnątrz innego bundle. W projektach z RuboCopem Ruby LSP aktywuje RuboCop addon, więc nie startujemy osobnego klienta `rubocop`. Ta polityka nie wyłącza przygotowania composed bundle przez sam Ruby LSP.
-- **Błędy Ruby**: brak mise, niepoprawny wynik resolvera i nieudany start wskazują root projektu. Nieudany root jest pomijany do końca sesji, aby kolejne bufory nie powtarzały tego samego błędu; po poprawieniu zależności uruchom Neovima ponownie. Szczegóły błędów procesu są w `:LspLog`. Błąd jednego root nie wyłącza innych projektów ani pozostałych LSP. Bez mise konfiguracje desktop nadal są rejestrowane, ale start klientów wymaga mise.
+- **Bundle Ruby**: w Dockerze właścicielem `ruby-lsp` jest developerski bundle projektu. Wrapper uruchamia `bundle exec ruby-lsp` z jawnym Gemfile, wyłączonym auto-install i zamrożonym lockfile. Gemy dev należą do projektu: `.bundle/gems` jest dostępne pod identyczną ścieżką bezwzględną na hoście i w kontenerze dzięki mountowi checkoutu. Cache narzędzi trafia do `.dev/cache`. Oba katalogi są ignorowane przez Git i build obrazu; usunięcie checkoutu usuwa te dane. `gd` otwiera ich źródła tylko do odczytu; taki bufor nie uruchamia kolejnego LSP ani formatowania. Katalogi bez aktywowanego projektowego LSP zachowują start mise bez `BUNDLE_GEMFILE` i composed bundle Ruby LSP.
+- **Formatowanie przez projektowy Ruby LSP**: projektowe `.rubocop.yml` i Gemfile wybierają wyłącznie gotowego klienta `ruby_lsp` danego bufora. Brak klienta z obsługą formatowania jest widocznym błędem, bez uruchamiania innego RuboCopa. Projekt bez konfiguracji RuboCop pomija automatyczne formatowanie. Dodatek RuboCop pozostaje wewnątrz Ruby LSP; nie uruchamiamy drugiego klienta LSP.
+- **Błędy Ruby**: brak mise, niepoprawny wynik resolvera i nieudany start wskazują root projektu. Nieudany root jest pomijany do końca sesji, aby kolejne bufory nie powtarzały tego samego błędu; po poprawieniu zależności uruchom Neovima ponownie. Szczegóły błędów procesu są w `:LspLog`. Błąd jednego root nie wyłącza innych projektów ani pozostałych LSP. Bez mise konfiguracje desktop nadal są rejestrowane; start hostowych klientów wymaga mise, a aktywowany projektowy Ruby LSP korzysta z własnego pliku wykonywalnego.
+
+Opcjonalny odbiór na przygotowanych, jednorazowych kopiach projektów w katalogu
+tymczasowym, z ich własnymi `.bundle/gems` (bez buildów ani instalacji podczas testu):
+
+```bash
+python3 tests/nvim_docker_acceptance.py --ruby-base /tmp/odbior/ruby_base \
+  --r3x /tmp/odbior/r3x --output /tmp/odbior/wynik.json
+```
+
+W kopiach trzeba wcześniej wykonać `./dockerized.sh setup`. Po przeniesieniu checkoutu
+lub zmianie platformy/Ruby przygotuj środowisko ponownie; natywne gemy i nazwa obrazu
+Compose mogą zależeć od poprzedniego środowiska. Osobisty cache nie jest wymagany.
+Opcja `--reverse` odwraca kolejność projektów. Test jawnie przełącza projektowy `PATH` przy otwieraniu kopii i korzysta z zainstalowanych pluginów,
+blokuje hostowe narzędzia Ruby, sprawdza diagnostykę, formatowanie niezapisanego bufora,
+definicje i zwykłe zamknięcie kontenerów. Usuwa własne pliki testowe; nie wymusza
+usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej inspekcji.
+Ścieżki oryginalnych projektów i ich cache są odrzucane.
 
 **Komendy**:
 - `:Mason` — UI ręcznych dodatków

@@ -12,6 +12,22 @@ M.servers = {
   "gopls",    -- Go LSP (Conform owns formatting)
 }
 
+-- Only explicitly activated executables from this project override mise.
+function M.project_executable(binary, root)
+  if not root then
+    return nil
+  end
+  local path = vim.fn.exepath(binary)
+  local owner = path ~= "" and vim.fs.root(vim.fs.dirname(path), { "Gemfile", ".git" }) or nil
+  local prefix = vim.fs.normalize(root) .. "/"
+  if path ~= "" and vim.fs.normalize(path):sub(1, #prefix) == prefix then
+    if not owner or vim.fs.normalize(owner) == vim.fs.normalize(root) then
+      return path, owner
+    end
+  end
+  return nil, owner
+end
+
 function M.resolve(binary, dirname)
   local mise = vim.fn.exepath("mise")
   assert(mise ~= "", "mise is required to resolve " .. binary)

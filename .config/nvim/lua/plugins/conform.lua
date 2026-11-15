@@ -1,15 +1,7 @@
 -- conform.nvim — formatting engine (format-on-save)
 local profile = require("config.profile")
 
-local function rubocop_project_root(bufnr)
-  local root = vim.fs.root(bufnr, ".rubocop.yml")
-
-  if root and vim.fn.filereadable(root .. "/Gemfile") == 1 then
-    return root
-  end
-
-  return nil
-end
+local ruby = require("config.ruby")
 
 return {
   "stevearc/conform.nvim",
@@ -69,7 +61,10 @@ return {
       markdown = {},
 
       ruby = function(bufnr)
-        if rubocop_project_root(bufnr) then
+        if ruby.is_gem(vim.api.nvim_buf_get_name(bufnr)) or ruby.project_lsp(ruby.root(bufnr)) then
+          return {} -- An activated project Ruby LSP owns formatting.
+        end
+        if ruby.rubocop_root(bufnr) then
           return { "rubocop" }
         end
 
@@ -82,10 +77,19 @@ return {
         return require("config.formatting").project_formatter(bufnr)
       end,
       rubocop = function(bufnr)
-        local root = rubocop_project_root(bufnr)
+        local root = ruby.rubocop_root(bufnr)
 
         return {
           command = function()
+            -- A binstub's env-ruby shebang also inherits the activated PATH.
+            for _, binary in ipairs({ "ruby", "bundle" }) do
+              local _, owner = require("config.tools").project_executable(binary, root)
+              if owner and vim.fn.filereadable(owner .. "/Gemfile") == 1
+                  and vim.fs.normalize(owner) ~= vim.fs.normalize(root) then
+                error("Ruby formatting [" .. root .. "]: " .. binary
+                  .. " belongs to another project: " .. owner .. "; activate this project's environment", 0)
+              end
+            end
             local bin = root and (root .. "/bin/rubocop") or nil
 
             if bin and vim.fn.executable(bin) == 1 then

@@ -11,16 +11,17 @@ local project_types = {
   json = true, jsonc = true, json5 = true, css = true, graphql = true, markdown = true,
 }
 
-local function remaining(deadline)
+local function remaining(deadline, budget_ms)
   local ms = math.floor((deadline - vim.uv.hrtime()) / 1e6)
   if ms <= 0 then
-    error("Formatting exceeded the 2000 ms budget", 0)
+    error("Formatting exceeded the " .. (budget_ms or 2000) .. " ms budget", 0)
   end
   return ms
 end
 
-local function run(argv, cwd, deadline, mise)
-  local opts = { cwd = cwd, text = true, timeout = remaining(deadline) }
+local function run(argv, cwd, deadline, mise, budget_ms)
+  budget_ms = budget_ms or 2000
+  local opts = { cwd = cwd, text = true, timeout = remaining(deadline, budget_ms) }
   if mise then
     -- An inherited override must not hide the directory's configured request.
     opts.env = vim.fn.environ()
@@ -29,13 +30,13 @@ local function run(argv, cwd, deadline, mise)
   end
   local result = vim.system(argv, opts):wait()
   if result.code == 124 then
-    error("Formatting timeout (2000 ms total budget): " .. argv[1], 0)
+    error("Formatting timeout (" .. budget_ms .. " ms total budget): " .. argv[1], 0)
   end
   if result.code ~= 0 then
     error(string.format("%s failed (exit %s): %s", argv[1], result.code,
       vim.trim(result.stderr or "")), 0)
   end
-  remaining(deadline)
+  remaining(deadline, budget_ms)
   return vim.trim(result.stdout or "")
 end
 
@@ -85,34 +86,66 @@ local function resolve(bufnr, trigger, deadline)
     plan.kind, plan.reason = "skip", "Project formatting requires the desktop profile"
   elseif ft == "eruby.yaml.tmuxinator" or (trigger == "save" and ft == "dockerfile") then
     plan.kind, plan.reason = "skip", "This filetype is excluded from formatting"
-  elseif ft == "ruby" and #require("conform").list_formatters_for_buffer(bufnr) == 0 then
-    plan.kind, plan.reason = "skip", "No project RuboCop; rubyfmt is available only through explicit formatting"
+  elseif ft == "ruby" then
+    local ruby = require("config.ruby")
+    local root = ruby.root(bufnr)
+    if ruby.is_gem(vim.api.nvim_buf_get_name(bufnr)) then
+      plan.kind, plan.reason = "skip", "Gem sources are read-only"
+    elseif ruby.project_lsp(root) then
+      if not ruby.rubocop_root(bufnr) then
+        plan.kind, plan.reason = "skip", "No project RuboCop configuration"
+      else
+        for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, name = "ruby_lsp" })) do
+          if client.initialized and client:supports_method("textDocument/formatting", bufnr) then
+            plan.kind, plan.client_id, plan.cwd = "ruby_lsp", client.id, root
+            break
+          end
+        end
+        if plan.kind ~= "ruby_lsp" then
+          error("Ruby LSP [" .. root .. "]: no ready client supports formatting; see :LspLog", 0)
+        end
+      end
+    elseif #require("conform").list_formatters_for_buffer(bufnr) == 0 then
+      plan.kind, plan.reason = "skip", "No project RuboCop; rubyfmt is available only through explicit formatting"
+    end
   elseif project_types[ft] then
     local filename = vim.api.nvim_buf_get_name(bufnr)
     if filename == "" then
       plan.kind, plan.reason = "skip", "Name the buffer before project formatting"
-      return plan
+      return plan, deadline
     end
     local dirname = vim.fs.dirname(filename)
     local config = vim.fs.find(config_names, { path = dirname, upward = true, type = "file", limit = 1 })[1]
     if config then
-      plan.config = config
-      plan.cwd = vim.fs.dirname(config)
+      plan.config = vim.fn.fnamemodify(config, ":p")
+      plan.filename = vim.fn.fnamemodify(filename, ":p")
+      plan.cwd = vim.fs.dirname(plan.config)
       if vim.fs.basename(plan.cwd) == ".config" then
         plan.cwd = vim.fs.dirname(plan.cwd)
       end
-      plan.command, plan.source = binary_for(dirname, deadline)
+      local root = vim.fs.root(dirname, { "Gemfile", ".git" }) or plan.cwd
+      local project_bin = require("config.tools").project_executable("dprint", root)
+      if project_bin then
+        plan.command, plan.source = project_bin, "project_path"
+        plan.cwd, plan.budget_ms = root, 10000
+        deadline = deadline + 8000 * 1e6
+      else
+        plan.command, plan.source = binary_for(dirname, deadline)
+        plan.budget_ms = 2000
+      end
       if vim.fn.executable(plan.command) ~= 1 then
         error("dprint is not executable: " .. plan.command, 0)
       end
-      local output = run({ plan.command, "--version" }, plan.cwd, deadline)
+      local output = run({ plan.command, "--version" }, plan.cwd, deadline, false, plan.budget_ms)
       local version = vim.version.parse(output:match("^dprint%s+(%S+)") or "")
       if not version or not vim.version.ge(version, require("config.tools").minimum_versions.dprint) then
         error("dprint >= 0.64.3 is required; selected " .. plan.command .. " reported: " .. output, 0)
       end
       plan.version = tostring(version)
-      local plugins = json(run({ plan.command, "resolved-config", "--config", config, "--file", filename },
-        plan.cwd, deadline), "{", "from dprint")
+      local resolved_config = run(
+        { plan.command, "resolved-config", "--config", plan.config, "--file", plan.filename },
+        plan.cwd, deadline, false, plan.budget_ms)
+      local plugins = json(resolved_config, "{", "from dprint")
       if next(plugins) ~= nil then
         plan.kind = "project"
       else
@@ -123,7 +156,7 @@ local function resolve(bufnr, trigger, deadline)
       plan.kind, plan.reason = "skip", "No project dprint plugin formats this Markdown file"
     end
   end
-  return plan
+  return plan, deadline
 end
 
 local function operation(bufnr, trigger, dispatch)
@@ -138,12 +171,15 @@ local function operation(bufnr, trigger, dispatch)
   busy = true
   local ok, result = xpcall(function()
     local deadline = vim.uv.hrtime() + 2000 * 1e6
-    local plan = resolve(bufnr, trigger, deadline)
+    local plan
+    plan, deadline = resolve(bufnr, trigger, deadline)
     if dispatch and plan.kind ~= "skip" then
       active = plan
-      local opts = { bufnr = bufnr, async = false, timeout_ms = remaining(deadline), lsp_format = "fallback" }
+      local opts = { bufnr = bufnr, async = false, timeout_ms = remaining(deadline, plan.budget_ms), lsp_format = "fallback" }
       if plan.kind == "project" then
         opts.formatters, opts.lsp_format = { "project_dprint" }, "never"
+      elseif plan.kind == "ruby_lsp" then
+        opts.formatters, opts.lsp_format, opts.id = {}, "fallback", plan.client_id
       elseif vim.bo[bufnr].filetype == "go" then
         opts.lsp_format = "never"
       end
@@ -178,7 +214,7 @@ function M.project_formatter(bufnr)
   return {
     inherit = "dprint",
     command = plan.command,
-    args = { "fmt", "--config", plan.config, "--stdin", "$FILENAME" },
+    args = { "fmt", "--config", plan.config, "--stdin", plan.filename },
     cwd = function() return plan.cwd end,
   }
 end

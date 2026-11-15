@@ -63,6 +63,7 @@ if Path(sys.argv[0]).parent == base / 'bin':
     write_log({'fallback': True})
     sys.exit(31)
 
+documents = {}
 for line in sys.stdin.buffer:
     if not line.startswith(b'Content-Length:'):
         continue
@@ -77,7 +78,19 @@ for line in sys.stdin.buffer:
             'bundle_gemfile': os.environ.get('BUNDLE_GEMFILE'),
             'root': request['params']['rootUri'],
         })
-        result = {'capabilities': {'textDocumentSync': 1}}
+        result = {'capabilities': {'textDocumentSync': 1, 'documentFormattingProvider': True}}
+    elif method == 'textDocument/didOpen':
+        doc = request['params']['textDocument']
+        documents[doc['uri']] = doc['text']
+        continue
+    elif method == 'textDocument/didChange':
+        documents[request['params']['textDocument']['uri']] = request['params']['contentChanges'][0]['text']
+        continue
+    elif method == 'textDocument/formatting':
+        uri = request['params']['textDocument']['uri']
+        write_log({'format': True, 'uri': uri, 'text': documents.get(uri), 'cwd': os.getcwd()})
+        result = [{'range': {'start': {'line': 0, 'character': 0}, 'end': {'line': 0, 'character': 100}},
+                   'newText': 'formatted by project LSP'}]
     elif method == 'exit':
         break
     else:
@@ -109,6 +122,9 @@ end
 for _, spec in ipairs(require('plugins.lsp')) do
   if spec[1] == 'neovim/nvim-lspconfig' and spec.cond() then spec.config() end
 end
+local function activate(name)
+  vim.env.PATH = base .. '/' .. name .. '/.dev/bin:' .. base .. '/bin'
+end
 local function open(path)
   vim.cmd.edit(vim.fn.fnameescape(path))
   vim.bo.filetype = 'ruby'
@@ -129,7 +145,7 @@ end
 class RubyLspStartupTest(unittest.TestCase):
     setUpClass = classmethod(nvim_test.NeovimTest.setUpClass.__func__)
 
-    def run_case(self, code, *, modes=None, include_mise=True, profile='desktop'):
+    def run_case(self, code, *, modes=None, include_mise=True, profile='desktop', project_roots=()):
         with tempfile.TemporaryDirectory(prefix='dotfiles-ruby-lsp-') as directory:
             base = Path(directory)
             for name in ('bin', 'foreign', 'project a', 'worktree', 'standalone'):
@@ -143,11 +159,36 @@ class RubyLspStartupTest(unittest.TestCase):
                     (path / filename).write_text('puts :fixture\n')
             (base / 'project a/Gemfile').touch()
             (base / 'worktree/.git').write_text('gitdir: /fixture/repository/.git/worktrees/test\n')
+            for name in project_roots:
+                project = base / name
+                (project / 'Gemfile').touch()
+                runner = project / '.dev/bin/ruby-lsp'
+                runner.parent.mkdir(parents=True)
+                runner.write_text('#!' + sys.executable + '\n' + r'''
+import json, os
+from pathlib import Path
+import sys
+root = Path(__file__).parents[2]
+assert sys.argv[1:] == []
+assert Path.cwd() == root
+assert os.environ['PWD'] == str(root)
+with open(Path(os.environ['LSP_TEST_DIR']) / 'calls.jsonl', 'a') as stream:
+    stream.write(json.dumps({'transport': 'project_path', 'cwd': str(root)}) + '\n')
+if (root / 'mode').exists() and (root / 'mode').read_text() == 'exit':
+    print('fixture Docker image is missing; run setup', file=sys.stderr)
+    sys.exit(23)
+env = dict(os.environ, TEST_RUBY='project-' + root.name, TEST_BUNDLER='project-bundler-' + root.name,
+           BUNDLE_GEMFILE=str(root / 'Gemfile'))
+os.execve(str(root / 'ruby-lsp'), [str(root / 'ruby-lsp')], env)
+''')
+                runner.chmod(0o755)
             for root, mode in (modes or {}).items():
                 (base / root / 'mode').write_text(mode)
             if include_mise:
                 (base / 'bin/mise').write_text(FIXTURE)
                 (base / 'bin/mise').chmod(0o755)
+            (base / 'bin/bundle').write_text(FIXTURE)
+            (base / 'bin/bundle').chmod(0o755)
             (base / 'bin/env').symlink_to(shutil.which('env'))
             env = {k: v for k, v in os.environ.items()
                    if not k.startswith(('MISE_', 'BUNDLE_', 'RUBY', 'GEM_', 'XDG_'))}
@@ -176,6 +217,136 @@ vim.cmd('qa!')
                 if (base / 'notifications.json').exists() else []
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             return calls, notes
+
+    def test_project_roots_start_without_mise_and_reuse_their_clients(self):
+        calls, notes = self.run_case(r'''
+local cwd = vim.fn.getcwd()
+activate('project a')
+local a = open(base .. '/project a/one.rb')
+assert(ready(a), 'Docker LSP for first root did not start')
+local first = vim.lsp.get_clients({bufnr = a})[1]
+activate('worktree')
+local b = open(base .. '/worktree/one.rb')
+assert(ready(b), 'Docker LSP for second root did not start')
+assert(vim.lsp.get_clients({bufnr = b})[1].id ~= first.id)
+activate('project a')
+local another = open(base .. '/project a/two.rb')
+assert(ready(another))
+assert(vim.lsp.get_clients({bufnr = another})[1].id == first.id)
+assert(vim.fn.getcwd() == cwd)
+''', project_roots=('project a', 'worktree'), include_mise=False)
+        starts = [call for call in calls if 'program' in call]
+        self.assertEqual(len(starts), 2)
+        self.assertTrue(all(call['ruby'].startswith('project-') for call in starts))
+        self.assertTrue(all(call['bundle_gemfile'] == str(Path(call['cwd']) / 'Gemfile') for call in starts))
+        self.assertFalse(notes)
+
+    def test_failed_project_wrapper_never_uses_mise_or_retries_other_buffers(self):
+        calls, notes = self.run_case(r'''
+activate('project a')
+local a = open(base .. '/project a/one.rb')
+assert(vim.wait(3000, function() return #notifications > 0 end, 10))
+open(base .. '/project a/two.rb')
+vim.wait(100)
+activate('worktree')
+local b = open(base .. '/worktree/one.rb')
+assert(ready(b))
+''', project_roots=('project a', 'worktree'), modes={'project a': 'exit'})
+        attempts = [call for call in calls if call.get('transport') == 'project_path']
+        self.assertEqual(len(attempts), 2)
+        root_notes = [note for note in notes if 'project a' in note]
+        self.assertEqual(len(root_notes), 1, notes)
+        self.assertFalse(any(call.get('fallback') for call in calls))
+
+    def test_activated_project_formatting_uses_the_ready_project_client_for_unsaved_text(self):
+        conform = Path.home() / '.local/share/nvim/lazy/conform.nvim'
+        if not conform.is_dir():
+            self.skipTest('installed Conform source required')
+        calls, notes = self.run_case('vim.opt.rtp:append(' + json.dumps(str(conform)) + ')' + r'''
+vim.fn.writefile({'AllCops: {}'}, base .. '/project a/.rubocop.yml')
+local spec = require('plugins.conform')
+require('conform').setup(spec.opts)
+activate('project a')
+local buf = open(base .. '/project a/one.rb')
+assert(ready(buf))
+vim.api.nvim_buf_set_lines(buf, 0, -1, false, {"puts 'unsaved buffer'"})
+local plan = require('config.formatting').format(buf, 'manual')
+assert(plan and plan.kind == 'ruby_lsp', 'container LSP must own formatting')
+assert(vim.api.nvim_buf_get_lines(buf, 0, 1, false)[1] == 'formatted by project LSP')
+''', project_roots=('project a',))
+        formatted = [call for call in calls if call.get('format')]
+        self.assertEqual(len(formatted), 1)
+        self.assertIn('unsaved buffer', formatted[0]['text'])
+        self.assertFalse(any(call.get('fallback') for call in calls), calls)
+        self.assertFalse(notes)
+
+    def test_activated_project_formatting_reports_missing_lsp_and_skips_unconfigured_projects(self):
+        conform = Path.home() / '.local/share/nvim/lazy/conform.nvim'
+        if not conform.is_dir():
+            self.skipTest('installed Conform source required')
+        calls, notes = self.run_case('vim.opt.rtp:append(' + json.dumps(str(conform)) + ')' + r'''
+require('conform').setup(require('plugins.conform').opts)
+activate('project a')
+local buf = open(base .. '/project a/one.rb')
+assert(ready(buf))
+local formatting = require('config.formatting')
+assert(formatting.format(buf, 'save').kind == 'skip', 'no project formatter must stay unformatted')
+vim.fn.writefile({'AllCops: {}'}, base .. '/project a/.rubocop.yml')
+local get_clients = vim.lsp.get_clients
+vim.lsp.get_clients = function() return {} end
+assert(formatting.format(buf, 'manual') == nil)
+vim.lsp.get_clients = get_clients
+assert(#notifications == 1 and notifications[1]:find('no ready client', 1, true))
+''', project_roots=('project a',))
+        self.assertFalse(any(call.get('format') or call.get('fallback') for call in calls), calls)
+        self.assertEqual(len(notes), 1)
+
+    def test_project_gem_sources_are_readonly_and_start_no_new_client(self):
+        calls, notes = self.run_case(r'''
+for _, root in ipairs({'project a', 'worktree', 'relocated project'}) do
+  local gem_root = base .. '/' .. root .. '/.bundle/gems/ruby/4.0.0/gems/example'
+  local path = gem_root .. '/lib/example.rb'
+  vim.fn.mkdir(vim.fs.dirname(path), 'p')
+  vim.fn.writefile({'class Example; end'}, path)
+  vim.fn.writefile({'source "https://rubygems.org"'}, gem_root .. '/Gemfile')
+  local gem = open(path)
+  vim.wait(80)
+  assert(vim.bo[gem].readonly and not vim.bo[gem].modifiable, 'project gem source must be readonly')
+  assert(#vim.lsp.get_clients({bufnr = gem}) == 0, 'gem must not start a host LSP')
+  assert(require('config.formatting').format(gem, 'save').kind == 'skip')
+end
+''')
+        self.assertFalse(calls)
+        self.assertFalse(notes)
+
+    def test_bundle_sibling_sources_stay_editable_and_use_project_lsp(self):
+        calls, notes = self.run_case(r'''
+activate('project a')
+for _, suffix in ipairs({'/.bundle/gems-other/example.rb', '/lib/example.rb'}) do
+  local path = base .. '/project a' .. suffix
+  vim.fn.mkdir(vim.fs.dirname(path), 'p')
+  vim.fn.writefile({'puts :editable'}, path)
+  local buf = open(path)
+  assert(not vim.bo[buf].readonly and vim.bo[buf].modifiable, 'ordinary source was made readonly')
+  assert(ready(buf), 'ordinary source did not receive project LSP')
+end
+''', project_roots=('project a',))
+        self.assertEqual(len([call for call in calls if 'program' in call]), 1)
+        self.assertFalse(notes)
+
+    def test_inactive_project_wrappers_and_another_roots_path_keep_mise(self):
+        calls, notes = self.run_case(r'''
+local a = open(base .. '/project a/one.rb')
+assert(ready(a))
+activate('project a')
+local b = open(base .. '/worktree/one.rb')
+assert(ready(b))
+''', project_roots=('project a', 'worktree'))
+        starts = [call for call in calls if 'program' in call]
+        self.assertEqual(len(starts), 2)
+        self.assertFalse(any(call.get('transport') for call in calls), calls)
+        self.assertEqual({call['ruby'] for call in starts}, {'project a', 'worktree'})
+        self.assertFalse(notes)
 
     def test_two_roots_and_standalone_keep_their_runtime_and_reuse_clients(self):
         for order in (('project a', 'worktree'), ('worktree', 'project a')):

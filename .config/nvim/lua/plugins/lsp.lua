@@ -2,6 +2,7 @@
 local profile = require("config.profile")
 
 local tools = require("config.tools")
+local ruby = require("config.ruby")
 local servers = tools.servers
 
 -- Build the per-server options shared by the native LSP configurations.
@@ -11,23 +12,17 @@ local function make_server_opts(server)
     opts.filetypes = { "helm" }
   elseif server == "ruby_lsp" then
     local failed_roots = {}
+    opts.flags = { exit_timeout = 2000 }
     opts.root_dir = function(bufnr, on_dir)
-      local filename = vim.api.nvim_buf_get_name(bufnr)
-      if filename == "" then
-        return
-      end
-      -- Standalone files use their directory rather than Neovim's startup cwd.
-      local root = vim.fs.root(bufnr, { "Gemfile", ".git" }) or vim.fs.dirname(filename)
-      if not failed_roots[root] then
+      -- Standalone files use their directory; gem sources start no new client.
+      local root = ruby.root(bufnr)
+      if root and not failed_roots[root] then
         on_dir(root)
       end
     end
     opts.cmd = function(dispatchers, config)
       local root = config.root_dir
       local ok, rpc = pcall(function()
-        -- With auto-install disabled, mise exec can otherwise use Ruby from PATH.
-        tools.resolve("ruby", root)
-        local path = tools.resolve("ruby-lsp", root)
         local on_exit = dispatchers.on_exit
         dispatchers.on_exit = function(code, signal)
           -- Native Neovim also ignores SIGTERM from an explicit client stop.
@@ -40,6 +35,16 @@ local function make_server_opts(server)
           end
           on_exit(code, signal)
         end
+        local project_lsp = ruby.project_lsp(root)
+        if project_lsp then
+          return vim.lsp.rpc.start({ project_lsp }, dispatchers, {
+            cwd = root,
+            env = { PWD = root },
+          })
+        end
+        -- With auto-install disabled, mise exec can otherwise use Ruby from PATH.
+        tools.resolve("ruby", root)
+        local path = tools.resolve("ruby-lsp", root)
         -- mise selects Ruby's environment; Ruby LSP must compose its own bundle.
         return vim.lsp.rpc.start({
           vim.fn.exepath("mise"), "-C", root, "exec", "--",
@@ -71,6 +76,7 @@ return {
     "neovim/nvim-lspconfig",
     cond = profile.is_desktop,
     config = function()
+      ruby.setup()
       if vim.fn.exists(':LspInfo') == 0 then
         vim.api.nvim_create_user_command('LspInfo', ':checkhealth vim.lsp', { desc = 'Alias to `:checkhealth vim.lsp`' })
       end

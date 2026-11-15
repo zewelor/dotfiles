@@ -78,6 +78,14 @@ if name == "mise":
         raise SystemExit(0)
     raise SystemExit(2)
 
+if Path(program).parent.name == "bin" and Path(program).parent.parent.name == ".dev":
+    root = Path(program).parents[2]
+    if os.environ.get("FMT_TEST_WRAPPER_FAIL_ROOT") == str(root):
+        print("fixture project wrapper failure", file=sys.stderr)
+        raise SystemExit(23)
+    executable = str(root / "bin/dprint")
+    os.execv(executable, [executable, *args])
+
 if "dprint" in name:
     old_path = os.environ.get("FMT_TEST_OLD_DPRINT_PATH")
     version = "0.63.9" if program == old_path else "0.64.3"
@@ -303,6 +311,131 @@ assert(buffer_text(b):match('^formatted:dprint:'))
         self.assertTrue(all(call["sentinel"] == "preserved-value" for call in mise_calls))
         self.assertTrue(all(call["mise_dprint_version"] == "inherited-parent-override" for call in local_invocations + managed_invocations))
         self.assertTrue(all(call["sentinel"] == "preserved-value" for call in local_invocations + managed_invocations))
+
+    def test_project_dprint_routes_all_calls_and_does_not_fall_back(self):
+        roots = {}
+
+        def prepare(temp, _bin_dir, _tools):
+            for name in ("active-project", "project-failure"):
+                root = temp / name
+                (root / ".config").mkdir(parents=True)
+                (root / "bin").mkdir()
+                (root / ".git").mkdir()
+                (root / ".config/dprint.jsonc").write_text('{"plugins":["fixture"]}', encoding="utf-8")
+                self.write_fixture(root / ".dev/bin/dprint")
+                self.write_fixture(root / "bin/dprint")
+                self.install_local_binary(root)
+                roots[name] = str(root)
+            nested = Path(roots["active-project"]) / "nested"
+            (nested / ".git").mkdir(parents=True)
+            self.write_fixture(nested / ".dev/bin/dprint")
+            self.write_fixture(nested / "bin/dprint")
+            return {
+                "FMT_PROJECT_ROOT": roots["active-project"],
+                "FMT_PROJECT_FAIL_ROOT": roots["project-failure"],
+                "FMT_TEST_WRAPPER_FAIL_ROOT": roots["project-failure"],
+            }
+
+        calls = self.run_nvim(r'''local formatting = setup_conform()
+local root = vim.env.FMT_PROJECT_ROOT
+local filename = root .. '/src/data.js'
+local config = root .. '/.config/dprint.jsonc'
+local observed_timeouts = {}
+local real_system = vim.system
+vim.system = function(argv, opts, callback)
+  if argv[1] == root .. '/.dev/bin/dprint' then
+    table.insert(observed_timeouts, opts.timeout)
+  end
+  return real_system(argv, opts, callback)
+end
+-- Merely having a wrapper must not activate it.
+local inactive = make_buffer(filename, 'javascript', 'before')
+assert(formatting.info(inactive).source == 'node_modules')
+vim.env.PATH = root .. '/nested/.dev/bin:' .. vim.env.PATH
+local nested_plan = formatting.info(inactive)
+assert(nested_plan and nested_plan.source == 'node_modules', 'nested project tool must not format parent project')
+vim.env.PATH = root .. '/.dev/bin:' .. vim.env.PATH
+local buffer = inactive
+local plan = formatting.format(buffer, 'manual')
+vim.system = real_system
+assert(plan and plan.kind == 'project' and plan.source == 'project_path')
+assert(plan.cwd == root and plan.config == config and plan.filename == filename)
+assert(buffer_text(buffer) == 'formatted:dprint:before')
+assert(#observed_timeouts >= 2 and observed_timeouts[1] > 9000 and observed_timeouts[2] > 9000,
+  'Project dprint operations did not receive the 10000 ms total budget')
+
+local failed_root = vim.env.FMT_PROJECT_FAIL_ROOT
+-- The active wrapper from the first root must not handle the second root.
+local unrelated = make_buffer(failed_root .. '/src/probe.js', 'javascript', 'before')
+assert(formatting.info(unrelated).source == 'node_modules')
+vim.env.PATH = failed_root .. '/.dev/bin:' .. vim.env.PATH
+local failed = make_buffer(failed_root .. '/src/data.js', 'javascript', 'before')
+local messages = {}
+vim.notify = function(message) table.insert(messages, tostring(message)) end
+assert(formatting.format(failed, 'manual') == nil, 'wrapper failure unexpectedly succeeded')
+assert(buffer_text(failed) == 'before', 'wrapper failure changed the buffer')
+assert(table.concat(messages, '\n'):find('fixture project wrapper failure', 1, true),
+  'wrapper failure was not visible')
+''', prepare=prepare)
+
+        project_wrappers = [call for call in calls if "/.dev/bin/" in call["program"]]
+        root = Path(roots["active-project"])
+        root_calls = [call for call in project_wrappers if call["cwd"] == str(root)]
+        self.assertTrue(all(call["program"] == str(root / ".dev/bin/dprint") for call in root_calls))
+        self.assertEqual(
+            [call["args"] for call in root_calls],
+            [
+                ["--version"],
+                ["resolved-config", "--config", str(root / ".config/dprint.jsonc"),
+                 "--file", str(root / "src/data.js")],
+                ["fmt", "--config", str(root / ".config/dprint.jsonc"),
+                 "--stdin", str(root / "src/data.js")],
+            ],
+        )
+        failed_root = Path(roots["project-failure"])
+        failed_root_calls = [call for call in project_wrappers if call["cwd"] == str(failed_root)]
+        self.assertEqual([call["program"] for call in failed_root_calls], [str(failed_root / ".dev/bin/dprint")])
+        self.assertEqual([call["args"] for call in failed_root_calls], [["--version"]])
+        self.assertEqual(self.calls_named(calls, "mise"), [])
+        self.assertEqual(
+            [call["args"][0] for call in calls if call["program"] == str(root / "node_modules/.bin/dprint")],
+            ["--version", "resolved-config", "--version", "resolved-config"],
+        )
+        self.assertEqual(
+            [call["args"][0] for call in calls if call["program"] == str(Path(roots["project-failure"]) / "node_modules/.bin/dprint")],
+            ["--version", "resolved-config"],
+        )
+
+    def test_foreign_project_runtime_cannot_format_ruby_via_bundle_or_binstub(self):
+        for binstub in (False, True):
+            with self.subTest(binstub=binstub):
+                def prepare(temp, _bin_dir, _tools):
+                    active = temp / "active-runtime"
+                    other = temp / "other-project"
+                    for root in (active, other):
+                        root.mkdir()
+                        (root / "Gemfile").touch()
+                    self.write_fixture(active / ".dev/bin/ruby")
+                    self.write_fixture(active / ".dev/bin/bundle")
+                    (other / ".rubocop.yml").write_text("AllCops: {}\n", encoding="utf-8")
+                    if binstub:
+                        executable = other / "bin/rubocop"
+                        executable.parent.mkdir()
+                        executable.write_text("#!/usr/bin/env ruby\nputs 'binstub'\n", encoding="utf-8")
+                        executable.chmod(0o755)
+                    return {"ACTIVE_RUNTIME": str(active), "OTHER_PROJECT": str(other)}
+
+                calls = self.run_nvim(r'''local formatting = setup_conform()
+vim.env.PATH = vim.env.ACTIVE_RUNTIME .. '/.dev/bin:' .. vim.env.PATH
+local buf = make_buffer(vim.env.OTHER_PROJECT .. '/example.rb', 'ruby', 'before')
+local messages = {}
+vim.notify = function(message) table.insert(messages, tostring(message)) end
+assert(formatting.format(buf, 'manual') == nil)
+assert(buffer_text(buf) == 'before')
+assert(table.concat(messages, '\n'):find('belongs to another project', 1, true),
+  'foreign Ruby runtime must produce a clear project mismatch error')
+''', prepare=prepare)
+                self.assertFalse(any('/active-runtime/.dev/bin/' in call['program'] for call in calls), calls)
 
     def test_routed_types_and_all_supported_dprint_config_locations(self):
         types = [
