@@ -707,21 +707,6 @@ fi"
     echo "[nvim] Skipping Neovim plugin update: nvim not found for user '${target_user}'."
   fi
 
-  if target_user_has "npx"; then
-    echo
-    echo "[skills] Updating skills via npx"
-    if run_for_target_user 'npx --yes skills update --global'; then
-      echo "[skills] Update complete"
-    else
-      local _skills_ec=$?
-      echo "[skills] Update failed (exit ${_skills_ec}); retry as '${target_user}' from '${target_home}': npx --yes skills update --global"
-      failures+=(skills)
-    fi
-  else
-    echo
-    echo "[skills] Skipping skills update: npx not found for user '${target_user}'."
-  fi
-
   if (( ${#failures[@]} )); then
     echo
     echo "update-all completed with failures: ${(j:, :)failures}" >&2

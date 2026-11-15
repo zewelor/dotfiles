@@ -100,6 +100,9 @@ class UpdateAllTests(unittest.TestCase):
             stub = tool_bin / tool
             stub.write_text("#!/bin/sh\nexit 0\n")
             stub.chmod(0o755)
+        (tool_bin / "npx").write_text(
+            '#!/bin/sh\nprintf "%s\\n" "$*" >> "$TEST_NPX_LOG"\nexit 99\n'
+        )
         if nvim_installed:
             (tool_bin / "nvim").write_text(
                 '#!/bin/sh\nprintf "%s\\n" "${DOTFILES_PROFILE-unset}" >> "$TEST_NVIM_LOG"\n'
@@ -197,6 +200,7 @@ sudo() {
                 TEST_NVIM_EXIT=str((quiet_exits or {}).get("nvim", 0)),
                 TEST_NVIM_INSTALLED=str(nvim_installed).lower(),
                 TEST_NVIM_MAINTAIN_LOG=str(self.nvim_maintain_log),
+                TEST_NPX_LOG=str(self.base / "npx.log"),
                 TEST_COMPLETION_LOG=str(self.completion_log),
                 TEST_COMPLETION_POLICY_LOG=str(self.completion_policy_log),
                 SUDO_USER="fixture",
@@ -235,6 +239,16 @@ sudo() {
         for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):
             self.assertNotIn(f"{stage} stdout", result.stdout + result.stderr)
             self.assertNotIn(f"{stage} stderr", result.stdout + result.stderr)
+
+    def test_update_all_does_not_update_git_managed_skills(self):
+        result = self.run_update_all(
+            "desktop", "desktop", mise_installed=True, config_exists=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.base / "npx.log").exists())
+        self.assertIn("upgrade", self.mise_log.read_text())
+        self.assertTrue(self.completion_log.exists())
+        self.assertIn("plugins update", self.nvim_maintain_log.read_text())
 
     def test_quiet_update_stages_show_output_on_failure_exit_1(self):
         for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):

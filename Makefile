@@ -133,5 +133,5 @@ doctor:
 verify:
 	@"$(HEALTHCHECK)" verify
 
-# Refresh the private package through the installer's profile and Stow checks.
-skills: install-private
+# Link the approved shared resources without configuring desktop applications.
+skills: install-skills

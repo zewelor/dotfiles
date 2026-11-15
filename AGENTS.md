@@ -21,7 +21,13 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
   prywatnego repozytorium `prv/`.
 - Publiczne konfiguracje współdzielone przez desktop i serwery należą do
   głównego repo. Prywatne dane i konfiguracje tylko dla profilu `desktop`
-  należą do `prv/`; instalator linkuje `prv/` wyłącznie dla tego profilu.
+  należą do `prv/`. Cały pakiet Stow `prv/` jest desktopowy; wyjątkiem są
+  współdzielone zasoby `prv/.agents`, linkowane osobno na obu profilach.
+  Serwer musi być uprawniony do przechowywania całego prywatnego checkoutu.
+- Wybór klientów agentów jest niezależny od profilu hosta. Deklarację operatora
+  odczytuje instalator; nie dodawaj jej do startu shella ani nie instaluj CLI
+  jako ukrytej zależności konfiguracji. Skille konsumenta pochodzą z zatwierdzonego
+  Git, a ich aktualizacja wymaga osobnego workflow z `docs/agent-skills.md`.
 - GNU Stow służy do stabilnych, deklaratywnych plików należących do repo.
   Sekrety, cache, wygenerowany stan i pliki nadpisywane przez aplikacje nie
   powinny być przejmowane przez Stow. Wyjątki zapisuj deterministycznie w
