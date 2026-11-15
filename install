@@ -381,6 +381,8 @@ prepare_stow_targets() {
   print_banner "Preparing runtime-owned Stow targets..."
   local source_dir target_dir
   for source_dir in "$BASE_DIR/.config" "$BASE_DIR"/.config/**/*(/DN); do
+    # Neovim is static configuration; its data and state live outside this tree.
+    [[ "$source_dir" == "$BASE_DIR/.config/nvim" || "$source_dir" == "$BASE_DIR/.config/nvim/"* ]] && continue
     target_dir="$HOME_DIR/${source_dir#"$BASE_DIR"/}"
     if [[ -L "$target_dir" || ( -e "$target_dir" && ! -d "$target_dir" ) ]]; then
       echo "Error: $target_dir must be a real directory, not a symlink or file." >&2
@@ -1154,7 +1156,29 @@ setup_desktop_assets() {
   fi
 }
 
+# Link the static Neovim tree so new modules need no additional Stow run.
+setup_neovim_config() {
+  print_banner "Linking static Neovim configuration..."
+  local source_dir="$BASE_DIR/.config/nvim" target_dir="$CONFIG_DIR/nvim"
+  require_real_directory_path "$CONFIG_DIR" || return 1
+  if [[ ! -d "$source_dir" ]]; then
+    echo "Error: Neovim configuration is missing: $source_dir" >&2
+    return 1
+  fi
+  if [[ -L "$target_dir" && "$target_dir" -ef "$source_dir" ]]; then
+    return 0
+  fi
+  if [[ -e "$target_dir" || -L "$target_dir" ]]; then
+    echo "Error: preserve $target_dir by moving it aside before linking the Neovim directory." >&2
+    echo "See docs/config-directory-links.md: Neovim directory link migration." >&2
+    return 1
+  fi
+  mkdir -p "$CONFIG_DIR"
+  ln -sT -- "$source_dir" "$target_dir"
+}
+
 stow_base_dotfiles() {
+  setup_neovim_config
   setup_btop
   install_with_stow --no-folding -d "$BASE_DIR" -t "$HOME_DIR" --ignore ".gitignore" --ignore "tests" "."
 }

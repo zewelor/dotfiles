@@ -12,3 +12,6 @@ require("config.options")
 
 -- Keymaps (custom keyboard shortcuts)
 require("config.keymaps")
+
+-- Open existing file:line references without an external plugin.
+require("config.fileline")

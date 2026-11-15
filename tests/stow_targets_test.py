@@ -43,6 +43,9 @@ class StowTargetsTest(unittest.TestCase):
         hidden = self.repo / ".config/example/.hidden/managed.conf"
         hidden.parent.mkdir()
         hidden.write_text("managed\n")
+        nvim = self.repo / ".config/nvim"
+        (nvim / "lua/config").mkdir(parents=True)
+        (nvim / "init.lua").write_text("-- fixture\n")
         script = (ROOT / "install").read_text()
         main = script[script.index("run_installation() {"):]
         # Run the production base stage, excluding tool installs and user services.
@@ -96,6 +99,79 @@ class StowTargetsTest(unittest.TestCase):
 
     def test_desktop_runtime_files_stay_outside_checkout(self):
         self.check_runtime_files("desktop")
+
+    def test_neovim_directory_link_exposes_new_modules_without_reinstall(self):
+        for profile in ("server", "desktop"):
+            with self.subTest(profile=profile):
+                result = self.run_install(profile)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                target = self.config / "nvim"
+                self.assertTrue(target.is_symlink())
+                self.assertEqual(target.resolve(), self.repo / ".config/nvim")
+                source = self.repo / ".config/nvim/lua/config/new_module.lua"
+                source.write_text("return true\n")
+                self.assertEqual((target / "lua/config/new_module.lua").read_text(), "return true\n")
+
+    def test_existing_neovim_directory_is_preserved_before_stow(self):
+        target = self.config / "nvim"
+        target.mkdir(parents=True)
+        (target / "local.lua").write_text("local settings\n")
+        result = self.run_install()
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("nvim", result.stderr)
+        self.assertFalse(target.is_symlink())
+        self.assertEqual((target / "local.lua").read_text(), "local settings\n")
+        self.assertFalse((self.config / "example/nested/managed.conf").exists())
+
+    def test_foreign_neovim_file_or_link_is_preserved(self):
+        self.config.mkdir(parents=True)
+        target = self.config / "nvim"
+        foreign = self.root / "foreign-nvim"
+        foreign.mkdir()
+        (foreign / "local.lua").write_text("keep\n")
+        for kind in ("file", "link", "dangling"):
+            with self.subTest(kind=kind):
+                if kind == "file":
+                    target.write_text("keep\n")
+                else:
+                    target.symlink_to(foreign if kind == "link" else foreign / "missing")
+                try:
+                    result = self.run_install()
+                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn("nvim", result.stderr)
+                    self.assertEqual((foreign / "local.lua").read_text(), "keep\n")
+                    self.assertTrue(target.is_symlink() if kind != "file" else target.is_file())
+                finally:
+                    target.unlink()
+
+    def test_neovim_publication_conflict_does_not_replace_local_data(self):
+        fake_ln = self.root / "bin/ln"
+        fake_ln.write_text('''#!/bin/sh
+if [ "$NEOVIM_TEST_CONFLICT" = directory ]; then
+  mkdir "$HOME/.config/nvim"
+  printf 'keep\\n' > "$HOME/.config/nvim/local.lua"
+else
+  ln_target="$HOME/.config/nvim"
+  /usr/bin/ln -s "$NEOVIM_TEST_FOREIGN" "$ln_target"
+fi
+exec /usr/bin/ln "$@"
+''')
+        fake_ln.chmod(0o755)
+        foreign = self.root / "foreign-nvim"
+        foreign.mkdir()
+        (foreign / "local.lua").write_text("keep\n")
+        self.env["NEOVIM_TEST_FOREIGN"] = str(foreign)
+        for kind in ("directory", "link"):
+            with self.subTest(kind=kind):
+                if self.home.exists():
+                    shutil.rmtree(self.home)
+                self.env["NEOVIM_TEST_CONFLICT"] = kind
+                result = self.run_install()
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                target = self.config / "nvim"
+                self.assertEqual(target.is_symlink(), kind == "link")
+                self.assertEqual((target / "local.lua").read_text(), "keep\n")
+                self.assertFalse((self.repo / ".config/nvim/local.lua").exists())
 
     def test_server_base_does_not_link_desktop_files(self):
         files = ("atuin/themes/catppuccin-latte-blue.toml", "foot/foot.ini",

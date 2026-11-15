@@ -11,11 +11,13 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 ├── README.md              # Dokumentacja konfiguracji
 ├── init.lua              # Entry point - ładuje wszystko
 ├── maintain.lua          # Jawne headless utrzymanie pluginów
+├── LICENSE.fileline      # Licencja lokalnej adaptacji fileline.nvim
 ├── lua/
 │   ├── config/
 │   │   ├── lazy.lua     # Setup lazy.nvim
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   ├── keymaps.lua  # Wszystkie keybindings
+│   │   ├── fileline.lua # Otwieranie istniejącego pliku przez plik:linia
 │   │   ├── formatting.lua # Wspólna polityka formatowania projektu
 │   │   ├── profile.lua  # Jawny wybór profilu desktop
 │   │   └── tools.lua    # Lista LSP i resolver binarek mise
@@ -54,6 +56,12 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 `stdpath("state")` Neovima (zwykle `~/.local/state/nvim/`). Aktualizacje
 pluginów nie zmieniają dzięki temu repozytorium dotfiles.
 
+Instalator bazowy linkuje cały katalog `~/.config/nvim` do tej konfiguracji.
+Nowe moduły są widoczne od razu; ponowne linkowanie przez Stow nie jest potrzebne.
+To jawny wyjątek od `--no-folding`: katalog zawiera wyłącznie konfigurację,
+a utrzymywany stan Neovima pozostaje w katalogach danych i stanu.
+[Uzasadnienie i migracja starszych instalacji](../../docs/config-directory-links.md).
+
 `update-all` przekazuje Neovimowi profil zapisany w `~/.zshrc.d/profile.zsh`
 użytkownika docelowego (domyślnie `server`, gdy pliku brak).
 
@@ -77,6 +85,30 @@ i sortera Telescope, bez kompilacji parserów i natywnego rozszerzenia FZF.
 Te dodatki są włączane tylko przy `DOTFILES_PROFILE=desktop`; brak tej zmiennej
 oznacza lekki wariant, tak jak domyślny profil shella. Reguła jest niezależna
 od obecności `mise`.
+
+## Otwieranie pliku na konkretnej linii
+
+```sh
+nvim plik.lua:12
+nvim plik.lua:1-60
+nvim 'katalog ze spacjami/plik.lua:12'
+```
+
+W edytorze działają również `:e plik.lua:12` i `:e plik.lua:1-60`. Lokalny moduł
+`lua/config/fileline.lua` obsługuje formaty `plik:linia` i `plik:początek-koniec`
+dla istniejącego, czytelnego pliku, w obu profilach. Zakres otwiera plik na
+pierwszej wskazanej linii, bez zaznaczania tekstu. Linia `0` oznacza pierwszą,
+a numer większy od długości pliku wskazuje ostatnią linię. Rzeczywisty plik
+o nazwie np. `plik.lua:12` lub `plik.lua:1-60` ma pierwszeństwo. Brak pliku
+bazowego pozostawia zwykły nowy bufor z pełną nazwą; sufiksy kolumn i nawiasy
+nie mają osobnej obsługi.
+Odwołania z pozycją nie obsługują wielu splitów tworzonych przy starcie
+przez `-o`/`-O`; w tym przypadku użyj natywnego `+linia plik`.
+
+To uproszczona lokalna adaptacja
+[fileline.nvim](https://github.com/lewis6991/fileline.nvim/tree/c116aa8dd7aa7e1db6938f872285e598dc9ee00b)
+na licencji MIT (`LICENSE.fileline`). Nie jest pobierana ani aktualizowana przez
+menedżer pluginów; zmiany tego kodu przechodzą przez repozytorium dotfiles.
 
 ## ⚙️ Core Options
 

@@ -35,6 +35,9 @@ class StowIntegrationTest(unittest.TestCase):
         public_file = self.repo / ".config/health-check-fixture/public.toml"
         public_file.parent.mkdir(parents=True)
         public_file.write_text("public defaults\n")
+        nvim = self.repo / ".config/nvim"
+        nvim.mkdir(parents=True)
+        (nvim / "init.lua").write_text("-- fixture\n")
         self.private_file = self.private / ".config/health-check-fixture/private.toml"
         self.private_file.parent.mkdir(parents=True)
         self.private_file.write_text("private override\n")
@@ -46,6 +49,7 @@ class StowIntegrationTest(unittest.TestCase):
             "prepare_private_flatpak_targets",
             "prepare_private_stow_targets",
             "prepare_stow_targets",
+            "setup_neovim_config",
             "stow_base_dotfiles",
         ]
         function_source = "\n".join(extract_function(install_source, name) for name in functions)

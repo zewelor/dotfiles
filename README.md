@@ -84,7 +84,15 @@ runtime files in the account's own configuration directory.
 The base Stow package uses `--no-folding` to create real directories and link
 managed files individually. Before linking, the installer rejects directory
 symlinks at paths corresponding to directories in the repository's `.config`
-tree, including mise. Existing directory links elsewhere are not automatically
+tree, including mise. The explicit exception is `~/.config/nvim`: the base
+installer links that entire static directory to the repository, independently
+of Stow. New Neovim modules are then visible without reinstalling links. Plugins,
+lockfiles, undo and other maintained Neovim state live under the data/state
+directories instead. An existing link to this checkout is accepted; any other
+existing Neovim path is preserved and stops installation until manually migrated.
+See [Neovim directory link migration](docs/config-directory-links.md#neovim-directory-link-migration)
+and the [rationale and other candidates](docs/config-directory-links.md).
+Existing directory links elsewhere are not automatically
 migrated. For an older installation, preserve local runtime files, replace the
 directory links with real directories, and link only repository-managed files
 before retrying. Adding an ignore rule does not stop writes through an existing
