@@ -60,6 +60,7 @@ for _, case in ipairs(vim.json.decode(vim.env.FMT_CASES)) do
   vim.bo[bufnr].filetype = case.filetype
   vim.bo[bufnr].expandtab = true
   vim.bo[bufnr].shiftwidth = 2
+  require("editorconfig").config(bufnr)
   vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.fn.readfile(case.input))
   conform.format({ bufnr = bufnr, async = false, lsp_format = "never", timeout_ms = 5000 })
   if case.wait_for_notification then
@@ -295,6 +296,23 @@ class NeovimShfmtTest(unittest.TestCase):
             self.assertEqual(original.stdout, EXPECTED_OUTPUT)
             self.assertEqual(formatted_result.stdout, original.stdout)
             self.assertEqual(formatted_result.stderr, original.stderr)
+
+    def test_shell_formatting_respects_editorconfig_indentation(self):
+        source_text = "if true; then\necho yes\nfi\n"
+        for filetype in ("sh", "bash", "zsh"):
+            for style, unit in (("space", "    "), ("tab", "\t")):
+                with self.subTest(filetype=filetype, style=style):
+                    with tempfile.TemporaryDirectory(prefix="nvim-shfmt-editorconfig-") as directory:
+                        temp = Path(directory)
+                        (temp / ".editorconfig").write_text(
+                            "root = true\n[*]\nindent_style = " + style + "\nindent_size = 4\n")
+                        source = temp / ("source." + filetype)
+                        output = temp / ("formatted." + filetype)
+                        source.write_text(source_text)
+                        self.run_conform([{"input": str(source), "output": str(output),
+                                           "filename": str(source), "filetype": filetype}], temp)
+                        self.assertEqual(output.read_text(), "if true; then\n" + unit + "echo yes\nfi\n")
+                        self.assertEqual(source.read_text(), source_text)
 
     def test_valid_zsh_dynamic_pattern_failure_is_visible_without_fallback(self):
         source = 'value="*.zsh"\nprint -r -- "${~value}"\n'

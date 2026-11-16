@@ -152,9 +152,10 @@ return {
         command = function(_, ctx) return require("config.tools").resolve("shfmt", ctx.dirname) end,
         append_args = function(_, ctx)
           if vim.bo[ctx.buf].filetype == "zsh" then
-            return { "-i", "2", "-ln", "zsh" }
+            -- An explicit dialect disables shfmt's EditorConfig lookup; use buffer indentation.
+            return { "-ln", "zsh", "-i", tostring(vim.bo[ctx.buf].expandtab and ctx.shiftwidth or 0) }
           end
-          return { "-i", "2" }
+          return {}
         end,
       },
     },
