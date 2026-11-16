@@ -14,6 +14,12 @@ ROOT = Path(__file__).resolve().parents[1]
 NVIM = shutil.which("nvim")
 CONFORM = Path.home() / ".local/share/nvim/lazy/conform.nvim"
 REAL_DOCKERFMT = os.environ.get("DOTFILES_TEST_DOCKERFMT") or shutil.which("dockerfmt")
+if REAL_DOCKERFMT and Path(REAL_DOCKERFMT).resolve().name == "mise":
+    # Resolve the global shim before isolating HOME; never trust a test checkout's config.
+    REAL_DOCKERFMT = subprocess.check_output(
+        [str(Path(REAL_DOCKERFMT).resolve()), "which", "dockerfmt"],
+        cwd=Path.home(), env=dict(os.environ, MISE_AUTO_INSTALL="false"), text=True, timeout=5,
+    ).strip()
 
 DOCKERFILE = '''FROM alpine
 RUN if [ -n "$MODE" ]; then \\
