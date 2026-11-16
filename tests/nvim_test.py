@@ -52,24 +52,6 @@ class NeovimTest(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-    def test_copilot_excludes_env_files(self):
-        self.run_lua("""
-local should_attach = require('plugins.copilot').opts.should_attach
-local cases = {
-  { '/project/.env', false },
-  { '/project/config/.env.local', false },
-  { '/project/.envrc', true },
-  { '/project/environment.sh', true },
-}
-for _, case in ipairs(cases) do
-  local buf = vim.api.nvim_create_buf(true, false)
-  vim.api.nvim_buf_set_name(buf, case[1])
-  local allowed = should_attach(buf, vim.api.nvim_buf_get_name(buf))
-  assert(allowed == case[2], case[1] .. ': unexpected Copilot attachment decision')
-  vim.api.nvim_buf_delete(buf, { force = true })
-end
-""", "desktop")
-
     def test_profiles_with_and_without_mise(self):
         for profile in (None, "server", "desktop"):
             for mise in (False, True):
@@ -79,7 +61,7 @@ end
                     self.run_lua("""
 local expected = vim.env.DOTFILES_PROFILE == 'desktop'
 assert(require('config.profile').is_desktop() == expected, 'wrong desktop profile policy')
-for _, name in ipairs({'conform', 'copilot', 'opencode'}) do
+for _, name in ipairs({'conform', 'opencode'}) do
   local spec = require('plugins.' .. name)
   local active = spec.cond == nil or (type(spec.cond) == 'function' and spec.cond() or spec.cond == true)
   assert(active == expected, name .. ': wrong profile condition')
@@ -89,8 +71,12 @@ for _, spec in ipairs(require('plugins.lsp')) do
 end
 vim.g.mapleader = ' '
 require('config.keymaps')
-for _, key in ipairs({' cf', ' oa', ' ct'}) do
+for _, key in ipairs({' cf', ' oa'}) do
   assert((vim.fn.maparg(key, 'n') ~= '') == expected, key .. ': wrong keymap policy')
+end
+assert(vim.fn.maparg(' ct', 'n') == '', 'retired Copilot toggle remains mapped')
+for _, key in ipairs({'<M-]>', '<M-[>', '<M-l>', '<C-]>'}) do
+  assert(vim.fn.maparg(key, 'i') == '', key .. ': retired Copilot suggestion remains mapped')
 end
 """, profile, mise)
 

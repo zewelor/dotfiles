@@ -26,7 +26,6 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
-│   │   ├── copilot.lua              # GitHub Copilot (lightweight inline suggestions)
 │   │   ├── lsp.lua                  # Natywny LSP; Mason tylko do ręcznych dodatków
 │   │   ├── mini-align.lua           # Wyrównywanie tekstu
 │   │   ├── mini-icons.lua           # Ikony plików
@@ -67,7 +66,7 @@ użytkownika docelowego (domyślnie `server`, gdy pliku brak).
 
 Pełny zestaw deweloperski jest włączany tylko przez
 `DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): natywny LSP,
-`conform.nvim` oraz integracje Copilot i OpenCode wraz z ich skrótami.
+`conform.nvim` oraz integracja OpenCode wraz z jej skrótami.
 Aktywowane projektowe Ruby LSP i dprint mają pierwszeństwo; pozostałe narzędzia
 rozwiązuje mise w kontekście katalogu projektu. Profil `server`
 i brak profilu korzystają z uproszczonego trybu, również gdy `mise` jest
@@ -214,10 +213,12 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 
 ### **blink.cmp** — Autouzupełnianie
 
+Integracja Copilot w edytorze jest wycofana. Źródła podpowiedzi Blinka pozostają bez zmian.
+
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
 - **Dopasowanie**: `prefer_rust_with_warning` preferuje Rust i pozwala Blinkowi pobrać gotową bibliotekę bez kompilatora Rust. Gdy biblioteka jest niedostępna, Blink ostrzega i używa Lua.
-- **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi. Copilot nie jest podpięty jako źródło `blink.cmp`, żeby autouzupełnianie zostało lekkie.
+- **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi.
 - **Keymaps** (preset `enter`, `preselect = false`, podczas wpisywania):
   - `<C-Space>` — Pokaż menu; przy otwartym menu pokaż/ukryj dokumentację
   - `<Enter>` — Zatwierdź wskazaną podpowiedź; bez wskazanej pozycji wstaw nowy wiersz
@@ -229,27 +230,6 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 
 Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lub
 `<C-n>`/`<C-p>`, a potem zatwierdź Enterem.
-
----
-
-### **copilot.lua** — GitHub Copilot (lightweight inline suggestions)
-
-- **Repo**: [zbirenbaum/copilot.lua](https://github.com/zbirenbaum/copilot.lua)
-- **Cel**: Lżejsza integracja GitHub Copilot przez natywny klient LSP Neovima, bez źródła `blink.cmp`.
-- **Tryb pracy**: Auto-sugestie są włączone dla zwykłych plików kodu, ale z opóźnieniem `500ms`; panel, `blink.cmp` source i next-edit suggestions są wyłączone.
-- **Wyłączone filetype'y**: `markdown`, `text`, `yaml`, `gitcommit`, `gitrebase`, `help`.
-- **Wyłączone pliki**: `.env` i warianty `.env.*`, np. `.env.local` oraz `.env.production`.
-- **Wymagania**: Neovim 0.11+ i Node.js 22+.
-- **Profil**: Tylko `desktop`; na `server` i bez profilu plugin oraz jego skróty są wyłączone.
-- **Keymaps**:
-  - `<M-]>` w Insert — Pobierz / pokaż następną sugestię
-  - `<M-[>` w Insert — Poprzednia sugestia
-  - `<M-l>` w Insert — Akceptuj sugestię
-  - `<C-]>` w Insert — Odrzuć sugestię
-  - `<Space>ct` — Przełącz auto-trigger dla bieżącego bufora
-- **Komendy**:
-  - `:Copilot auth` — Zaloguj Copilot
-  - `:Copilot status` — Sprawdź status
 
 ---
 
@@ -563,10 +543,6 @@ usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej ins
 
 - `<Space>cf` — Formatuj plik (conform.nvim)
 
-#### Copilot
-
-- `<Space>ct` — Przełącz auto-trigger dla bieżącego bufora
-
 #### LSP (aktywne gdy serwer LSP jest podłączony)
 
 - `<Space>rn` — Rename symbol
@@ -612,15 +588,6 @@ usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej ins
 
 - `Shift+Ctrl+u` — Scroll opencode w górę (half page)
 - `Shift+Ctrl+d` — Scroll opencode w dół (half page)
-
----
-
-#### Copilot
-
-- `Alt+]` w Insert — Pobierz / pokaż następną sugestię
-- `Alt+[` w Insert — Poprzednia sugestia
-- `Alt+l` w Insert — Akceptuj sugestię
-- `Ctrl+]` w Insert — Odrzuć sugestię
 
 ---
 
