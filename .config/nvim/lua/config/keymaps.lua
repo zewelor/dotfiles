@@ -4,7 +4,6 @@
 
 -- Helper references for brevity
 local keymap = vim.keymap.set
-local opts = { noremap = true, silent = true }
 
 -- ============================================================================
 -- LEADER KEY MAPPINGS (Leader = Space)
@@ -127,10 +126,10 @@ keymap("n", "<Tab>", "<C-w>w", { desc = "Cycle to next window" })
 keymap("n", "<S-Tab>", "<C-w>W", { desc = "Cycle to previous window" })
 
 -- Resize windows
-keymap("n", "<C-Up>", ":resize +2<CR>", opts)
-keymap("n", "<C-Down>", ":resize -2<CR>", opts)
-keymap("n", "<C-Left>", ":vertical resize -2<CR>", opts)
-keymap("n", "<C-Right>", ":vertical resize +2<CR>", opts)
+keymap("n", "<C-Up>", ":resize +2<CR>", { silent = true, desc = "Increase window height" })
+keymap("n", "<C-Down>", ":resize -2<CR>", { silent = true, desc = "Decrease window height" })
+keymap("n", "<C-Left>", ":vertical resize -2<CR>", { silent = true, desc = "Decrease window width" })
+keymap("n", "<C-Right>", ":vertical resize +2<CR>", { silent = true, desc = "Increase window width" })
 
 -- Better indentation in Visual mode
 keymap("v", "<", "<gv", { desc = "Indent left and reselect" })

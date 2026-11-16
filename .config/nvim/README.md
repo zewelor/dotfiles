@@ -644,6 +644,8 @@ usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej ins
 
 #### Zmiana rozmiaru okien
 
+Mapowania mają opisy widoczne przez `:nmap <C-Up>` i analogiczne polecenia dla pozostałych strzałek.
+
 - `<C-Up>` — Zwiększ wysokość
 - `<C-Down>` — Zmniejsz wysokość
 - `<C-Left>` — Zmniejsz szerokość
