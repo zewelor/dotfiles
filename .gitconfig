@@ -53,6 +53,7 @@
   navigate = true # use n and N to move between diff sections
   features = catppuccin-latte
   side-by-side = true
+  wrap-max-lines = unlimited
 
 [init]
   defaultBranch = main
