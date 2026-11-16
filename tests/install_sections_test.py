@@ -239,7 +239,7 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
 ''')
         helper = repo / "bin/maintain-neovim"
         helper.write_text('#!/bin/sh\nprintf "maintenance\n" >> "$HOME/order"\n'
-                          'case "$TEST_NVIM_VERSION" in missing|0.9.5|0.10.4) exit 92;; esac\n'
+                          'case "$TEST_NVIM_VERSION" in missing|0.9.5|0.10.4|0.11.0|0.11.2) exit 92;; esac\n'
                           'exit "${TEST_PLUGIN_EXIT:-0}"\n')
         helper.chmod(0o755)
         mise = self.home / ".local/bin/mise"
@@ -252,6 +252,7 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
         for profile in ("desktop", "server"):
             for version, plugin_exit, succeeds in (("missing", 0, True), ("0.9.5", 0, True),
                                                    ("0.10.4", 0, True), ("0.11.0", 0, True),
+                                                   ("0.11.2", 0, True), ("0.11.3", 0, True),
                                                    ("0.12.0", 42, False), ("broken", 0, False),
                                                    ("invalid", 0, False)):
                 with self.subTest(profile=profile, version=version, plugin_exit=plugin_exit):
@@ -273,7 +274,7 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
                         continue
                     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                     later = (["codex", "opencode", "agy", "summarize"] if profile == "desktop" else []) + ["completions"]
-                    modern = version == "0.11.0"
+                    modern = version == "0.11.3"
                     expected = (["mise"] if profile == "desktop" else [])
                     expected += (["maintenance"] + (["tools"] if profile == "desktop" else []) if modern else []) + later
                     expected += ([] if modern else ["vim"]) + (["terminal", "kde", "units"] if profile == "desktop" else [])
@@ -322,7 +323,7 @@ setup_summarize() { touch "$HOME_DIR/summarize-ran" }
         repo = self.make_fixture('''
 configure_git_conflict_style() { touch "$HOME_DIR/git-ran" }
 has() { [[ "$1" == nvim ]] }
-nvim() { print -r -- 'NVIM v0.11.0' }
+nvim() { print -r -- 'NVIM v0.11.3' }
 ''')
         for section, filename in (("profile", "profile.zsh"), ("shell", "editor.zsh")):
             for kind in ("directory_link", "file_link", "regular", "missing"):

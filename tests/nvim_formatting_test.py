@@ -169,11 +169,11 @@ class NeovimFormattingTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         output = subprocess.check_output([NVIM, "--version"], text=True, timeout=5)
-        version = re.match(r"NVIM v(\d+)\.(\d+)", output)
+        version = re.match(r"NVIM v(\d+)\.(\d+)\.(\d+)", output)
         if version is None:
             raise RuntimeError("Cannot determine Neovim version")
-        if tuple(map(int, version.groups())) < (0, 11):
-            raise unittest.SkipTest("Neovim 0.11 or newer is required")
+        if tuple(map(int, version.groups())) < (0, 11, 3):
+            raise unittest.SkipTest("Neovim 0.11.3 or newer is required")
         if not CONFORM.is_dir():
             raise unittest.SkipTest("installed conform.nvim source is required")
 

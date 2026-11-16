@@ -1,7 +1,7 @@
 -- Headless maintenance entry point. The shell helper owns profile/environment checks.
 local stage, mode = unpack(arg)
 local function run()
-  assert(vim.fn.has("nvim-0.11") == 1, "Neovim >= 0.11 is required")
+  assert(vim.fn.has("nvim-0.11.3") == 1, "Neovim >= 0.11.3 is required")
   assert(stage == "plugins", "Expected plugins stage")
   assert(mode == "install" or mode == "update", "Expected install or update mode")
   vim.opt.rtp:prepend(vim.fn.stdpath("config"))

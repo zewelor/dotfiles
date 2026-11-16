@@ -17,7 +17,7 @@ Pomysły na ulepszenia dotfiles - do zrobienia gdy będzie czas/potrzeba.
 - Powrót do tematu przy ponownej ocenie korzyści lub zmianie obsługi błędów w smug.
 
 ### Neovim na Debian stable (AppImage fallback)
-- Makefile używa Vim jako fallbacku, gdy apt nie oferuje Neovim 0.11+
+- Makefile używa Vim jako fallbacku, gdy apt nie oferuje Neovim 0.11.3+
 - Opcja: dodać AppImage download gdy apt ma stary nvim
 - Rozważyć gdy: potrzeba nvim na starym Debianie
 

@@ -1102,7 +1102,7 @@ supports_neovim_config() {
     return 2
   fi
   autoload -Uz is-at-least
-  is-at-least 0.11 "$version"
+  is-at-least 0.11.3 "$version"
 }
 
 setup_editor() {
@@ -1210,7 +1210,7 @@ install_help() {
   printf '\nWithout arguments, run the full installation. Sections require a saved profile.\n'
   printf 'Stow sections require confirmation; private requires base, desktop requires private units, and ai requires private agent resources and the Summarize seed.\n'
   printf 'The vault section requires an interactive terminal. Tools also refresh completions.\n'
-  printf 'Neovim requires base configuration and Neovim >= 0.11; desktop also requires mise and build/runtime dependencies.\n'
+  printf 'Neovim requires base configuration and Neovim >= 0.11.3; desktop also requires mise and build/runtime dependencies.\n'
 }
 
 load_section_profile() {
@@ -1403,7 +1403,7 @@ run_installation() {
   else
     local version_status=$?
     (( version_status == 1 )) || return "$version_status"
-    print_banner 'Skipping Neovim maintenance: Neovim >= 0.11 is unavailable; keeping Vim fallback'
+    print_banner 'Skipping Neovim maintenance: Neovim >= 0.11.3 is unavailable; keeping Vim fallback'
   fi
   if is_desktop; then
     setup_codex

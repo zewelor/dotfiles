@@ -2,7 +2,7 @@
 
 Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) jako menedżerem pluginów.
 
-**Wymaganie:** Neovim 0.11 lub nowszy. Konfiguracja korzysta wyłącznie z natywnego API LSP (`vim.lsp.config()` i `vim.lsp.enable()`).
+**Wymaganie:** Neovim 0.11.3 lub nowszy (minimum nvim-lspconfig). Konfiguracja korzysta wyłącznie z natywnego API LSP (`vim.lsp.config()` i `vim.lsp.enable()`).
 
 ## 📁 Struktura konfiguracji
 
@@ -416,7 +416,7 @@ operator, dotfiles ich nie instalują.
 
 - **Repo**: [nvim-treesitter/nvim-treesitter](https://github.com/nvim-treesitter/nvim-treesitter)
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
-- **Wymagania**: Neovim 0.11+.
+- **Wymagania**: Neovim 0.11.3+.
 - **Profil**: Tylko `DOTFILES_PROFILE=desktop`. Na `server` i bez ustawionego profilu plugin oraz aktualizacja parserów są wyłączone.
 - **Auto-install**: Brakujące parsery (lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm, go) są instalowane automatycznie przy pierwszym starcie. Wymaga kompilacji (gcc/clang).
 - **Utrzymanie headless**: etap pluginów pomija startowy auto-install parserów; build czeka na wynik aktualizacji zainstalowanych parserów (limit 5 minut) i propaguje błąd. Ta polityka parserów jest osobna od utrzymania binarek mise.
@@ -450,10 +450,10 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - `ruby_lsp` — Ruby (aktywowany projektowy `ruby-lsp`; poza nim mise)
 
 **Konfiguracja API**:
-- **Neovim 0.11+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; nie ma mostu `mason-lspconfig` ani automatycznej aktywacji serwerów Masona.
+- **Neovim 0.11.3+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; nie ma mostu `mason-lspconfig` ani automatycznej aktywacji serwerów Masona.
 - **Jawna lista**: `servers` w `lua/config/tools.lua` określa podstawowe aktywowane serwery; Ruby LSP jest konfigurowany osobno. Serwery rozwiązują binarkę przez mise dla katalogu root projektu. Podstawowe serwery zachowują argumenty nvim-lspconfig, a procesy działają z katalogu root.
 - **Brak fallbacku**: binarki z Masona lub dowolnego systemowego `PATH` nie zastępują deklaracji mise; wyjątkiem jest jawnie aktywowany projektowy `ruby-lsp` opisany poniżej. Nierozwiązywalne lub niezainstalowane narzędzie kończy się widocznym błędem przy uruchamianiu klienta.
-- **Neovim <0.11**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
+- **Neovim <0.11.3**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
 - **Projektowy Ruby LSP**: przed startem Neovima aktywuj środowisko projektu, np. `source dockerized.sh`. Edytor wybiera `ruby-lsp` z `PATH` tylko wtedy, gdy ścieżka pliku wykonywalnego należy do root otwartego projektu. Startuje bez dodatkowych argumentów, z cwd i `PWD` ustawionymi na root; wrapper odpowiada za runtime, bundle, transport stdio i zakończenie procesu. Sam plik `dockerized.sh` nie włącza integracji. Neovim czeka do 2000 ms na zwykłe zakończenie LSP. Zmiana środowiska w terminalu nie zmienia już uruchomionego Neovima; dla innego środowiska otwórz nową sesję.
 - **Pozostałe katalogi Ruby**: bez aktywowanego projektowego `ruby-lsp` binarki `ruby` i `ruby-lsp` są sprawdzane przez mise w root i uruchamiane przez `mise -C <root> exec`, z wyłączoną automatyczną instalacją. Błąd aktywowanego wrappera nie przechodzi na mise. Znany problem launchera gema powiązanego z innym Ruby minor pozostaje poza zakresem tej integracji.
 - **Root Ruby**: pierwszeństwo ma katalog z `Gemfile`, następnie `.git` (także plik znacznika worktree). Plik Ruby poza repozytorium używa własnego katalogu i konfiguracji mise obowiązującej w tym katalogu. Nienazwany bufor nie uruchamia klienta. Kolejne pliki tego samego root używają istniejącego klienta; katalog i środowisko procesu Neovima pozostają bez zmian.
@@ -621,7 +621,7 @@ update-all
 ```
 
 Samodzielna sekcja wymaga zapisanego profilu (`make install-profile`),
-konfiguracji bazowej (`make install-base`) i Neovima >= 0.11. Desktop wymaga
+konfiguracji bazowej (`make install-base`) i Neovima >= 0.11.3. Desktop wymaga
 również konfiguracji mise (`make install-tools`) i swoich zależności budowania.
 Nieznany profil jest odrzucany.
 `make install-neovim` najpierw uzupełnia pluginy przez
@@ -629,7 +629,7 @@ Nieznany profil jest odrzucany.
 w katalogu domowym użytkownika docelowego i odświeża completions. Server przygotowuje
 wyłącznie lekki zestaw pluginów, bez instalacji mise, narzędzi językowych i kompilacji
 parserów. Pełna instalacja przygotowuje pluginy w obu profilach; desktop instaluje
-narzędzia mise wcześniej w etapie `tools`. Przy braku Neovima >= 0.11 pomija
+narzędzia mise wcześniej w etapie `tools`. Przy braku Neovima >= 0.11.3 pomija
 jego utrzymanie, zachowuje Vim i kontynuuje pozostałe etapy; jawna sekcja
 `make install-neovim` nadal odmawia działania bez wspieranej wersji.
 `update-all` aktualizuje binarki

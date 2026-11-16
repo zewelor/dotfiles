@@ -44,8 +44,8 @@ version_output=$(nvim --version)
 nvim_version="${version_output%%$'\n'*}"
 nvim_version="${nvim_version#NVIM v}"
 autoload -Uz is-at-least
-if [[ "$nvim_version" != <->.<->* ]] || ! is-at-least 0.11 "$nvim_version"; then
-  print -u2 'Error: Neovim >= 0.11 is required.'
+if [[ "$nvim_version" != <->.<->.<->* ]] || ! is-at-least 0.11.3 "$nvim_version"; then
+  print -u2 'Error: Neovim >= 0.11.3 is required.'
   exit 1
 fi
 

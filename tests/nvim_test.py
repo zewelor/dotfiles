@@ -21,11 +21,11 @@ class NeovimTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         output = subprocess.check_output([NVIM, "--version"], text=True, timeout=5)
-        version = re.match(r"NVIM v(\d+)\.(\d+)", output)
+        version = re.match(r"NVIM v(\d+)\.(\d+)\.(\d+)", output)
         if version is None:
             raise RuntimeError("Cannot determine Neovim version")
-        if tuple(map(int, version.groups())) < (0, 11):
-            raise unittest.SkipTest("Neovim 0.11 or newer is required")
+        if tuple(map(int, version.groups())) < (0, 11, 3):
+            raise unittest.SkipTest("Neovim 0.11.3 or newer is required")
 
     def run_lua(self, code, profile=None, mise=False):
         with tempfile.TemporaryDirectory(prefix="dotfiles-nvim-") as directory:
@@ -52,6 +52,21 @@ class NeovimTest(unittest.TestCase):
                 env=env, capture_output=True, text=True, timeout=15,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_unsupported_neovim_stops_before_plugin_setup(self):
+        self.run_lua("""
+local manager_started = false
+package.preload['config.lazy'] = function() manager_started = true; return {} end
+local has = vim.fn.has
+vim.fn.has = function(feature)
+  if feature == 'nvim-0.11.3' then return 0 end
+  return has(feature)
+end
+local ok, err = pcall(dofile, %s)
+assert(not ok, 'unsupported Neovim was accepted')
+assert(tostring(err):find('Neovim 0.11.3 or newer', 1, true), tostring(err))
+assert(not manager_started, 'plugin setup started before the version check')
+""" % json.dumps(str(ROOT / '.config/nvim/init.lua')), "server")
 
     def test_child_processes_disable_implicit_mise_installation(self):
         for profile in ("desktop", "server"):

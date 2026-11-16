@@ -128,11 +128,21 @@ exit "${TEST_NVIM_EXIT:-0}"
     def test_old_neovim_fails_before_maintenance(self):
         self.profile("desktop")
         self.base_config()
-        self.env["TEST_NVIM_VERSION"] = "0.10.4"
+        for version in ("0.10.4", "0.11.0", "0.11.2"):
+            with self.subTest(version=version):
+                self.env["TEST_NVIM_VERSION"] = version
+                result = self.run_helper()
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("0.11.3", result.stderr)
+                self.assertFalse(self.log.exists())
+
+    def test_exact_minimum_neovim_runs_maintenance(self):
+        self.profile("server")
+        self.base_config()
+        self.env["TEST_NVIM_VERSION"] = "0.11.3"
         result = self.run_helper()
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("0.11", result.stderr)
-        self.assertFalse(self.log.exists())
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(self.log.exists())
 
     def test_desktop_requires_mise(self):
         self.profile("desktop")

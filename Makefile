@@ -102,11 +102,11 @@ packages:
 	if [ -z "$$CANDIDATE" ] || [ "$$CANDIDATE" = "(none)" ]; then \
 		echo "Neovim not found in apt. Installing Vim..."; \
 		sudo apt-get install -y --no-install-recommends vim; \
-	elif dpkg --compare-versions "$$CANDIDATE" lt "0.11"; then \
-		echo "Neovim version $$CANDIDATE is too old (< 0.11). Installing Vim..."; \
+	elif dpkg --compare-versions "$$CANDIDATE" lt "0.11.3"; then \
+		echo "Neovim version $$CANDIDATE is too old (< 0.11.3). Installing Vim..."; \
 		sudo apt-get install -y --no-install-recommends vim; \
 	else \
-		echo "Neovim version $$CANDIDATE is sufficient (>= 0.11). Installing Neovim..."; \
+		echo "Neovim version $$CANDIDATE is sufficient (>= 0.11.3). Installing Neovim..."; \
 		sudo apt-get install -y --no-install-recommends neovim; \
 	fi
 

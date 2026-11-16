@@ -1,8 +1,8 @@
 -- Bootstrap lazy.nvim and core configuration
 
 -- This configuration relies on Neovim's native LSP API introduced in 0.11.
-if vim.fn.has("nvim-0.11") ~= 1 then
-  error("This configuration requires Neovim 0.11 or newer")
+if vim.fn.has("nvim-0.11.3") ~= 1 then
+  error("This configuration requires Neovim 0.11.3 or newer")
 end
 
 -- An editor command must not implicitly install a missing mise tool.

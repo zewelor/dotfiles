@@ -347,19 +347,19 @@ check_editor_support() {
 
   local nvim_version=""
   autoload -Uz is-at-least
-  nvim_version=$(nvim --version 2>/dev/null | head -n 1 | grep -oE 'v[0-9]+\.[0-9]+' | sed 's/^v//')
+  nvim_version=$(nvim --version 2>/dev/null | head -n 1 | grep -oE 'v[0-9]+\.[0-9]+\.[0-9]+' | sed 's/^v//')
 
   if [[ -z "$nvim_version" ]]; then
     warn "Could not parse Neovim version"
     return
   fi
 
-  if is-at-least "0.11" "$nvim_version"; then
+  if is-at-least "0.11.3" "$nvim_version"; then
     pass "Neovim version is supported (${nvim_version})"
   elif has "vim"; then
-    warn "Neovim ${nvim_version} is older than 0.11; Vim fallback should be used"
+    warn "Neovim ${nvim_version} is older than 0.11.3; Vim fallback should be used"
   else
-    fail "Neovim ${nvim_version} is older than 0.11 and no Vim fallback is installed"
+    fail "Neovim ${nvim_version} is older than 0.11.3 and no Vim fallback is installed"
   fi
 }
 
