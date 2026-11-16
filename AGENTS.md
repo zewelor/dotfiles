@@ -26,8 +26,10 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
   Serwer musi być uprawniony do przechowywania całego prywatnego checkoutu.
 - Wybór klientów agentów jest niezależny od profilu hosta. Deklarację operatora
   odczytuje instalator; nie dodawaj jej do startu shella ani nie instaluj CLI
-  jako ukrytej zależności konfiguracji. Skille konsumenta pochodzą z zatwierdzonego
-  Git, a ich aktualizacja wymaga osobnego workflow z `docs/agent-skills.md`.
+  jako ukrytej zależności konfiguracji. Na desktopie `update-all` odświeża skille
+  przez npx; nadpisanie lokalnych adaptacji jest zaakceptowane. Serwer korzysta
+  z wersji Git i pomija upstream updater. Publikację desktopowych aktualizacji
+  opisuje `docs/agent-skills.md`; nie commituj ich automatycznie.
 - GNU Stow służy do stabilnych, deklaratywnych plików należących do repo.
   Sekrety, cache, wygenerowany stan i pliki nadpisywane przez aplikacje nie
   powinny być przejmowane przez Stow. Wyjątki zapisuj deterministycznie w

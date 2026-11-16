@@ -102,8 +102,11 @@ before applying it; the overall installation is not transactional.
 New target directories remain real directories. Existing directory links managed
 by Stow may remain; foreign links or a linked top-level client/resource directory
 require manual inspection and migration. No runtime config, credentials or plugin
-installation is supplied by this step. See [maintaining agent skills](docs/agent-skills.md)
-for the separate, reviewed Git update workflow.
+installation is supplied by this step. On desktop, each `update-all` refreshes
+upstream skills through `npx --yes skills update --global` when npx is available;
+local skill edits may be overwritten. Server skips that stage and consumes
+the approved Git version. See [maintaining agent skills](docs/agent-skills.md)
+for publishing desktop updates to other hosts.
 
 These dotfiles assume configuration under `~/.config`; relocating it through
 `XDG_CONFIG_HOME` is not supported by the installer or shell helpers.

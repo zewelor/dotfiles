@@ -101,7 +101,9 @@ class UpdateAllTests(unittest.TestCase):
             stub.write_text("#!/bin/sh\nexit 0\n")
             stub.chmod(0o755)
         (tool_bin / "npx").write_text(
-            '#!/bin/sh\nprintf "%s\\n" "$*" >> "$TEST_NPX_LOG"\nexit 99\n'
+            '#!/bin/sh\nprintf "%s|%s|%s\\n" "$*" "$HOME" "$PWD" >> "$TEST_NPX_LOG"\n'
+            'printf "skills stdout\\n"\nprintf "skills stderr\\n" >&2\n'
+            'exit "${TEST_SKILLS_EXIT:-0}"\n'
         )
         if nvim_installed:
             (tool_bin / "nvim").write_text(
@@ -131,6 +133,7 @@ class UpdateAllTests(unittest.TestCase):
         self, caller_profile, target_profile, mise_installed, config_exists=False,
         caller_config=None,
         nvim_installed=True,
+        npx_installed=True,
         upgrade_exit=0,
         config_link=None,
         system_config=None,
@@ -179,6 +182,9 @@ sudo() {
   if [[ "${TEST_NVIM_INSTALLED:-true}" == false && "$*" == *"command -v nvim >/dev/null 2>&1"* ]]; then
     return 1
   fi
+  if [[ "${TEST_NPX_INSTALLED:-true}" == false && "$*" == *"command -v npx >/dev/null 2>&1"* ]]; then
+    return 1
+  fi
   HOME="$TEST_TARGET_HOME" /usr/bin/env -u DOTFILES_PROFILE "$@"
 }
 '''
@@ -201,6 +207,8 @@ sudo() {
                 TEST_NVIM_INSTALLED=str(nvim_installed).lower(),
                 TEST_NVIM_MAINTAIN_LOG=str(self.nvim_maintain_log),
                 TEST_NPX_LOG=str(self.base / "npx.log"),
+                TEST_NPX_INSTALLED=str(npx_installed).lower(),
+                TEST_SKILLS_EXIT=str((quiet_exits or {}).get("skills", 0)),
                 TEST_COMPLETION_LOG=str(self.completion_log),
                 TEST_COMPLETION_POLICY_LOG=str(self.completion_policy_log),
                 SUDO_USER="fixture",
@@ -240,15 +248,46 @@ sudo() {
             self.assertNotIn(f"{stage} stdout", result.stdout + result.stderr)
             self.assertNotIn(f"{stage} stderr", result.stdout + result.stderr)
 
-    def test_update_all_does_not_update_git_managed_skills(self):
+    def test_target_desktop_updates_skills_as_target_user_from_home(self):
         result = self.run_update_all(
-            "desktop", "desktop", mise_installed=True, config_exists=True,
+            "server", "desktop", mise_installed=True, config_exists=True,
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertFalse((self.base / "npx.log").exists())
+        self.assertEqual((self.base / "npx.log").read_text().splitlines(), [
+            f"--yes skills update --global|{self.home}|{self.home}",
+        ])
         self.assertIn("upgrade", self.mise_log.read_text())
         self.assertTrue(self.completion_log.exists())
         self.assertIn("plugins update", self.nvim_maintain_log.read_text())
+
+    def test_target_server_skips_skills_even_when_caller_is_desktop(self):
+        for target_profile in ("server", None):
+            with self.subTest(target_profile=target_profile):
+                result = self.run_update_all(
+                    "desktop", target_profile, mise_installed=False,
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertFalse((self.base / "npx.log").exists())
+                self.assertIn("[skills] Skipping skills update on server", result.stdout)
+
+    def test_desktop_skills_failure_is_reported(self):
+        result = self.run_update_all(
+            "server", "desktop", mise_installed=True, config_exists=True,
+            quiet_exits={"skills": 42},
+        )
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("[skills] Update failed (exit 42)", result.stdout)
+        self.assertIn("skills stderr", result.stderr)
+        self.assertIn("update-all completed with failures: skills", result.stderr)
+
+    def test_desktop_without_npx_skips_skills(self):
+        result = self.run_update_all(
+            "server", "desktop", mise_installed=True, config_exists=True,
+            npx_installed=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.base / "npx.log").exists())
+        self.assertIn("[skills] Skipping skills update: npx not found", result.stdout)
 
     def test_quiet_update_stages_show_output_on_failure_exit_1(self):
         for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):

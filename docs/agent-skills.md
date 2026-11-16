@@ -1,41 +1,33 @@
 # Maintaining agent skills
 
-The tracked files in `prv/.agents/skills/` are the approved consumer copies for
-desktop and explicitly configured servers;
-`prv/.agents/.skill-lock.json` records their upstream sources and last recorded
-folder hashes. They are part of the private Git repository and may contain local
-changes. The upstream authoring repository is a separate source of truth: make
-changes there first when maintaining a skill owned there. Third-party skills may
-also have local adaptations that need to survive an upstream update.
+Desktop refreshes upstream skills on each `update-all` through
+`npx --yes skills update --global`, when npx is available for the target user.
+The saved profile of that user controls this stage, including when invoked
+through sudo. Server skips the updater and does not need Node/npx to link skills.
+There is no separate timer: updates run when the operator runs `update-all`.
+An updater failure is reported and makes `update-all` return a failure.
 
-`update-all` does not update these files. The skills CLI's global updater can
-replace an installed skill when its upstream hash changes, including local
-edits; its lock is not a Git merge or a guarantee that the installed content is
-unmodified. A lock `ref` can name a moving branch rather than a pinned commit.
+The desktop skill links point into `prv/.agents/skills/`; the global lock is
+`prv/.agents/.skill-lock.json`. Upstream refreshes may overwrite local changes
+and leave the private checkout dirty. This is intentional: preserving local
+skill adaptations during a refresh is not required. The lock records upstream
+sources and folder hashes; a `ref` may name a moving branch.
 
-For an intentional update, work on one skill at a time:
+To distribute a desktop refresh to servers:
 
-1. Inspect the private repository's status and diff, the skill and its lock entry.
-   Preserve any existing work. Identify its upstream URL, path and ref. Record
-   the exact upstream commit used for the proposed update; a branch name or
-   folder hash alone does not pin that commit.
-2. Use a disposable directory and a separate `HOME`, cache and temporary
-   directory. Copy the selected skill and global lock into the disposable
-   `HOME/.agents/`, dereferencing links so the copy cannot write through to the
-   live home or repository. Keep a second, untouched copy of the selected skill
-   outside that disposable home. Do not point the updater at live files.
-3. Run the updater only for the selected name in the disposable home, with a
-   deliberately pinned CLI version, for example `npx --yes skills@1.8.1 update
-   <skill-name> --global -y`. The version is the one tested for this workflow;
-   review CLI changes before choosing another version. Check the command output,
-   exit status, resulting skill and lock entry. A successful exit alone does not
-   prove that the source was fetched or a skill updated.
-4. Compare the untouched copy with the candidate, including supporting files and
-   deletions. Identify local adaptations against the previous upstream revision
-   where available. Manually reconcile them with the new upstream revision; if
-   their intent or a conflict is unclear, stop and resolve it explicitly. Never
-   blindly copy the updater's output over the tracked skill.
-5. Apply only the reviewed changes and relevant lock entry to the private Git
-   checkout. Inspect the complete scoped Git diff and validate the skill before
-   any separately authorized commit or deployment. An update to a source
-   repository, the private consumer, and its parent gitlink are separate steps.
+1. Inspect the private repository's status and scoped diff, including skill
+   files, supporting files, deletions and the global lock. Preserve unrelated
+   work and validate the changed skills.
+2. Commit and publish the selected changes in the private repository, then
+   update and publish the parent dotfiles gitlink as a separate step. Neither
+   the updater nor `update-all` commits or pushes changes automatically.
+3. Update the server's dotfiles and private checkout to the approved revision,
+   then run the required agent installation section if links need updating.
+   Deployment is a separately authorized action; desktop updates alone do not
+   change a server.
+
+The installer refuses locally changed, untracked or ignored `.agents` sources.
+Reconcile and commit a refresh before re-running the agent installation sections.
+
+For skills maintained in a separate authoring repository, make deliberate source
+changes there first, then refresh the consumer copy through the usual updater.
