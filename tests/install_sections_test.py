@@ -162,6 +162,30 @@ setup_herdr() { return 0 }
                 self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
                 self.assertEqual((self.home / "stages").read_text().splitlines(), expected_stages)
 
+    def test_neovim_section_refreshes_completions_after_successful_setup(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+setup_neovim() { print -r -- setup >> "$HOME/stages"; return "$TEST_SETUP_EXIT" }
+''')
+        completions = repo / "bin/update-shell-completions"
+        completions.write_text('#!/bin/sh\nprintf "completions\\n" >> "$HOME/stages"\n'
+                               'exit "$TEST_COMPLETIONS_EXIT"\n')
+        for setup_exit, completion_exit, expected_exit, stages in (
+            (42, 0, 42, ["setup"]),
+            (0, 43, 43, ["setup", "completions"]),
+            (0, 0, 0, ["setup", "completions"]),
+        ):
+            with self.subTest(setup_exit=setup_exit, completion_exit=completion_exit):
+                (self.home / "stages").unlink(missing_ok=True)
+                result = subprocess.run(
+                    ["zsh", str(repo / "install"), "--section", "neovim"],
+                    env={**self.env, "TEST_SETUP_EXIT": str(setup_exit),
+                         "TEST_COMPLETIONS_EXIT": str(completion_exit)},
+                    cwd=self.home, text=True, capture_output=True, timeout=10,
+                )
+                self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
+                self.assertEqual((self.home / "stages").read_text().splitlines(), stages)
+
     def test_full_install_preserves_vim_fallback_and_propagates_supported_neovim_failures(self):
         repo = self.make_fixture('''
 configure_profile() { DOTFILES_PROFILE=desktop }

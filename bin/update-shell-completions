@@ -9,7 +9,7 @@ trap '[[ -z "$temp_file" ]] || rm -f -- "$temp_file"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' HUP TERM
 
-for tool in sourcetap gog opencode workmux; do
+for tool in sourcetap gog opencode workmux dockerfmt; do
   command_path=$(whence -p "$tool") || continue
   case "$tool" in
     opencode) args=(--completions zsh) ;;

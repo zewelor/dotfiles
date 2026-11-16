@@ -43,7 +43,6 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   └── sshconfig.lua     # Filetype detection dla ~/.ssh/config.d/*
 └── after/
     └── ftplugin/
-        ├── dockerfile.lua # Nadpisy dla Dockerfile (RUN: 4 + shell blok: +2)
         ├── go.lua         # Nadpisy dla Go
         ├── just.lua       # Commentstring (#) dla Justfile
         ├── markdown.lua   # Nadpisy dla Markdown (2 spacje + wrap)
@@ -141,9 +140,21 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 | Język | Plik | Opis nadpisu |
 |-------|------|--------------|
 | **Markdown** | `markdown.lua` | `wrap`, `linebreak`, `breakindent` (indent zarządzany przez `.editorconfig`) |
-| **Dockerfile** | `dockerfile.lua` | Custom indent logic dla kontynuacji `RUN` oraz bloków shell (`if/for/while/case`); basic indent (4 spacje) zarządzany przez `.editorconfig` |
 | **Just** | `just.lua` | `commentstring = "# %s"` + `ts-comments.nvim` (ftdetect w `ftdetect/just.lua`) |
 | **SSH config** | `sshconfig.lua` | Ustawia `filetype=sshconfig` dla fragmentów `~/.ssh/config.d/*`, żeby działały builtinowe komentarze (`# %s`) |
+
+Dockerfile używa standardowych wcięć Neovima zamiast własnego parsera bloków
+shellowych w `RUN`. Rozpoznawanie `fdockerfile` i wariantów oraz wcięcia z
+`.editorconfig` pozostają aktywne. Na desktopie `<Space>cf` formatuje cały bufor
+przez `dockerfmt`, w tym shell wewnątrz `RUN`; zapis nadal pomija formatowanie
+Dockerfile. Ręczne formatowanie nie zapisuje pliku automatycznie.
+
+Dockerfmt jest gotową binarką zarządzaną przez mise i korzysta z wbudowanego
+adaptera Conforma. Przy wejściu przez stdin dostaje szerokość wcięcia i wybór
+tabów z bufora. Może modernizować zapisy, np. `MAINTAINER` na `LABEL`;
+przejrzyj wynik przed zapisem. Brak narzędzia lub błąd nie przełącza formatowania
+na LSP. Instalacja narzędzi desktopu i `update-all` obejmują też dockerfmt;
+`bin/update-shell-completions` odświeża jego statyczne uzupełnianie Zsh.
 
 ## 🔌 Pluginy i ich użycie
 
@@ -278,6 +289,7 @@ Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lu
 - **Domyślne formatery**: Lua przez `stylua`, Python przez `ruff_format`, TOML przez `taplo`, Go przez `goimports`, a następnie `gofumpt`, sh/bash oraz Zsh przez `shfmt` (dla Zsh jawnie `-ln zsh`, wymagane >= 3.13.1), YAML przez `yamlfmt`, JS/TS/JSON/CSS/GraphQL przez natywne `oxfmt`.
 - **Go**: Conform wykonuje `goimports`, po nim `gofumpt`, z binarkami rozwiązanymi przez mise w katalogu bufora. Procesy formatterów współdzielą timeout Conform 2000 ms; osobne zapytania `mise which` mają limit 1000 ms każde. Błędy i timeout są widoczne; formatowanie nie przechodzi na gopls.
 - **Zsh**: sprawdzony shfmt 3.13.1 nie obsługuje całej składni Zsh, np. `${~pattern}`. Błąd parsera jest widoczny i nie zmienia bufora; nie przechodzimy automatycznie na inny formatter. Publiczne pliki shella przeszły kontrolę składni po formatowaniu; nie wykonujemy masowego reformatowania repozytorium.
+- **Dockerfile**: ręczne `<Space>cf` używa dockerfmt.
 - **Wyłączenia**: Dockerfile bez autoformatowania przy zapisie; `eruby.yaml.tmuxinator` bez formatowania również ręcznie. Nienazwany bufor z grupy projektowej wymaga najpierw nadania nazwy.
 - **Błędy i czas**: dla aktywowanego projektowego dprint jeden synchroniczny budżet 10000 ms obejmuje sprawdzenie wersji, konfigurację i formatowanie. Pozostałe projektowe dprint zachowuje budżet 2000 ms; domyślne formatery mają timeout Conform 2000 ms, a każde osobne rozwiązywanie przez mise limit 1000 ms. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
 - **Ruby**: projekty z `.rubocop.yml` i Gemfile korzystają z własnych reguł RuboCop. Aktywowany projektowy `ruby-lsp` obsługuje formatowanie przez gotowego klienta LSP; w pozostałych projektach Conform uruchamia repo-local `bin/rubocop`, jeśli istnieje, albo `bundle exec rubocop`, z cache w `tmp/rubocop`. Jeżeli odziedziczony Ruby lub Bundler należy do innego projektu z Gemfile, formatowanie zgłasza błąd zamiast uruchamiać jego wrapper. Poza tym kontraktem zapis i `<Space>cf` pomijają Ruby; rubyfmt pozostaje ręcznym dodatkiem opisanym poniżej.
@@ -319,9 +331,9 @@ poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
 `.config/mise/config.toml` jest jedynym źródłem narzędzi, backendów i wersji.
 `lua/config/tools.lua` określa aktywne serwery LSP, resolver działający w katalogu
 bufora oraz progi wersji używane przez konfigurację edytora. Utrzymywany zestaw
-obejmuje 12 narzędzi: pięć serwerów LSP i siedem formatterów. Ruff i
+obejmuje 13 narzędzi: pięć serwerów LSP i osiem formatterów. Ruff i
 Taplo są wspólne dla LSP i formatowania. `gem:ruby-lsp` pozostaje istniejącym
-narzędziem mise poza tą dwunastką.
+narzędziem mise poza tą trzynastką.
 
 | Narzędzie mise | Użycie |
 |---|---|
@@ -334,6 +346,7 @@ narzędziem mise poza tą dwunastką.
 | gofumpt | Formatowanie Go |
 | stylua | Formatowanie Lua |
 | shfmt | Formatowanie sh/bash/Zsh |
+| dockerfmt | Ręczne formatowanie Dockerfile i shella w `RUN` |
 | oxfmt | Natywne formatowanie JS/TS/JSON/CSS/GraphQL, bez npm |
 | dprint | Projektowe formatowanie, gdy projekt nie deklaruje własnej binarki |
 | yamlfmt | Domyślne formatowanie YAML |

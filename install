@@ -1313,7 +1313,11 @@ run_selected_section() {
       "$BASE_DIR/bin/update-shell-completions"
       ;;
     neovim)
-      setup_neovim
+      setup_neovim || return $?
+      if is_desktop; then
+        print_banner 'Refreshing static shell completions'
+        "$BASE_DIR/bin/update-shell-completions" || return $?
+      fi
       ;;
     ai)
       configure_stow_apply

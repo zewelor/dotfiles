@@ -20,6 +20,7 @@ EXPECTED_AQUA_TOOLS = {
     "aqua:mvdan/gofumpt",
     "aqua:JohnnyMorganz/StyLua",
     "aqua:mvdan/sh",
+    "aqua:reteps/dockerfmt",
     "aqua:oxc-project/oxc/oxfmt",
     "aqua:dprint/dprint",
     "aqua:google/yamlfmt",
@@ -107,7 +108,7 @@ class NeovimToolResolutionTest(unittest.TestCase):
 
         self.assertTrue(EXPECTED_AQUA_TOOLS.issubset(aqua_tools))
         self.assertTrue(EXPECTED_GO_TOOLS.issubset(go_tools))
-        self.assertEqual(len(EXPECTED_AQUA_TOOLS | EXPECTED_GO_TOOLS), 12)
+        self.assertEqual(len(EXPECTED_AQUA_TOOLS | EXPECTED_GO_TOOLS), 13)
         self.assertNotIn("aqua:LuaLS/lua-language-server", tools)
         for name in EXPECTED_AQUA_TOOLS:
             self.assertEqual(tools[name], "latest", name)

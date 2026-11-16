@@ -86,6 +86,11 @@ local function resolve(bufnr, trigger, deadline)
     plan.kind, plan.reason = "skip", "Project formatting requires the desktop profile"
   elseif ft == "eruby.yaml.tmuxinator" or (trigger == "save" and ft == "dockerfile") then
     plan.kind, plan.reason = "skip", "This filetype is excluded from formatting"
+  elseif ft == "dockerfile" then
+    local info = require("conform").get_formatter_info("dockerfmt", bufnr)
+    if not info.available then
+      error(info.available_msg or "dockerfmt is not available; prepare the desktop tools first", 0)
+    end
   elseif ft == "ruby" then
     local ruby = require("config.ruby")
     local root = ruby.root(bufnr)
@@ -180,7 +185,7 @@ local function operation(bufnr, trigger, dispatch)
         opts.formatters, opts.lsp_format = { "project_dprint" }, "never"
       elseif plan.kind == "ruby_lsp" then
         opts.formatters, opts.lsp_format, opts.id = {}, "fallback", plan.client_id
-      elseif vim.bo[bufnr].filetype == "go" then
+      elseif vim.bo[bufnr].filetype == "go" or vim.bo[bufnr].filetype == "dockerfile" then
         opts.lsp_format = "never"
       end
       -- Native LSP formatting parameters use the current buffer, even with an explicit bufnr.

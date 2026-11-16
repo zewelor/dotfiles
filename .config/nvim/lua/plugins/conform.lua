@@ -34,6 +34,7 @@ return {
       sh = { "shfmt" },
       bash = { "shfmt" },
       zsh = { "shfmt" },
+      dockerfile = { "dockerfmt" },
 
       javascript = { "oxfmt" },
       javascriptreact = { "oxfmt" },
@@ -73,6 +74,13 @@ return {
     },
 
     formatters = {
+      dockerfmt = {
+        command = function(_, ctx) return require("config.tools").resolve("dockerfmt", ctx.dirname) end,
+        -- dockerfmt cannot read EditorConfig on stdin; use the buffer's indentation.
+        append_args = function(_, ctx)
+          return vim.bo[ctx.buf].expandtab and { "--indent", tostring(ctx.shiftwidth) } or { "--use-tabs" }
+        end,
+      },
       project_dprint = function(bufnr)
         return require("config.formatting").project_formatter(bufnr)
       end,
