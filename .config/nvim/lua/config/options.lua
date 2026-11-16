@@ -42,6 +42,7 @@ vim.opt.ignorecase     = true      -- Case-insensitive search by default…
 vim.opt.smartcase      = true      -- …but case-sensitive if the pattern contains uppercase
 
 -- Files, backups, undo
+vim.opt.autoread       = true      -- Reload unmodified buffers when files change externally
 vim.opt.swapfile       = false     -- Do not create swap files (.swp)
 vim.opt.backup         = false     -- Do not create backup files
 vim.opt.undofile       = true      -- Persist undo history to an undo file

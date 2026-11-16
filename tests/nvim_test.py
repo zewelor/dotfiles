@@ -52,6 +52,29 @@ class NeovimTest(unittest.TestCase):
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_external_changes_reload_without_agent_plugin(self):
+        for profile in ("desktop", "server"):
+            with self.subTest(profile=profile):
+                self.run_lua("""
+vim.o.autoread = false
+require('config.options')
+local path = vim.env.HOME .. '/external.txt'
+vim.fn.writefile({ 'before' }, path)
+vim.cmd.edit(vim.fn.fnameescape(path))
+-- Decline prompts when a buffer cannot be reloaded automatically.
+vim.api.nvim_create_autocmd('FileChangedShell', {
+  callback = function() vim.v.fcs_choice = '' end,
+})
+vim.fn.writefile({ 'changed externally' }, path)
+vim.cmd.checktime()
+assert(vim.api.nvim_get_current_line() == 'changed externally', 'unmodified buffer did not reload')
+vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'local edits' })
+vim.fn.writefile({ 'changed externally a second time' }, path)
+vim.cmd.checktime()
+assert(vim.api.nvim_get_current_line() == 'local edits', 'external changes overwrote local edits')
+assert(vim.bo.modified, 'local edits lost the modified flag')
+""", profile)
+
     def test_profiles_with_and_without_mise(self):
         for profile in (None, "server", "desktop"):
             for mise in (False, True):
@@ -61,7 +84,7 @@ class NeovimTest(unittest.TestCase):
                     self.run_lua("""
 local expected = vim.env.DOTFILES_PROFILE == 'desktop'
 assert(require('config.profile').is_desktop() == expected, 'wrong desktop profile policy')
-for _, name in ipairs({'conform', 'opencode'}) do
+for _, name in ipairs({'conform'}) do
   local spec = require('plugins.' .. name)
   local active = spec.cond == nil or (type(spec.cond) == 'function' and spec.cond() or spec.cond == true)
   assert(active == expected, name .. ': wrong profile condition')
@@ -71,12 +94,18 @@ for _, spec in ipairs(require('plugins.lsp')) do
 end
 vim.g.mapleader = ' '
 require('config.keymaps')
-for _, key in ipairs({' cf', ' oa'}) do
+for _, key in ipairs({' cf'}) do
   assert((vim.fn.maparg(key, 'n') ~= '') == expected, key .. ': wrong keymap policy')
 end
 assert(vim.fn.maparg(' ct', 'n') == '', 'retired Copilot toggle remains mapped')
 for _, key in ipairs({'<M-]>', '<M-[>', '<M-l>', '<C-]>'}) do
   assert(vim.fn.maparg(key, 'i') == '', key .. ': retired Copilot suggestion remains mapped')
+end
+for _, mapping in ipairs({
+  { 'n', ' oa' }, { 'x', ' oa' }, { 'n', ' ox' }, { 'x', ' ox' },
+  { 'n', ' ot' }, { 't', ' ot' }, { 'n', '<S-C-u>' }, { 'n', '<S-C-d>' },
+}) do
+  assert(vim.fn.maparg(mapping[2], mapping[1]) == '', mapping[2] .. ': retired OpenCode key remains mapped')
 end
 """, profile, mise)
 

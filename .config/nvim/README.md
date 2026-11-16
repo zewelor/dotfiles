@@ -32,7 +32,6 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── mini-pairs.lua           # Autopairs
 │   │   ├── mini-surround.lua        # Surround (gsa/gsd/gsr)
 │   │   ├── neotree.lua              # File explorer
-│   │   ├── opencode.lua             # AI Assistant (opencode.nvim)
 │   │   ├── snacks.lua               # Utility modules
 │   │   ├── telescope.lua            # Wyszukiwanie i fuzzy finder
 │   │   ├── treesitter.lua           # Tree-sitter (Neovim 0.11+)
@@ -66,7 +65,7 @@ użytkownika docelowego (domyślnie `server`, gdy pliku brak).
 
 Pełny zestaw deweloperski jest włączany tylko przez
 `DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): natywny LSP,
-`conform.nvim` oraz integracja OpenCode wraz z jej skrótami.
+`conform.nvim`.
 Aktywowane projektowe Ruby LSP i dprint mają pierwszeństwo; pozostałe narzędzia
 rozwiązuje mise w kontekście katalogu projektu. Profil `server`
 i brak profilu korzystają z uproszczonego trybu, również gdy `mise` jest
@@ -126,7 +125,10 @@ Główne opcje edytora (z `lua/config/options.lua`):
 | `termguicolors` | true | True color support |
 | `clipboard` | "" | Clipboard systemowy nie jest domyślnym rejestrem; tylko świadome yankowanie (`y`) kopiuje do `+` |
 | `undofile` | true | Trwałe undo (po zamknięciu pliku) |
+| `autoread` | true | Przeładuj niezmodyfikowany bufor po wykryciu zewnętrznej zmiany |
 | `mouse` | "" | Wyłączona obsługa myszy |
+
+`autoread` działa niezależnie od pluginów agentów. `:checktime` jawnie sprawdza zewnętrzne zmiany; lokalnie zmodyfikowany bufor wymaga rozstrzygnięcia przez użytkownika.
 
 **Indent settings** (`expandtab`, `tabstop`, `shiftwidth`) są zarządzane przez wbudowaną obsługę `.editorconfig` w Neovimie. Plik `.editorconfig` znajduje się w `~/dotfiles/.editorconfig` i jest linkowany do `~/.editorconfig` przez stow.
 
@@ -213,7 +215,7 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 
 ### **blink.cmp** — Autouzupełnianie
 
-Integracja Copilot w edytorze jest wycofana. Źródła podpowiedzi Blinka pozostają bez zmian.
+Integracje Copilot i OpenCode w edytorze są wycofane. Zewnętrzne CLI agentów pozostają niezależne; źródła podpowiedzi Blinka pozostają bez zmian.
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
@@ -230,46 +232,6 @@ Integracja Copilot w edytorze jest wycofana. Źródła podpowiedzi Blinka pozost
 
 Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lub
 `<C-n>`/`<C-p>`, a potem zatwierdź Enterem.
-
----
-
-### **opencode.nvim** — AI Assistant (opencode)
-
-- **Repo**: [nickjvandyke/opencode.nvim](https://github.com/nickjvandyke/opencode.nvim)
-- **Cel**: Integracja z opencode AI assistant — edytorowo-świadome research, review i requesty
-- **Wymagania**: Zainstalowany `opencode` CLI (patrz sekcja "Instalacja opencode CLI" poniżej)
-- **Profil**: Tylko `desktop`; na `server` i bez profilu plugin oraz jego skróty są wyłączone.
-- **Integracja**: Używa snacks.nvim dla lepszego UI (input + picker)
-- **Context placeholders**: `@this` (zaznaczenie/kursor), `@buffer`, `@diagnostics`, `@diff`, itp.
-- **Komendy**:
-  - `:checkhealth opencode` — Sprawdź status integracji
-- **Keymaps**:
-  - `<leader>oa` — Ask opencode (z kontekstem `@this`)
-  - `<leader>ox` — Wybierz i wykonaj akcję/prompt
-  - `<leader>ot` — Toggle okno opencode (otwórz/zamknij terminal)
-  - `<S-C-u>` — Scroll opencode w górę (half page)
-  - `<S-C-d>` — Scroll opencode w dół (half page)
-- **Użycie step-by-step**:
-  1. Upewnij się, że `opencode` CLI jest zainstalowany i działa w terminalu
-  2. Uruchom Neovim — plugin automatycznie połączy się z działającym serwerem lub uruchomi własny
-  3. Użyj `<leader>oa` aby zapytać AI o kod pod kursorem / zaznaczeniu
-  4. Użyj `<leader>ox` aby wybrać z gotowych promptów (explain, fix, review, test, itp.)
-  5. Edytuj kod — zmiany od opencode automatycznie przeładują buffery
-
-#### Instalacja opencode CLI
-
-```bash
-# Via Homebrew (macOS/Linux)
-brew install anomalyco/opencode/opencode
-
-# Lub z repozytorium dotfiles przez mise
-cd ~/dotfiles && mise install opencode
-```
-
-**Ważne**: Uruchom `opencode` z flagą `--port` aby udostępnić serwer dla Neovim:
-```bash
-opencode --port
-```
 
 ---
 
@@ -550,14 +512,6 @@ usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej ins
 
 ---
 
-#### AI Assistant (opencode.nvim)
-
-- `<Space>oa` — Ask opencode o kod pod kursorem/zaznaczeniu (`@this`)
-- `<Space>ox` — Wybierz akcję/prompt z listy (explain, fix, review, test...)
-- `<Space>ot` — Toggle okno opencode (otwórz/zamknij terminal AI)
-
----
-
 ### Bez Leadera
 
 #### LSP (aktywne gdy serwer LSP jest podłączony)
@@ -581,13 +535,6 @@ usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej ins
 #### Wyrównywanie (mini.align)
 
 - `ga` — Wyrównaj tekst (Normal: po ruchu/operatorze, Visual: na zaznaczeniu)
-
----
-
-#### AI Assistant (opencode.nvim)
-
-- `Shift+Ctrl+u` — Scroll opencode w górę (half page)
-- `Shift+Ctrl+d` — Scroll opencode w dół (half page)
 
 ---
 
