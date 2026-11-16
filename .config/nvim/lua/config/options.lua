@@ -28,7 +28,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 -- Linux tip: install xclip (X11) or wl-clipboard (Wayland)
 
 -- Indentation & tabs
--- Basic indent (expandtab, shiftwidth, tabstop) managed by .editorconfig via editorconfig-vim plugin
+-- Basic indent (expandtab, shiftwidth, tabstop) managed by .editorconfig via built-in EditorConfig
 -- These options are not supported by editorconfig, so kept here:
 vim.opt.softtabstop    = -1        -- Use shiftwidth for <Tab>/<BS> in insert mode (−1 follows shiftwidth)
 vim.opt.autoindent     = true      -- Copy indent from current line when starting a new one

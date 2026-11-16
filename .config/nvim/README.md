@@ -24,7 +24,6 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   └── tools.lua    # Lista LSP i resolver binarek mise
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
-│   │   ├── editorconfig.lua         # EditorConfig (auto-apply .editorconfig)
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Autoformat (format-on-save)
 │   │   ├── copilot.lua              # GitHub Copilot (lightweight inline suggestions)
@@ -130,7 +129,7 @@ Główne opcje edytora (z `lua/config/options.lua`):
 | `undofile` | true | Trwałe undo (po zamknięciu pliku) |
 | `mouse` | "" | Wyłączona obsługa myszy |
 
-**Indent settings** (`expandtab`, `tabstop`, `shiftwidth`) są zarządzane przez `.editorconfig` via plugin `editorconfig-vim`. Plik `.editorconfig` znajduje się w `~/dotfiles/.editorconfig` i jest linkowany do `~/.editorconfig` przez stow.
+**Indent settings** (`expandtab`, `tabstop`, `shiftwidth`) są zarządzane przez wbudowaną obsługę `.editorconfig` w Neovimie. Plik `.editorconfig` znajduje się w `~/dotfiles/.editorconfig` i jest linkowany do `~/.editorconfig` przez stow.
 
 **Clipboard**: konfiguracja emuluje zachowanie SmartYank bez osobnego pluginu. Operacje `delete`/`change` nie nadpisują systemowego schowka, a `TextYankPost` kopiuje do rejestru `+` tylko przy operatorze `y`. W sesji SSH Neovim wymusza wbudowany provider `osc52`, żeby yank mógł trafić do lokalnego schowka terminala także wtedy, gdy autodetekcja zawodzi pod tmuxem.
 
