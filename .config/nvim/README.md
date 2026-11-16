@@ -26,7 +26,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
 │   │   ├── conform.lua              # Ręczne formatowanie
-│   │   ├── lsp.lua                  # Natywny LSP; Mason tylko do ręcznych dodatków
+│   │   ├── lsp.lua                  # Natywny LSP; narzędzia zarządzane przez mise
 │   │   ├── mini-align.lua           # Wyrównywanie tekstu
 │   │   ├── mini-icons.lua           # Ikony plików
 │   │   ├── mini-pairs.lua           # Autopairs
@@ -376,19 +376,12 @@ zwykłego etapu `mise upgrade` do aktualizacji tych binarek i osobnego headless
 procesu wyłącznie do pluginów. Zwykły start edytora nie instaluje ani nie
 aktualizuje narzędzi.
 
-Mason pozostaje jako ręczny menedżer opcjonalnych dodatków, z `PATH = "skip"`.
-Nie wpływa na domyślne LSP ani formatery, a instalowane ręcznie paczki nie są
-aktualizowane przez `update-all` ani usuwane przez konfigurację. `:MasonUpdate`
-odświeża rejestr, nie zainstalowane pakiety. Ruby poza projektem RuboCop nie jest
-formatowany automatycznie. `rubyfmt` można zainstalować ręcznie przez Mason i
-uruchomić jawnie, przekazując Conformowi dokładną ścieżkę binarki Masona:
+Konfiguracja nie ładuje Masona; narzędziami zarządza mise. Wcześniej zainstalowane
+paczki Masona pozostają na dysku i nie są automatycznie usuwane ani aktualizowane.
+Komendy `:Mason` i `:MasonInstall` nie są już dostępne. Ruby poza projektem
+RuboCop nadal nie ma domyślnego formatowania.
 
-```vim
-:lua local conform = require("conform"); conform.formatters.rubyfmt = { command = require("mason.settings").current.install_root_dir .. "/bin/rubyfmt" }; conform.format({ formatters = { "rubyfmt" }, lsp_format = "never" })
-```
-
-Ta jednorazowa konfiguracja nie dodaje Masona do `PATH` i nie włącza rubyfmt
-przy zapisie ani pod `<Space>cf`. Narzędzia mise nie są instalowane przy
+Narzędzia mise nie są instalowane przy
 formatowaniu. Pluginy kompilowane lokalnie wymagają make i kompilatora C; Go jest
 deklarowanym runtime'em dla gopls i goimports. Systemowe zależności przygotowuje
 operator, dotfiles ich nie instalują.
@@ -438,7 +431,6 @@ operator, dotfiles ich nie instalują.
 
 Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
-- **mason.nvim**: [williamboman/mason.nvim](https://github.com/williamboman/mason.nvim) — ręczny menedżer opcjonalnych narzędzi; nie dodaje binarek do `PATH`
 - **nvim-lspconfig**: [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) — Konfiguracja LSP
 
 **Zainstalowane serwery**:
@@ -479,8 +471,6 @@ usuwania kontenerów. Pozostałe po błędzie kontenery zgłasza do ręcznej ins
 Ścieżki oryginalnych projektów i ich cache są odrzucane.
 
 **Komendy**:
-- `:Mason` — UI ręcznych dodatków
-- `:MasonInstall <package>` — Zainstaluj opcjonalną paczkę Masona; nie aktywuje jej jako LSP
 - `:LspInfo` — Info o aktywnych serwerach
 
 **Keymaps** (aktywne gdy LSP jest podłączony):

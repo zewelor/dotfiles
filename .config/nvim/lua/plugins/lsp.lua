@@ -65,12 +65,6 @@ local function make_server_opts(server)
 end
 
 return {
-  -- Mason: optional manual packages, kept outside PATH
-  {
-    "williamboman/mason.nvim",
-    cond = profile.is_desktop,
-    opts = { PATH = "skip" },
-  },
   -- LSP configuration
   {
     "neovim/nvim-lspconfig",

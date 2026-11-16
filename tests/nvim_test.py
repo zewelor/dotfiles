@@ -161,12 +161,9 @@ vim.lsp.config = setmetatable({}, {
 vim.lsp.enable = function(name) enabled[name] = true end
 vim.fn.executable = function() return 0 end
 local specs = require('plugins.lsp')
-local mason
 for _, spec in ipairs(specs) do
   assert(spec[1] ~= 'williamboman/mason-lspconfig.nvim', 'mason-lspconfig must not activate LSP servers')
-  if spec[1] == 'williamboman/mason.nvim' then mason = spec end
 end
-assert(mason and mason.opts.PATH == 'skip', 'manual Mason extras must not enter PATH')
 local lsp
 for _, spec in ipairs(specs) do
   if spec[1] == 'neovim/nvim-lspconfig' then lsp = spec end

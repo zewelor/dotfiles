@@ -61,8 +61,8 @@ the Vim fallback and continue the remaining installation stages.
 configuration and Neovim >= 0.11.3. Desktop also requires mise.
 `update-all` upgrades declared mise tools through its regular mise stage and
 updates Neovim plugins separately. Ordinary editor startup does not install or
-update tools. Mason remains available for manually chosen extras; it does not
-manage the maintained defaults. See the
+update tools. Mise owns the maintained tools; Mason is not loaded, and existing
+Mason packages are not automatically removed. See the
 [Neovim tool ownership and prerequisites](.config/nvim/README.md#narzędzia-neovim--jawne-utrzymanie-przez-mise).
 `make skills` runs the same private section, including its saved desktop profile,
 base-directory prerequisites, submodule update, Stow confirmation and Herdr setup.
