@@ -6,7 +6,6 @@ local ruby = require("config.ruby")
 return {
   "stevearc/conform.nvim",
   cond = profile.is_desktop,
-  event = { "BufReadPre", "BufNewFile" },
   cmd = { "ConformInfo", "FormatInfo" },
   config = function(_, opts)
     require("conform").setup(opts)
