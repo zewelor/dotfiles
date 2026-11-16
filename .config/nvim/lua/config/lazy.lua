@@ -26,11 +26,7 @@ require("lazy").setup({
   lockfile = vim.fn.stdpath("state") .. "/lazy-lock.json",
   -- Streaming headless output skips Lazy's task error recording for failed processes.
   headless = { process = not vim.g.dotfiles_maintenance },
-  -- automatically check for plugin updates
-  checker = {
-    enabled = not vim.g.dotfiles_maintenance,
-    frequency = 604800 -- check every week
-  },
+  checker = { enabled = false },
   performance = {
     rtp = {
       paths = {

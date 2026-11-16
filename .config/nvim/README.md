@@ -169,6 +169,7 @@ na LSP. Instalacja narzędzi desktopu i `update-all` obejmują też dockerfmt;
 - **Repo**: [folke/lazy.nvim](https://github.com/folke/lazy.nvim)
 - **Cel**: Nowoczesny, szybki menedżer pluginów
 - **Auto-instalacja**: Instaluje się automatycznie przy pierwszym uruchomieniu
+- **Aktualizacje**: Lazy nie sprawdza ich okresowo w tle. Sprawdzaj je jawnie przez `:Lazy check`; aktualizacje wykonuje `update-all` albo świadome `:Lazy update`.
 - **Keymaps**:
   - `:Lazy` — Otwórz UI managera
   - `:Lazy sync` — Synchronizuj pluginy (install/update/clean)
