@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -51,6 +52,19 @@ class NeovimTest(unittest.TestCase):
                 env=env, capture_output=True, text=True, timeout=15,
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_child_processes_disable_implicit_mise_installation(self):
+        for profile in ("desktop", "server"):
+            with self.subTest(profile=profile):
+                self.run_lua("""
+package.loaded['config.lazy'] = {} -- Keep plugin installation outside this test.
+vim.env.MISE_AUTO_INSTALL = 'true'
+dofile(%s)
+local child = vim.system({ %s, '-c', %s }, { text = true }):wait()
+assert(child.code == 0, child.stderr)
+assert(child.stdout == 'false\\n', 'child process permits implicit mise installation: ' .. child.stdout)
+""" % (json.dumps(str(ROOT / '.config/nvim/init.lua')), json.dumps(sys.executable),
+       json.dumps("import os; print(os.environ['MISE_AUTO_INSTALL'])")), profile)
 
     def test_external_changes_reload_without_agent_plugin(self):
         for profile in ("desktop", "server"):

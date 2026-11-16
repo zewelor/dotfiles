@@ -85,6 +85,12 @@ Te dodatki są włączane tylko przy `DOTFILES_PROFILE=desktop`; brak tej zmienn
 oznacza lekki wariant, tak jak domyślny profil shella. Reguła jest niezależna
 od obecności `mise`.
 
+Neovim ustawia `MISE_AUTO_INSTALL=false` przed załadowaniem pluginów.
+Dotyczy to wszystkich profili i procesów potomnych, także `:terminal`.
+Brakujące narzędzia mise wymagają jawnego przygotowania; `mise install`
+pozostaje dostępne. Instalację narzędzi desktopu przygotowuje
+`make install-neovim`, a aktualizację wykonuje `update-all`.
+
 ## Otwieranie pliku na konkretnej linii
 
 ```sh
