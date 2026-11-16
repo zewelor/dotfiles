@@ -259,6 +259,64 @@ class NeovimFormattingTest(unittest.TestCase):
             if "dprint" in call["name"] and call["args"][:1] == [first_arg]
         ]
 
+    def test_manual_mapping_formats_buffer_and_write_only_persists_it(self):
+        def prepare(temp, _bin_dir, _tools):
+            root = temp / "manual-format"
+            root.mkdir()
+            return {"FMT_MANUAL_ROOT": str(root)}
+
+        calls = self.run_nvim(r'''
+setup_conform()
+local root = vim.env.FMT_MANUAL_ROOT
+local filename = root .. '/main.js'
+local source = 'const value={name:"Ada"};'
+local expected = 'formatted:oxfmt:' .. source
+local buf = make_buffer(filename, 'javascript', source)
+vim.api.nvim_set_current_buf(buf)
+
+local function process_calls()
+  if vim.fn.filereadable(vim.env.FMT_TEST_LOG) == 0 then return {} end
+  local calls = {}
+  for _, line in ipairs(vim.fn.readfile(vim.env.FMT_TEST_LOG)) do
+    table.insert(calls, vim.json.decode(line))
+  end
+  return calls
+end
+local function source_text()
+  return table.concat(vim.fn.readfile(filename), '\n')
+end
+local function formatted_calls(calls)
+  local count = 0
+  for _, call in ipairs(calls) do
+    if call.name ~= 'mise' then count = count + 1 end
+  end
+  return count
+end
+
+vim.cmd('write')
+assert(buffer_text(buf) == source, 'ordinary write formatted the buffer')
+assert(source_text() == source, 'ordinary write formatted the source file')
+assert(#process_calls() == 0, 'ordinary write invoked mise or a formatter')
+
+vim.g.mapleader = ' '
+require('config.keymaps')
+local format_map = vim.fn.maparg(' cf', 'n', false, true)
+assert(type(format_map.callback) == 'function', 'manual format mapping is missing')
+format_map.callback()
+assert(buffer_text(buf) == expected, 'manual mapping did not format the buffer')
+assert(source_text() == source, 'manual mapping wrote the source file before saving')
+local after_manual = process_calls()
+assert(#after_manual > 0 and formatted_calls(after_manual) == 1,
+  'manual mapping did not invoke exactly one formatter')
+
+vim.cmd('write')
+assert(source_text() == expected, 'write did not persist the manually formatted buffer')
+assert(#process_calls() == #after_manual, 'write formatted the buffer a second time')
+''', prepare=prepare)
+
+        self.assertEqual(len(self.calls_named(calls, "oxfmt")), 1)
+        self.assertGreaterEqual(len(self.calls_named(calls, "mise")), 1)
+
     def test_project_routing_uses_buffer_roots_and_clears_only_mise_override(self):
         def prepare(temp, _bin_dir, _tools):
             root_a = temp / "project-a"
@@ -275,12 +333,13 @@ class NeovimFormattingTest(unittest.TestCase):
             }
 
         calls = self.run_nvim(r'''
-local formatting, spec = setup_conform()
+local formatting = setup_conform()
 local root_a, root_b = vim.env.FMT_PROJECT_A, vim.env.FMT_PROJECT_B
 local a = make_buffer(root_a .. '/src/a.js', 'javascript', 'before')
 local b = make_buffer(root_b .. '/src/b.ts', 'typescript', 'before')
 vim.api.nvim_set_current_buf(b)
-assert(spec.opts.format_on_save(a) == nil, 'save callback must not dispatch Conform twice')
+local a_plan = formatting.format(a, 'manual')
+assert(a_plan and a_plan.kind == 'project')
 assert(vim.api.nvim_get_current_buf() == b, 'formatting a non-current buffer changed the current buffer')
 assert(buffer_text(a):match('^formatted:dprint:'))
 local plan = formatting.format(b, 'manual')
@@ -513,7 +572,7 @@ end
             return {"FMT_DEFAULT_ROOT": str(root), "FMT_EXCLUDED_ROOT": str(excluded)}
 
         calls = self.run_nvim(r'''
-local formatting, spec, conform = setup_conform()
+local formatting, _, conform = setup_conform()
 local root = vim.env.FMT_DEFAULT_ROOT
 local js = make_buffer(root .. '/src/code.js', 'javascript', 'before')
 formatting.format(js, 'manual')
@@ -527,16 +586,17 @@ assert(buffer_text(yaml):match('^formatted:yamlfmt:'))
 
 local markdown_save = make_buffer(root .. '/notes-save.md', 'markdown', 'before')
 local markdown_manual = make_buffer(root .. '/notes-manual.md', 'markdown', 'before')
-assert(spec.opts.format_on_save(markdown_save) == nil)
+local markdown_plan = formatting.format(markdown_save, 'manual')
+assert(markdown_plan and markdown_plan.kind == 'skip')
 formatting.format(markdown_manual, 'manual')
 assert(buffer_text(markdown_save) == 'before' and buffer_text(markdown_manual) == 'before')
 
 local docker = make_buffer(root .. '/Dockerfile', 'dockerfile', 'before')
-assert(spec.opts.format_on_save(docker) == nil)
+vim.api.nvim_buf_call(docker, function() vim.cmd('write') end)
 assert(buffer_text(docker) == 'before')
 local erb = make_buffer(root .. '/config.yml.erb', 'eruby.yaml.tmuxinator', 'before')
-assert(spec.opts.format_on_save(erb) == nil)
-formatting.format(erb, 'manual')
+local erb_plan = formatting.format(erb, 'manual')
+assert(erb_plan and erb_plan.kind == 'skip')
 assert(buffer_text(erb) == 'before')
 
 local excluded = make_buffer(vim.env.FMT_EXCLUDED_ROOT .. '/settings.yaml', 'yaml', 'before')
@@ -762,16 +822,15 @@ assert(not package.loaded['conform'], 'server formatting loaded Conform')
             return {"FMT_RUBY_ROOT": str(root)}
 
         calls = self.run_nvim(r'''
-local formatting, spec, conform = setup_conform()
+local formatting, _, conform = setup_conform()
 local buf = make_buffer(vim.env.FMT_RUBY_ROOT .. '/scratch.rb', 'ruby', 'before')
 local messages = {}
 vim.notify = function(message) messages[#messages + 1] = message end
 local get_clients = vim.lsp.get_clients
 vim.lsp.get_clients = function() error('Ruby outside RuboCop must not use LSP formatting') end
-assert(spec.opts.format_on_save(buf) == nil)
-assert(buffer_text(buf) == 'before', 'standalone Ruby was autoformatted')
 local plan = formatting.format(buf, 'manual')
-assert(plan and plan.kind == 'skip', 'shared manual action should explain the missing project formatter')
+assert(plan and plan.kind == 'skip', 'standalone Ruby was not skipped')
+assert(buffer_text(buf) == 'before', 'standalone Ruby was formatted')
 vim.lsp.get_clients = get_clients
 conform.format({ bufnr = buf, formatters = { 'rubyfmt' }, lsp_format = 'never' })
 assert(buffer_text(buf):match('^formatted:rubyfmt:'), 'optional explicit rubyfmt did not run')
@@ -853,7 +912,7 @@ end
 local formatting = setup_conform()
 for _, name in ipairs({ 'binstub', 'bundled' }) do
   local buf = make_buffer(vim.env.HOME .. '/' .. name .. '/app.rb', 'ruby', 'before')
-  assert(formatting.format(buf, 'save'), 'project Ruby formatting was skipped')
+  assert(formatting.format(buf, 'manual'), 'project Ruby formatting was skipped')
   local program = name == 'binstub' and 'rubocop' or 'bundle'
   assert(buffer_text(buf) == 'formatted:' .. program .. ':before')
 end
@@ -909,12 +968,15 @@ assert(vim.api.nvim_get_current_buf() == other and buffer_text(other) == 'untouc
 assert(formatting.format(buf, 'manual'), 'already formatted Go failed')
 assert(buffer_text(buf) == expected, 'Go formatting is not idempotent')
 vim.api.nvim_buf_set_lines(buf, 0, -1, false, source)
+local before_save_calls = vim.fn.readfile(vim.env.FMT_TEST_LOG)
 vim.api.nvim_buf_call(buf, function() vim.cmd('write!') end)
-assert(table.concat(vim.fn.readfile(filename), '\n') == expected, 'save skipped goimports/gofumpt')
+assert(table.concat(vim.fn.readfile(filename), '\n') == original, 'ordinary write formatted Go source')
+assert(vim.deep_equal(vim.fn.readfile(vim.env.FMT_TEST_LOG), before_save_calls),
+  'ordinary write invoked a Go formatter or mise')
 ''', prepare=prepare, timeout=45)
 
-        self.assertGreaterEqual(len(self.mise_which_calls(calls, "goimports")), 3)
-        self.assertGreaterEqual(len(self.mise_which_calls(calls, "gofumpt")), 3)
+        self.assertTrue(self.mise_which_calls(calls, "goimports"))
+        self.assertTrue(self.mise_which_calls(calls, "gofumpt"))
         for binary in ("goimports", "gofumpt"):
             self.assertTrue(all(call["args"] == ["-C", calls[0]["args"][1], "which", binary]
                                 for call in self.mise_which_calls(calls, binary)))

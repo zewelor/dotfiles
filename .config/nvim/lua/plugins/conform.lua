@@ -1,4 +1,4 @@
--- conform.nvim — formatting engine (format-on-save)
+-- conform.nvim — explicit formatting through the manual mapping
 local profile = require("config.profile")
 
 local ruby = require("config.ruby")
@@ -19,12 +19,6 @@ return {
   end,
   opts = {
     notify_no_formatters = false,
-
-    format_on_save = function(bufnr)
-      -- The shared wrapper already formats synchronously; avoid a second dispatch.
-      require("config.formatting").format(bufnr, "save")
-      return nil
-    end,
 
     formatters_by_ft = {
       lua = { "stylua" },
