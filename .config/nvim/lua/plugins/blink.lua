@@ -34,8 +34,8 @@ return {
     -- C-k: Toggle signature help (if signature.enabled = true)
     --
     -- See :h blink-cmp-config-keymap for defining your own keymap
-    -- Use Enter to confirm selection; Tab navigates items
-    keymap = { preset = 'super-tab' },
+    -- Enter accepts a selected suggestion; Tab remains available for snippets and indentation.
+    keymap = { preset = 'enter' },
 
     appearance = {
       -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
@@ -46,6 +46,8 @@ return {
     -- (Default) Only show the documentation popup when manually triggered
     completion = {
       documentation = { auto_show = false },
+      -- Keep Enter as a newline until a completion is explicitly selected.
+      list = { selection = { preselect = false } },
       menu = {
         auto_show_delay_ms = 2000, -- 2 second delay before showing completion menu
       },

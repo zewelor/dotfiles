@@ -216,12 +216,19 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 
 - **Repo**: [saghen/blink.cmp](https://github.com/saghen/blink.cmp)
 - **Cel**: Szybkie, nowoczesne autouzupełnianie kodu
+- **Dopasowanie**: `prefer_rust_with_warning` preferuje Rust i pozwala Blinkowi pobrać gotową bibliotekę bez kompilatora Rust. Gdy biblioteka jest niedostępna, Blink ostrzega i używa Lua.
 - **Źródła**: `lsp`, `path`, `snippets` oraz `buffer` jako fallback, więc słowa z otwartych buforów pojawiają się dopiero wtedy, gdy LSP nie zwróci sensownych podpowiedzi. Copilot nie jest podpięty jako źródło `blink.cmp`, żeby autouzupełnianie zostało lekkie.
-- **Keymaps** (w menu autouzupełniania):
-  - `<C-Space>` — Wymuś pokazanie menu
-  - `<CR>` — Potwierdź wybór
+- **Keymaps** (preset `enter`, `preselect = false`, podczas wpisywania):
+  - `<C-Space>` — Pokaż menu; przy otwartym menu pokaż/ukryj dokumentację
+  - `<Enter>` — Zatwierdź wskazaną podpowiedź; bez wskazanej pozycji wstaw nowy wiersz
+  - `<Tab>` — Przejdź dalej w snippet lub wykonaj zwykły Tab
+  - `<S-Tab>` — Poprzednie pole snippet; poza snippet zwykłe działanie klawisza
+  - `<Up>` / `<C-p>` — Poprzednia podpowiedź
+  - `<Down>` / `<C-n>` — Następna podpowiedź
   - `<C-e>` — Anuluj
-  - `<Tab>` / `<S-Tab>` — Nawigacja w menu
+
+Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lub
+`<C-n>`/`<C-p>`, a potem zatwierdź Enterem.
 
 ---
 
