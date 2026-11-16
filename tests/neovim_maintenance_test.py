@@ -205,6 +205,72 @@ return {
                                "-l", str(ROOT / ".config/nvim/maintain.lua"), "plugins", mode],
                               env=self.env, cwd=self.home, text=True, capture_output=True, timeout=30)
 
+    def local_manager_source(self):
+        # Installed Lazy may be a partial clone; make a complete local Git fixture.
+        source = self.home / "manager-source"
+        shutil.copytree(LAZY, source, ignore=shutil.ignore_patterns(".git"))
+        for args in (("init", "--initial-branch=stable"), ("add", "."),
+                     ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                      "commit", "-m", "Prepared manager source")):
+            subprocess.run(["git", "-C", str(source), *args], env=self.env,
+                           check=True, capture_output=True, timeout=10)
+        subprocess.run(["git", "config", "--file", str(self.home / ".gitconfig"),
+                        "--unset-all", "url." + LAZY.as_uri() + ".insteadOf"],
+                       env=self.env, check=True, capture_output=True, timeout=10)
+        subprocess.run(["git", "config", "--file", str(self.home / ".gitconfig"),
+                        "url." + source.as_uri() + ".insteadOf", "https://github.com/folke/lazy.nvim.git"],
+                       env=self.env, check=True, capture_output=True, timeout=10)
+
+    def run_config(self):
+        script = "vim.opt.loadplugins = true; vim.opt.rtp:prepend(vim.fn.stdpath('config')); require('config.lazy')"
+        return subprocess.run([NVIM, "--headless", "-u", "NONE", "-i", "NONE", "-n",
+                               "-c", "lua " + script, "-c", "qa!"],
+                              env=self.env, cwd=self.home, text=True, capture_output=True, timeout=30)
+
+    def test_startup_installs_missing_plugins_without_updating_existing(self):
+        result = self.run_config()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        installed = self.home / ".local/share/nvim/lazy/managed"
+        self.assertTrue((installed / "plugin/fixture.lua").is_file())
+        original = subprocess.check_output(["git", "-C", str(installed), "rev-parse", "HEAD"],
+                                           env=self.env, text=True, timeout=10).strip()
+        (self.remote / "plugin/fixture.lua").write_text("vim.g.fixture_loaded = 'new'\n")
+        self.git("add", ".")
+        self.git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "commit", "-m", "New upstream version")
+        upstream = self.git("rev-parse", "HEAD").stdout.strip()
+        self.assertNotEqual(original, upstream)
+        added_remote = self.home / "added-remote"
+        subprocess.run(["git", "clone", "--no-hardlinks", self.remote.as_uri(), str(added_remote)],
+                       env=self.env, check=True, capture_output=True, timeout=10)
+        spec = self.home / ".config/nvim/lua/plugins/fixture.lua"
+        spec.write_text(spec.read_text().replace(
+            "\n}\n", '\n  { "fixture/added", url = ' + json.dumps(added_remote.as_uri())
+            + ', lazy = true },\n}\n'))
+        added = self.home / ".local/share/nvim/lazy/added"
+        for attempt in range(2):
+            with self.subTest(attempt=attempt):
+                result = self.run_config()
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(subprocess.check_output(
+                    ["git", "-C", str(installed), "rev-parse", "HEAD"], env=self.env,
+                    text=True, timeout=10).strip(), original)
+                self.assertTrue((added / "plugin/fixture.lua").is_file())
+                self.assertEqual(subprocess.check_output(
+                    ["git", "-C", str(added), "rev-parse", "HEAD"], env=self.env,
+                    text=True, timeout=10).strip(), upstream)
+                self.assertEqual((self.home / "build.log").read_text().splitlines(), ["built"])
+
+    def test_startup_bootstraps_missing_manager_and_plugins(self):
+        self.local_manager_source()
+        manager = self.home / ".local/share/nvim/lazy/lazy.nvim"
+        shutil.rmtree(manager)
+        result = self.run_config()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((manager / "lua/lazy/init.lua").is_file())
+        self.assertTrue((self.home / ".local/share/nvim/lazy/managed/plugin/fixture.lua").is_file())
+        self.assertEqual((self.home / "build.log").read_text().splitlines(), ["built"])
+
     def test_real_lazy_installs_missing_plugin_without_updating_it_on_repeat(self):
         result = self.run_stage()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
