@@ -50,8 +50,8 @@ For example, `make install-vault` runs the interactive Vault
 prompts without running the other installation sections. Individual sections
 read the saved profile from `~/.zshrc.d/profile.zsh`; set it first with
 `./install --section profile`. Desktop-only sections refuse the server profile.
-Stow sections retain their dry-run and apply confirmation, and the `ai` section
-requires shared agent commands and skills from the private setup. The `tools`
+Stow sections retain their dry-run and apply confirmation. The `ai` section
+initializes pinned private agent resources on either profile. The `tools`
 section refreshes shell completions after installing tools.
 The desktop installation prepares the declared Neovim tools through mise and
 installs missing plugins when Neovim >= 0.11 is available. Older hosts keep
@@ -63,8 +63,8 @@ updates Neovim plugins separately. Ordinary editor startup does not install or
 update tools. Mason remains available for manually chosen extras; it does not
 manage the maintained defaults. See the
 [Neovim tool ownership and prerequisites](.config/nvim/README.md#narzędzia-neovim--jawne-utrzymanie-przez-mise).
-`make skills` runs the same private section, including its saved desktop profile,
-base-directory prerequisites, submodule update, Stow confirmation and Herdr setup.
+`make skills` (or `make install-skills`) links only approved shared skills and
+commands from the pinned private submodule, on either saved profile.
 Full installation selects a profile in memory and saves it only after the login
 shell check and Stow confirmation. Cancelling before that point leaves the saved
 profile unchanged. `./install --section profile` deliberately saves the selection
@@ -72,6 +72,41 @@ immediately. A profile change selects future behavior; it does not remove existi
 desktop tools or links, and a saved profile is not proof of a completed install.
 When present, generated `~/.zshrc.d/profile.zsh` and `editor.zsh` must be
 regular local files; other shell includes may be symlinks.
+
+### Agent clients per host
+
+The host profile selects desktop or server behavior. A separate, local regular
+file `~/.config/dotfiles/agents` declares which agent configurations to link,
+one name per line: `codex`, `opencode`, or `antigravity`. Blank lines and lines
+starting with `#` are ignored; unknown names fail before installation. For
+Oracle the declaration is:
+
+```text
+codex
+```
+
+Without the file, desktop keeps all three clients and server selects none.
+An empty file selects none on either profile. Full installation uses this list;
+`make install-ai` requires a nonempty selection and configures only those clients.
+Neither command installs client CLIs. Ansible or the operator owns the declaration;
+it is read only during installation. Changing it does not remove previous links.
+`make install-summarize` is a separate desktop-only section with its private seed.
+
+Agent installation checks out the entire private repository at the parent
+gitlink, so use it only on a trusted host authorized to hold that repository.
+On servers it links only `.agents` resources and selected public client packages;
+it does not run the desktop private section. Locally changed, untracked or ignored
+files under `prv/.agents` block linking until reconciled. Existing local target
+files are preserved and reported as Stow conflicts. Stow previews each package
+before applying it; the overall installation is not transactional.
+New target directories remain real directories. Existing directory links managed
+by Stow may remain; foreign links or a linked top-level client/resource directory
+require manual inspection and migration. No runtime config, credentials or plugin
+installation is supplied by this step. On desktop, each `update-all` refreshes
+upstream skills through `npx --yes skills update --global` when npx is available;
+local skill edits may be overwritten. Server skips that stage and consumes
+the approved Git version. See [maintaining agent skills](docs/agent-skills.md)
+for publishing desktop updates to other hosts.
 
 These dotfiles assume configuration under `~/.config`; relocating it through
 `XDG_CONFIG_HOME` is not supported by the installer or shell helpers.

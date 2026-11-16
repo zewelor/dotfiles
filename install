@@ -185,11 +185,9 @@ configure_stow_apply() {
   return 1
 }
 
-# Update private data to the gitlink recorded by the desktop checkout.
+# Callers select whether private resources are needed; always honor the gitlink.
 setup_private_submodule() {
-  is_desktop || return 0
-
-  print_banner "Updating private desktop submodule"
+  print_banner "Updating pinned private submodule"
   local expected_commit
   local staged_commit
   local actual_commit
@@ -810,9 +808,58 @@ setup_user_systemd_units() {
   done
 }
 
-# Generic helper to set up an AI tool directory via stow.
-# Fails early if any subdirectory in the package already exists as a real
-# directory in the target (stow would descend into it instead of folding).
+# Read a host-owned declaration only during installation, never at shell startup.
+load_agent_clients() {
+  local declaration="$CONFIG_DIR/dotfiles/agents" client
+  typeset -gaU AGENT_CLIENTS=()
+  require_local_file_path "$declaration" || return 1
+  if [[ ! -f "$declaration" ]]; then
+    if is_desktop; then
+      AGENT_CLIENTS=(codex opencode antigravity)
+    fi
+    return 0
+  fi
+  while IFS= read -r client || [[ -n "$client" ]]; do
+    case "$client" in
+      ''|\#*) continue ;;
+      codex|opencode|antigravity) AGENT_CLIENTS+=("$client") ;;
+      *) echo "Error: unknown agent '$client' in $declaration; use one agent per line: codex, opencode, antigravity." >&2; return 1 ;;
+    esac
+  done < "$declaration"
+}
+
+# Use the approved checkout, not a manager's mutable installation directory.
+setup_agent_resources() {
+  local source="$BASE_DIR/prv/.agents" changes
+  if [[ ! -d "$source/skills" || ! -d "$source/commands" ]]; then
+    echo "Error: shared agent resources are missing from $source." >&2
+    return 1
+  fi
+  changes=$(git -C "$BASE_DIR/prv" status --porcelain --ignored --untracked-files=all -- .agents) || return 1
+  if [[ -n "$changes" ]]; then
+    echo 'Error: prv/.agents contains local changes or generated files; reconcile them before installing approved resources.' >&2
+    return 1
+  fi
+  require_real_directory_path "$HOME_DIR/.agents" || return 1
+  mkdir -p "$HOME_DIR/.agents"
+  require_real_directory_path "$HOME_DIR/.agents" || return 1
+  print_banner "Linking approved shared agent resources"
+  install_with_stow --no-folding -d "$BASE_DIR/prv" -t "$HOME_DIR/.agents" .agents
+}
+
+setup_selected_agents() {
+  local client
+  setup_agent_resources
+  for client in "${AGENT_CLIENTS[@]}"; do
+    case "$client" in
+      codex) setup_codex ;;
+      opencode) setup_opencode ;;
+      antigravity) setup_antigravity_cli ;;
+    esac
+  done
+}
+
+# Stow handles file conflicts while runtime directories remain local.
 setup_ai_tool() {
   local name="$1"
   local target_dir="$2"
@@ -821,47 +868,36 @@ setup_ai_tool() {
   local extra_args=("$@")
 
   print_banner "Setting up $name configuration..."
+  require_real_directory_path "$target_dir" || return 1
   mkdir -p "$target_dir"
+  require_real_directory_path "$target_dir" || return 1
+  install_with_stow --no-folding -d "$BASE_DIR" -t "$target_dir" "${extra_args[@]}" "$pkg"
+}
 
-  local repo_pkg="$BASE_DIR/$pkg"
-  if [[ -d "$repo_pkg" ]]; then
-    local dir
-    for dir in "$repo_pkg"/*(/N); do
-      local subdir="${dir:t}"
-      # Skip subdirectories that match a --ignore pattern (e.g. node_modules)
-      local arg skip=false
-      for arg in "${extra_args[@]}"; do
-        if [[ "$arg" == --ignore=* && "$subdir" =~ ${arg#--ignore=} ]]; then
-          skip=true
-          break
-        fi
-      done
-      $skip && continue
-      if [[ -d "$target_dir/$subdir" ]] && [[ ! -L "$target_dir/$subdir" ]]; then
-        echo "ERROR: $target_dir/$subdir already exists as a directory." >&2
-        echo "Move or back it up manually, then re-run ./install." >&2
-        return 1
-      fi
-    done
+# Preserve legacy client links through ~/.agents only when it names the same
+# approved source directory. Never use a mixed local resource directory as source.
+setup_agent_package() {
+  local package="$1" target_dir="$2" source="$BASE_DIR/prv/.agents"
+  if [[ "$HOME_DIR/.agents/$package" -ef "$source/$package" ]]; then
+    source="$HOME_DIR/.agents"
   fi
-
-  install_with_stow -d "$BASE_DIR" -t "$target_dir" "${extra_args[@]}" "$pkg"
+  require_real_directory_path "$target_dir" || return 1
+  mkdir -p "$target_dir"
+  require_real_directory_path "$target_dir" || return 1
+  install_with_stow --no-folding -d "$source" -t "$target_dir" "$package"
 }
 
 # Function to setup Codex configuration via stow.
 # Uses stow to link .codex contents (scripts) into ~/.codex/.
 setup_codex() {
-  mkdir -p "$HOME_DIR/.codex/commands"
   setup_ai_tool "Codex" "$HOME_DIR/.codex" ".codex"
-
   # Stow shared agent commands into ~/.codex/commands/
-  install_with_stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.codex/commands" commands
+  setup_agent_package commands "$HOME_DIR/.codex/commands"
 }
 
 # Function to setup OpenCode configuration via stow.
 # Uses stow to link .opencode contents (commands) into ~/.opencode/.
 setup_opencode() {
-  mkdir -p "$HOME_DIR/.opencode/commands"
   setup_ai_tool "OpenCode" "$HOME_DIR/.opencode" ".opencode" \
     --ignore='node_modules' \
     --ignore='package\.json' \
@@ -869,22 +905,24 @@ setup_opencode() {
     --ignore='bun\.lock'
 
   # Stow shared agent commands into ~/.opencode/commands/
-  install_with_stow -d "$HOME_DIR/.agents" -t "$HOME_DIR/.opencode/commands" commands
+  setup_agent_package commands "$HOME_DIR/.opencode/commands"
 }
 
 # Function to setup Antigravity CLI configuration via stow.
 # Uses stow to link stable CLI config while leaving runtime data unmanaged.
 setup_antigravity_cli() {
   local target_dir="$HOME_DIR/.gemini/antigravity-cli"
+  require_real_directory_path "$target_dir/skills" || return 1
   mkdir -p "$target_dir/skills"
+  require_real_directory_path "$target_dir/skills" || return 1
   print_banner "Setting up Antigravity CLI configuration..."
 
-  install_with_stow -d "$BASE_DIR/.gemini" -t "$target_dir" "antigravity-cli"
+  install_with_stow --no-folding -d "$BASE_DIR/.gemini" -t "$target_dir" "antigravity-cli"
 
   # Stow shared agent skills into ~/.gemini/antigravity-cli/skills/.
   # Stow does not preserve the package name as a path component, so the
   # target must already include the `skills/` segment.
-  install_with_stow -d "$HOME_DIR/.agents" -t "$target_dir/skills" skills
+  setup_agent_package skills "$target_dir/skills"
 }
 
 # Seed Summarize once while leaving its runtime-written config unmanaged.
@@ -1191,7 +1229,9 @@ INSTALL_SECTIONS=(
   'desktop-assets|desktop|Show Flatpak instructions and stow scripts and fonts'
   'tools|desktop|Install desktop tools with mise'
   'neovim|desktop|Prepare missing Neovim plugins and maintained tools'
-  'ai|desktop|Configure Codex, OpenCode, Antigravity, and Summarize'
+  'skills|both|Link approved shared agent skills and commands'
+  'ai|both|Configure the agents declared for this host'
+  'summarize|desktop|Seed the local Summarize configuration'
   'completions|both|Refresh static shell completions'
   'shell|both|Configure Git conflict style and the editor'
   'desktop|desktop|Configure terminal shortcuts and user services'
@@ -1206,7 +1246,10 @@ install_help() {
     printf '  make install-%-14s %-8s %s\n' "$parts[1]" "$parts[2]" "$parts[3]"
   done
   printf '\nWithout arguments, run the full installation. Sections require a saved profile.\n'
-  printf 'Stow sections require confirmation; private requires base, desktop requires private units, and ai requires private agent resources and the Summarize seed.\n'
+  printf 'Stow sections require confirmation; private requires base and desktop requires private units.\n'
+  printf 'Declare clients in ~/.config/dotfiles/agents (one per line: codex, opencode, antigravity).\n'
+  printf 'Without that file, desktop selects all three and server selects none. Empty files select none.\n'
+  printf 'Skills and ai initialize pinned prv; neither installs agent CLIs. Summarize requires its private seed.\n'
   printf 'The vault section requires an interactive terminal. Tools also refresh completions.\n'
   printf 'Neovim requires base configuration, mise tools, Neovim >= 0.11 and desktop build/runtime dependencies.\n'
 }
@@ -1262,11 +1305,14 @@ run_selected_section() {
     echo "Error: section 'vault' requires an interactive terminal." >&2
     return 1
   fi
-  if [[ "$section" == ai ]] && [[ ! -d "$HOME_DIR/.agents/commands" || ! -d "$HOME_DIR/.agents/skills" ]]; then
-    echo 'Error: shared agent commands or skills are missing; set up the private section first.' >&2
-    return 1
+  if [[ "$section" == ai ]]; then
+    load_agent_clients || return 1
+    if (( ${#AGENT_CLIENTS} == 0 )); then
+      echo "Error: no agents selected; declare clients in $CONFIG_DIR/dotfiles/agents first." >&2
+      return 1
+    fi
   fi
-  if [[ "$section" == ai && ! -f "$BASE_DIR/prv/.summarize/config.json" ]]; then
+  if [[ "$section" == summarize && ! -f "$BASE_DIR/prv/.summarize/config.json" ]]; then
     echo 'Error: the Summarize seed is missing; set up the private section first.' >&2
     return 1
   fi
@@ -1315,11 +1361,17 @@ run_selected_section() {
     neovim)
       setup_neovim
       ;;
+    skills)
+      configure_stow_apply
+      setup_private_submodule
+      setup_agent_resources
+      ;;
     ai)
       configure_stow_apply
-      setup_codex
-      setup_opencode
-      setup_antigravity_cli
+      setup_private_submodule
+      setup_selected_agents
+      ;;
+    summarize)
       setup_summarize
       ;;
     completions)
@@ -1355,12 +1407,15 @@ run_installation() {
     return
   fi
   configure_profile
+  load_agent_clients
 
   init_colors
   require_zsh_login_shell
   configure_stow_apply
   save_profile
-  setup_private_submodule
+  if is_desktop || (( ${#AGENT_CLIENTS} )); then
+    setup_private_submodule
+  fi
   prepare_stow_targets
   migrate_retired_managed_links
 
@@ -1398,9 +1453,13 @@ run_installation() {
       (( version_status == 1 )) || return "$version_status"
       print_banner 'Skipping Neovim maintenance: Neovim >= 0.11 is unavailable; keeping Vim fallback'
     fi
-    setup_codex
-    setup_opencode
-    setup_antigravity_cli
+  fi
+
+  if (( ${#AGENT_CLIENTS} )); then
+    setup_selected_agents
+  fi
+
+  if is_desktop; then
     setup_summarize
 
   fi

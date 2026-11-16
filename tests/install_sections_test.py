@@ -9,8 +9,8 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DESKTOP = ("private", "vault", "desktop-assets", "tools", "neovim", "ai", "desktop")
-ALL_SECTIONS = ("profile", "base", *DESKTOP, "completions", "shell")
+DESKTOP = ("private", "vault", "desktop-assets", "tools", "neovim", "summarize", "desktop")
+ALL_SECTIONS = ("profile", "base", *DESKTOP, "skills", "ai", "completions", "shell")
 
 
 class InstallSectionsTest(unittest.TestCase):
@@ -94,31 +94,6 @@ class InstallSectionsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(path.read_text(), original)
 
-    def test_make_skills_obeys_private_section_profile_and_confirmation(self):
-        repo = self.make_fixture('''
-setup_private_submodule() { return 0 }
-setup_herdr() { return 0 }
-''')
-        shutil.copy(ROOT / "Makefile", repo / "Makefile")
-        source = repo / "prv/.agents/skills/example/SKILL.md"
-        source.parent.mkdir(parents=True)
-        source.write_text("fixture\n")
-        (self.home / ".config").mkdir()
-        (self.home / ".var/app").mkdir(parents=True)
-        for profile, confirmation in (("server", "1"), ("desktop", "0"), ("desktop", "1")):
-            with self.subTest(profile=profile, confirmation=confirmation):
-                self.profile(profile)
-                result = subprocess.run(["make", "-s", "-C", str(repo), "skills"],
-                                        env={**self.env, "DOTFILES_STOW_CONFIRM_APPLY": confirmation},
-                                        stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
-                target = self.home / ".agents/skills/example/SKILL.md"
-                if profile == "desktop" and confirmation == "1":
-                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertEqual(target.resolve(), source)
-                else:
-                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-                    self.assertFalse(target.exists())
-
     def test_failed_profile_script_is_not_accepted(self):
         self.profile("desktop")
         (self.home / ".zshrc.d/profile.zsh").write_text('export DOTFILES_PROFILE=desktop\nfalse\n')
@@ -128,7 +103,7 @@ setup_herdr() { return 0 }
 
     def test_missing_section_prerequisites_fail_before_changes(self):
         self.profile("desktop")
-        for section in ("private", "ai"):
+        for section in ("private",):
             with self.subTest(section=section):
                 result = self.run_install("--section", section)
                 self.assertNotEqual(result.returncode, 0)
@@ -182,6 +157,7 @@ setup_mise_desktop_tools() { print mise >> "$HOME_DIR/order" }
 setup_codex() { print codex >> "$HOME_DIR/order" }
 setup_opencode() { print opencode >> "$HOME_DIR/order" }
 setup_antigravity_cli() { print agy >> "$HOME_DIR/order" }
+setup_agent_resources() { return 0 }
 setup_summarize() { print summarize >> "$HOME_DIR/order" }
 setup_vim() { print vim >> "$HOME_DIR/order" }
 setup_terminal_emulator() { print terminal >> "$HOME_DIR/order" }
@@ -236,23 +212,34 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
                     self.assertNotEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
                     self.assertEqual(order.read_text().splitlines(), ["maintenance"])
 
-    def test_ai_section_requires_summarize_seed_before_any_setup(self):
+    def test_summarize_section_requires_private_seed_before_setup(self):
         self.profile("desktop")
         repo = self.make_fixture('''
-configure_stow_apply() { touch "$HOME_DIR/stow-ran" }
-setup_codex() { touch "$HOME_DIR/codex-ran" }
-setup_opencode() { touch "$HOME_DIR/opencode-ran" }
-setup_antigravity_cli() { touch "$HOME_DIR/agy-ran" }
 setup_summarize() { touch "$HOME_DIR/summarize-ran" }
 ''')
-        for name in ("commands", "skills"):
-            (self.home / ".agents" / name).mkdir(parents=True)
-        result = subprocess.run(["zsh", str(repo / "install"), "--section", "ai"],
+        result = subprocess.run(["zsh", str(repo / "install"), "--section", "summarize"],
                                 env=self.env, cwd=repo, text=True, capture_output=True, timeout=10)
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("private", result.stderr)
-        for name in ("stow", "codex", "opencode", "agy", "summarize"):
-            self.assertFalse((self.home / f"{name}-ran").exists())
+        self.assertFalse((self.home / "summarize-ran").exists())
+
+    def test_shared_agent_sections_allow_server_profile(self):
+        self.profile("server")
+        repo = self.make_fixture('''
+configure_stow_apply() { return 0 }
+setup_private_submodule() { return 0 }
+setup_agent_resources() { return 0 }
+setup_codex() { return 0 }
+setup_selected_agents() { return 0 }
+''')
+        config = self.home / ".config/dotfiles"
+        config.mkdir(parents=True)
+        (config / "agents").write_text("codex\n")
+        for section in ("skills", "ai"):
+            with self.subTest(section=section):
+                result = subprocess.run(["zsh", str(repo / "install"), "--section", section],
+                                        env=self.env, cwd=repo, text=True, capture_output=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
     def make_fixture(self, extra):
         repo = self.home / "fixture"
@@ -454,6 +441,7 @@ setup_neovim() { print -r -- neovim >> "$HOME_DIR/order" }
 setup_codex() { return 0 }
 setup_opencode() { return 0 }
 setup_antigravity_cli() { return 0 }
+setup_agent_resources() { return 0 }
 setup_summarize() { return 0 }
 setup_editor() { return 0 }
 setup_terminal_emulator() { return 0 }

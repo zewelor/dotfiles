@@ -707,8 +707,11 @@ fi"
     echo "[nvim] Skipping Neovim plugin update: nvim not found for user '${target_user}'."
   fi
 
-  if target_user_has "npx"; then
-    echo
+  # Desktop owns upstream skill refreshes; servers consume the pinned Git copies.
+  echo
+  if [[ "${target_profile}" != desktop ]]; then
+    echo "[skills] Skipping skills update on server (managed through Git)."
+  elif target_user_has "npx"; then
     echo "[skills] Updating skills via npx"
     if run_for_target_user 'npx --yes skills update --global'; then
       echo "[skills] Update complete"
@@ -718,7 +721,6 @@ fi"
       failures+=(skills)
     fi
   else
-    echo
     echo "[skills] Skipping skills update: npx not found for user '${target_user}'."
   fi
 
