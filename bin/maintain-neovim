@@ -20,10 +20,6 @@ case "${DOTFILES_PROFILE:-}" in
   desktop|server) export DOTFILES_PROFILE ;;
   *) print -u2 'Error: invalid saved Neovim profile.'; exit 1 ;;
 esac
-if [[ "$DOTFILES_PROFILE" != desktop && "$mode" == install ]]; then
-  print -u2 'Error: Neovim tool preparation requires a saved desktop profile.'
-  exit 1
-fi
 
 export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$HOME/.zinit/polaris/bin:/usr/local/bin:/usr/bin:/bin"
 export MISE_CONFIG_DIR="$HOME/.config/mise"

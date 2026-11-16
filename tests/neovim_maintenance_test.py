@@ -95,19 +95,20 @@ exit "${TEST_NVIM_EXIT:-0}"
         self.assertFalse(self.log.exists())
         self.assertFalse(self.mise_log.exists())
 
-    def test_server_updates_plugins_but_cannot_install_them(self):
+    def test_server_installs_and_updates_plugins_without_desktop_tools(self):
         self.profile("server")
         self.base_config()
         self.env["DOTFILES_PROFILE"] = "desktop"
-        result = self.run_helper("plugins", "update")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.log.read_text().splitlines()[2], "server")
-        self.log.unlink()
-
-        result = self.run_helper("plugins", "install")
-        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("desktop profile", result.stderr)
-        self.assertFalse(self.log.exists())
+        for tool in ("mise", "make", "cc"):
+            self.write_tool(tool, 'printf called >> "$HOME/' + tool + '.log"\nexit 42\n')
+        for mode in ("install", "update"):
+            with self.subTest(mode=mode):
+                self.log.unlink(missing_ok=True)
+                result = self.run_helper("plugins", mode)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(self.log.read_text().splitlines()[2], "server")
+                for tool in ("mise", "make", "cc", "node", "npm", "python3", "go"):
+                    self.assertFalse((self.home / (tool + ".log")).exists(), tool)
 
     def test_unknown_profile_and_missing_base_fail_before_neovim(self):
         self.profile("unknown")

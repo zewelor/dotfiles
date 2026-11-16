@@ -53,11 +53,12 @@ read the saved profile from `~/.zshrc.d/profile.zsh`; set it first with
 Stow sections retain their dry-run and apply confirmation, and the `ai` section
 requires shared agent commands and skills from the private setup. The `tools`
 section refreshes shell completions after installing tools.
-The desktop installation prepares the declared Neovim tools through mise and
-installs missing plugins when Neovim >= 0.11 is available. Older hosts keep
+Both installation profiles prepare missing Neovim plugins when Neovim >= 0.11
+is available. Desktop also prepares declared tools through mise; server installs
+its lightweight plugin set without mise or parser compilation. Older hosts keep
 the Vim fallback and continue the remaining installation stages.
-`make install-neovim` runs the setup separately with a saved desktop profile,
-base/mise configuration and a strict Neovim >= 0.11 prerequisite.
+`make install-neovim` runs the setup separately with a saved profile, base
+configuration and Neovim >= 0.11. Desktop also requires mise.
 `update-all` upgrades declared mise tools through its regular mise stage and
 updates Neovim plugins separately. Ordinary editor startup does not install or
 update tools. Mason remains available for manually chosen extras; it does not

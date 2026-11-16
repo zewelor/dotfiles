@@ -1136,8 +1136,10 @@ EOF
 setup_neovim() {
   print_banner 'Preparing Neovim plugins'
   "$BASE_DIR/bin/maintain-neovim" plugins install || return $?
-  print_banner 'Preparing declared mise tools for Neovim'
-  (unset MISE_GLOBAL_CONFIG_FILE MISE_CEILING_PATHS; cd -- "$HOME_DIR" && "$MISE_BIN" install)
+  if is_desktop; then
+    print_banner 'Preparing declared mise tools for Neovim'
+    (unset MISE_GLOBAL_CONFIG_FILE MISE_CEILING_PATHS; cd -- "$HOME_DIR" && "$MISE_BIN" install) || return $?
+  fi
 }
 
 setup_desktop_assets() {
@@ -1190,7 +1192,7 @@ INSTALL_SECTIONS=(
   'vault|desktop|Configure environment secrets, rclone, and Storage Box'
   'desktop-assets|desktop|Show Flatpak instructions and stow scripts and fonts'
   'tools|desktop|Install desktop tools with mise'
-  'neovim|desktop|Prepare missing Neovim plugins and maintained tools'
+  'neovim|both|Prepare profile-specific Neovim plugins (desktop also installs tools)'
   'ai|desktop|Configure Codex, OpenCode, Antigravity, and Summarize'
   'completions|both|Refresh static shell completions'
   'shell|both|Configure Git conflict style and the editor'
@@ -1208,7 +1210,7 @@ install_help() {
   printf '\nWithout arguments, run the full installation. Sections require a saved profile.\n'
   printf 'Stow sections require confirmation; private requires base, desktop requires private units, and ai requires private agent resources and the Summarize seed.\n'
   printf 'The vault section requires an interactive terminal. Tools also refresh completions.\n'
-  printf 'Neovim requires base configuration, mise tools, Neovim >= 0.11 and desktop build/runtime dependencies.\n'
+  printf 'Neovim requires base configuration and Neovim >= 0.11; desktop also requires mise and build/runtime dependencies.\n'
 }
 
 load_section_profile() {
@@ -1395,13 +1397,15 @@ run_installation() {
 
   if is_desktop; then
     setup_mise_desktop_tools
-    if supports_neovim_config; then
-      setup_neovim
-    else
-      local version_status=$?
-      (( version_status == 1 )) || return "$version_status"
-      print_banner 'Skipping Neovim maintenance: Neovim >= 0.11 is unavailable; keeping Vim fallback'
-    fi
+  fi
+  if supports_neovim_config; then
+    setup_neovim || return $?
+  else
+    local version_status=$?
+    (( version_status == 1 )) || return "$version_status"
+    print_banner 'Skipping Neovim maintenance: Neovim >= 0.11 is unavailable; keeping Vim fallback'
+  fi
+  if is_desktop; then
     setup_codex
     setup_opencode
     setup_antigravity_cli

@@ -610,22 +610,25 @@ Mapowania mają opisy widoczne przez `:nmap <C-Up>` i analogiczne polecenia dla 
 
 ```bash
 cd ~/dotfiles
-# Pełna instalacja desktopu przygotowuje również Neovima po etapie mise.
+# Pełna instalacja przygotowuje pluginy Neovima dla wybranego profilu.
 make install
 
-# Istniejący desktop: uzupełnij mise tools i brakujące pluginy Neovima.
+# Uzupełnij pluginy Neovima; na desktopie także zadeklarowane narzędzia mise.
 make install-neovim
 
 # Mise aktualizuje zadeklarowane binarki; update-all osobno aktualizuje pluginy.
 update-all
 ```
 
-Samodzielna sekcja wymaga zapisanego profilu desktop (`make install-profile`),
-konfiguracji bazowej (`make install-base`), konfiguracji mise (`make install-tools`)
-i Neovima >= 0.11. Odmawia działania na server i przy nieznanym profilu.
-`make install-neovim` najpierw sprawdza i uzupełnia pluginy przez
-`bin/maintain-neovim plugins install`, a następnie uruchamia `mise install` w
-katalogu domowym użytkownika docelowego. Pełna instalacja desktopu instaluje
+Samodzielna sekcja wymaga zapisanego profilu (`make install-profile`),
+konfiguracji bazowej (`make install-base`) i Neovima >= 0.11. Desktop wymaga
+również konfiguracji mise (`make install-tools`) i swoich zależności budowania.
+Nieznany profil jest odrzucany.
+`make install-neovim` najpierw uzupełnia pluginy przez
+`bin/maintain-neovim plugins install`; na desktopie następnie uruchamia `mise install`
+w katalogu domowym użytkownika docelowego i odświeża completions. Server przygotowuje
+wyłącznie lekki zestaw pluginów, bez instalacji mise, narzędzi językowych i kompilacji
+parserów. Pełna instalacja przygotowuje pluginy w obu profilach; desktop instaluje
 narzędzia mise wcześniej w etapie `tools`. Przy braku Neovima >= 0.11 pomija
 jego utrzymanie, zachowuje Vim i kontynuuje pozostałe etapy; jawna sekcja
 `make install-neovim` nadal odmawia działania bez wspieranej wersji.

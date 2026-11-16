@@ -9,8 +9,8 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
-DESKTOP = ("private", "vault", "desktop-assets", "tools", "neovim", "ai", "desktop")
-ALL_SECTIONS = ("profile", "base", *DESKTOP, "completions", "shell")
+DESKTOP = ("private", "vault", "desktop-assets", "tools", "ai", "desktop")
+ALL_SECTIONS = ("profile", "base", *DESKTOP, "neovim", "completions", "shell")
 
 
 class InstallSectionsTest(unittest.TestCase):
@@ -162,6 +162,29 @@ setup_herdr() { return 0 }
                 self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
                 self.assertEqual((self.home / "stages").read_text().splitlines(), expected_stages)
 
+    def test_server_neovim_section_prepares_plugins_without_mise(self):
+        self.profile("server")
+        self.env["DOTFILES_PROFILE"] = "desktop"
+        repo = self.make_fixture("")
+        helper = repo / "bin/maintain-neovim"
+        helper.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
+                          'exit "$TEST_PLUGIN_EXIT"\n')
+        helper.chmod(0o755)
+        mise = self.home / ".local/bin/mise"
+        mise.parent.mkdir(parents=True)
+        mise.write_text('#!/bin/sh\ntouch "$HOME/mise-ran"\nexit 99\n')
+        mise.chmod(0o755)
+        for plugin_exit in (0, 42):
+            with self.subTest(plugin_exit=plugin_exit):
+                (self.home / "stages").unlink(missing_ok=True)
+                result = subprocess.run(
+                    ["zsh", str(repo / "install"), "--section", "neovim"],
+                    env={**self.env, "TEST_PLUGIN_EXIT": str(plugin_exit)},
+                    cwd=self.home, text=True, capture_output=True, timeout=10)
+                self.assertEqual(result.returncode, plugin_exit, result.stdout + result.stderr)
+                self.assertEqual((self.home / "stages").read_text().splitlines(), ["plugins install"])
+                self.assertFalse((self.home / "mise-ran").exists())
+
     def test_neovim_section_refreshes_completions_after_successful_setup(self):
         self.profile("desktop")
         repo = self.make_fixture('''
@@ -188,7 +211,7 @@ setup_neovim() { print -r -- setup >> "$HOME/stages"; return "$TEST_SETUP_EXIT" 
 
     def test_full_install_preserves_vim_fallback_and_propagates_supported_neovim_failures(self):
         repo = self.make_fixture('''
-configure_profile() { DOTFILES_PROFILE=desktop }
+configure_profile() { DOTFILES_PROFILE="$TEST_INSTALL_PROFILE" }
 configure_stow_apply() { STOW_APPLY=true }
 require_zsh_login_shell() { return 0 }
 setup_private_submodule() { return 0 }
@@ -225,40 +248,45 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
         mise.chmod(0o755)
         completions = repo / "bin/update-shell-completions"
         completions.write_text('#!/bin/sh\nprintf "completions\n" >> "$HOME/order"\n')
-        for version, plugin_exit, succeeds in (("missing", 0, True), ("0.9.5", 0, True),
-                                               ("0.10.4", 0, True), ("0.11.0", 0, True),
-                                               ("0.12.0", 42, False), ("broken", 0, False),
-                                               ("invalid", 0, False)):
-            with self.subTest(version=version, plugin_exit=plugin_exit):
-                order = self.home / "order"
-                order.unlink(missing_ok=True)
-                result = subprocess.run(["zsh", str(repo / "install")],
-                                        env={**self.env, "TEST_NVIM_VERSION": version,
-                                             "TEST_PLUGIN_EXIT": str(plugin_exit)},
-                                        cwd=repo, stdin=subprocess.DEVNULL, text=True,
-                                        capture_output=True, timeout=10)
-                stages = order.read_text().splitlines()
-                if not succeeds:
-                    self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-                    if plugin_exit:
-                        self.assertEqual(result.returncode, plugin_exit)
-                    self.assertNotIn("codex", stages)
-                    continue
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                later = ["codex", "opencode", "agy", "summarize", "completions"]
-                modern = version == "0.11.0"
-                expected = ["mise"] + (["maintenance", "tools"] if modern else []) + later
-                expected += ([] if modern else ["vim"]) + ["terminal", "kde", "units"]
-                self.assertEqual(stages, expected)
-                editor = (self.home / ".zshrc.d/editor.zsh").read_text()
-                self.assertIn("export EDITOR=" + ("nvim" if modern else "vim"), editor)
-                if not modern:
-                    order.unlink()
-                    explicit = subprocess.run(["zsh", str(repo / "install"), "--section", "neovim"],
-                                              env={**self.env, "TEST_NVIM_VERSION": version}, cwd=repo,
-                                              stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
-                    self.assertNotEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
-                    self.assertEqual(order.read_text().splitlines(), ["maintenance"])
+        editor_path = self.home / ".zshrc.d/editor.zsh"
+        for profile in ("desktop", "server"):
+            for version, plugin_exit, succeeds in (("missing", 0, True), ("0.9.5", 0, True),
+                                                   ("0.10.4", 0, True), ("0.11.0", 0, True),
+                                                   ("0.12.0", 42, False), ("broken", 0, False),
+                                                   ("invalid", 0, False)):
+                with self.subTest(profile=profile, version=version, plugin_exit=plugin_exit):
+                    order = self.home / "order"
+                    order.unlink(missing_ok=True)
+                    editor_path.unlink(missing_ok=True)
+                    result = subprocess.run(["zsh", str(repo / "install")],
+                                            env={**self.env, "TEST_INSTALL_PROFILE": profile, "TEST_NVIM_VERSION": version,
+                                                 "TEST_PLUGIN_EXIT": str(plugin_exit)},
+                                            cwd=repo, stdin=subprocess.DEVNULL, text=True,
+                                            capture_output=True, timeout=10)
+                    stages = order.read_text().splitlines() if order.exists() else []
+                    if not succeeds:
+                        self.assertFalse(editor_path.exists(), "failed preparation selected an editor")
+                        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                        if plugin_exit:
+                            self.assertEqual(result.returncode, plugin_exit)
+                        self.assertNotIn("codex", stages)
+                        continue
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    later = (["codex", "opencode", "agy", "summarize"] if profile == "desktop" else []) + ["completions"]
+                    modern = version == "0.11.0"
+                    expected = (["mise"] if profile == "desktop" else [])
+                    expected += (["maintenance"] + (["tools"] if profile == "desktop" else []) if modern else []) + later
+                    expected += ([] if modern else ["vim"]) + (["terminal", "kde", "units"] if profile == "desktop" else [])
+                    self.assertEqual(stages, expected)
+                    editor = editor_path.read_text()
+                    self.assertIn("export EDITOR=" + ("nvim" if modern else "vim"), editor)
+                    if not modern:
+                        order.unlink()
+                        explicit = subprocess.run(["zsh", str(repo / "install"), "--section", "neovim"],
+                                                  env={**self.env, "TEST_NVIM_VERSION": version}, cwd=repo,
+                                                  stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
+                        self.assertNotEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
+                        self.assertEqual(order.read_text().splitlines() if order.exists() else [], ["maintenance"])
 
     def test_ai_section_requires_summarize_seed_before_any_setup(self):
         self.profile("desktop")
