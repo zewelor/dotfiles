@@ -174,44 +174,14 @@ assert(not configured.lua_ls and not enabled.lua_ls, 'retired LuaLS must not be 
 for _, name in ipairs(declared) do
   assert(configured[name] and enabled[name], name .. ': declared native server was not configured and enabled')
 end
-assert(configured.ruby_lsp and enabled.ruby_lsp and type(configured.ruby_lsp.cmd) == 'function',
-  'Ruby LSP must defer mise resolution until a project client starts')
+assert(not configured.ruby_lsp and not enabled.ruby_lsp, 'Ruby LSP must remain unmanaged')
 for name in pairs(enabled) do
-  local found = name == 'ruby_lsp'
+  local found = false
   for _, declared_name in ipairs(declared) do
     found = found or name == declared_name
   end
   assert(found, name .. ': an undeclared LSP was activated')
 end
-""", "desktop")
-
-    def test_desktop_without_mise_reports_ruby_client_start_failure(self):
-        self.run_lua("""
-local defaults = {
-  lua_ls = { 'lua-language-server' }, helm_ls = { 'helm_ls', 'serve' },
-  ruff = { 'ruff', 'server' }, taplo = { 'taplo', 'lsp', 'stdio' },
-  marksman = { 'marksman', 'server' }, gopls = { 'gopls' },
-}
-local configured, enabled = {}, {}
-vim.lsp.config = setmetatable({}, {
-  __index = function(_, name) return defaults[name] and { cmd = defaults[name] } or nil end,
-  __call = function(_, name, opts) configured[name] = opts end,
-})
-vim.lsp.enable = function(name) enabled[name] = true end
-local lsp
-for _, spec in ipairs(require('plugins.lsp')) do
-  if spec[1] == 'neovim/nvim-lspconfig' then lsp = spec end
-end
-assert(lsp, 'native nvim-lspconfig plugin spec is missing')
-lsp.config()
-for _, name in ipairs(require('config.tools').servers) do
-  assert(configured[name] and enabled[name], name .. ': declared server was skipped without Ruby mise')
-end
-assert(configured.ruby_lsp and enabled.ruby_lsp, 'Ruby LSP configuration must remain lazy')
-local ok, err = pcall(configured.ruby_lsp.cmd, {}, { root_dir = '/projects/ruby' })
-assert(not ok, 'Ruby LSP must not start without mise')
-assert(err:find('mise', 1, true) and err:find('/projects/ruby', 1, true),
-  'missing-mise diagnostic must name the project and cause')
 """, "desktop")
 
 

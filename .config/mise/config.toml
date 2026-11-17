@@ -1,7 +1,6 @@
 [tools]
 usage = "latest"
 ruby = "latest"
-"gem:ruby-lsp" = { version = "latest", source = "https://rubygems.org/" }
 go = "latest"
 "gem:tmuxinator" = { version = "latest", source = "https://rubygems.org/" }
 github-cli = "latest"

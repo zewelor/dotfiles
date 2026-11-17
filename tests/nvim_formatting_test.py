@@ -467,37 +467,6 @@ assert(table.concat(messages, '\n'):find('fixture project wrapper failure', 1, t
             ["--version", "resolved-config"],
         )
 
-    def test_foreign_project_runtime_cannot_format_ruby_via_bundle_or_binstub(self):
-        for binstub in (False, True):
-            with self.subTest(binstub=binstub):
-                def prepare(temp, _bin_dir, _tools):
-                    active = temp / "active-runtime"
-                    other = temp / "other-project"
-                    for root in (active, other):
-                        root.mkdir()
-                        (root / "Gemfile").touch()
-                    self.write_fixture(active / ".dev/bin/ruby")
-                    self.write_fixture(active / ".dev/bin/bundle")
-                    (other / ".rubocop.yml").write_text("AllCops: {}\n", encoding="utf-8")
-                    if binstub:
-                        executable = other / "bin/rubocop"
-                        executable.parent.mkdir()
-                        executable.write_text("#!/usr/bin/env ruby\nputs 'binstub'\n", encoding="utf-8")
-                        executable.chmod(0o755)
-                    return {"ACTIVE_RUNTIME": str(active), "OTHER_PROJECT": str(other)}
-
-                calls = self.run_nvim(r'''local formatting = setup_conform()
-vim.env.PATH = vim.env.ACTIVE_RUNTIME .. '/.dev/bin:' .. vim.env.PATH
-local buf = make_buffer(vim.env.OTHER_PROJECT .. '/example.rb', 'ruby', 'before')
-local messages = {}
-vim.notify = function(message) table.insert(messages, tostring(message)) end
-assert(formatting.format(buf, 'manual') == nil)
-assert(buffer_text(buf) == 'before')
-assert(table.concat(messages, '\n'):find('belongs to another project', 1, true),
-  'foreign Ruby runtime must produce a clear project mismatch error')
-''', prepare=prepare)
-                self.assertFalse(any('/active-runtime/.dev/bin/' in call['program'] for call in calls), calls)
-
     def test_routed_types_and_all_supported_dprint_config_locations(self):
         types = [
             ("yaml", "data.yaml"), ("yaml.tmuxinator", "tmux.yaml"),
@@ -816,28 +785,33 @@ assert(not package.loaded['conform'], 'server formatting loaded Conform')
 ''', profile="server", prepare=prepare)
         self.assertEqual(calls, [])
 
-    def test_ruby_without_project_is_manual_only(self):
-        def prepare(temp, bin_dir, _mason):
-            self.write_fixture(bin_dir / "rubyfmt")
-            root = temp / "ruby"
+    def test_ruby_formatting_never_invokes_available_project_or_runtime_tools(self):
+        def prepare(temp, bin_dir, _tools):
+            for name in ('ruby', 'bundle', 'ruby-lsp', 'rubocop', 'rubyfmt', 'docker'):
+                self.write_fixture(bin_dir / name)
+            root = temp / 'ruby-project'
             root.mkdir()
-            return {"FMT_RUBY_ROOT": str(root)}
+            (root / 'Gemfile').write_text('gem "rubocop"\n')
+            (root / '.rubocop.yml').write_text('AllCops: {}\n')
+            for name in ('bin/rubocop', '.dev/bin/ruby', '.dev/bin/bundle', '.dev/bin/ruby-lsp'):
+                self.write_fixture(root / name)
+            return {'FMT_RUBY_ROOT': str(root)}
 
         calls = self.run_nvim(r'''
-local formatting, _, conform = setup_conform()
-local buf = make_buffer(vim.env.FMT_RUBY_ROOT .. '/scratch.rb', 'ruby', 'before')
+local formatting = setup_conform()
+local root = vim.env.FMT_RUBY_ROOT
+local buf = make_buffer(root .. '/main.rb', 'ruby', 'puts( :before )')
 local messages = {}
-vim.notify = function(message) messages[#messages + 1] = message end
-local get_clients = vim.lsp.get_clients
-vim.lsp.get_clients = function() error('Ruby outside RuboCop must not use LSP formatting') end
-local plan = formatting.format(buf, 'manual')
-assert(plan and plan.kind == 'skip', 'standalone Ruby was not skipped')
-assert(buffer_text(buf) == 'before', 'standalone Ruby was formatted')
-vim.lsp.get_clients = get_clients
-conform.format({ bufnr = buf, formatters = { 'rubyfmt' }, lsp_format = 'never' })
-assert(buffer_text(buf):match('^formatted:rubyfmt:'), 'optional explicit rubyfmt did not run')
+vim.notify = function(message) messages[#messages + 1] = tostring(message) end
+for _, activated in ipairs({ false, true }) do
+  if activated then vim.env.PATH = root .. '/.dev/bin:' .. vim.env.PATH end
+  local plan = formatting.format(buf, 'manual')
+  assert(plan and plan.kind == 'skip', 'Ruby must be left to project commands')
+  assert(buffer_text(buf) == 'puts( :before )', 'manual Ruby formatting changed the buffer')
+end
+assert(#messages == 2, 'manual Ruby formatting should explain why it was skipped')
 ''', prepare=prepare)
-        self.assertEqual(len(self.calls_named(calls, "rubyfmt")), 1)
+        self.assertEqual(calls, [], 'Ruby formatting started a project/runtime command')
 
     def test_defaults_use_path_and_keep_the_native_oxfmt_mise_route(self):
         cases = [
@@ -917,30 +891,6 @@ end
 assert(buffer_text(buf) == 'before')
 ''', prepare=prepare)
         self.assertEqual(calls, [], "availability checks must not invoke mise or install tools")
-
-    def test_project_rubocop_keeps_binstub_and_bundle_routes(self):
-        def prepare(temp, bin_dir, _mason):
-            self.write_fixture(bin_dir / "bundle")
-            for name in ("binstub", "bundled"):
-                root = temp / name
-                root.mkdir()
-                (root / ".rubocop.yml").write_text("AllCops: {}\n")
-                (root / "Gemfile").write_text('gem "rubocop"\n')
-                if name == "binstub":
-                    self.write_fixture(root / "bin/rubocop")
-            return {}
-
-        calls = self.run_nvim(r'''
-local formatting = setup_conform()
-for _, name in ipairs({ 'binstub', 'bundled' }) do
-  local buf = make_buffer(vim.env.HOME .. '/' .. name .. '/app.rb', 'ruby', 'before')
-  assert(formatting.format(buf, 'manual'), 'project Ruby formatting was skipped')
-  local program = name == 'binstub' and 'rubocop' or 'bundle'
-  assert(buffer_text(buf) == 'formatted:' .. program .. ':before')
-end
-''', prepare=prepare)
-        self.assertEqual(len(self.calls_named(calls, "rubocop")), 1)
-        self.assertEqual(self.calls_named(calls, "bundle")[0]["args"][:2], ["exec", "rubocop"])
 
     @unittest.skipUnless(REAL_GOIMPORTS and REAL_GOFUMPT and REAL_GO,
                          "prepared goimports, gofumpt and Go on PATH or DOTFILES_TEST_* paths are required")

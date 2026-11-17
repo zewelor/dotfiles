@@ -92,27 +92,7 @@ local function resolve(bufnr, trigger, deadline)
       error(info.available_msg or "dockerfmt is not available; prepare the desktop tools first", 0)
     end
   elseif ft == "ruby" then
-    local ruby = require("config.ruby")
-    local root = ruby.root(bufnr)
-    if ruby.is_gem(vim.api.nvim_buf_get_name(bufnr)) then
-      plan.kind, plan.reason = "skip", "Gem sources are read-only"
-    elseif ruby.project_lsp(root) then
-      if not ruby.rubocop_root(bufnr) then
-        plan.kind, plan.reason = "skip", "No project RuboCop configuration"
-      else
-        for _, client in ipairs(vim.lsp.get_clients({ bufnr = bufnr, name = "ruby_lsp" })) do
-          if client.initialized and client:supports_method("textDocument/formatting", bufnr) then
-            plan.kind, plan.client_id, plan.cwd = "ruby_lsp", client.id, root
-            break
-          end
-        end
-        if plan.kind ~= "ruby_lsp" then
-          error("Ruby LSP [" .. root .. "]: no ready client supports formatting; see :LspLog", 0)
-        end
-      end
-    elseif #require("conform").list_formatters_for_buffer(bufnr) == 0 then
-      plan.kind, plan.reason = "skip", "No project RuboCop; rubyfmt is available only through explicit formatting"
-    end
+    plan.kind, plan.reason = "skip", "Ruby formatting belongs to the project's format/check commands"
   elseif project_types[ft] then
     local filename = vim.api.nvim_buf_get_name(bufnr)
     if filename == "" then
@@ -183,8 +163,6 @@ local function operation(bufnr, trigger, dispatch)
       local opts = { bufnr = bufnr, async = false, timeout_ms = remaining(deadline, plan.budget_ms), lsp_format = "fallback" }
       if plan.kind == "project" then
         opts.formatters, opts.lsp_format = { "project_dprint" }, "never"
-      elseif plan.kind == "ruby_lsp" then
-        opts.formatters, opts.lsp_format, opts.id = {}, "fallback", plan.client_id
       elseif vim.bo[bufnr].filetype == "go" or vim.bo[bufnr].filetype == "dockerfile" then
         opts.lsp_format = "never"
       end
