@@ -3,8 +3,8 @@
 set -euo pipefail
 
 repo_dir="${0:A:h:h}"
-if (( $# != 2 )) || [[ "$1" != plugins || "$2" != (install|update) ]]; then
-  print -u2 'Usage: maintain-neovim plugins install|update'
+if (( $# != 2 )) || [[ "$1" != plugins || "$2" != (install|update|check) ]]; then
+  print -u2 'Usage: maintain-neovim plugins install|update|check'
   exit 1
 fi
 stage="$1"
@@ -62,6 +62,9 @@ if [[ "$DOTFILES_PROFILE" == desktop ]]; then
     fi
   done
 fi
+
+# Preflight stops before any plugin process or state changes.
+[[ "$mode" == check ]] && exit 0
 
 # Bound the entire process as well as individual registry/package operations.
 if timeout --signal=TERM --kill-after=10s 15m \

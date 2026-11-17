@@ -371,8 +371,8 @@ Wersje bazowe narzędzi Neovim są deklarowane jako `latest` w mise. Dprint musi
 być co najmniej 0.64.3; konfiguracja Zsh wymaga shfmt 3.13.1 lub nowszego ze
 względu na `-ln zsh`. Mise odpowiada za instalację i aktualizację zadeklarowanych
 wersji. Pełna instalacja desktopu uruchamia `mise install` przed przygotowaniem
-pluginów. `make install-neovim` sprawdza najpierw pluginy, a następnie uruchamia
-`mise install` z katalogu domowego użytkownika docelowego. `update-all` używa
+pluginów. `make install-neovim` najpierw sprawdza wymagania, potem uruchamia
+`mise install` z katalogu domowego użytkownika docelowego, a na końcu przygotowuje pluginy. `update-all` używa
 zwykłego etapu `mise upgrade` do aktualizacji tych binarek i osobnego headless
 procesu wyłącznie do pluginów. Zwykły start edytora nie instaluje ani nie
 aktualizuje narzędzi.
@@ -615,11 +615,13 @@ Samodzielna sekcja wymaga zapisanego profilu (`make install-profile`),
 konfiguracji bazowej (`make install-base`) i Neovima >= 0.11.3. Desktop wymaga
 również konfiguracji mise (`make install-tools`) i swoich zależności budowania.
 Nieznany profil jest odrzucany.
-`make install-neovim` najpierw uzupełnia pluginy przez
-`bin/maintain-neovim plugins install`; na desktopie następnie uruchamia `mise install`
-w katalogu domowym użytkownika docelowego i odświeża completions. Server przygotowuje
-wyłącznie lekki zestaw pluginów, bez instalacji mise, narzędzi językowych i kompilacji
-parserów. Pełna instalacja przygotowuje pluginy w obu profilach; desktop instaluje
+`make install-neovim` najpierw sprawdza wymagania przez
+`bin/maintain-neovim plugins check`, bez instalacji narzędzi ani uruchamiania sesji Neovima.
+Na desktopie następnie uruchamia `mise install` w katalogu domowym użytkownika
+docelowego, a dopiero potem przygotowuje pluginy przez
+`bin/maintain-neovim plugins install` i odświeża completions. Server po sprawdzeniu
+wymagań przygotowuje wyłącznie lekki zestaw pluginów, bez instalacji mise,
+narzędzi językowych i kompilacji parserów. Pełna instalacja przygotowuje pluginy w obu profilach; desktop instaluje
 narzędzia mise wcześniej w etapie `tools`. Przy braku Neovima >= 0.11.3 pomija
 jego utrzymanie, zachowuje Vim i kontynuuje pozostałe etapy; jawna sekcja
 `make install-neovim` nadal odmawia działania bez wspieranej wersji.

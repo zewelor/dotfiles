@@ -101,12 +101,15 @@ exit "${TEST_NVIM_EXIT:-0}"
         self.env["DOTFILES_PROFILE"] = "desktop"
         for tool in ("mise", "make", "cc"):
             self.write_tool(tool, 'printf called >> "$HOME/' + tool + '.log"\nexit 42\n')
-        for mode in ("install", "update"):
+        for mode in ("check", "install", "update"):
             with self.subTest(mode=mode):
                 self.log.unlink(missing_ok=True)
                 result = self.run_helper("plugins", mode)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertEqual(self.log.read_text().splitlines()[2], "server")
+                if mode == "check":
+                    self.assertFalse(self.log.exists())
+                else:
+                    self.assertEqual(self.log.read_text().splitlines()[2], "server")
                 for tool in ("mise", "make", "cc", "node", "npm", "python3", "go"):
                     self.assertFalse((self.home / (tool + ".log")).exists(), tool)
 
@@ -152,6 +155,25 @@ exit "${TEST_NVIM_EXIT:-0}"
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("mise", result.stderr)
         self.assertFalse(self.log.exists())
+
+    def test_preflight_checks_requirements_without_running_maintenance(self):
+        self.profile("desktop")
+        self.base_config()
+        result = self.run_helper(mode="check")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(self.log.exists())
+        self.assertFalse(self.mise_log.exists())
+        self.env["TEST_NVIM_VERSION"] = "0.11.2"
+        result = self.run_helper(mode="check")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("0.11.3", result.stderr)
+        self.env["TEST_NVIM_VERSION"] = "0.11.6"
+        (self.home / ".config/nvim/init.lua").unlink()
+        result = self.run_helper(mode="check")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("install-base", result.stderr)
+        self.assertFalse(self.log.exists())
+        self.assertFalse(self.mise_log.exists())
 
     def test_process_failure_propagates(self):
         self.profile("desktop")

@@ -1134,12 +1134,14 @@ EOF
 }
 
 setup_neovim() {
-  print_banner 'Preparing Neovim plugins'
-  "$BASE_DIR/bin/maintain-neovim" plugins install || return $?
+  print_banner 'Checking Neovim maintenance prerequisites'
+  "$BASE_DIR/bin/maintain-neovim" plugins check || return $?
   if is_desktop; then
-    print_banner 'Preparing declared mise tools for Neovim'
+    print_banner 'Installing declared mise tools for Neovim'
     (unset MISE_GLOBAL_CONFIG_FILE MISE_CEILING_PATHS; cd -- "$HOME_DIR" && "$MISE_BIN" install) || return $?
   fi
+  print_banner 'Preparing Neovim plugins'
+  "$BASE_DIR/bin/maintain-neovim" plugins install || return $?
 }
 
 setup_desktop_assets() {

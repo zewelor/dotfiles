@@ -135,25 +135,31 @@ setup_herdr() { return 0 }
                 self.assertIn("first", result.stderr)
                 self.assertEqual(list(self.home.iterdir()), [self.home / ".zshrc.d"])
 
-    def test_neovim_section_runs_plugins_before_mise_install_and_stops_on_failure(self):
+    def test_neovim_section_preflights_before_mise_tools_and_plugin_maintenance(self):
         self.profile("desktop")
         self.env["DOTFILES_PROFILE"] = "server"
         repo = self.make_fixture("")
         helper = repo / "bin/maintain-neovim"
         helper.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
-                          'if [ "$1" = plugins ]; then exit "${TEST_PLUGIN_EXIT:-0}"; fi\n')
+                          'if [ "$2" = check ]; then exit "${TEST_PREFLIGHT_EXIT:-0}"; fi\n'
+                          'if [ "$2" = install ]; then exit "${TEST_PLUGIN_EXIT:-0}"; fi\n')
         helper.chmod(0o755)
         mise = self.home / ".local/bin/mise"
         mise.parent.mkdir(parents=True)
         mise.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
                         'exit "${TEST_MISE_EXIT:-0}"\n')
         mise.chmod(0o755)
-        cases = ((42, 0, 42, ["plugins install"]),
-                 (0, 42, 42, ["plugins install", "install"]),
-                 (0, 0, 0, ["plugins install", "install"]))
-        for plugin_exit, mise_exit, expected_exit, expected_stages in cases:
-            with self.subTest(plugin_exit=plugin_exit, mise_exit=mise_exit):
+        cases = (("missing base", 91, 0, 0, 91, ["plugins check"]),
+                 ("old Neovim", 92, 0, 0, 92, ["plugins check"]),
+                 ("mise failure", 0, 0, 42, 42, ["plugins check", "install"]),
+                 ("plugin failure", 0, 42, 0, 42,
+                  ["plugins check", "install", "plugins install"]),
+                 ("success", 0, 0, 0, 0,
+                  ["plugins check", "install", "plugins install"]))
+        for name, preflight_exit, plugin_exit, mise_exit, expected_exit, expected_stages in cases:
+            with self.subTest(case=name):
                 (self.home / "stages").unlink(missing_ok=True)
+                self.env["TEST_PREFLIGHT_EXIT"] = str(preflight_exit)
                 self.env["TEST_PLUGIN_EXIT"] = str(plugin_exit)
                 self.env["TEST_MISE_EXIT"] = str(mise_exit)
                 result = subprocess.run(["zsh", str(repo / "install"), "--section", "neovim"],
@@ -168,6 +174,7 @@ setup_herdr() { return 0 }
         repo = self.make_fixture("")
         helper = repo / "bin/maintain-neovim"
         helper.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
+                          'if [ "$2" = check ]; then exit 0; fi\n'
                           'exit "$TEST_PLUGIN_EXIT"\n')
         helper.chmod(0o755)
         mise = self.home / ".local/bin/mise"
@@ -182,7 +189,7 @@ setup_herdr() { return 0 }
                     env={**self.env, "TEST_PLUGIN_EXIT": str(plugin_exit)},
                     cwd=self.home, text=True, capture_output=True, timeout=10)
                 self.assertEqual(result.returncode, plugin_exit, result.stdout + result.stderr)
-                self.assertEqual((self.home / "stages").read_text().splitlines(), ["plugins install"])
+                self.assertEqual((self.home / "stages").read_text().splitlines(), ["plugins check", "plugins install"])
                 self.assertFalse((self.home / "mise-ran").exists())
 
     def test_neovim_section_refreshes_completions_after_successful_setup(self):
@@ -238,8 +245,9 @@ has() { [[ "$1" == vim || ( "$1" == nvim && "$TEST_NVIM_VERSION" != missing ) ]]
 nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$TEST_NVIM_VERSION" }
 ''')
         helper = repo / "bin/maintain-neovim"
-        helper.write_text('#!/bin/sh\nprintf "maintenance\n" >> "$HOME/order"\n'
+        helper.write_text('#!/bin/sh\nprintf "%s\n" "$2" >> "$HOME/order"\n'
                           'case "$TEST_NVIM_VERSION" in missing|0.9.5|0.10.4|0.11.0|0.11.2) exit 92;; esac\n'
+                          'if [ "$2" = check ]; then exit 0; fi\n'
                           'exit "${TEST_PLUGIN_EXIT:-0}"\n')
         helper.chmod(0o755)
         mise = self.home / ".local/bin/mise"
@@ -276,7 +284,7 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
                     later = (["codex", "opencode", "agy", "summarize"] if profile == "desktop" else []) + ["completions"]
                     modern = version == "0.11.3"
                     expected = (["mise"] if profile == "desktop" else [])
-                    expected += (["maintenance"] + (["tools"] if profile == "desktop" else []) if modern else []) + later
+                    expected += (["check"] + (["tools"] if profile == "desktop" else []) + ["install"] if modern else []) + later
                     expected += ([] if modern else ["vim"]) + (["terminal", "kde", "units"] if profile == "desktop" else [])
                     self.assertEqual(stages, expected)
                     editor = editor_path.read_text()
@@ -287,7 +295,7 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
                                                   env={**self.env, "TEST_NVIM_VERSION": version}, cwd=repo,
                                                   stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
                         self.assertNotEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
-                        self.assertEqual(order.read_text().splitlines() if order.exists() else [], ["maintenance"])
+                        self.assertEqual(order.read_text().splitlines() if order.exists() else [], ["check"])
 
     def test_ai_section_requires_summarize_seed_before_any_setup(self):
         self.profile("desktop")
