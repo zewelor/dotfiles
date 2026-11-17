@@ -1401,7 +1401,7 @@ run_installation() {
     setup_mise_desktop_tools
   fi
   if supports_neovim_config; then
-    setup_neovim || return $?
+    setup_neovim
   else
     local version_status=$?
     (( version_status == 1 )) || return "$version_status"
