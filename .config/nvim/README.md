@@ -617,6 +617,19 @@ Kolejne `install` lub `update` ponawia je także przy istniejącym checkoutcie;
 po udanym buildzie wpis jest usuwany. Sprawne pluginy nie są przebudowywane
 przy kolejnym `install`.
 
+### Globalne ustawienia dprint
+
+Globalny `~/.config/dprint/dprint.jsonc` jest linkowany przez Stow do
+`.config/dprint/dprint.jsonc` w tym repo. `make install-neovim` przygotowuje cache
+wersji zapisanych w configu, bez zmiany przypiętych numerów. `update-all` oraz
+`bin/maintain-neovim plugins update` najpierw uruchamiają
+`dprint config update --global`, aby wybrać najnowsze wersje pluginów, a potem
+`dprint install --global`, aby przygotować ich cache. Nowe numery trafiają przez
+link do pliku w repo — przejrzyj diff i commituj aktualizację. Nie powstaje
+osobna kopia configu. Brak configu wymaga ponownego `make install-base`.
+Globalne reguły dotyczą także CLI dprint poza edytorem;
+`*-lock.json` i `pnpm-lock.yaml` są domyślnie pomijane.
+
 ## 📝 Dodawanie nowego pluginu
 
 1. **Stwórz nowy plik** w `lua/plugins/nazwa.lua`:

@@ -1,0 +1,9 @@
+// Global defaults managed in this repo; project configs take precedence.
+{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "lineWidth": 100,
+  "indentWidth": 2,
+  "excludes": ["**/*-lock.json", "**/pnpm-lock.yaml"],
+  // dprint downloads ready-made WASM from the npm registry; Node.js and npm are not required.
+  "plugins": ["npm:@dprint/oxc@0.51.0"]
+}

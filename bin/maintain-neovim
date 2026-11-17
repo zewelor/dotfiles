@@ -73,6 +73,27 @@ if [[ "$DOTFILES_PROFILE" == desktop ]]; then
     print -u2 'Error: desktop Neovim requires tree-sitter >= 0.26.1; run make install-neovim.'
     exit 1
   fi
+  if ! command -v dprint >/dev/null; then
+    print -u2 'Error: desktop Neovim requires prepared dprint; run make install-neovim.'
+    exit 1
+  fi
+
+  # Install pinned plugins; explicit updates refresh version pins in the repo.
+  (
+    export DPRINT_CONFIG_DIR="$XDG_CONFIG_HOME/dprint"
+    export DPRINT_CACHE_DIR="$XDG_CACHE_HOME/dprint/cache"
+    unset DPRINT_CONFIG_DISCOVERY
+    if [[ ! -f "$DPRINT_CONFIG_DIR/dprint.jsonc" ]]; then
+      print -u2 'Error: dprint global configuration is missing; run make install-base first.'
+      exit 1
+    fi
+    if [[ "$mode" == update ]]; then
+      print '[dprint] Updating global formatter plugin versions in the repo config'
+      timeout --signal=TERM --kill-after=10s 2m dprint config update --global
+    fi
+    print '[dprint] Preparing configured global formatter plugins'
+    timeout --signal=TERM --kill-after=10s 2m dprint install --global
+  )
 fi
 
 # Preflight stops before any plugin process or state changes.

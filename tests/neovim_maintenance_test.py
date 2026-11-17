@@ -28,11 +28,14 @@ class NeovimMaintenanceTest(unittest.TestCase):
         self.bin.mkdir(parents=True)
         self.log = self.home / "nvim.log"
         self.mise_log = self.home / "mise.log"
+        self.dprint_log = self.home / "dprint.log"
         self.env = dict(os.environ, HOME=str(self.home), ZDOTDIR=str(self.home),
                         DOTFILES_PROFILE="server", MISE_CONFIG_DIR=str(self.caller),
                         XDG_CONFIG_HOME=str(self.caller), XDG_DATA_HOME=str(self.caller),
                         NVIM_APPNAME="foreign", TEST_NVIM_LOG=str(self.log),
                         TEST_MISE_LOG=str(self.mise_log))
+        self.env.update(DPRINT_CONFIG_DIR=str(self.caller), DPRINT_CACHE_DIR=str(self.caller),
+                        TEST_DPRINT_LOG=str(self.dprint_log))
         self.write_tool("nvim", '''
 if [ "$1" = --version ]; then printf 'NVIM v%s\\n' "${TEST_NVIM_VERSION:-0.11.6}"; exit 0; fi
 printf '%s\\n' "$PWD" "$HOME" "$DOTFILES_PROFILE" "$MISE_CONFIG_DIR" \\
@@ -43,6 +46,16 @@ exit "${TEST_NVIM_EXIT:-0}"
         self.write_tool("make", 'exit 0\n')
         self.write_tool("cc", 'exit 0\n')
         self.write_tool("tree-sitter", 'echo "tree-sitter 0.26.1"\n')
+        self.write_tool("dprint", '''
+printf '%s|%s|%s|%s\\n' "$*" "$DPRINT_CONFIG_DIR" "$DPRINT_CACHE_DIR" "$PWD" >> "$TEST_DPRINT_LOG"
+if [ "$1 $2" = 'config update' ]; then
+  [ "${TEST_DPRINT_UPDATE_EXIT:-0}" = 0 ] || exit "$TEST_DPRINT_UPDATE_EXIT"
+  config="$DPRINT_CONFIG_DIR/dprint.jsonc"
+  updated=$(sed 's/oxc@[^"]*/oxc@0.99.0/' "$config")
+  printf '%s\\n' "$updated" > "$config"
+fi
+exit "${TEST_DPRINT_EXIT:-0}"
+''')
         # These deliberately fail if maintenance tries to invoke runtimes that are
         # not prerequisites for Neovim plugin maintenance.
         for tool in ("node", "npm", "python3", "go"):
@@ -66,6 +79,12 @@ exit "${TEST_NVIM_EXIT:-0}"
         mise = self.home / ".config/mise"
         mise.mkdir()
         (mise / "config.toml").write_text("[tools]\n")
+        self.repo_config = self.base / "dotfiles/.config/dprint/dprint.jsonc"
+        self.repo_config.parent.mkdir(parents=True)
+        self.repo_config.write_bytes((ROOT / ".config/dprint/dprint.jsonc").read_bytes())
+        dprint = self.home / ".config/dprint"
+        dprint.mkdir()
+        (dprint / "dprint.jsonc").symlink_to(self.repo_config)
 
     def run_helper(self, stage="plugins", mode="install"):
         return subprocess.run(["/usr/bin/zsh", str(ROOT / "bin/maintain-neovim"), stage, mode],
@@ -100,7 +119,7 @@ exit "${TEST_NVIM_EXIT:-0}"
         self.profile("server")
         self.base_config()
         self.env["DOTFILES_PROFILE"] = "desktop"
-        for tool in ("mise", "make", "cc", "tree-sitter"):
+        for tool in ("mise", "make", "cc", "tree-sitter", "dprint"):
             self.write_tool(tool, 'printf called >> "$HOME/' + tool + '.log"\nexit 42\n')
         for mode in ("check", "install", "update"):
             with self.subTest(mode=mode):
@@ -111,8 +130,69 @@ exit "${TEST_NVIM_EXIT:-0}"
                     self.assertFalse(self.log.exists())
                 else:
                     self.assertEqual(self.log.read_text().splitlines()[2], "server")
-                for tool in ("mise", "make", "cc", "tree-sitter", "node", "npm", "python3", "go"):
+                for tool in ("mise", "make", "cc", "tree-sitter", "dprint", "node", "npm", "python3", "go"):
                     self.assertFalse((self.home / (tool + ".log")).exists(), tool)
+
+    def test_global_formatter_install_preserves_config_and_update_changes_repo_pin(self):
+        self.profile("desktop")
+        self.base_config()
+        directory = self.home / ".config/dprint"
+        config = directory / "dprint.jsonc"
+        original = self.repo_config.read_bytes()
+        for mode in ("check", "install", "install", "update"):
+            result = self.run_helper(mode=mode)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue(config.is_symlink())
+            if mode == "update":
+                self.assertIn(b"npm:@dprint/oxc@0.99.0", self.repo_config.read_bytes())
+                self.assertNotEqual(self.repo_config.read_bytes(), original)
+            else:
+                self.assertEqual(self.repo_config.read_bytes(), original)
+        commands = [line.split("|")[0] for line in self.dprint_log.read_text().splitlines()]
+        self.assertEqual(commands, ["install --global", "install --global",
+                                    "config update --global", "install --global"])
+        for line in self.dprint_log.read_text().splitlines():
+            self.assertEqual(line.split("|")[1:], [str(directory),
+                str(self.home / ".cache/dprint/cache"), str(self.home)])
+
+
+    def test_global_formatter_update_failure_stops_before_cache_and_neovim(self):
+        self.profile("desktop")
+        self.base_config()
+        original = self.repo_config.read_bytes()
+        self.env["TEST_DPRINT_UPDATE_EXIT"] = "42"
+        result = self.run_helper(mode="update")
+        self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
+        self.assertFalse(self.log.exists())
+        self.assertEqual(self.repo_config.read_bytes(), original)
+        commands = [line.split("|")[0] for line in self.dprint_log.read_text().splitlines()]
+        self.assertEqual(commands, ["config update --global"])
+
+
+    def test_global_formatter_missing_config_fails_without_creating_a_copy(self):
+        self.profile("desktop")
+        self.base_config()
+        directory = self.home / ".config/dprint"
+        (directory / "dprint.jsonc").unlink()
+        directory.rmdir()
+        for mode in ("install", "update"):
+            result = self.run_helper(mode=mode)
+            self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("install-base", result.stderr)
+            self.assertFalse(directory.exists())
+            self.assertFalse(self.dprint_log.exists())
+            self.assertFalse(self.log.exists())
+
+
+    def test_global_formatter_failure_stops_before_neovim(self):
+        self.profile("desktop")
+        self.base_config()
+        self.env["TEST_DPRINT_EXIT"] = "42"
+        for mode in ("install", "update"):
+            result = self.run_helper(mode=mode)
+            self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
+            self.assertFalse(self.log.exists())
+
 
     def test_unknown_profile_and_missing_base_fail_before_neovim(self):
         self.profile("unknown")
@@ -164,6 +244,7 @@ exit "${TEST_NVIM_EXIT:-0}"
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertFalse(self.log.exists())
         self.assertFalse(self.mise_log.exists())
+        self.assertFalse(self.dprint_log.exists())
         self.env["TEST_NVIM_VERSION"] = "0.11.2"
         result = self.run_helper(mode="check")
         self.assertNotEqual(result.returncode, 0)

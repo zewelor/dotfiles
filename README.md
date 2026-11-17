@@ -60,7 +60,12 @@ the Vim fallback and continue the remaining installation stages.
 `make install-neovim` runs the setup separately with a saved profile, base
 configuration and Neovim >= 0.11.3. Desktop also requires mise.
 `update-all` upgrades declared mise tools through its regular mise stage and
-updates Neovim plugins separately. Ordinary editor startup does not install or
+updates Neovim plugins separately. Stow links the global dprint configuration
+from `.config/dprint/dprint.jsonc`; settings and plugin versions are managed in
+this repository. Desktop installation prepares the declared formatter plugins
+without changing their pins. `update-all` updates those pins to the latest
+published versions, then prepares the cache. The config changes remain in the
+checkout for review and commit. Ordinary editor startup does not install or
 update tools. Mise owns the maintained tools; Mason is not loaded, and existing
 Mason packages are not automatically removed. See the
 [Neovim tool ownership and prerequisites](.config/nvim/README.md#narzędzia-neovim--jawne-utrzymanie-przez-mise).
