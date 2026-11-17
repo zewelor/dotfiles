@@ -1,10 +1,15 @@
--- Manual formatting; project checks remain the authority for committed code.
+-- Explicit formatting; project checks remain the authority for committed code.
 return {
   "stevearc/conform.nvim",
   cond = require("config.profile").is_desktop,
   cmd = "ConformInfo",
   opts = {
     default_format_opts = { lsp_format = "never", timeout_ms = 2000 },
+    format_on_save = function(bufnr)
+      if vim.b[bufnr].format_on_save then
+        return {}
+      end
+    end,
     notify_no_formatters = true,
     formatters_by_ft = {
       lua = { "stylua" },

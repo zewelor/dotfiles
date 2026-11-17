@@ -89,6 +89,12 @@ if require("config.profile").is_desktop() then
 	keymap("n", "<leader>cf", function()
 		require("conform").format({ async = false, lsp_format = "never" })
 	end, { desc = "Format buffer (conform)" })
+	keymap("n", "<leader>uf", function()
+		require("conform")
+		vim.b.format_on_save = not vim.b.format_on_save
+		vim.notify(vim.b.format_on_save and "Format on save enabled for this buffer"
+			or "Format on save disabled for this buffer")
+	end, { desc = "Toggle format on save for buffer" })
 end
 
 -- Git hunks (gitsigns)

@@ -1,4 +1,4 @@
-"""Manual Conform formatting with isolated PATH tools and real buffer writes.
+"""Conform formatting with isolated PATH tools and real buffer writes.
 
 Uses installed Conform sources without loading Lazy or touching user state.
 """
@@ -91,6 +91,28 @@ assert(vim.api.nvim_get_current_line() == 'value = 1', 'manual formatting did no
 assert(vim.fn.readfile(vim.api.nvim_buf_get_name(0))[1] == 'value=1', 'format silently saved buffer')
 vim.cmd.write()
 assert(vim.fn.readfile(vim.api.nvim_buf_get_name(0))[1] == 'value = 1')
+''')
+        self.assertEqual([c['name'] for c in calls], ['stylua'])
+
+    def test_format_on_save_can_be_toggled_per_buffer(self):
+        calls = self.run_case('''
+vim.g.mapleader = ' '
+require('config.keymaps')
+vim.o.hidden = true
+open('first.lua', 'lua')
+local first = vim.api.nvim_get_current_buf()
+assert(vim.fn.maparg(' uf', 'n') ~= '', 'format-on-save toggle is missing')
+vim.api.nvim_feedkeys(' uf', 'mx', false)
+open('second.lua', 'lua')
+vim.cmd.write()
+assert(vim.fn.readfile(vim.api.nvim_buf_get_name(0))[1] == 'value=1', 'toggle leaked to another buffer')
+vim.api.nvim_set_current_buf(first)
+vim.cmd.write()
+assert(vim.fn.readfile(vim.api.nvim_buf_get_name(0))[1] == 'value = 1', 'toggle did not enable formatting')
+vim.api.nvim_feedkeys(' uf', 'mx', false)
+vim.api.nvim_buf_set_lines(0, 0, -1, false, {'value=1'})
+vim.cmd.write()
+assert(vim.fn.readfile(vim.api.nvim_buf_get_name(0))[1] == 'value=1', 'toggle did not disable formatting')
 ''')
         self.assertEqual([c['name'] for c in calls], ['stylua'])
 

@@ -145,8 +145,8 @@ Specyficzne ustawienia dla konkretnych typów plików (w `after/ftplugin/` + `ft
 Dockerfile używa standardowych wcięć Neovima zamiast własnego parsera bloków
 shellowych w `RUN`. Rozpoznawanie `fdockerfile` i wariantów oraz wcięcia z
 `.editorconfig` pozostają aktywne. Na desktopie `<Space>cf` formatuje cały bufor
-przez `dockerfmt`, w tym shell wewnątrz `RUN`; zapis nadal pomija formatowanie
-Dockerfile. Ręczne formatowanie nie zapisuje pliku automatycznie.
+przez `dockerfmt`, w tym shell wewnątrz `RUN`. Formatowanie przy zapisie jest
+domyślnie wyłączone. Ręczne formatowanie nie zapisuje pliku automatycznie.
 
 Dockerfmt jest gotową binarką zarządzaną przez mise i korzysta z wbudowanego
 adaptera Conforma. Przy wejściu przez stdin dostaje szerokość wcięcia i wybór
@@ -280,11 +280,15 @@ Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lu
 
 ### **conform.nvim** — Ręczne formatowanie
 
-Conform ładuje się przy pierwszym `<Space>cf` albo `:ConformInfo`.
+Conform ładuje się przy pierwszym `<Space>cf`, `<Space>uf` lub `:ConformInfo`.
 
-**Zapis nie uruchamia formattera.** `<Space>cf` wywołuje Conform synchronicznie,
+**Formatowanie przy zapisie jest domyślnie wyłączone.** `<Space>cf` wywołuje Conform synchronicznie,
 z limitem 2 sekund, bez formatowania przez LSP. Zmienia bufor; zapis i staging
 pozostają oddzielnymi, świadomymi krokami. `:ConformInfo` pokazuje narzędzia i błędy.
+
+`<Space>uf` włącza lub wyłącza formatowanie przed zapisem bieżącego bufora
+i pokazuje stan w powiadomieniu. Ustawienie znika po usunięciu bufora lub
+zamknięciu Neovima.
 
 | Pliki | Formatter |
 |---|---|
@@ -498,7 +502,8 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 #### Formatowanie
 
-- `<Space>cf` — Formatuj plik (conform.nvim)
+- `<Space>cf` — Formatuj bufor (desktop)
+- `<Space>uf` — Przełącz formatowanie przy zapisie bieżącego bufora (desktop)
 
 #### LSP (aktywne gdy serwer LSP jest podłączony)
 
