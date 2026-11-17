@@ -25,9 +25,9 @@ ROOT = Path(__file__).resolve().parents[1]
 NVIM = shutil.which("nvim")
 LAZY = Path.home() / ".local/share/nvim/lazy"
 CONFORM = LAZY / "conform.nvim"
-MASON_BIN = LAZY.parent / "mason/bin"
-MASON_GOFUMPT = MASON_BIN / "gofumpt"
-MASON_GOIMPORTS = MASON_BIN / "goimports"
+REAL_GOFUMPT = os.environ.get("DOTFILES_TEST_GOFUMPT") or shutil.which("gofumpt")
+REAL_GOIMPORTS = os.environ.get("DOTFILES_TEST_GOIMPORTS") or shutil.which("goimports")
+REAL_GO = os.environ.get("DOTFILES_TEST_GO") or shutil.which("go")
 REAL_DPRINT = os.environ.get("DOTFILES_TEST_DPRINT")
 REAL_DPRINT_PLUGIN = os.environ.get("DOTFILES_TEST_DPRINT_PLUGIN")
 REAL_OXFMT = os.environ.get("DOTFILES_TEST_OXFMT")
@@ -201,7 +201,8 @@ class NeovimFormattingTest(unittest.TestCase):
                 binary = tool_dir / name
                 self.write_fixture(binary)
                 binaries[name] = str(binary)
-            (bin_dir / "shfmt").symlink_to(tool_dir / "shfmt")
+            for name in ("shfmt", "stylua", "ruff", "taplo", "yamlfmt", "goimports", "gofumpt"):
+                (bin_dir / name).symlink_to(tool_dir / name)
             log_path = temp / "calls.jsonl"
             env = {
                 "HOME": str(temp),
@@ -838,7 +839,7 @@ assert(buffer_text(buf):match('^formatted:rubyfmt:'), 'optional explicit rubyfmt
 ''', prepare=prepare)
         self.assertEqual(len(self.calls_named(calls, "rubyfmt")), 1)
 
-    def test_defaults_use_shell_path_and_resolve_other_tools_with_mise(self):
+    def test_defaults_use_path_and_keep_the_native_oxfmt_mise_route(self):
         cases = [
             ("lua", "lua/main.lua", ["stylua"]),
             ("python", "python/main.py", ["ruff"]),
@@ -886,8 +887,8 @@ end
                 expected.setdefault(binary, []).append(target_dir)
         for binary, target_dirs in expected.items():
             resolved = self.mise_which_calls(calls, binary)
-            if binary == "shfmt":
-                self.assertEqual(resolved, [], "shell formatting must use PATH directly")
+            if binary != "oxfmt":
+                self.assertEqual(resolved, [], binary + " formatting must use PATH directly")
                 continue
             self.assertGreaterEqual(len(resolved), len(target_dirs), f"mise did not resolve {binary} for each buffer")
             actual = [call["args"] for call in resolved]
@@ -899,6 +900,23 @@ end
             [call["name"] for call in formatter_calls],
             [binary for _ft, _filename, binaries in cases for binary in binaries],
         )
+
+    def test_path_formatters_remain_unavailable_when_only_mise_can_resolve_them(self):
+        def prepare(_temp, bin_dir, _tools):
+            for name in ("stylua", "ruff", "taplo", "yamlfmt", "goimports", "gofumpt"):
+                (bin_dir / name).unlink()
+            return {}
+
+        calls = self.run_nvim(r'''
+local _, _, conform = setup_conform()
+local buf = make_buffer(vim.env.HOME .. '/main.go', 'go', 'before')
+for _, name in ipairs({ 'stylua', 'ruff_format', 'taplo', 'yamlfmt', 'goimports', 'gofumpt' }) do
+  local info = conform.get_formatter_info(name, buf)
+  assert(not info.available, name .. ': unexpectedly found a tool outside PATH')
+end
+assert(buffer_text(buf) == 'before')
+''', prepare=prepare)
+        self.assertEqual(calls, [], "availability checks must not invoke mise or install tools")
 
     def test_project_rubocop_keeps_binstub_and_bundle_routes(self):
         def prepare(temp, bin_dir, _mason):
@@ -924,27 +942,33 @@ end
         self.assertEqual(len(self.calls_named(calls, "rubocop")), 1)
         self.assertEqual(self.calls_named(calls, "bundle")[0]["args"][:2], ["exec", "rubocop"])
 
-    @unittest.skipUnless(MASON_GOIMPORTS.is_file() and MASON_GOFUMPT.is_file() and shutil.which("go"),
-                         "existing Mason goimports/gofumpt binaries and Go are required")
+    @unittest.skipUnless(REAL_GOIMPORTS and REAL_GOFUMPT and REAL_GO,
+                         "prepared goimports, gofumpt and Go on PATH or DOTFILES_TEST_* paths are required")
     def test_real_goimports_and_gofumpt_preserve_imports_and_style(self):
-        # Read an existing toolchain directly; querying mise would resolve unrelated
-        # newly declared tools and attempt network/cache writes in the user's HOME.
-        go = Path(os.environ.get("DOTFILES_TEST_GO", str(Path.home() / ".local/share/mise/installs/go/latest/bin/go")))
-        if not go.is_file():
-            self.skipTest("set DOTFILES_TEST_GO to an existing Go executable")
+        # Resolve mise shims before isolating HOME; tests never install tools.
+        binaries = {}
+        for name, candidate in (("go", REAL_GO), ("goimports", REAL_GOIMPORTS), ("gofumpt", REAL_GOFUMPT)):
+            binary = Path(candidate).resolve()
+            if binary.name == "mise":
+                binary = Path(subprocess.check_output(
+                    [str(binary), "which", name], cwd=Path.home(),
+                    env=dict(os.environ, MISE_AUTO_INSTALL="false"), text=True, timeout=5,
+                ).strip())
+            self.assertTrue(binary.is_file() and os.access(binary, os.X_OK), str(binary))
+            binaries[name] = binary
 
         def prepare(temp, bin_dir, tool_dir):
             root = temp / "go-project"
             root.mkdir()
             (root / "go.mod").write_text("module example.test/formatting\n\ngo 1.20\n", encoding="utf-8")
-            binaries = {
-                name: str(tool_dir / name)
-                for name in self.MISE_BINARIES
-            }
-            binaries.update({"goimports": str(MASON_GOIMPORTS), "gofumpt": str(MASON_GOFUMPT)})
+            # Real PATH tools do not create the fixture process log.
+            (temp / "calls.jsonl").touch()
+            for name, binary in binaries.items():
+                link = bin_dir / name
+                link.unlink(missing_ok=True)
+                link.symlink_to(binary)
             return {
-                "PATH": str(bin_dir) + ":" + str(go.parent) + ":/usr/bin:/bin",
-                "FMT_TEST_MISE_BINARIES": json.dumps(binaries),
+                "PATH": str(bin_dir) + ":/usr/bin:/bin",
                 "FMT_GO_ROOT": str(root), "GOPROXY": "off", "GOSUMDB": "off", "GOTOOLCHAIN": "local",
                 "GOPATH": str(temp / "gopath"), "GOCACHE": str(temp / "gocache"),
             }
@@ -979,11 +1003,7 @@ assert(vim.deep_equal(vim.fn.readfile(vim.env.FMT_TEST_LOG), before_save_calls),
   'ordinary write invoked a Go formatter or mise')
 ''', prepare=prepare, timeout=45)
 
-        self.assertTrue(self.mise_which_calls(calls, "goimports"))
-        self.assertTrue(self.mise_which_calls(calls, "gofumpt"))
-        for binary in ("goimports", "gofumpt"):
-            self.assertTrue(all(call["args"] == ["-C", calls[0]["args"][1], "which", binary]
-                                for call in self.mise_which_calls(calls, binary)))
+        self.assertEqual(self.calls_named(calls, "mise"), [], "Go formatting must use prepared PATH binaries")
 
     @unittest.skipUnless(REAL_OXFMT, "set DOTFILES_TEST_OXFMT to an existing native oxfmt binary")
     def test_real_native_oxfmt_formats_five_types_without_touching_sources(self):

@@ -114,9 +114,6 @@ return {
           env = { RUBOCOP_CACHE_ROOT = "tmp/rubocop" },
         }
       end,
-      stylua = { command = function(_, ctx) return require("config.tools").resolve("stylua", ctx.dirname) end },
-      ruff_format = { command = function(_, ctx) return require("config.tools").resolve("ruff", ctx.dirname) end },
-      taplo = { command = function(_, ctx) return require("config.tools").resolve("taplo", ctx.dirname) end },
       -- The standalone CLI formats files; stdin support belongs to the npm wrapper.
       oxfmt = function(bufnr)
         local dirname = vim.fs.dirname(vim.api.nvim_buf_get_name(bufnr)) or vim.fn.getcwd()
@@ -137,9 +134,6 @@ return {
           end,
         }
       end,
-      yamlfmt = { command = function(_, ctx) return require("config.tools").resolve("yamlfmt", ctx.dirname) end },
-      goimports = { command = function(_, ctx) return require("config.tools").resolve("goimports", ctx.dirname) end },
-      gofumpt = { command = function(_, ctx) return require("config.tools").resolve("gofumpt", ctx.dirname) end },
       shfmt = {
         append_args = function(_, ctx)
           if vim.bo[ctx.buf].filetype == "zsh" then
