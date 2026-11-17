@@ -69,6 +69,19 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
                 self.assertEqual(old.read_text(), "# previous working completion\n")
                 self.assertEqual([p.name for p in self.cache.iterdir()], ["_opencode"])
 
+    def test_directory_created_at_target_during_generation_is_not_written_into(self):
+        self.env["COMPLETION_TARGET"] = str(self.cache / "_gog")
+        self.tool("gog", '''mkdir -p "$COMPLETION_TARGET"
+printf '%s\\n' 'unmanaged' > "$COMPLETION_TARGET/sentinel"
+printf '%s\\n' '#compdef gog' '_gog() { :; }'
+''')
+        result = self.refresh()
+        self.assertNotEqual(result.returncode, 0)
+        target = self.cache / "_gog"
+        self.assertEqual((target / "sentinel").read_text(), "unmanaged\n")
+        self.assertEqual(sorted(p.name for p in target.iterdir()), ["sentinel"])
+        self.assertEqual(sorted(p.name for p in self.cache.iterdir()), ["_gog"])
+
     def test_custom_cache_directory(self):
         self.env["ZSH_CACHE_DIR"] = str(self.home / "custom-cache")
         self.good_tool("opencode")

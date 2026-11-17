@@ -26,7 +26,7 @@ for tool in sourcetap gog opencode workmux dockerfmt; do
     print -u2 -- "Invalid $tool completion; keeping the previous file."
     exit 1
   fi
-  mv -f -- "$temp_file" "$completion_dir/_$tool"
+  mv -fT -- "$temp_file" "$completion_dir/_$tool"
   temp_file=""
   print -r -- "Updated $tool completion"
 done
