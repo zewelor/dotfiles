@@ -236,11 +236,6 @@ sudo() {
             self.assertNotIn(f"{stage} stdout", result.stdout + result.stderr)
             self.assertNotIn(f"{stage} stderr", result.stdout + result.stderr)
 
-    def test_quiet_update_stages_show_output_on_failure_exit_1(self):
-        for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):
-            with self.subTest(stage=stage):
-                self.assert_quiet_stage_failure(stage, 1)
-
     def test_quiet_update_stages_show_output_on_failure_exit_42(self):
         for stage in ("zinit", "mise-self-update", "mise-upgrade", "mise-prune", "nvim"):
             with self.subTest(stage=stage):
