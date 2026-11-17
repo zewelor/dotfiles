@@ -68,6 +68,20 @@ assert(tostring(err):find('Neovim 0.11.3 or newer', 1, true), tostring(err))
 assert(not manager_started, 'plugin setup started before the version check')
 """ % json.dumps(str(ROOT / '.config/nvim/init.lua')), "server")
 
+    def test_manual_format_uses_conform_without_lsp_fallback(self):
+        self.run_lua("""
+vim.g.mapleader = ' '
+local options
+package.loaded.conform = { format = function(opts) options = opts end }
+require('config.keymaps')
+local mapping = vim.fn.maparg(' cf', 'n', false, true)
+assert(type(mapping.callback) == 'function', 'manual format mapping missing')
+mapping.callback()
+assert(options and options.async == false and options.lsp_format == 'never',
+  'manual format must use synchronous Conform without LSP fallback')
+""", "desktop")
+
+
     def test_child_processes_disable_implicit_mise_installation(self):
         for profile in ("desktop", "server"):
             with self.subTest(profile=profile):

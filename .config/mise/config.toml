@@ -28,9 +28,7 @@ yq = "latest"
 "aqua:JohnnyMorganz/StyLua" = "latest" # Lua formatting
 "aqua:mvdan/sh" = "latest" # sh/bash/Zsh formatting (>=3.13.1)
 "aqua:reteps/dockerfmt" = "latest" # Dockerfile and embedded RUN shell formatting
-"aqua:oxc-project/oxc/oxfmt" = "latest" # Native JS/TS/JSON/CSS/GraphQL formatting, no npm
-"aqua:dprint/dprint" = "latest" # Project-configured formatting (>=0.64.3)
-"aqua:google/yamlfmt" = "latest" # Default YAML formatting
+"aqua:dprint/dprint" = "latest" # Project formatting and global Oxc defaults (>=0.64.3)
 
 [settings]
 minimum_release_age_excludes = [

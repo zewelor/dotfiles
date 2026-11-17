@@ -87,7 +87,7 @@ end, { desc = "Update n_lines (mini.surround)" })
 -- Formatting (conform.nvim)
 if require("config.profile").is_desktop() then
 	keymap("n", "<leader>cf", function()
-		require("config.formatting").format(0, "manual")
+		require("conform").format({ async = false, lsp_format = "never" })
 	end, { desc = "Format buffer (conform)" })
 end
 

@@ -18,9 +18,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── options.lua  # Opcje edytora (vim.opt)
 │   │   ├── keymaps.lua  # Wszystkie keybindings
 │   │   ├── fileline.lua # Otwieranie istniejącego pliku przez plik:linia
-│   │   ├── formatting.lua # Wspólna polityka formatowania projektu
-│   │   ├── profile.lua  # Jawny wybór profilu desktop
-│   │   └── tools.lua    # Resolver binarek mise i progi wersji
+│   │   └── profile.lua  # Jawny wybór profilu desktop
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
@@ -64,16 +62,14 @@ użytkownika docelowego (domyślnie `server`, gdy pliku brak).
 Pełny zestaw deweloperski jest włączany tylko przez
 `DOTFILES_PROFILE=desktop` (warunek `config.profile.is_desktop()`): natywny LSP,
 `conform.nvim`.
-Aktywowany projektowy dprint ma pierwszeństwo. Standardowe formatery
-korzystają z przygotowanego `PATH`; resolver mise pozostaje dla dprint i natywnego Oxfmt. Profil `server`
-i brak profilu korzystają z uproszczonego trybu, również gdy `mise` jest
-dostępne w `PATH`; sam mise dla pojedynczego CLI nie włącza narzędzi edytora.
+Formatery korzystają z przygotowanego `PATH`. Dprint sam wybiera konfigurację
+projektu, a przy jej braku globalny plugin Oxc WASM. Profil `server` i brak
+profilu zachowują lekki edytor, bez formatterów i LSP; obecność mise nie włącza
+narzędzi edytora.
 
-Desktop wymaga mise i konfiguracji z zadeklarowanymi narzędziami. Domyślny Oxfmt jest
-natywną binarką mise, więc utrzymywany zestaw LSP i formatterów nie wymaga
-Node.js ani npm. Projektowy `node_modules/.bin/oxfmt` ma pierwszeństwo i może
-wymagać Node.js zgodnie z konfiguracją projektu. Pluginy kompilowane lokalnie
-również wymagają make i kompilatora C.
+Desktop wymaga mise i konfiguracji z zadeklarowanymi narzędziami. Dprint i jego
+plugin Oxc WASM nie wymagają Node.js ani npm. Pluginy kompilowane lokalnie
+nadal wymagają make i kompilatora C.
 
 Profil `server` nie ładuje `nvim-treesitter` ani `telescope-fzf-native`, nawet
 gdy kompilator jest dostępny. Korzysta ze standardowego podświetlania składni
@@ -284,61 +280,69 @@ Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lu
 
 ### **conform.nvim** — Ręczne formatowanie
 
-- **Repo**: [stevearc/conform.nvim](https://github.com/stevearc/conform.nvim)
-- **Cel**: Formatowanie plików przez zewnętrzne narzędzia
-- **Ładowanie**: otwarcie pliku nie ładuje Conforma. Plugin ładuje się przy pierwszym formatowaniu albo użyciu `:ConformInfo` / `:FormatInfo`.
-- **Zapis nie uruchamia formattera**. Ręczne `<Space>cf` korzysta z poniższej polityki. Dla YAML (również obecnych podtypów), JS/TS/React, JSON/JSONC/JSON5, CSS, GraphQL i Markdown najbliższa konfiguracja dprint decyduje, czy plugin obsługuje plik. Samo istnienie konfiguracji nie wystarcza. Wspierane nazwy to `dprint.json`, `dprint.jsonc`, `.dprint.json`, `.dprint.jsonc` i warianty `.config/dprint.json(c)`.
-- **Dprint 0.64.3+**: wybrana binarka jest sprawdzana przed użyciem. `resolved-config --file` rozpoznaje obsługę pliku, a `fmt --stdin` z pełną ścieżką respektuje `includes`, `excludes` i `.gitignore`. Wykluczone pliki pozostają bez zmian. Brak pluginu, również przez negatywne `associations`, pozwala użyć formattera domyślnego; Markdown bez pluginu jest pomijany.
-- **Wybór binarki**: dprint z `PATH`, którego ścieżka leży wewnątrz bieżącego projektu, ma pierwszeństwo. Aktywacja środowiska projektu (np. `source dockerized.sh`) należy do użytkownika; edytor nie wykrywa ani nie wywołuje tego skryptu. Samo istnienie wrappera na dysku nie włącza integracji. Wrapper innego projektu jest pomijany. Dalej wybierane jest lokalne `node_modules/.bin/dprint`, a potem efektywna deklaracja mise w katalogu bufora (także globalna). Błąd wybranego narzędzia nie uruchamia innej wersji. Dla Oxfmt pierwszeństwo ma projektowe `node_modules/.bin/oxfmt`, potem natywna binarka mise. StyLua, Ruff, Taplo, yamlfmt, goimports, gofumpt, shfmt i dockerfmt korzystają ze standardowego wyszukiwania Conforma w `PATH`. Zapytania mise pomijają odziedziczone `MISE_DPRINT_VERSION`, zachowując resztę środowiska i reguły zaufania. Narzędzia nie są instalowane przy formatowaniu.
-- **Oxfmt**: projektowa binarka zachowuje Conformowy stdin i nazwę pliku. Domyślna natywna binarka mise nie obsługuje stdin, więc Conform formatuje tymczasowy plik obok bufora i odczytuje zmieniony wynik. Tymczasowa nazwa może zmienić dopasowanie konfiguracji lub reguł ignorowania zależnych od nazwy pliku; to ograniczenie dotyczy natywnej ścieżki.
-- **Domyślne formatery**: Lua przez `stylua`, Python przez `ruff_format`, TOML przez `taplo`, Go przez `goimports`, a następnie `gofumpt`, sh/bash oraz Zsh przez `shfmt` (dla Zsh jawnie `-ln zsh`, wymagane >= 3.13.1), YAML przez `yamlfmt`, JS/TS/JSON/CSS/GraphQL przez natywne `oxfmt`.
-- **Go**: Conform wykonuje `goimports`, po nim `gofumpt`, z binarkami z przygotowanego `PATH`. Procesy formatterów współdzielą timeout Conform 2000 ms, bez dodatkowych zapytań `mise which`. Błędy i timeout są widoczne; formatowanie nie przechodzi na gopls.
-- **PATH standardowych formatterów**: Conform uruchamia StyLua, Ruff, Taplo, yamlfmt, goimports, gofumpt, shfmt i dockerfmt z przygotowanego `PATH`, bez osobnego `mise -C <katalog bufora> which`. Jeżeli polecenie jest shimem mise, wersję wybierają zwykłe reguły mise w katalogu roboczym procesu. Adapter StyLua szuka katalogu konfiguracji `stylua.toml` / `.stylua.toml`, a Ruff — `pyproject.toml` / `ruff.toml` / `.ruff.toml`; bez takiego pliku oraz dla pozostałych wymienionych adapterów proces dziedziczy cwd Neovima. Otwarcie pliku z innego repozytorium w tej samej sesji nie gwarantuje osobnej wersji narzędzia dla tego bufora. Reguły wcięć nadal pochodzą z pliku lub ustawień bufora.
-- **Wcięcia shella**: sh/bash respektują `.editorconfig` zamiast wymuszonych dwóch spacji. Zsh dostaje `-ln zsh`, co wyłącza odczyt opcji formatowania EditorConfig przez shfmt; szerokość wcięcia i wybór tabów przekazujemy z bufora. Pozostałe opcje shfmt z EditorConfig nie są wtedy stosowane. Jeżeli pliku `.editorconfig` nie ma, wbudowany adapter Conforma korzysta z wcięć bufora.
-- **Zsh**: sprawdzony shfmt 3.13.1 nie obsługuje całej składni Zsh, np. `${~pattern}`. Błąd parsera jest widoczny i nie zmienia bufora; nie przechodzimy automatycznie na inny formatter. Publiczne pliki shella przeszły kontrolę składni po formatowaniu; nie wykonujemy masowego reformatowania repozytorium.
-- **Dockerfile**: ręczne `<Space>cf` używa dockerfmt.
-- **Wyłączenia**: `eruby.yaml.tmuxinator` bez formatowania również ręcznie. Nienazwany bufor z grupy projektowej wymaga najpierw nadania nazwy.
-- **Błędy i czas**: dla aktywowanego projektowego dprint jeden synchroniczny budżet 10000 ms obejmuje sprawdzenie wersji, konfigurację i formatowanie. Pozostałe projektowe dprint zachowuje budżet 2000 ms; domyślne formatery mają timeout Conform 2000 ms, a każde osobne rozwiązywanie przez mise limit 1000 ms. Błąd konfiguracji, brak wymaganej wersji i timeout są widoczne; wybrany dprint nie przechodzi na inny formatter ani LSP. Błąd nie blokuje zapisu pracy. Brak projektowego kontraktu zachowuje dotychczasowy fallback LSP.
-- **Ruby**: `<Space>cf` pomija Ruby także z Gemfile, `.rubocop.yml` i aktywowanym wrapperem projektu. Formatowanie i kontrolę zmian uruchamiaj komendami projektu.
-- **Diagnostyka**: `:FormatInfo` pokazuje bieżącą decyzję, źródło binarki, wersję, konfigurację i cwd, bez formatowania. `:ConformInfo` pozostaje informacją o dostępności domyślnych narzędzi i logach; nie odtwarza ostatniego wyboru projektowego. Brak domyślnego formattera nadal nie pokazuje popupu.
-- **Keymaps**:
-  - `<Space>cf` — Format buffer
+Conform ładuje się przy pierwszym `<Space>cf` albo `:ConformInfo`.
 
-#### Potwierdzona zgodność dprint — 2026-11-13
+**Zapis nie uruchamia formattera.** `<Space>cf` wywołuje Conform synchronicznie,
+z limitem 2 sekund, bez formatowania przez LSP. Zmienia bufor; zapis i staging
+pozostają oddzielnymi, świadomymi krokami. `:ConformInfo` pokazuje narzędzia i błędy.
 
-Sprawdzony zestaw to **dprint 0.64.3 + pretty_yaml 0.6.0**, Neovim 0.11.6,
-Conform `016802d` i mise 2026.11.7. W R3X deklaracja pozostaje `latest`,
-która w tym sprawdzeniu wybierała zainstalowane 0.64.3. To punkt kontrolny
-zgodności, a nie przypięcie wersji projektu ani gwarancja dla przyszłego `latest`.
+| Pliki | Formatter |
+|---|---|
+| Lua | StyLua |
+| Python | Ruff |
+| TOML | Taplo |
+| Go | goimports, następnie gofumpt |
+| sh/bash/Zsh | shfmt (Zsh wymaga 3.13.1+ i dostaje `-ln zsh`) |
+| YAML, JS/TS/React, JSON/JSONC/JSON5, CSS, GraphQL, Markdown | dprint: konfiguracja projektu, a przy jej braku globalny plugin Oxc |
+| Dockerfile, fdockerfile i warianty | dockerfmt |
+| Ruby, ERB | brak formattera |
 
-Testy Neovima przeszły **11/11**, w tym test rzeczywistego CLI i pluginu YAML.
-Osobna próba modułu z prawdziwym mise i konfiguracją R3X potwierdziła wybór
-0.64.3, formatowanie nowego bufora YAML przed pierwszym zapisem, zachowanie
-wykluczeń `workflows/` i `config/database.yml` oraz domyślny plan dla JSON bez
-obsługującego go pluginu. Próby ładowały moduł z repo i nie zapisywały plików
-R3X; nie zastępują podlinkowania nowego modułu i odbioru zwykłej sesji edytora.
+Zasada: **konfiguracja projektu ma pierwszeństwo; poza nią dprint używa
+globalnego pluginu Oxc (silnika Oxfmt) w WASM, bez Node.js**.
+Mise przygotowuje binarki, a Neovim uruchamia je z `PATH`.
 
-Po aktualizacji CLI lub pluginu można powtórzyć [testy formatowania](../../tests/nvim_formatting_test.py)
-z lokalnymi, rzeczywistymi plikami:
+Dprint używa reguł repo (`dprint.json`, `dprint.jsonc`, warianty z kropką oraz
+`.config/dprint.json(c)`). Binarka pochodzi z `PATH`, zwykle z mise. Nie ma
+specjalnego wyboru wrapperów `.dev/bin`, odpytywania mise o wersje ani inspekcji
+pluginów dprint przed każdym formatowaniem. Przy konfiguracji dprint to dprint
+rozstrzyga obsługę i wykluczenia plików. Brak binarki, błędna konfiguracja lub
+nieobsługiwany typ nie przełączają formatowania na inny program. Konfiguracja
+globalna nie uzupełnia brakujących pluginów projektu. Dostępne formatery sprawdzisz przez
+`:ConformInfo`.
 
-```sh
-DOTFILES_TEST_DPRINT=/path/to/dprint \
-DOTFILES_TEST_DPRINT_PLUGIN=/path/to/pretty_yaml-v0.6.0.wasm \
-PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -m unittest discover -s tests -p 'nvim*_test.py' -v
-```
+Conform przekazuje niezapisany bufor i oryginalną ścieżkę przez stdin. Nie tworzy
+plików tymczasowych obok źródła. Błąd pozostawia bufor bez zmian, bez przejścia
+na LSP. Nie utrzymujemy osobnych binarek Oxfmt ani yamlfmt. Plugin Oxc nie czyta
+`.oxfmtrc`; jego opcje należą do sekcji `oxc` w konfiguracji dprint. Wynik może
+różnić się od osobnego Oxfmt zależnie od wersji silnika i ustawień.
 
-Polecenie uruchamiaj z katalogu głównego dotfiles. Bez obu zmiennych test
-rzeczywistego CLI jest pomijany. Testy nie pobierają narzędzi ani pluginów;
-poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
+Utrzymanie configu i wersji pluginów opisują [globalne ustawienia dprint](#globalne-ustawienia-dprint).
 
----
+Shfmt dla sh/bash wykorzystuje `.editorconfig`; jeżeli pliku nie ma, wbudowany
+adapter Conforma korzysta z wcięć bufora.
+Jawne `-ln zsh` wyłącza odczyt opcji formatowania EditorConfig przez shfmt;
+dla Zsh przekazujemy więc szerokość wcięcia i wybór tabów z bufora. Pozostałe
+opcje shfmt z EditorConfig nie są wtedy stosowane. ERB jest celowo pomijane.
+
+Dockerfmt używa gotowej binarki mise i wbudowanego adaptera Conforma. Ponieważ
+stdin nie obsługuje `.editorconfig`, Conform przekazuje szerokość wcięcia i wybór
+tabów z bufora. Formatter obsługuje shell w `RUN`, ale może też modernizować
+zapisy Dockerfile, np. `MAINTAINER` na `LABEL`; przejrzyj wynik przed zapisem.
+Brak narzędzia albo błąd formatowania nie przełącza się na formatowanie LSP.
+
+Narzędzia muszą być wcześniej przygotowane. Edytor ustawia
+`MISE_AUTO_INSTALL=false` we wszystkich profilach. Ustawienie dziedziczą procesy
+potomne, także `:terminal`; jawne `mise install` pozostaje dostępne.
+Dprint może potrzebować przygotowanego cache pluginów;
+konfiguracja Neovima nie zarządza tym cache ani nie gwarantuje pracy offline.
+Projektowe `format`/`check` pozostają właściwym odbiorem zmian, także dla Ruby.
 
 ### Narzędzia Neovim — jawne utrzymanie przez mise
 
 `.config/mise/config.toml` jest jedynym źródłem narzędzi, backendów i wersji.
-`lua/plugins/lsp.lua` określa aktywne serwery LSP. `lua/config/tools.lua` zawiera
-resolver działający w katalogu bufora oraz progi wersji używane przez konfigurację edytora. Utrzymywany zestaw
-obejmuje 13 narzędzi: pięć serwerów LSP i osiem formatterów. Ruff i
+`lua/plugins/lsp.lua` określa aktywne serwery LSP, a `lua/plugins/conform.lua`
+formatery uruchamiane z `PATH`. Utrzymywany zestaw obejmuje 11 narzędzi:
+pięć serwerów LSP i osiem formatterów. Ruff i
 Taplo są wspólne dla LSP i formatowania.
 
 | Narzędzie mise | Użycie |
@@ -354,9 +358,7 @@ Taplo są wspólne dla LSP i formatowania.
 | tree-sitter | CLI do budowania parserów, przygotowywane przez mise |
 | shfmt | Formatowanie sh/bash/Zsh |
 | dockerfmt | Ręczne formatowanie Dockerfile i shella w `RUN` |
-| oxfmt | Natywne formatowanie JS/TS/JSON/CSS/GraphQL, bez npm |
-| dprint | Projektowe formatowanie, gdy projekt nie deklaruje własnej binarki |
-| yamlfmt | Domyślne formatowanie YAML |
+| dprint | Formatowanie z configiem projektu lub globalnym pluginem Oxc WASM |
 
 Projektowy RuboCop należy do Bundlera i korzysta z Gemfile/lockfile oraz procedury
 aktualizacji projektu. Projektowe `node_modules`, lokalny dprint, mise i pluginy
