@@ -4,6 +4,27 @@ To jest projektowy delta dla repozytorium dotfiles. Nie powtarzaj tutaj
 globalnych zasad agenta ani dokumentacji narzędzi. Komentarze w kodzie i
 konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
 
+## Instalacja, aktualizacje i profile (MUST)
+
+- Konfiguruj automatyczny bootstrap brakujących pluginów, parserów i podobnych
+  komponentów przy pierwszym użyciu, zgodnie z wybranym profilem. Użytkownik
+  nie powinien pamiętać o dodatkowej komendzie po dodaniu takiego komponentu.
+- Zwykły start zachowuje wersje sprawnych, zainstalowanych komponentów i ich
+  zależności. Bootstrap brakującego elementu nie powinien przy okazji ich
+  aktualizować ani przebudowywać. Aktualizacje uruchamiaj jawnie przez
+  `update-all` lub odpowiednią komendę danego narzędzia.
+- Bootstrap korzysta z wcześniej przygotowanych zależności. Standalone CLI,
+  runtime'y i kompilatory przygotowuj w jawnym etapie instalacji; nie dodawaj
+  ich instalacji jako ukrytego skutku startu shella lub edytora.
+- Profil `server` projektuj pod konkretne potrzeby serwera, zamiast kopiować
+  cały desktop. Przed dodaniem funkcji oceń jej zastosowanie i koszt zależności.
+  Preferuj gotowe binarki i minimalny zestaw narzędzi; opcjonalne funkcje
+  wymagające kompilacji domyślnie pomijaj lub wyłączaj na serwerze.
+- Przed dodaniem toolchainu, pakietów deweloperskich lub kompilacji na serwerze
+  (także przez pluginy, bootstrap i aktualizacje) wyraźnie zgłoś użytkownikowi
+  ten koszt, wskaż zależności i lżejszą alternatywę oraz uzyskaj jego jawną zgodę
+  na taki zakres. Nie dodawaj ich jako ukrytej zależności wspólnej konfiguracji.
+
 ## Zakres, własność i źródła prawdy (MUST)
 
 - Przed zmianą zapisz `git status --short` w repo głównym oraz, jeśli zadanie
@@ -104,12 +125,6 @@ konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
   `start-k8s-work()` w `.zsh/kubernetes.zsh`, nie w głównym `.zshrc`.
 - `mise` jest wymagane tylko dla profilu `desktop`; na `server` pozostaje
   opcjonalne, dopóki konkretny use case nie uzasadni zmiany polityki.
-- Profil `server` ma pozostać lekki: preferuj gotowe binarki i minimalne
-  zależności. Przed dodaniem toolchainu, pakietów deweloperskich lub kompilacji
-  na serwerze (także przez pluginy i automatyczne aktualizacje) wyraźnie zgłoś
-  użytkownikowi ten koszt, wskaż zależności i lżejszą alternatywę oraz uzyskaj
-  jego jawną zgodę na taki zakres. Nie dodawaj ich jako ukrytej zależności
-  wspólnej konfiguracji.
 - Nowe standalone CLI dodawaj domyślnie przez `mise`. Zinit służy pluginom
   shellowym i świadomym wyjątkom wymagającym integracji z shellem.
 - CLI instalowane wyjątkowo przez Zinit wystawiaj przez `sbin`, nie przez
