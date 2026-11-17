@@ -214,14 +214,14 @@ setup_private_submodule() {
 install_with_stow() {
   local stow_opts=("$@")
 
-  echo "Running stow with: ${stow_opts[*]}"
+  echo "Checking Stow changes (dry run): stow -v ${stow_opts[*]} -n"
   if ! stow -v "${stow_opts[@]}" -n; then
     echo "Error: Stow dry run failed with options: ${stow_opts[*]}" >&2
     return 1
   fi
 
   [[ "$STOW_APPLY" == "true" ]] || return 1
-  echo "Applying changes..."
+  echo "Applying Stow changes..."
   stow -v "${stow_opts[@]}"
 }
 
