@@ -52,9 +52,12 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
                          sorted("_" + tool for tool in TOOLS))
 
     def test_unavailable_tools_are_optional(self):
+        self.good_tool("dockerfmt")
         result = self.refresh()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse(self.log.exists())
+        self.assertIn("Skipping sourcetap: not found in PATH", result.stdout)
+        self.assertIn("Updated dockerfmt", result.stdout)
+        self.assertEqual(self.log.read_text().splitlines(), ["dockerfmt:completion zsh"])
 
     def test_failure_preserves_previous_completion(self):
         for body in ["echo partial; exit 7\n", "exit 0\n", "echo 'broken() {'\n"]:
