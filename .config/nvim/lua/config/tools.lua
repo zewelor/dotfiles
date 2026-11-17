@@ -4,13 +4,6 @@ M.minimum_versions = {
   dprint = { 0, 64, 3 }, -- Project plugin/config discovery
   shfmt = { 3, 13, 1 }, -- Zsh dialect support
 }
-M.servers = {
-  "helm_ls",  -- Helm chart LSP
-  "ruff",     -- Python LSP, linting and formatting
-  "taplo",    -- TOML LSP and formatting
-  "marksman", -- Markdown LSP
-  "gopls",    -- Go LSP (Conform owns formatting)
-}
 
 -- Only explicitly activated executables from this project override mise.
 function M.project_executable(binary, root)

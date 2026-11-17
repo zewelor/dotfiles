@@ -20,7 +20,7 @@ Nowoczesna, modularna konfiguracja Neovim z [lazy.nvim](https://lazy.folke.io/) 
 │   │   ├── fileline.lua # Otwieranie istniejącego pliku przez plik:linia
 │   │   ├── formatting.lua # Wspólna polityka formatowania projektu
 │   │   ├── profile.lua  # Jawny wybór profilu desktop
-│   │   └── tools.lua    # Lista LSP i resolver binarek mise
+│   │   └── tools.lua    # Resolver binarek mise i progi wersji
 │   ├── plugins/         # Każdy plugin = osobny plik
 │   │   ├── blink.lua                # Autouzupełnianie
 │   │   ├── gitsigns.lua             # Stage hunks / selected lines / blame
@@ -336,8 +336,8 @@ poprawny wynik testów z atrapami sam nie potwierdza zgodności nowej wersji.
 ### Narzędzia Neovim — jawne utrzymanie przez mise
 
 `.config/mise/config.toml` jest jedynym źródłem narzędzi, backendów i wersji.
-`lua/config/tools.lua` określa aktywne serwery LSP, resolver działający w katalogu
-bufora oraz progi wersji używane przez konfigurację edytora. Utrzymywany zestaw
+`lua/plugins/lsp.lua` określa aktywne serwery LSP. `lua/config/tools.lua` zawiera
+resolver działający w katalogu bufora oraz progi wersji używane przez konfigurację edytora. Utrzymywany zestaw
 obejmuje 13 narzędzi: pięć serwerów LSP i osiem formatterów. Ruff i
 Taplo są wspólne dla LSP i formatowania.
 
@@ -445,7 +445,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 
 **Konfiguracja API**:
 - **Neovim 0.11.3+**: używa natywnego `vim.lsp.config()` + `vim.lsp.enable()`; nie ma mostu `mason-lspconfig` ani automatycznej aktywacji serwerów Masona.
-- **Jawna lista**: `servers` w `lua/config/tools.lua` określa aktywowane serwery. Pięć podstawowych serwerów korzysta z komend i argumentów nvim-lspconfig oraz przygotowanego `PATH`, bez osobnego `mise -C <root> which`.
+- **Jawna lista**: `vim.lsp.enable(...)` w `lua/plugins/lsp.lua` określa aktywowane serwery. Pięć podstawowych serwerów korzysta z komend i argumentów nvim-lspconfig oraz przygotowanego `PATH`, bez osobnego `mise -C <root> which`.
 - **Katalog procesu i root**: standardowe serwery dziedziczą cwd Neovima. Root projektu nadal jest wykrywany przez nvim-lspconfig i przekazywany przez protokół LSP; nie ustawia cwd procesu. Shim mise wybiera wersję według cwd procesu, więc otwarcie pliku z innego repo nie gwarantuje jego własnej wersji serwera.
 - **Dostępność**: brak standardowego serwera w `PATH` oznacza brak klienta; Neovim nie szuka wtedy binarki przez mise ani jej nie instaluje. Dostępność i przyczyny problemów sprawdzisz przez `:checkhealth vim.lsp` / `:LspLog`.
 - **Neovim <0.11.3**: niewspierany — konfiguracja kończy działanie z czytelnym komunikatem o wymaganej wersji.
@@ -453,7 +453,7 @@ Zestaw pluginów do inteligentnego uzupełniania i nawigacji po kodzie:
 - **Źródła gemów**: nie ma już specjalnego hooka ustawiającego `.bundle/gems` tylko do odczytu. Pliki mają zwykłe zachowanie edytora i uprawnienia systemowe.
 
 **Komendy**:
-- `:LspInfo` — Info o aktywnych serwerach
+- `:LspInfo` — Info o aktywnych serwerach; nvim-lspconfig lub lokalny alias zapewnia dostęp do `:checkhealth vim.lsp`
 
 **Keymaps** (aktywne gdy LSP jest podłączony):
 - `gd` — Go to definition

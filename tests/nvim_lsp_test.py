@@ -18,7 +18,7 @@ ROOT, NVIM = nvim_test.ROOT, nvim_test.NVIM
 class NativeLspPathTest(unittest.TestCase):
     setUpClass = classmethod(nvim_test.NeovimTest.setUpClass.__func__)
 
-    def run_native_case(self, *, available, filetype="python"):
+    def run_native_case(self, *, available, filetype="python", native_lsp_command=False):
         with tempfile.TemporaryDirectory(prefix='dotfiles-native-lsp-') as directory:
             temp = Path(directory)
             projects = [temp / 'project a', temp / 'project b']
@@ -75,15 +75,29 @@ while True:
             script = temp / 'test.lua'
             script.write_text('''
 vim.opt.runtimepath:prepend(%s)
+local exists = vim.fn.exists
+if vim.env.LSP_TEST_NATIVE_COMMAND == '1' then
+  -- Neovim 0.11 cannot define a lowercase user command; simulate the newer builtin.
+  vim.fn.exists = function(name) return name == ':lsp' and 2 or exists(name) end
+end
+vim.cmd.runtime('plugin/lspconfig.lua')
+vim.fn.exists = exists
 package.path = %s .. ';' .. package.path
 package.loaded['config.lazy'] = {} -- Exercise init without plugin installation.
 dofile(%s)
 vim.cmd('filetype plugin indent on')
 local notes = {}
 vim.notify = function(message) notes[#notes + 1] = tostring(message) end
-for _, spec in ipairs(require('plugins.lsp')) do
-  if spec.cond() then spec.config() end
+local spec = require('plugins.lsp')
+if spec.cond() then spec.config() end
+for _, name in ipairs({ 'helm_ls', 'ruff', 'taplo', 'marksman', 'gopls' }) do
+  assert(vim.lsp.is_enabled(name), name .. ': native server not enabled')
 end
+for _, name in ipairs({ 'ruby_lsp', 'lua_ls' }) do
+  assert(not vim.lsp.is_enabled(name), name .. ': retired server enabled')
+end
+assert(vim.deep_equal(vim.lsp.config.helm_ls.filetypes, { 'helm' }), 'Helm filetypes changed')
+assert(vim.fn.exists(':LspInfo') == 2, 'LspInfo command missing')
 local available = %s
 for _, project in ipairs(%s) do
   vim.env.PATH = project .. '/.dev/bin:' .. vim.env.LSP_PATH_BIN
@@ -111,7 +125,8 @@ for _, client in ipairs(vim.lsp.get_clients()) do client:stop(true) end
             ))
             env = dict(os.environ, HOME=str(temp), PATH=str(bin_dir),
                        DOTFILES_PROFILE='desktop', LSP_PATH_LOG=str(log), MISE_AUTO_INSTALL='true',
-                       LSP_PATH_BIN=str(bin_dir), LSP_PATH_EXTENSION='rb' if filetype == 'ruby' else 'py')
+                       LSP_PATH_BIN=str(bin_dir), LSP_PATH_EXTENSION='rb' if filetype == 'ruby' else 'py',
+                       LSP_TEST_NATIVE_COMMAND='1' if native_lsp_command else '0')
             for name in ('XDG_CONFIG_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'XDG_CACHE_HOME'):
                 env[name] = str(temp / name.lower())
             result = subprocess.run(
@@ -138,6 +153,10 @@ for _, client in ipairs(vim.lsp.get_clients()) do client:stop(true) end
     def test_ruby_projects_do_not_start_clients_or_invoke_available_wrappers(self):
         events, _cwd, _roots = self.run_native_case(available=False, filetype='ruby')
         self.assertEqual(events, [], 'Ruby LSP or a project/runtime wrapper was invoked')
+
+    def test_lsp_info_survives_upstream_native_command_shortcut(self):
+        events, _cwd, _roots = self.run_native_case(available=False, native_lsp_command=True)
+        self.assertEqual(events, [])
 
 
 if __name__ == '__main__':
