@@ -68,7 +68,6 @@ return {
 
     formatters = {
       dockerfmt = {
-        command = function(_, ctx) return require("config.tools").resolve("dockerfmt", ctx.dirname) end,
         -- dockerfmt cannot read EditorConfig on stdin; use the buffer's indentation.
         append_args = function(_, ctx)
           return vim.bo[ctx.buf].expandtab and { "--indent", tostring(ctx.shiftwidth) } or { "--use-tabs" }
@@ -142,7 +141,6 @@ return {
       goimports = { command = function(_, ctx) return require("config.tools").resolve("goimports", ctx.dirname) end },
       gofumpt = { command = function(_, ctx) return require("config.tools").resolve("gofumpt", ctx.dirname) end },
       shfmt = {
-        command = function(_, ctx) return require("config.tools").resolve("shfmt", ctx.dirname) end,
         append_args = function(_, ctx)
           if vim.bo[ctx.buf].filetype == "zsh" then
             -- An explicit dialect disables shfmt's EditorConfig lookup; use buffer indentation.

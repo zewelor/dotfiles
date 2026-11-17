@@ -201,6 +201,7 @@ class NeovimFormattingTest(unittest.TestCase):
                 binary = tool_dir / name
                 self.write_fixture(binary)
                 binaries[name] = str(binary)
+            (bin_dir / "shfmt").symlink_to(tool_dir / "shfmt")
             log_path = temp / "calls.jsonl"
             env = {
                 "HOME": str(temp),
@@ -837,7 +838,7 @@ assert(buffer_text(buf):match('^formatted:rubyfmt:'), 'optional explicit rubyfmt
 ''', prepare=prepare)
         self.assertEqual(len(self.calls_named(calls, "rubyfmt")), 1)
 
-    def test_global_defaults_resolve_mise_tools_at_the_buffer_directory(self):
+    def test_defaults_use_shell_path_and_resolve_other_tools_with_mise(self):
         cases = [
             ("lua", "lua/main.lua", ["stylua"]),
             ("python", "python/main.py", ["ruff"]),
@@ -885,6 +886,9 @@ end
                 expected.setdefault(binary, []).append(target_dir)
         for binary, target_dirs in expected.items():
             resolved = self.mise_which_calls(calls, binary)
+            if binary == "shfmt":
+                self.assertEqual(resolved, [], "shell formatting must use PATH directly")
+                continue
             self.assertGreaterEqual(len(resolved), len(target_dirs), f"mise did not resolve {binary} for each buffer")
             actual = [call["args"] for call in resolved]
             for target in target_dirs:

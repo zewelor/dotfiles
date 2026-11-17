@@ -1,7 +1,7 @@
 """Exercise the real Conform-to-shfmt Zsh formatting path in isolation.
 
-This test uses the installed Conform source and existing Mason shfmt binary,
-injected through a mise fixture. It never loads the user's Neovim config or
+This test uses installed Conform and shfmt from PATH (or DOTFILES_TEST_SHFMT),
+injected through an isolated PATH fixture. It never loads the user's Neovim config or
 runs Lazy, Mason, or an installer.
 """
 
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 NVIM = shutil.which("nvim")
 ZSH = shutil.which("zsh")
 CONFORM = Path.home() / ".local/share/nvim/lazy/conform.nvim"
-SHFMT = Path.home() / ".local/share/nvim/mason/bin/shfmt"
+SHFMT = os.environ.get("DOTFILES_TEST_SHFMT") or shutil.which("shfmt")
 REVIEW_DIR = Path("/tmp/mca116-shfmt-review")
 
 SOURCE = r'''#!/usr/bin/env zsh
@@ -48,7 +48,7 @@ LUA_FORMAT = r'''
 vim.opt.rtp:append(vim.env.FMT_CONFORM)
 local spec = require("plugins.conform")
 local conform = require("conform")
-spec.config({ name = "conform.nvim" }, spec.opts)
+conform.setup(spec.opts)
 local notifications = {}
 vim.notify = function(message)
   table.insert(notifications, tostring(message))
@@ -78,9 +78,16 @@ class NeovimShfmtTest(unittest.TestCase):
     def setUpClass(cls):
         if not CONFORM.is_dir():
             raise unittest.SkipTest("installed conform.nvim source is required")
-        if not SHFMT.is_file() or not os.access(SHFMT, os.X_OK):
-            raise unittest.SkipTest("installed Mason shfmt binary is required")
-        version = subprocess.check_output([str(SHFMT), "--version"], text=True).strip()
+        global SHFMT
+        if not SHFMT:
+            raise unittest.SkipTest("shfmt on PATH or DOTFILES_TEST_SHFMT is required")
+        # Resolve a mise shim before isolating HOME; never install a tool for tests.
+        if Path(SHFMT).resolve().name == "mise":
+            SHFMT = subprocess.check_output(
+                [str(Path(SHFMT).resolve()), "which", "shfmt"],
+                cwd=Path.home(), env=dict(os.environ, MISE_AUTO_INSTALL="false"), text=True, timeout=5,
+            ).strip()
+        version = subprocess.check_output([str(SHFMT), "--version"], text=True, timeout=5).strip()
         match = re.match(r"^v?(\d+)\.(\d+)\.(\d+)", version)
         if match is None or tuple(map(int, match.groups())) < (3, 13, 1):
             raise unittest.SkipTest(f"shfmt v3.13.1 or newer is required, found {version}")
@@ -224,11 +231,7 @@ class NeovimShfmtTest(unittest.TestCase):
             )
 
             self.assertEqual(len(blocks), 4, f"Expected four real shfmt calls, got {blocks!r}")
-            self.assertGreaterEqual(len(mise_blocks), 4, "mise did not resolve shfmt for each buffer")
-            self.assertTrue(
-                all(block == ["-C", str(temp), "which", "shfmt"] for block in mise_blocks),
-                f"mise resolved shfmt with unexpected arguments: {mise_blocks!r}",
-            )
+            self.assertEqual(mise_blocks, [], "formatting must use PATH directly")
             for args in blocks[:2]:
                 self.assertTrue(
                     any(args[index:index + 2] == ["-ln", "zsh"] for index in range(len(args) - 1)),
@@ -344,8 +347,7 @@ class NeovimShfmtTest(unittest.TestCase):
             )
 
             self.assertEqual(len(blocks), 1, f"Expected one shfmt call, got {blocks!r}")
-            self.assertGreaterEqual(len(mise_blocks), 1, "mise did not resolve shfmt")
-            self.assertTrue(all(block == ["-C", str(temp), "which", "shfmt"] for block in mise_blocks))
+            self.assertEqual(mise_blocks, [], "formatting must use PATH directly")
             args = blocks[0]
             self.assertTrue(
                 any(args[index:index + 2] == ["-ln", "zsh"] for index in range(len(args) - 1)),

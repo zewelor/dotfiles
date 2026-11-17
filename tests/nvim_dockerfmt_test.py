@@ -150,7 +150,6 @@ vim.fn.writefile({ vim.json.encode({
   lines = vim.api.nvim_buf_get_lines(0, 0, -1, false),
   notifications = messages,
   lsp_calls = lsp_calls,
-  uses_mise_resolver = type(plugin_opts.formatters.dockerfmt.command) == "function",
 }) }, vim.env.RESULT)
 '''
             )
@@ -197,13 +196,8 @@ vim.fn.writefile({ vim.json.encode({
             observation["project"] = str(project)
             return observation
 
-    def assert_mise_resolution(self, result, *, project):
-        if result["uses_mise_resolver"]:
-            self.assertTrue(result["mise_calls"], "mise resolver did not run")
-        else:
-            self.assertEqual(result["mise_calls"], [])
-        for args in result["mise_calls"]:
-            self.assertEqual(args, ["-C", str(project), "which", "dockerfmt"])
+    def assert_path_resolution(self, result):
+        self.assertEqual(result["mise_calls"], [], "Dockerfile formatting must use PATH directly")
 
     def assert_style_args(self, call, *, expandtab, shiftwidth):
         args = call["args"]
@@ -223,7 +217,7 @@ vim.fn.writefile({ vim.json.encode({
                 self.assertEqual(result["source"], DOCKERFILE)
                 self.assertEqual(result["lsp_calls"], 0)
                 self.assertEqual(len(result["calls"]), 1)
-                self.assert_mise_resolution(result, project=Path(result["project"]))
+                self.assert_path_resolution(result)
                 self.assert_style_args(result["calls"][0], expandtab=expandtab, shiftwidth=shiftwidth)
 
     def test_missing_or_failed_dockerfmt_leaves_buffer_unchanged_without_lsp_fallback(self):
@@ -235,7 +229,7 @@ vim.fn.writefile({ vim.json.encode({
                 self.assertEqual(result["lsp_calls"], 0)
                 self.assertTrue(result["notifications"], "formatter failure was not visible")
                 self.assertEqual(len(result["calls"]), 0 if tool == "missing" else 1)
-                self.assert_mise_resolution(result, project=Path(result["project"]))
+                self.assert_path_resolution(result)
 
     @unittest.skipUnless(REAL_DOCKERFMT, "Set DOTFILES_TEST_DOCKERFMT or put dockerfmt on PATH")
     def test_real_dockerfmt_formats_nested_run_if_case_idempotently_without_saving(self):
@@ -245,7 +239,7 @@ vim.fn.writefile({ vim.json.encode({
                 self.assertEqual(result["lines"], formatted_dockerfile(unit))
                 self.assertEqual(result["source"], DOCKERFILE)
                 self.assertEqual(len(result["calls"]), 2)
-                self.assert_mise_resolution(result, project=Path(result["project"]))
+                self.assert_path_resolution(result)
                 for call in result["calls"]:
                     self.assert_style_args(call, expandtab=expandtab, shiftwidth=4)
 
