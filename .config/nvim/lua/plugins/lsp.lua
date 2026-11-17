@@ -80,13 +80,6 @@ return {
       -- Neovim 0.11+: configure servers through the native LSP API.
       for _, server in ipairs(servers) do
         local opts = make_server_opts(server)
-        local default_command = vim.deepcopy(vim.lsp.config[server].cmd)
-        opts.cmd = function(dispatchers, config)
-          local root = config.root_dir or vim.fn.getcwd()
-          local command = vim.deepcopy(default_command)
-          command[1] = tools.resolve(command[1], root)
-          return vim.lsp.rpc.start(command, dispatchers, { cwd = root })
-        end
         vim.lsp.config(server, opts)
         vim.lsp.enable(server)
       end

@@ -185,64 +185,6 @@ for name in pairs(enabled) do
 end
 """, "desktop")
 
-    def test_native_lsp_commands_resolve_each_server_at_its_project_root(self):
-        self.run_lua("""
-local declared = require('config.tools').servers
-local defaults = {
-  lua_ls = { 'lua-language-server' },
-  helm_ls = { 'helm_ls', 'serve' },
-  ruff = { 'ruff', 'server' },
-  taplo = { 'taplo', 'lsp', 'stdio' },
-  marksman = { 'marksman', 'server' },
-  gopls = { 'gopls' },
-}
-local configured, starts = {}, {}
-vim.lsp.config = setmetatable({}, {
-  __index = function(_, name)
-    return defaults[name] and { cmd = defaults[name] } or nil
-  end,
-  __call = function(_, name, opts)
-    configured[name] = opts
-  end,
-})
-vim.lsp.enable = function() end
-vim.fn.executable = function() return 0 end
-vim.lsp.rpc.start = function(command, dispatchers, opts)
-  starts[#starts + 1] = { command = command, dispatchers = dispatchers, opts = opts }
-  return {}
-end
-local resolved = {}
-require('config.tools').resolve = function(binary, root)
-  resolved[#resolved + 1] = { binary = binary, root = root }
-  return '/mise/bin/' .. binary
-end
-local lsp
-for _, spec in ipairs(require('plugins.lsp')) do
-  if spec[1] == 'neovim/nvim-lspconfig' then lsp = spec end
-end
-assert(lsp, 'native nvim-lspconfig plugin spec is missing')
-lsp.config()
-for _, name in ipairs(declared) do
-  local root = '/projects/' .. name
-  local dispatchers = { server = name }
-  local config = configured[name]
-  assert(type(config.cmd) == 'function', name .. ': expected a native command factory')
-  config.cmd(dispatchers, { root_dir = root })
-  local call = starts[#starts]
-  local resolution = resolved[#resolved]
-  assert(resolution.binary == defaults[name][1] and resolution.root == root,
-    name .. ': resolver did not receive this server command and project root')
-  local expected = vim.deepcopy(defaults[name])
-  expected[1] = '/mise/bin/' .. expected[1]
-  assert(#call.command == #expected, name .. ': default server argument count changed')
-  for index, value in ipairs(expected) do
-    assert(call.command[index] == value, name .. ': default server arguments were not preserved')
-  end
-  assert(call.dispatchers == dispatchers and call.opts.cwd == root,
-    name .. ': RPC process did not retain dispatchers and project cwd')
-end
-""", "desktop")
-
     def test_desktop_without_mise_reports_ruby_client_start_failure(self):
         self.run_lua("""
 local defaults = {
