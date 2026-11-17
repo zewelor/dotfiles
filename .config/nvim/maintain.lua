@@ -29,6 +29,14 @@ local function run()
       pending[name] = nil
     end
   end
+  -- Install normally preserves existing plugins; reconcile this compatibility pin explicitly.
+  local treesitter = config.plugins["nvim-treesitter"]
+  if mode == "install" and treesitter and treesitter._.installed and not treesitter._.is_local then
+    local current = assert(require("lazy.manage.git").info(treesitter.dir), "Cannot read Tree-sitter revision")
+    if current.commit ~= treesitter.commit then
+      require("lazy").update({ plugins = { treesitter }, wait = true, show = false, clear = false })
+    end
+  end
   -- Preserve setup's tasks too: Lazy may already have attempted a missing build.
   require("lazy")[mode == "install" and "install" or "sync"]({ wait = true, show = false, clear = false })
   for name, plugin in pairs(config.plugins) do
@@ -55,7 +63,15 @@ local function run()
     check(plugin)
   end
   assert(#errors == 0, table.concat(errors, "\n"))
-
+  treesitter = config.plugins["nvim-treesitter"]
+  if treesitter then
+    require("lazy").load({ plugins = { "nvim-treesitter" } })
+    assert(#errors == 0, table.concat(errors, "\n"))
+    treesitter.dotfiles_install_parsers()
+    -- A restored plugin can change the parser manifest even during install.
+    -- Upstream skips parsers already at that revision.
+    assert(require("nvim-treesitter").update():wait(300000), "Tree-sitter parser update failed")
+  end
 end
 
 local ok, err = xpcall(run, debug.traceback)

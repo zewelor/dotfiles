@@ -354,6 +354,7 @@ narzędziem mise poza tą trzynastką.
 | goimports | Organizacja importów Go |
 | gofumpt | Formatowanie Go |
 | stylua | Formatowanie Lua |
+| tree-sitter | CLI do budowania parserów, przygotowywane przez mise |
 | shfmt | Formatowanie sh/bash/Zsh |
 | dockerfmt | Ręczne formatowanie Dockerfile i shella w `RUN` |
 | oxfmt | Natywne formatowanie JS/TS/JSON/CSS/GraphQL, bez npm |
@@ -367,7 +368,8 @@ dprint pozostają pod kontrolą projektu; globalne utrzymanie nie przegląda rep
 R3X korzysta z własnej konfiguracji mise.
 LuaLS nie jest instalowany ani aktywowany; formatowanie Lua przez StyLua pozostaje dostępne.
 
-Wersje bazowe narzędzi Neovim są deklarowane jako `latest` w mise. Dprint musi
+Wersje bazowe narzędzi Neovim są deklarowane jako `latest` w mise, z wyjątkiem
+Tree-sitter CLI przypiętego do 0.26.1. Dprint musi
 być co najmniej 0.64.3; konfiguracja Zsh wymaga shfmt 3.13.1 lub nowszego ze
 względu na `-ln zsh`. Mise odpowiada za instalację i aktualizację zadeklarowanych
 wersji. Pełna instalacja desktopu uruchamia `mise install` przed przygotowaniem
@@ -412,8 +414,11 @@ operator, dotfiles ich nie instalują.
 - **Cel**: Parsowanie kodu drzewem składni dla lepszego podświetlania i wcięć
 - **Wymagania**: Neovim 0.11.3+.
 - **Profil**: Tylko `DOTFILES_PROFILE=desktop`. Na `server` i bez ustawionego profilu plugin oraz aktualizacja parserów są wyłączone.
-- **Auto-install**: Brakujące parsery (lua, vim, bash, python, json, yaml, toml, markdown, dockerfile, git, helm, go) są instalowane automatycznie przy pierwszym starcie. Wymaga kompilacji (gcc/clang).
-- **Utrzymanie headless**: etap pluginów pomija startowy auto-install parserów; build czeka na wynik aktualizacji zainstalowanych parserów (limit 5 minut) i propaguje błąd. Ta polityka parserów jest osobna od utrzymania binarek mise.
+- **Zgodność**: plugin jest przypięty do `f873ec2955098fc4b7c3abfe891bdd49fa7947e2`, zgodnego z Neovimem 0.11. Nowszy upstream wymaga 0.12. Zmianę przypięcia należy połączyć z decyzją o wersji Neovima i rzeczywistym odbiorem parserów.
+- **Instalacja parserów**: desktop przy starcie doinstalowuje brakujące lub niekompletne parsery w tle. Sprawne parsery zachowują swoje wersje; aktualizacje pozostają jawne przez `update-all`. `make install-neovim` również przygotowuje parsery. Lista języków jest w `lua/plugins/treesitter.lua`. Po zakończeniu instalacji podświetlanie uruchamia się także w już otwartych buforach.
+- **Wymagania desktopu**: kompilator C i Tree-sitter CLI >= 0.26.1. Pierwsza instalacja pobiera źródła parserów. Błędy instalacji są widoczne, a kolejny start ponawia instalację niekompletnych języków. Mise dostarcza gotową binarkę CLI; kompilator pozostaje zależnością systemową. Bezpośrednie `bin/maintain-neovim plugins install|update` sprawdza CLI przed uruchomieniem Lazy i nie instaluje go samoczynnie.
+- **Utrzymanie headless**: operacje czekają na wynik (limit 5 minut) i propagują błąd. Instalacja najpierw uzgadnia istniejący checkout Tree-sittera z przypięciem, zanim załaduje jego kod. Pozostałe sprawne pluginy zachowują swoje wersje. Niekompletne parsery lub brakujące reguły `highlights` są naprawiane. Oba tryby uzgadniają parsery z manifestem przypiętego pluginu; parsery już zgodne z manifestem nie są przebudowywane.
+- **Odbiór**: `tests/nvim_parser_maintenance_test.py` w jednorazowym HOME instaluje i aktualizuje wymagane parsery, odtwarza awarie zapisu reguł i kompilatora oraz brak parsera, sprawdza ponowienie przy starcie, podświetlanie i zapytania highlights. Wymaga jawnej ścieżki do checkoutu upstream i przygotowanego CLI; pobiera źródła parserów.
 - **Komendy**:
   - `:TSUpdate` — Zaktualizuj wszystkie parsery
   - `:TSInstall <lang>` — Zainstaluj parser dla języka
@@ -630,6 +635,7 @@ przez mise i pluginy w osobnym procesie `bin/maintain-neovim plugins update`;
 nie uruchamia dodatkowego etapu narzędzi Neovim. Server zachowuje lekki zestaw
 pluginów i nie przygotowuje narzędzi Neovima. Zwykły start edytora nadal może
 bootstrapować lazy.nvim i brakujące pluginy.
+Desktop automatycznie doinstalowuje brakujące parsery Tree-sitter w tle; ich aktualizacje pozostają częścią jawnego utrzymania. Server nie instaluje ani nie buduje parserów.
 Nieudane buildy maintenance zapisuje w `stdpath("state")/pending-plugin-builds.json`.
 Kolejne `install` lub `update` ponawia je także przy istniejącym checkoutcie;
 po udanym buildzie wpis jest usuwany. Sprawne pluginy nie są przebudowywane

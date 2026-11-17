@@ -272,28 +272,6 @@ assert(err:find('mise', 1, true) and err:find('/projects/ruby', 1, true),
   'missing-mise diagnostic must name the project and cause')
 """, "desktop")
 
-    @unittest.skipUnless((LAZY / "nvim-treesitter").is_dir(), "Tree-sitter plugin is not installed")
-    def test_treesitter_build_waits_for_parser_failure(self):
-        self.run_lua("""
-vim.opt.rtp:append(%s)
-local async = require('nvim-treesitter.async')
-local finished = false
-package.loaded['nvim-treesitter.install'] = {
-  update = async.async(function()
-    async.await(1, function(callback) vim.defer_fn(callback, 10) end)
-    finished = true
-    return false
-  end),
-}
-dofile(%s)
-local build = require('plugins.treesitter').build
-local ok = pcall(function()
-  if type(build) == 'string' then vim.cmd(build:sub(2)) else build() end
-end)
-assert(finished, 'the build returned before its parser update finished')
-assert(not ok, 'the parser update failure was reported as a successful build')
-""" % (json.dumps(str(LAZY / "nvim-treesitter")),
-       json.dumps(str(LAZY / "nvim-treesitter/plugin/nvim-treesitter.lua"))), "desktop")
 
 
 if __name__ == "__main__":
