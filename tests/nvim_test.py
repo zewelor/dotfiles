@@ -118,6 +118,64 @@ assert(vim.api.nvim_get_current_line() == 'local edits', 'external changes overw
 assert(vim.bo.modified, 'local edits lost the modified flag')
 """, profile)
 
+    def test_helm_filetype_requires_a_chart_for_yaml_and_tpl_templates(self):
+        self.run_lua("""
+require('config.options')
+vim.cmd('filetype on')
+vim.cmd.cd(vim.env.HOME)
+local cases = {
+  { 'project/templates/manifest.yaml', 'yaml' },
+  { 'project/templates/snippet.tpl', 'smarty' },
+  { 'chart/templates/nested/deployment.yml', 'helm' },
+  { 'chart/templates/_helpers.tpl', 'helm' },
+  { 'chart/examples/templates/config.yaml', 'yaml' },
+  { 'chart/values.yaml', 'yaml' },
+  { 'chart/Chart.yaml', 'yaml' },
+}
+vim.fn.mkdir('chart/templates/nested', 'p')
+vim.fn.writefile({ 'apiVersion: v2', 'name: example', 'version: 1.0.0' }, 'chart/Chart.yaml')
+for _, case in ipairs(cases) do
+  local path, expected = unpack(case)
+  vim.cmd.edit(path)
+  assert(vim.bo.filetype == expected, path .. ': expected ' .. expected .. ', got ' .. vim.bo.filetype)
+end
+vim.cmd.edit('docs/example.yaml.gotmpl')
+assert(vim.bo.filetype ~= 'helm', 'generic Go template was detected as Helm')
+""")
+
+    @unittest.skipUnless((LAZY / "mini.surround").is_dir(), "mini.surround is not installed")
+    def test_surround_uses_motion_selection_and_dot_repeat(self):
+        self.run_lua("""
+vim.opt.runtimepath:prepend(%s)
+require('mini.surround').setup(require('plugins.mini-surround').opts)
+require('config.keymaps')
+local function keys(input, expected)
+  vim.api.nvim_feedkeys(input, 'xt', false)
+  local actual = vim.api.nvim_get_current_line()
+  assert(actual == expected, input .. ': expected ' .. expected .. ', got ' .. actual)
+end
+vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'alpha beta' })
+keys('gsaiw)', '(alpha) beta')
+keys('2w.', '(alpha) (beta)')
+keys('gsr)]', '(alpha) [beta]')
+keys('gsd]', '(alpha) beta')
+keys('viwgsa]', '(alpha) [beta]')
+""" % json.dumps(str(LAZY / 'mini.surround')))
+
+    @unittest.skipUnless((LAZY / "mini.align").is_dir(), "mini.align is not installed")
+    def test_align_accepts_a_new_delimiter_for_a_new_selection(self):
+        self.run_lua("""
+vim.opt.runtimepath:prepend(%s)
+require('mini.align').setup(require('plugins.mini-align').opts)
+require('config.keymaps')
+vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'a=one', 'long=two', 'x:one', 'wide:two' })
+vim.api.nvim_feedkeys('gaj=', 'xt', false)
+vim.api.nvim_win_set_cursor(0, { 3, 0 })
+vim.api.nvim_feedkeys('Vjga:', 'xt', false)
+local actual = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+assert(vim.deep_equal(actual, { 'a    = one', 'long = two', 'x   :one', 'wide:two' }), vim.inspect(actual))
+""" % json.dumps(str(LAZY / 'mini.align')))
+
     def test_profiles_with_and_without_mise(self):
         for profile in (None, "server", "desktop"):
             for mise in (False, True):

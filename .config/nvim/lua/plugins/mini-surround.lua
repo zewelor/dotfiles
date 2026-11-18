@@ -1,16 +1,15 @@
--- mini.surround — add/delete/replace surroundings (custom keymaps live in lua/config/keymaps.lua)
+-- mini.surround - add, delete, and replace surroundings.
 return {
   "nvim-mini/mini.surround",
   main = "mini.surround",
   opts = {
-    -- Disable built-in keymaps (we use gsa/gsd/gsr/... instead)
     mappings = {
-      add = "",
-      delete = "",
-      find = "",
+      add = "gsa",
+      delete = "gsd",
+      find = "gsf",
       find_left = "",
-      highlight = "",
-      replace = "",
+      highlight = "gsh",
+      replace = "gsr",
       suffix_last = "",
       suffix_next = "",
     },

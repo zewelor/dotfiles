@@ -102,6 +102,9 @@ wpisane polecenie.
 wyrównuje zaznaczenie. W trakcie wyrównywania `s` wybiera wzorzec podziału,
 `j` justowanie, `m` separator łączenia, a `t` usuwa zbędne spacje.
 
+**Mini.surround** obsługuje ruchy Vima. `gsaiw)` otacza słowo nawiasami,
+`gsa]` otacza zaznaczenie w Visual, a `.` powtarza ostatnią zmianę otoczenia w Normal.
+
 **Git:** do stage pojedynczych linii zaznacz je w Visual i użyj `<Space>ghs`.
 W Normal ten sam skrót stage'uje hunk pod kursorem; `<Space>ghS` cały bufor.
 `<Space>ghd` otwiera diff bieżącego bufora z bazą Gitsigns (domyślnie indeks).
@@ -123,6 +126,8 @@ Wbudowany EditorConfig Neovima odczytuje reguły repozytorium. Globalny
 Markdown zachowuje zawijanie i końcowe spacje; wcięcia wynikają z `.editorconfig`.
 Fragmenty `~/.ssh/config.d/*` mają filetype `sshconfig`; `Justfile` ma `just`.
 Pliki tmuxinatora zawierające ERB mają `eruby.yaml.tmuxinator` i nie są formatowane.
+Pliki `.yaml`, `.yml` i `.tpl` pod `templates/` chartu z `Chart.yaml` otrzymują
+typ `helm`, również w podkatalogach. `Chart.yaml` i `values.yaml` mają typ `yaml`.
 
 Dockerfile używa standardowego mechanizmu wcięć Neovima. `fdockerfile` i jego
 warianty są rozpoznawane jako Dockerfile. Usunięty własny parser zagnieżdżonego

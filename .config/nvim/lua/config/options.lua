@@ -77,15 +77,21 @@ vim.opt.mouse   = ""              -- disable mouse; keyboard-driven workflow
 vim.opt.confirm = true            -- prompt to save when quitting modified buffers
 
 -- Filetype detection
--- Helm chart templates should use `helm` filetype so helm_ls can attach.
+local function helm_template(path)
+  local chart = vim.fs.root(path, "Chart.yaml")
+  if chart and vim.startswith(path, vim.fs.joinpath(chart, "templates") .. "/") then
+    return "helm"
+  end
+end
+
 vim.filetype.add({
   filename = {
     ["fdockerfile"] = "dockerfile",
   },
   pattern = {
     [".*/[fF][dD]ockerfile[^/]*"] = "dockerfile",
-    [".*/templates/.*%.ya?ml"] = "helm",
-    [".*/templates/.*%.tpl"] = "helm",
+    [".*/templates/.*%.ya?ml"] = helm_template,
+    [".*/templates/.*%.tpl"] = helm_template,
     [".*/%.tmuxinator/.*%.ya?ml"] = function(path, bufnr)
       local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
       for _, line in ipairs(lines) do
@@ -96,6 +102,5 @@ vim.filetype.add({
 
       return "yaml.tmuxinator"
     end,
-    [".*%.gotmpl"] = "helm",
   },
 })

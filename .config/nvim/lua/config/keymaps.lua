@@ -43,46 +43,10 @@ keymap("n", "<leader>sc", ":close<CR>", { desc = "Close current split" })
 -- OTHER USEFUL MAPPINGS (non-leader)
 -- ============================================================================
 
--- Align text (mini.align) – keep mappings here to follow repo rule
-keymap("n", "ga", function()
-	-- Use operatorfunc so the next motion selects the region to align
-	vim.o.operatorfunc = "v:lua.MiniAlign.align_user"
-	return "g@"
-end, { expr = true, desc = "Align (mini.align)" })
-keymap("x", "ga", function()
-	local mode = ({ v = "char", V = "line", ["\22"] = "block" })[vim.fn.mode(1)]
-	require("mini.align").align_user(mode)
-end, { desc = "Align selection (mini.align)" })
-
--- Surround (mini.surround) – keep mappings here to follow repo rule
-keymap("n", "gsa", function()
-	require("mini.surround")
-	MiniSurround.add()
-end, { desc = "Add surrounding (mini.surround)" })
-keymap("x", "gsa", function()
-	require("mini.surround")
-	MiniSurround.add("visual")
-end, { desc = "Add surrounding for selection (mini.surround)" })
-keymap("n", "gsd", function()
-	require("mini.surround")
-	MiniSurround.delete()
-end, { desc = "Delete surrounding (mini.surround)" })
-keymap("n", "gsr", function()
-	require("mini.surround")
-	MiniSurround.replace()
-end, { desc = "Replace surrounding (mini.surround)" })
-keymap("n", "gsf", function()
-	require("mini.surround")
-	MiniSurround.find()
-end, { desc = "Find surrounding (mini.surround)" })
-keymap("n", "gsh", function()
-	require("mini.surround")
-	MiniSurround.highlight()
-end, { desc = "Highlight surrounding (mini.surround)" })
+-- mini.surround exposes this action separately from its operator mappings.
 keymap("n", "gsn", function()
-	require("mini.surround")
-	MiniSurround.update_n_lines()
-end, { desc = "Update n_lines (mini.surround)" })
+	require("mini.surround").update_n_lines()
+end, { desc = "Set surrounding search radius" })
 
 -- Formatting (conform.nvim)
 if require("config.profile").is_desktop() then
