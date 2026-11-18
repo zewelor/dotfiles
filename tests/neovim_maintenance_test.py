@@ -90,6 +90,52 @@ exit "${TEST_DPRINT_EXIT:-0}"
         return subprocess.run(["/usr/bin/zsh", str(ROOT / "bin/maintain-neovim"), stage, mode],
                               env=self.env, cwd=self.caller, text=True, capture_output=True, timeout=10)
 
+    def test_preflight_checks_requirements_without_running_maintenance(self):
+        self.profile("desktop")
+        self.base_config()
+        result = self.run_helper(mode="check")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse(self.log.exists())
+        self.assertFalse(self.mise_log.exists())
+        self.assertFalse(self.dprint_log.exists())
+        self.env["TEST_NVIM_VERSION"] = "0.11.2"
+        result = self.run_helper(mode="check")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("0.11.3", result.stderr)
+        self.env["TEST_NVIM_VERSION"] = "0.11.6"
+        (self.home / ".config/nvim/init.lua").unlink()
+        result = self.run_helper(mode="check")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("install-base", result.stderr)
+        self.assertFalse(self.log.exists())
+        self.assertFalse(self.mise_log.exists())
+
+    def test_server_installs_and_updates_plugins_without_desktop_tools(self):
+        self.profile("server")
+        self.base_config()
+        self.env["DOTFILES_PROFILE"] = "desktop"
+        for tool in ("mise", "make", "cc", "tree-sitter", "dprint"):
+            self.write_tool(tool, 'printf called >> "$HOME/' + tool + '.log"\nexit 42\n')
+        for mode in ("check", "install", "update"):
+            with self.subTest(mode=mode):
+                self.log.unlink(missing_ok=True)
+                result = self.run_helper("plugins", mode)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                if mode == "check":
+                    self.assertFalse(self.log.exists())
+                else:
+                    self.assertEqual(self.log.read_text().splitlines()[2], "server")
+                for tool in ("mise", "make", "cc", "tree-sitter", "dprint", "node", "npm", "python3", "go"):
+                    self.assertFalse((self.home / (tool + ".log")).exists(), tool)
+
+    def test_exact_minimum_neovim_runs_maintenance(self):
+        self.profile("server")
+        self.base_config()
+        self.env["TEST_NVIM_VERSION"] = "0.11.3"
+        result = self.run_helper()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue(self.log.exists())
+
     def test_desktop_plugins_use_target_home_and_need_no_language_runtimes(self):
         self.profile("desktop")
         self.base_config()
@@ -114,24 +160,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertIn("Usage: maintain-neovim plugins install|update", result.stderr)
         self.assertFalse(self.log.exists())
         self.assertFalse(self.mise_log.exists())
-
-    def test_server_installs_and_updates_plugins_without_desktop_tools(self):
-        self.profile("server")
-        self.base_config()
-        self.env["DOTFILES_PROFILE"] = "desktop"
-        for tool in ("mise", "make", "cc", "tree-sitter", "dprint"):
-            self.write_tool(tool, 'printf called >> "$HOME/' + tool + '.log"\nexit 42\n')
-        for mode in ("check", "install", "update"):
-            with self.subTest(mode=mode):
-                self.log.unlink(missing_ok=True)
-                result = self.run_helper("plugins", mode)
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                if mode == "check":
-                    self.assertFalse(self.log.exists())
-                else:
-                    self.assertEqual(self.log.read_text().splitlines()[2], "server")
-                for tool in ("mise", "make", "cc", "tree-sitter", "dprint", "node", "npm", "python3", "go"):
-                    self.assertFalse((self.home / (tool + ".log")).exists(), tool)
 
     def test_global_formatter_install_preserves_config_and_update_changes_repo_pin(self):
         self.profile("desktop")
@@ -220,14 +248,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
                 self.assertIn("0.11.3", result.stderr)
                 self.assertFalse(self.log.exists())
 
-    def test_exact_minimum_neovim_runs_maintenance(self):
-        self.profile("server")
-        self.base_config()
-        self.env["TEST_NVIM_VERSION"] = "0.11.3"
-        result = self.run_helper()
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue(self.log.exists())
-
     def test_desktop_requires_mise(self):
         self.profile("desktop")
         self.base_config()
@@ -236,26 +256,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("mise", result.stderr)
         self.assertFalse(self.log.exists())
-
-    def test_preflight_checks_requirements_without_running_maintenance(self):
-        self.profile("desktop")
-        self.base_config()
-        result = self.run_helper(mode="check")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertFalse(self.log.exists())
-        self.assertFalse(self.mise_log.exists())
-        self.assertFalse(self.dprint_log.exists())
-        self.env["TEST_NVIM_VERSION"] = "0.11.2"
-        result = self.run_helper(mode="check")
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("0.11.3", result.stderr)
-        self.env["TEST_NVIM_VERSION"] = "0.11.6"
-        (self.home / ".config/nvim/init.lua").unlink()
-        result = self.run_helper(mode="check")
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("install-base", result.stderr)
-        self.assertFalse(self.log.exists())
-        self.assertFalse(self.mise_log.exists())
 
     def test_process_failure_propagates(self):
         self.profile("desktop")
