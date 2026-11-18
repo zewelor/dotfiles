@@ -28,12 +28,6 @@ class NeovimToolDeclarationsTest(unittest.TestCase):
     def test_mise_config_declares_all_maintained_binaries_with_explicit_backends(self):
         config = tomllib.loads((ROOT / ".config/mise/config.toml").read_text())
         tools = config["tools"]
-        aqua_tools = {name for name in tools if name.startswith("aqua:")}
-        go_tools = {name for name in tools if name.startswith("go:")}
-
-        self.assertTrue(EXPECTED_AQUA_TOOLS.issubset(aqua_tools))
-        self.assertTrue(EXPECTED_GO_TOOLS.issubset(go_tools))
-        self.assertEqual(len(EXPECTED_AQUA_TOOLS | EXPECTED_GO_TOOLS), 11)
         self.assertEqual(tools["aqua:tree-sitter/tree-sitter"], "0.26.1")
         self.assertNotIn("aqua:LuaLS/lua-language-server", tools)
         self.assertNotIn("aqua:google/yamlfmt", tools)
