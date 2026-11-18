@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOLS = ("sourcetap", "gog", "opencode", "workmux", "dockerfmt")
+TOOLS = ("sourcetap", "gog", "opencode", "dockerfmt")
 
 
 MISE = shutil.which("mise")
@@ -60,7 +60,7 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.log.read_text().splitlines(), [
             "sourcetap:completion zsh", "gog:completion zsh",
-            "opencode:--completions zsh", "workmux:completions zsh", "dockerfmt:completion zsh"])
+            "opencode:--completions zsh", "dockerfmt:completion zsh"])
         for tool in TOOLS:
             self.assertIn(f"_{tool}()", (self.cache / f"_{tool}").read_text())
         self.assertEqual(sorted(p.name for p in self.cache.iterdir()),
@@ -193,7 +193,7 @@ source "$COMPLETION_LOADER"
 autoload -Uz compinit
 compinit -u -d "$HOME/.zcompdump"
 for definition in "${queued[@]}"; do compdef ${(z)definition}; done
-for tool in sourcetap gog opencode workmux dockerfmt; do
+for tool in sourcetap gog opencode dockerfmt; do
   [[ "${_comps[$tool]}" == "_$tool" ]] || exit 1
 done
 [[ "${_comps[oc]}" == _opencode ]]

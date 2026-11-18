@@ -76,7 +76,6 @@ below are not proof of every application's write behavior.
 | --- | --- |
 | `delta` | A theme fragment included by `.gitconfig`; the inspected directory contains only its managed link. Strongest next candidate, but there is little benefit while it remains one file. |
 | `yamlfmt` | One formatter configuration and no observed local state. Verify the CLI's configuration-generation behavior before changing ownership. |
-| `workmux` | One tracked configuration and no observed local state in this directory. Verify where the installed version writes sessions, locks and generated configuration. |
 | `lazygit` | One tracked theme/configuration file and no observed local state in this directory. Verify the installed version's state and configuration-update paths first. |
 
 Keep the following directories real:

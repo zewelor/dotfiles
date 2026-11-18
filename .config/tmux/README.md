@@ -8,7 +8,6 @@ Catppuccin theme setup and available status modules for quick reference.
 set -g @catppuccin_flavor "latte"
 set -g @catppuccin_window_status_style "rounded"
 set -g @catppuccin_window_flags "icon"
-set -g @catppuccin_window_flags_icon_format '##{?window_activity_flag,...}...#{?@workmux_status, #{@workmux_status},} '
 set -g @catppuccin_window_text ' #W'
 set -g @catppuccin_window_current_text ' #W'
 run ~/.config/tmux/plugins/catppuccin/tmux/catppuccin.tmux
@@ -19,7 +18,6 @@ set -g status-right ''
 - **Flavor**: `latte` (light)
 - **Window style**: `rounded` (segments with rounded corners)
 - **Window flags**: `icon` (shows Catppuccin window-state icons, including zoom)
-- **Workmux status**: appended to window flags (after catppuccin icons) via custom `@catppuccin_window_flags_icon_format`
 - **Status-right**: empty (minimalist)
 - **UI colors**: pane borders, messages, clock — all handled by catppuccin (no manual overrides)
 - **status-interval**: `1` (fast automatic-rename response)
@@ -94,14 +92,12 @@ set -ag status-right "#{E:@catppuccin_status_session}"
 | Shortened path | `#{d:pane_current_path}` | `/h/o/p/dot2dot` |
 | Basename only | `#{b:pane_current_path}` | `dot2dot` |
 | Current command | `#{pane_current_command}` | `zsh`, `nvim` |
-| Window name | `#{window_name}` / `#T` | `zsh`, `wm-feature` |
+| Window name | `#{window_name}` / `#T` | `zsh`, `server` |
 
 ## Window Name Behavior
 
 - Normal panes: shows `#{pane_current_command}` (from `automatic-rename`)
-- Workmux windows: shows branch name (workmux calls `tmux rename-window`)
 - Manual rename: `prefix + ,` to override
-- Workmux agent status: shown as icon after catppuccin window flags (configured via `@catppuccin_window_flags_icon_format`)
 
 ## Plugins (git submodules)
 

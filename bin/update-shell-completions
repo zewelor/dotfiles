@@ -13,14 +13,13 @@ trap '[[ -z "$temp_file" ]] || rm -f -- "$temp_file"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' HUP TERM
 
-for tool in sourcetap gog opencode workmux dockerfmt; do
+for tool in sourcetap gog opencode dockerfmt; do
   if ! command_path=$(whence -p "$tool"); then
     print -r -- "Skipping $tool: not found in PATH"
     continue
   fi
   case "$tool" in
     opencode) args=(--completions zsh) ;;
-    workmux)  args=(completions zsh) ;;
     *)        args=(completion zsh) ;;
   esac
 

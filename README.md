@@ -122,7 +122,7 @@ files remain links to the repository.
 
 `./install` and `update-all` run `bin/update-shell-completions` after installing
 or updating tools. It generates static Zsh completions for installed Sourcetap,
-gog, OpenCode, and workmux CLIs. Shell startup only registers cached files;
+gog, OpenCode, and dockerfmt CLIs. Shell startup only registers cached files;
 it never launches these generators. Failed or invalid output leaves the previous
 completion file intact and returns an error.
 
