@@ -36,7 +36,7 @@ Do not rely solely on model memory when behavior may be version-sensitive or rec
   text, or merely detect that code changed. Reuse existing coverage; add a regression test only for a real gap.
 - Prefer E2E tests for complex features, with realistic scenarios of medium or high complexity beyond the simplest
   happy path and a reproducible artifact. Before testing a system in isolation, identify its failure modes. Use focused tests during development
-  and run the full E2E suite at the end.
+  and run the full E2E suite when repository rules require it or focused checks cannot verify the affected integration paths.
 - For documentation, formatting, or other changes without runtime behavior, use relevant syntax, link, or reference
   checks instead of inventing behavior tests. Report checks actually run and any unverified behavior.
 
