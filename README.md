@@ -68,7 +68,7 @@ published versions, then prepares the cache. The config changes remain in the
 checkout for review and commit. Ordinary editor startup does not install or
 update tools. Mise owns the maintained tools; Mason is not loaded, and existing
 Mason packages are not automatically removed. See the
-[Neovim tool ownership and prerequisites](.config/nvim/README.md#narzędzia-neovim--jawne-utrzymanie-przez-mise).
+[Neovim tool ownership and prerequisites](.config/nvim/README.md#instalacja-i-utrzymanie).
 `make skills` runs the same private section, including its saved desktop profile,
 base-directory prerequisites, submodule update, Stow confirmation and Herdr setup.
 Full installation selects a profile in memory and saves it only after the login
