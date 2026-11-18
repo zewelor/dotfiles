@@ -16,7 +16,7 @@ yq = "latest"
 "github:openclaw/gogcli" = "latest"
 
 # Neovim defaults: prebuilt releases except the two Go tools.
-"aqua:tree-sitter/tree-sitter" = "0.26.1" # CLI required by the pinned Neovim parser installer
+"aqua:tree-sitter/tree-sitter" = "0.27.2" # CLI required by the pinned Neovim parser installer
 "aqua:mrjosh/helm-ls" = "latest" # Helm LSP
 "aqua:astral-sh/ruff" = "latest" # Python LSP, linting and formatting
 "aqua:tamasfe/taplo" = "latest" # TOML LSP and formatting
