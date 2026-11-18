@@ -32,6 +32,31 @@ class InstallSectionsTest(unittest.TestCase):
         config.mkdir(exist_ok=True)
         (config / "profile.zsh").write_text(f'export DOTFILES_PROFILE="{value}"\n')
 
+    def test_server_neovim_section_prepares_plugins_without_mise(self):
+        self.profile("server")
+        self.env["DOTFILES_PROFILE"] = "desktop"
+        repo = self.make_fixture("")
+        helper = repo / "bin/maintain-neovim"
+        helper.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
+                          'if [ "$2" = check ]; then exit 0; fi\n'
+                          'exit "$TEST_PLUGIN_EXIT"\n')
+        helper.chmod(0o755)
+        mise = self.home / ".local/bin/mise"
+        mise.parent.mkdir(parents=True)
+        mise.write_text('#!/bin/sh\ntouch "$HOME/mise-ran"\nexit 99\n')
+        mise.chmod(0o755)
+        for plugin_exit in (0, 42):
+            with self.subTest(plugin_exit=plugin_exit):
+                (self.home / "stages").unlink(missing_ok=True)
+                result = subprocess.run(
+                    ["zsh", str(repo / "install"), "--section", "neovim"],
+                    env={**self.env, "TEST_PLUGIN_EXIT": str(plugin_exit)},
+                    cwd=self.home, text=True, capture_output=True, timeout=10)
+                self.assertEqual(result.returncode, plugin_exit, result.stdout + result.stderr)
+                self.assertEqual((self.home / "stages").read_text().splitlines(), ["plugins check", "plugins install"])
+                self.assertFalse((self.home / "mise-ran").exists())
+
+
     def test_help_lists_sections_without_touching_home(self):
         result = self.run_install("--help")
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -168,29 +193,6 @@ setup_herdr() { return 0 }
                 self.assertEqual(result.returncode, expected_exit, result.stdout + result.stderr)
                 self.assertEqual((self.home / "stages").read_text().splitlines(), expected_stages)
 
-    def test_server_neovim_section_prepares_plugins_without_mise(self):
-        self.profile("server")
-        self.env["DOTFILES_PROFILE"] = "desktop"
-        repo = self.make_fixture("")
-        helper = repo / "bin/maintain-neovim"
-        helper.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$HOME/stages"\n'
-                          'if [ "$2" = check ]; then exit 0; fi\n'
-                          'exit "$TEST_PLUGIN_EXIT"\n')
-        helper.chmod(0o755)
-        mise = self.home / ".local/bin/mise"
-        mise.parent.mkdir(parents=True)
-        mise.write_text('#!/bin/sh\ntouch "$HOME/mise-ran"\nexit 99\n')
-        mise.chmod(0o755)
-        for plugin_exit in (0, 42):
-            with self.subTest(plugin_exit=plugin_exit):
-                (self.home / "stages").unlink(missing_ok=True)
-                result = subprocess.run(
-                    ["zsh", str(repo / "install"), "--section", "neovim"],
-                    env={**self.env, "TEST_PLUGIN_EXIT": str(plugin_exit)},
-                    cwd=self.home, text=True, capture_output=True, timeout=10)
-                self.assertEqual(result.returncode, plugin_exit, result.stdout + result.stderr)
-                self.assertEqual((self.home / "stages").read_text().splitlines(), ["plugins check", "plugins install"])
-                self.assertFalse((self.home / "mise-ran").exists())
 
     def test_neovim_section_refreshes_completions_after_successful_setup(self):
         self.profile("desktop")
@@ -296,6 +298,7 @@ nvim() { [[ "$TEST_NVIM_VERSION" != broken ]] || return 42; print -r -- "NVIM v$
                                                   stdin=subprocess.DEVNULL, text=True, capture_output=True, timeout=10)
                         self.assertNotEqual(explicit.returncode, 0, explicit.stdout + explicit.stderr)
                         self.assertEqual(order.read_text().splitlines() if order.exists() else [], ["check"])
+
 
     def test_ai_section_requires_summarize_seed_before_any_setup(self):
         self.profile("desktop")

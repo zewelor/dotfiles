@@ -110,6 +110,7 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertFalse(self.log.exists())
         self.assertFalse(self.mise_log.exists())
 
+
     def test_server_installs_and_updates_plugins_without_desktop_tools(self):
         self.profile("server")
         self.base_config()
@@ -130,6 +131,7 @@ exit "${TEST_DPRINT_EXIT:-0}"
                 for tool in ("mise", "make", "cc", "tree-sitter", "dprint", "node", "npm", "python3", "go"):
                     self.assertFalse((self.home / (tool + ".log")).exists(), tool)
 
+
     def test_exact_minimum_neovim_runs_maintenance(self):
         self.profile("server")
         self.base_config()
@@ -137,6 +139,7 @@ exit "${TEST_DPRINT_EXIT:-0}"
         result = self.run_helper()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertTrue(self.log.exists())
+
 
     def test_desktop_plugins_use_target_home_and_need_no_language_runtimes(self):
         self.profile("desktop")
@@ -163,6 +166,7 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertFalse(self.log.exists())
         self.assertFalse(self.mise_log.exists())
 
+
     def test_global_formatter_install_preserves_config_and_update_changes_repo_pin(self):
         self.profile("desktop")
         self.base_config()
@@ -185,7 +189,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
             self.assertEqual(line.split("|")[1:], [str(directory),
                 str(self.home / ".cache/dprint/cache"), str(self.home)])
 
-
     def test_global_formatter_update_failure_stops_before_cache_and_neovim(self):
         self.profile("desktop")
         self.base_config()
@@ -197,7 +200,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertEqual(self.repo_config.read_bytes(), original)
         commands = [line.split("|")[0] for line in self.dprint_log.read_text().splitlines()]
         self.assertEqual(commands, ["config update --global"])
-
 
     def test_global_formatter_missing_config_fails_without_creating_a_copy(self):
         self.profile("desktop")
@@ -213,7 +215,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
             self.assertFalse(self.dprint_log.exists())
             self.assertFalse(self.log.exists())
 
-
     def test_global_formatter_failure_stops_before_neovim(self):
         self.profile("desktop")
         self.base_config()
@@ -222,7 +223,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
             result = self.run_helper(mode=mode)
             self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
             self.assertFalse(self.log.exists())
-
 
     def test_unknown_profile_and_missing_base_fail_before_neovim(self):
         self.profile("unknown")
@@ -250,6 +250,7 @@ exit "${TEST_DPRINT_EXIT:-0}"
                 self.assertIn("0.11.3", result.stderr)
                 self.assertFalse(self.log.exists())
 
+
     def test_desktop_requires_mise(self):
         self.profile("desktop")
         self.base_config()
@@ -258,13 +259,6 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("mise", result.stderr)
         self.assertFalse(self.log.exists())
-
-    def test_process_failure_propagates(self):
-        self.profile("desktop")
-        self.base_config()
-        self.env["TEST_NVIM_EXIT"] = "42"
-        result = self.run_helper("plugins", "update")
-        self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
 
     def test_desktop_requires_prepared_compatible_tree_sitter_before_plugins(self):
         self.profile("desktop")
@@ -279,6 +273,7 @@ exit "${TEST_DPRINT_EXIT:-0}"
                 self.assertFalse(self.log.exists(), "plugin maintenance ran before CLI preparation")
                 self.assertFalse(self.mise_log.exists(), "helper implicitly installed missing CLI")
 
+
     def test_preflight_does_not_require_cli_or_mutate_tools_and_plugins(self):
         self.profile("desktop")
         self.base_config()
@@ -289,7 +284,12 @@ exit "${TEST_DPRINT_EXIT:-0}"
         self.assertFalse(self.log.exists())
         self.assertFalse(self.mise_log.exists())
 
-
+    def test_process_failure_propagates(self):
+        self.profile("desktop")
+        self.base_config()
+        self.env["TEST_NVIM_EXIT"] = "42"
+        result = self.run_helper("plugins", "update")
+        self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
 
 
 @unittest.skipUnless(NVIM and LAZY.is_dir(), "installed Neovim and lazy.nvim sources are required")
@@ -346,29 +346,6 @@ return {
                                "-l", str(ROOT / ".config/nvim/maintain.lua"), "plugins", mode],
                               env=self.env, cwd=self.home, text=True, capture_output=True, timeout=30)
 
-    def local_manager_source(self):
-        # Installed Lazy may be a partial clone; make a complete local Git fixture.
-        source = self.home / "manager-source"
-        shutil.copytree(LAZY, source, ignore=shutil.ignore_patterns(".git"))
-        for args in (("init", "--initial-branch=stable"), ("add", "."),
-                     ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
-                      "commit", "-m", "Prepared manager source")):
-            subprocess.run(["git", "-C", str(source), *args], env=self.env,
-                           check=True, capture_output=True, timeout=10)
-        subprocess.run(["git", "config", "--file", str(self.home / ".gitconfig"),
-                        "--unset-all", "url." + LAZY.as_uri() + ".insteadOf"],
-                       env=self.env, check=True, capture_output=True, timeout=10)
-        subprocess.run(["git", "config", "--file", str(self.home / ".gitconfig"),
-                        "url." + source.as_uri() + ".insteadOf", "https://github.com/folke/lazy.nvim.git"],
-                       env=self.env, check=True, capture_output=True, timeout=10)
-
-    def run_config(self, before="", after=""):
-        script = "vim.opt.loadplugins = true; vim.opt.rtp:prepend(vim.fn.stdpath('config')); require('config.lazy')"
-        command = "local ok, err = xpcall(function() " + before + "; " + script + "; " + after + " end, debug.traceback); if not ok then io.stderr:write(tostring(err)); vim.cmd('cquit 1') end"
-        return subprocess.run([NVIM, "--headless", "-u", "NONE", "-i", "NONE", "-n",
-                               "-c", "lua " + command, "-c", "qa!"],
-                              env=self.env, cwd=self.home, text=True, capture_output=True, timeout=30)
-
     def test_fresh_server_full_install_prepares_first_editor_start(self):
         # Use real maintenance + Lazy bootstrap with local Git sources. Stub only
         # unrelated system/Stow operations of the full installer.
@@ -420,6 +397,29 @@ return {
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertNotIn("Error", result.stdout + result.stderr)
 
+    def local_manager_source(self):
+        # Installed Lazy may be a partial clone; make a complete local Git fixture.
+        source = self.home / "manager-source"
+        shutil.copytree(LAZY, source, ignore=shutil.ignore_patterns(".git"))
+        for args in (("init", "--initial-branch=stable"), ("add", "."),
+                     ("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                      "commit", "-m", "Prepared manager source")):
+            subprocess.run(["git", "-C", str(source), *args], env=self.env,
+                           check=True, capture_output=True, timeout=10)
+        subprocess.run(["git", "config", "--file", str(self.home / ".gitconfig"),
+                        "--unset-all", "url." + LAZY.as_uri() + ".insteadOf"],
+                       env=self.env, check=True, capture_output=True, timeout=10)
+        subprocess.run(["git", "config", "--file", str(self.home / ".gitconfig"),
+                        "url." + source.as_uri() + ".insteadOf", "https://github.com/folke/lazy.nvim.git"],
+                       env=self.env, check=True, capture_output=True, timeout=10)
+
+    def run_config(self, before="", after=""):
+        script = "vim.opt.loadplugins = true; vim.opt.rtp:prepend(vim.fn.stdpath('config')); require('config.lazy')"
+        command = "local ok, err = xpcall(function() " + before + "; " + script + "; " + after + " end, debug.traceback); if not ok then io.stderr:write(tostring(err)); vim.cmd('cquit 1') end"
+        return subprocess.run([NVIM, "--headless", "-u", "NONE", "-i", "NONE", "-n",
+                               "-c", "lua " + command, "-c", "qa!"],
+                              env=self.env, cwd=self.home, text=True, capture_output=True, timeout=30)
+
 
     def test_startup_installs_missing_plugins_without_updating_existing(self):
         result = self.run_config()
@@ -464,6 +464,131 @@ return {
         self.assertTrue((manager / "lua/lazy/init.lua").is_file())
         self.assertTrue((self.home / ".local/share/nvim/lazy/managed/plugin/fixture.lua").is_file())
         self.assertEqual((self.home / "build.log").read_text().splitlines(), ["built"])
+
+    def test_parser_maintenance_installs_retries_and_skips_server(self):
+        self.env["DOTFILES_PROFILE"] = "desktop"
+        plugin = self.home / "local-treesitter"
+        plugin.mkdir()
+        spec = self.home / ".config/nvim/lua/plugins/treesitter.lua"
+        spec.write_text("""
+local spec = dofile(%s)
+spec.dir = %s
+package.preload['nvim-treesitter.config'] = function()
+  return { get_installed = function() return {} end,
+    get_install_dir = function(kind) return vim.env.HOME .. '/site/' .. kind end }
+end
+package.preload['nvim-treesitter'] = function()
+  return {
+    setup = function() end,
+    uninstall = function() return { wait = function() end } end,
+    update = function()
+      vim.fn.writefile({ 'updated' }, vim.env.HOME .. '/parser-update.log')
+      return { wait = function() return vim.env.TEST_PARSER_UPDATE_FAILURE ~= '1' end }
+    end,
+    install = function(languages)
+      vim.fn.writefile(languages, vim.env.HOME .. '/parsers.log')
+      if vim.env.TEST_PARSER_FAILURE ~= '1' then
+        for _, lang in ipairs(languages) do
+          vim.fn.mkdir(vim.env.HOME .. '/site/parser', 'p')
+          vim.fn.mkdir(vim.env.HOME .. '/site/queries/' .. lang, 'p')
+          vim.fn.writefile({}, vim.env.HOME .. '/site/parser/' .. lang .. '.so')
+          vim.fn.writefile({}, vim.env.HOME .. '/site/queries/' .. lang .. '/highlights.scm')
+        end
+      end
+      return { wait = function() return vim.env.TEST_PARSER_FAILURE ~= '1' end }
+    end,
+  }
+end
+return spec
+""" % (json.dumps(str(ROOT / ".config/nvim/lua/plugins/treesitter.lua")), json.dumps(str(plugin))))
+        self.env["TEST_PARSER_FAILURE"] = "1"
+        result = self.run_stage()
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Tree-sitter parser installation failed", result.stdout + result.stderr)
+        self.env.pop("TEST_PARSER_FAILURE")
+        result = self.run_stage()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual((self.home / "parsers.log").read_text().splitlines(),
+                         ["lua", "vim", "vimdoc", "query", "bash", "python", "json", "yaml", "toml",
+                          "markdown", "markdown_inline", "dockerfile", "git_config", "gitcommit", "diff", "helm", "go"])
+        self.assertTrue((self.home / "parser-update.log").exists())
+        self.env["TEST_PARSER_UPDATE_FAILURE"] = "1"
+        result = self.run_stage("update")
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Tree-sitter parser update failed", result.stdout + result.stderr)
+        self.env.pop("TEST_PARSER_UPDATE_FAILURE")
+        result = self.run_stage("update")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.home / "parser-update.log").exists())
+        (self.home / "parser-update.log").unlink()
+        (self.home / "parsers.log").unlink()
+        self.env["DOTFILES_PROFILE"] = "server"
+        result = self.run_stage()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((self.home / "parsers.log").exists())
+
+
+    def test_install_and_update_repair_incompatible_checkout_before_loading_it(self):
+        self.env['DOTFILES_PROFILE'] = 'desktop'
+        tree_remote = self.home / 'tree-remote'
+        subprocess.run(['git', 'clone', str(self.remote), str(tree_remote)],
+                       check=True, capture_output=True, timeout=10)
+        self.remote = tree_remote
+        module = self.remote / 'lua/nvim-treesitter'
+        module.mkdir(parents=True)
+        (module / 'init.lua').write_text("""
+return {
+  setup = function() end,
+    uninstall = function() return { wait = function() end } end,
+  install = function(languages)
+    for _, lang in ipairs(languages) do
+      vim.fn.mkdir(vim.env.HOME .. '/site/parser', 'p')
+      vim.fn.mkdir(vim.env.HOME .. '/site/queries/' .. lang, 'p')
+      vim.fn.writefile({}, vim.env.HOME .. '/site/parser/' .. lang .. '.so')
+      vim.fn.writefile({}, vim.env.HOME .. '/site/queries/' .. lang .. '/highlights.scm')
+    end
+    vim.fn.writefile({'installed'}, vim.env.HOME .. '/parser-installed', 'a')
+    return {wait = function() return true end}
+  end,
+  update = function()
+    vim.fn.writefile({'updated'}, vim.env.HOME .. '/parser-updated', 'a')
+    return {wait = function() return true end}
+  end,
+}
+""")
+        (module / 'config.lua').write_text("return {get_install_dir = function(kind) return vim.env.HOME .. '/site/' .. kind end}\n")
+        (module / 'install.lua').write_text("return require('nvim-treesitter')\n")
+        self.git('add', '.')
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                 'commit', '-m', 'Compatible parser API')
+        compatible = self.git('rev-parse', 'HEAD').stdout.strip()
+        (module / 'init.lua').write_text("error('incompatible parser API loaded before checkout')\n")
+        self.git('add', '.')
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
+                 'commit', '-m', 'Incompatible parser API')
+        (self.home / '.config/nvim/lua/plugins/treesitter.lua').write_text(
+            'local spec = dofile(' + json.dumps(str(ROOT / '.config/nvim/lua/plugins/treesitter.lua')) + ')\n'
+            'spec.url = ' + json.dumps(self.remote.as_uri()) + '\n'
+            'spec.commit = ' + json.dumps(compatible) + '\nreturn spec\n')
+        installed = self.home / '.local/share/nvim/lazy/nvim-treesitter'
+        for mode in ('install', 'update'):
+            with self.subTest(mode=mode):
+                if installed.exists():
+                    shutil.rmtree(installed)
+                subprocess.run(['git', 'clone', str(self.remote), str(installed)], env=self.env,
+                               check=True, capture_output=True, timeout=10)
+                result = self.run_stage(mode)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertNotIn('incompatible parser API', result.stdout + result.stderr)
+                head = subprocess.check_output(['git', '-C', str(installed), 'rev-parse', 'HEAD'], text=True)
+                self.assertEqual(head.strip(), compatible)
+                self.assertTrue((self.home / 'parser-installed').exists())
+                before = (self.home / 'parser-installed').read_text()
+                result = self.run_stage('install')
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual((self.home / 'parser-installed').read_text(), before,
+                                 'healthy parsers were reinstalled on repeat install')
+
 
     def test_real_lazy_installs_missing_plugin_without_updating_it_on_repeat(self):
         result = self.run_stage()
@@ -636,131 +761,6 @@ return {
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
                 self.assertFalse(log.exists(), 'server/unset profile started parser installation')
                 self.assertFalse((site / 'parser/json.so').exists())
-
-    def test_parser_maintenance_installs_retries_and_skips_server(self):
-        self.env["DOTFILES_PROFILE"] = "desktop"
-        plugin = self.home / "local-treesitter"
-        plugin.mkdir()
-        spec = self.home / ".config/nvim/lua/plugins/treesitter.lua"
-        spec.write_text("""
-local spec = dofile(%s)
-spec.dir = %s
-package.preload['nvim-treesitter.config'] = function()
-  return { get_installed = function() return {} end,
-    get_install_dir = function(kind) return vim.env.HOME .. '/site/' .. kind end }
-end
-package.preload['nvim-treesitter'] = function()
-  return {
-    setup = function() end,
-    uninstall = function() return { wait = function() end } end,
-    update = function()
-      vim.fn.writefile({ 'updated' }, vim.env.HOME .. '/parser-update.log')
-      return { wait = function() return vim.env.TEST_PARSER_UPDATE_FAILURE ~= '1' end }
-    end,
-    install = function(languages)
-      vim.fn.writefile(languages, vim.env.HOME .. '/parsers.log')
-      if vim.env.TEST_PARSER_FAILURE ~= '1' then
-        for _, lang in ipairs(languages) do
-          vim.fn.mkdir(vim.env.HOME .. '/site/parser', 'p')
-          vim.fn.mkdir(vim.env.HOME .. '/site/queries/' .. lang, 'p')
-          vim.fn.writefile({}, vim.env.HOME .. '/site/parser/' .. lang .. '.so')
-          vim.fn.writefile({}, vim.env.HOME .. '/site/queries/' .. lang .. '/highlights.scm')
-        end
-      end
-      return { wait = function() return vim.env.TEST_PARSER_FAILURE ~= '1' end }
-    end,
-  }
-end
-return spec
-""" % (json.dumps(str(ROOT / ".config/nvim/lua/plugins/treesitter.lua")), json.dumps(str(plugin))))
-        self.env["TEST_PARSER_FAILURE"] = "1"
-        result = self.run_stage()
-        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Tree-sitter parser installation failed", result.stdout + result.stderr)
-        self.env.pop("TEST_PARSER_FAILURE")
-        result = self.run_stage()
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual((self.home / "parsers.log").read_text().splitlines(),
-                         ["lua", "vim", "vimdoc", "query", "bash", "python", "json", "yaml", "toml",
-                          "markdown", "markdown_inline", "dockerfile", "git_config", "gitcommit", "diff", "helm", "go"])
-        self.assertTrue((self.home / "parser-update.log").exists())
-        self.env["TEST_PARSER_UPDATE_FAILURE"] = "1"
-        result = self.run_stage("update")
-        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("Tree-sitter parser update failed", result.stdout + result.stderr)
-        self.env.pop("TEST_PARSER_UPDATE_FAILURE")
-        result = self.run_stage("update")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue((self.home / "parser-update.log").exists())
-        (self.home / "parser-update.log").unlink()
-        (self.home / "parsers.log").unlink()
-        self.env["DOTFILES_PROFILE"] = "server"
-        result = self.run_stage()
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertFalse((self.home / "parsers.log").exists())
-
-    def test_install_and_update_repair_incompatible_checkout_before_loading_it(self):
-        self.env['DOTFILES_PROFILE'] = 'desktop'
-        tree_remote = self.home / 'tree-remote'
-        subprocess.run(['git', 'clone', str(self.remote), str(tree_remote)],
-                       check=True, capture_output=True, timeout=10)
-        self.remote = tree_remote
-        module = self.remote / 'lua/nvim-treesitter'
-        module.mkdir(parents=True)
-        (module / 'init.lua').write_text("""
-return {
-  setup = function() end,
-    uninstall = function() return { wait = function() end } end,
-  install = function(languages)
-    for _, lang in ipairs(languages) do
-      vim.fn.mkdir(vim.env.HOME .. '/site/parser', 'p')
-      vim.fn.mkdir(vim.env.HOME .. '/site/queries/' .. lang, 'p')
-      vim.fn.writefile({}, vim.env.HOME .. '/site/parser/' .. lang .. '.so')
-      vim.fn.writefile({}, vim.env.HOME .. '/site/queries/' .. lang .. '/highlights.scm')
-    end
-    vim.fn.writefile({'installed'}, vim.env.HOME .. '/parser-installed', 'a')
-    return {wait = function() return true end}
-  end,
-  update = function()
-    vim.fn.writefile({'updated'}, vim.env.HOME .. '/parser-updated', 'a')
-    return {wait = function() return true end}
-  end,
-}
-""")
-        (module / 'config.lua').write_text("return {get_install_dir = function(kind) return vim.env.HOME .. '/site/' .. kind end}\n")
-        (module / 'install.lua').write_text("return require('nvim-treesitter')\n")
-        self.git('add', '.')
-        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
-                 'commit', '-m', 'Compatible parser API')
-        compatible = self.git('rev-parse', 'HEAD').stdout.strip()
-        (module / 'init.lua').write_text("error('incompatible parser API loaded before checkout')\n")
-        self.git('add', '.')
-        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid',
-                 'commit', '-m', 'Incompatible parser API')
-        (self.home / '.config/nvim/lua/plugins/treesitter.lua').write_text(
-            'local spec = dofile(' + json.dumps(str(ROOT / '.config/nvim/lua/plugins/treesitter.lua')) + ')\n'
-            'spec.url = ' + json.dumps(self.remote.as_uri()) + '\n'
-            'spec.commit = ' + json.dumps(compatible) + '\nreturn spec\n')
-        installed = self.home / '.local/share/nvim/lazy/nvim-treesitter'
-        for mode in ('install', 'update'):
-            with self.subTest(mode=mode):
-                if installed.exists():
-                    shutil.rmtree(installed)
-                subprocess.run(['git', 'clone', str(self.remote), str(installed)], env=self.env,
-                               check=True, capture_output=True, timeout=10)
-                result = self.run_stage(mode)
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertNotIn('incompatible parser API', result.stdout + result.stderr)
-                head = subprocess.check_output(['git', '-C', str(installed), 'rev-parse', 'HEAD'], text=True)
-                self.assertEqual(head.strip(), compatible)
-                self.assertTrue((self.home / 'parser-installed').exists())
-                before = (self.home / 'parser-installed').read_text()
-                result = self.run_stage('install')
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                self.assertEqual((self.home / 'parser-installed').read_text(), before,
-                                 'healthy parsers were reinstalled on repeat install')
-
-
 
 
 if __name__ == "__main__":
