@@ -43,21 +43,15 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
         return subprocess.run([str(ROOT / "bin/update-shell-completions")],
                               cwd=cwd or self.home, env=self.env, text=True, capture_output=True)
 
-    def test_refresh_skips_user_zshenv(self):
+    def test_generates_supported_scripts_and_command_arguments(self):
         startup_log = self.home / "startup-log"
         self.env["STARTUP_LOG"] = str(startup_log)
         (self.home / ".zshenv").write_text('print -r -- sourced >> "$STARTUP_LOG"\n')
-        self.good_tool("gog")
-        result = self.refresh()
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertTrue((self.cache / "_gog").is_file())
-        self.assertFalse(startup_log.exists())
-
-    def test_generates_supported_scripts_and_command_arguments(self):
         for tool in TOOLS:
             self.good_tool(tool)
         result = self.refresh()
         self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(startup_log.exists(), "refresh sourced the user's .zshenv")
         self.assertEqual(self.log.read_text().splitlines(), [
             "sourcetap:completion zsh", "gog:completion zsh",
             "opencode:--completions zsh", "dockerfmt:completion zsh"])
