@@ -482,18 +482,13 @@ return {
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("= 'new'", plugin.read_text())
 
-    def test_real_lazy_build_failure_reaches_process_exit(self):
-        self.env["TEST_BUILD_FAILURE"] = "1"
-        result = self.run_stage()
-        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("controlled build failure", result.stdout + result.stderr)
-
     def test_real_lazy_retries_failed_build_without_updating_or_rebuilding_healthy_plugins(self):
         for retry_mode in ("install", "update"):
             with self.subTest(retry_mode=retry_mode):
                 self.env["TEST_BUILD_FAILURE"] = "1"
                 result = self.run_stage()
                 self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("controlled build failure", result.stdout + result.stderr)
                 self.assertFalse((self.home / "build.log").exists())
                 plugin_file = self.home / ".local/share/nvim/lazy/managed/plugin/fixture.lua"
                 checkout = plugin_file.read_text()
