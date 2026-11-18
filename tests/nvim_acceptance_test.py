@@ -91,7 +91,7 @@ for _, name in ipairs({'copilot.lua','opencode.nvim','mason.nvim','editorconfig-
   assert(not config.plugins[name], name .. ' remains enabled')
 end
 assert(vim.env.MISE_AUTO_INSTALL == 'false')
-assert(vim.fn.maparg(' ff','n') ~= '' and vim.fn.maparg(' hs','n') ~= '')
+assert(vim.fn.maparg(' ff','n') ~= '' and vim.fn.maparg(' ghs','n') ~= '')
 open(vim.env.PROJECT .. '/example.rb')
 vim.wait(200)
 assert(#vim.lsp.get_clients({bufnr=0}) == 0, 'Ruby started an LSP')

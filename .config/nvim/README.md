@@ -174,13 +174,16 @@ na LSP. Instalacja narzędzi desktopu i `update-all` obejmują też dockerfmt;
 - **Repo**: [lewis6991/gitsigns.nvim](https://github.com/lewis6991/gitsigns.nvim)
 - **Cel**: Git diff w gutterze, stage/reset hunks i podgląd blame bez wychodzenia z Neovim
 - **Keymaps**:
-  - `<Space>hs` — Stage hunk pod kursorem
-  - `<Space>hs` w Visual — Stage zaznaczone linie z aktualnego hunk'a
-  - `<Space>hS` — Stage cały bufor
+  - `<Space>ghs` — Stage hunk pod kursorem
+  - `<Space>ghs` w Visual — Stage zaznaczone linie z aktualnego hunk'a
+  - `<Space>ghS` — Stage cały bufor
+  - `<Space>ghd` — Diff bieżącego bufora z aktualną bazą Gitsigns (domyślnie indeks).
+    Zapis bufora indeksu aktualizuje staged.
+  - `<Space>ghD` — Diff bieżącego bufora z ostatnim commitem (`HEAD`).
 - **Uwagi**: Plugin korzysta z `signcolumn`, więc `vim.opt.signcolumn = "yes"` zostaje w core options.
 - **Przykłady**:
-  - Chcesz stage'ować tylko 2 linie z większego hunka: zaznacz je w Visual mode i naciśnij `<Space>hs`.
-  - Chcesz stage'ować cały obecny change set w pliku: naciśnij `<Space>hs` w Normal mode.
+  - Chcesz stage'ować tylko 2 linie z większego hunka: zaznacz je w Visual mode i naciśnij `<Space>ghs`.
+  - Chcesz dodać do indeksu wszystkie zmiany w bieżącym buforze: naciśnij `<Space>ghS` w Normal mode.
   - Chcesz ogarnąć commit/branch/stash dla całego repo: `<leader>gg` otwiera LazyGit (floating window przez snacks.nvim).
 
 ### Gdy używać czego
