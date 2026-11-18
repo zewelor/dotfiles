@@ -37,6 +37,33 @@ return {
     -- Enter accepts a selected suggestion; Tab remains available for snippets and indentation.
     keymap = { preset = 'enter' },
 
+    cmdline = {
+      keymap = {
+        preset = 'cmdline',
+        -- Keep Left/Right for editing the command text instead of cycling items.
+        ['<Left>'] = false,
+        ['<Right>'] = false,
+        -- Navigate completion items when the menu is open; fall back to command history otherwise.
+        ['<Up>'] = { 'select_prev', 'fallback' },
+        ['<Down>'] = { 'select_next', 'fallback' },
+      },
+      completion = {
+        -- Avoid preselecting so Enter runs the typed command unless an item is explicitly picked.
+        list = {
+          selection = {
+            preselect = function()
+              return vim.fn.getcmdtype() ~= ':'
+            end,
+          },
+        },
+        menu = {
+          auto_show = function(ctx)
+            return ctx.mode == 'cmdwin' or vim.fn.getcmdtype() == ':'
+          end,
+        },
+      },
+    },
+
     appearance = {
       -- 'mono' (default) for 'Nerd Font Mono' or 'normal' for 'Nerd Font'
       -- Adjusts spacing to ensure icons are aligned
@@ -49,7 +76,9 @@ return {
       -- Keep Enter as a newline until a completion is explicitly selected.
       list = { selection = { preselect = false } },
       menu = {
-        auto_show_delay_ms = 2000, -- 2 second delay before showing completion menu
+        auto_show_delay_ms = function(ctx)
+          return ctx.mode == 'cmdline' and 0 or 2000
+        end,
       },
     },
 

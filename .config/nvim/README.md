@@ -247,6 +247,11 @@ Integracje Copilot i OpenCode w edytorze są wycofane. Zewnętrzne CLI agentów 
 Menu nie zaznacza pierwszej podpowiedzi automatycznie. Wskaż ją strzałkami lub
 `<C-n>`/`<C-p>`, a potem zatwierdź Enterem.
 
+W wierszu poleceń `:` menu otwiera się od razu, bez zaznaczenia pierwszej
+pozycji. Strzałki góra/dół wybierają pozycję przy otwartym menu, a po jego
+zamknięciu wracają do historii komend. Strzałki lewo/prawo przesuwają kursor.
+Enter wykonuje tekst wiersza poleceń.
+
 ---
 
 ### **mini.align** — Interaktywne wyrównywanie
