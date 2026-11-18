@@ -11,6 +11,10 @@ sprawdź praktyki społeczności, także zanim napiszesz własną integrację lu
 obejście. Dostosuj zakres researchu do znaczenia decyzji; drobne poprawki bez
 wyboru rozwiązania go nie wymagają.
 
+Zacznij od czynności użytkownika lub skryptu, który korzysta z ustawienia.
+Sprawdź, jak wykonuje ją dzisiaj. Przy upraszczaniu wskaż konkretną różnicę
+w codziennej pracy i co przestaniemy utrzymywać.
+
 1. **Odkryj kandydatów.** Dla Neovima użyj
    [Dotfyle](https://dotfyle.com/neovim/configurations/top); dla pozostałych
    dotfiles pomocniczo [dotfiles.github.io](https://dotfiles.github.io/inspiration/).
@@ -39,6 +43,10 @@ autoryzacji.
 
 ## Instalacja, aktualizacje i profile (MUST)
 
+- Przy zmianie sposobu instalacji ustal dla danego profilu, kto dostarcza
+  binarkę, kto ją aktualizuje i skąd aplikacja ją uruchamia. Sprawdź także
+  istniejącą instalację z lokalnymi nadpisaniami. Pakiety dołożone ręcznie
+  mogą pozostać opcjonalne poza zestawem zarządzanym przez repo.
 - Konfiguruj automatyczny bootstrap brakujących pluginów, parserów i podobnych
   komponentów przy pierwszym użyciu, zgodnie z wybranym profilem. Użytkownik
   nie powinien pamiętać o dodatkowej komendzie po dodaniu takiego komponentu.
@@ -86,6 +94,9 @@ autoryzacji.
 - Bieżące wersje, backendy i listę narzędzi odczytuj z `Makefile`, `install`,
   `.config/mise/config.toml`, konfiguracji shella oraz live CLI. Nie kopiuj
   zmiennego stanu do zawsze ładowanych instrukcji.
+- Pomijaj jawne ustawienia powtarzające domyślne zachowanie aplikacji.
+  Zachowaj świadomie wybrany default z krótkim komentarzem, gdy wyjaśnia
+  nieoczywistą zależność, np. konflikt skrótu między terminalowym UI a edytorem.
 - Zmieniaj minimalny, celowy zakres i zachowuj istniejący styl oraz komentarze.
   W `install` poprzedzaj każdy większy etap czytelnym `print_banner`.
 - Przy zmianach `install` zachowuj spójność pełnej instalacji, samodzielnych
@@ -135,6 +146,10 @@ autoryzacji.
   mogą pozostać w jego specu. Opcje trzymaj w `lua/config/options.lua`, a
   ustawienia per-filetype w `after/ftplugin/<filetype>.lua`, chyba że
   udokumentowany konflikt wymaga innego miejsca.
+- Przy integracji z narzędziem projektu sprawdź zwykłą komendę w rzeczywistym
+  repozytorium i użyj tej samej konfiguracji w edytorze. Dla formatowania
+  sprawdź też pojedynczy plik poza projektem. Błąd wybranego formattera ma
+  być widoczny. Domyślny formatter służy plikom bez konfiguracji projektu.
 - Przy zmianie pluginu, keymapy, opcji, zachowania per-filetype lub struktury
   zaktualizuj odpowiadającą sekcję `.config/nvim/README.md`.
 - Keymapy muszą mieć `desc`. Komentarze opisują krótko „dlaczego”, a spec
