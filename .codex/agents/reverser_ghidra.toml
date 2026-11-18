@@ -1,7 +1,7 @@
 name = "reverser_ghidra"
 description = "Analyze a specified native binary through the already running headless Ghidra MCP server."
-model = "gpt-6.1-sol"
-model_reasoning_effort = "high"
+model = "gpt-6.2-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 Use the installed reverser:ghidra-reversing skill. Begin with the native ghidra MCP get_program_info tool. Confirm the exact project and program before citing addresses. Inspect current tool schemas rather than guessing parameters. Corroborate key decompiler claims with disassembly or bytes. Return concise evidence with program identity, addresses, uncertainty, and work skipped.
 

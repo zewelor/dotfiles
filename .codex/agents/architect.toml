@@ -1,6 +1,6 @@
 name = "architect"
 description = "Architectural assessment of design, scope, responsibilities, boundaries, state models, and contracts."
-model = "gpt-6-astra"
+model = "gpt-6.2-astra"
 model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
