@@ -4,6 +4,39 @@ To jest projektowy delta dla repozytorium dotfiles. Nie powtarzaj tutaj
 globalnych zasad agenta ani dokumentacji narzędzi. Komentarze w kodzie i
 konfiguracji pisz po angielsku; ten plik pozostaje po polsku.
 
+## Wybór rozwiązań i praktyki społeczności (MUST)
+
+Przy wyborze lub wymianie pluginu, CLI albo nietrywialnego wzorca konfiguracji
+sprawdź praktyki społeczności, także zanim napiszesz własną integrację lub
+obejście. Dostosuj zakres researchu do znaczenia decyzji; drobne poprawki bez
+wyboru rozwiązania go nie wymagają.
+
+1. **Odkryj kandydatów.** Dla Neovima użyj
+   [Dotfyle](https://dotfyle.com/neovim/configurations/top); dla pozostałych
+   dotfiles pomocniczo [dotfiles.github.io](https://dotfiles.github.io/inspiration/).
+2. **Znajdź konkretne ustawienia.** Używaj Grep MCP do rzeczywistych fragmentów
+   konfiguracji; uzupełniaj wyniki przez
+   [GitHub Code Search](https://github.com/search?type=code), także jako
+   alternatywę przy braku dostępu do Grepa.
+3. **Sprawdź kontekst.** Zweryfikuj aktywną konfigurację, historię danego pliku,
+   warunki uruchomienia i ustawienia narzędzia w projekcie. W upstream sprawdź
+   utrzymanie, zgodność wersji i informacje o migracjach lub deprecjacjach;
+   szczegóły zachowania potwierdź w dokumentacji zgodnie z zasadami Context7.
+4. **Porównaj rozwiązania.** Uwzględnij obecny wybór. Gdy oceniasz popularność,
+   określ i podaj próbę niezależnych repozytoriów: licz repozytoria, nie trafienia,
+   a kopiowane presety traktuj jako wspólne źródło wzorca. Ranking i taka próba
+   nie są reprezentatywnym pomiarem całej społeczności. Przy małej liczbie
+   przykładów podaj dostępne dowody i niepewność.
+5. **Wyjaśnij wybór.** Krótko podaj powód i linki do źródeł; oddziel uzasadnienie
+   autora od naszej oceny. Przy porównywalnym dopasowaniu preferuj szeroko używane,
+   aktywnie wspierane rozwiązanie, uwzględniając profile, zależności i koszt
+   utrzymania tego repo. Migrację uzasadnij korzyścią, nie samą nowością.
+
+Przy braku dostępu do źródeł zgłoś luki i oprzyj rekomendację na dostępnych
+dowodach, jawnie ograniczając wnioski. Wyjaśnienie wyboru jest częścią pracy,
+bez dodatkowego wymogu oczekiwania na akceptację; obowiązują istniejące granice
+autoryzacji.
+
 ## Instalacja, aktualizacje i profile (MUST)
 
 - Konfiguruj automatyczny bootstrap brakujących pluginów, parserów i podobnych
