@@ -367,6 +367,58 @@ return {
                                "-c", "lua " + command, "-c", "qa!"],
                               env=self.env, cwd=self.home, text=True, capture_output=True, timeout=30)
 
+    def test_fresh_server_full_install_prepares_first_editor_start(self):
+        # Use real maintenance + Lazy bootstrap with local Git sources. Stub only
+        # unrelated system/Stow operations of the full installer.
+        shutil.rmtree(self.home / ".local/share/nvim/lazy/lazy.nvim")
+        self.env["GIT_ALLOW_PROTOCOL"] = "file"
+        self.local_manager_source()
+        (self.home / ".zshrc.d").mkdir()
+        (self.home / ".zshrc.d/profile.zsh").write_text('export DOTFILES_PROFILE=server\n')
+        config = self.home / ".config/nvim"
+        (config / "init.lua").symlink_to(ROOT / ".config/nvim/init.lua")
+        for source in (ROOT / ".config/nvim/lua/config").glob("*.lua"):
+            if source.name != "lazy.lua":
+                (config / "lua/config" / source.name).symlink_to(source)
+        repo = self.home / "installer"
+        (repo / "bin").mkdir(parents=True)
+        (repo / ".zsh").mkdir()
+        shutil.copy(ROOT / ".zsh/helpers.zsh", repo / ".zsh/helpers.zsh")
+        (repo / "bin/maintain-neovim").symlink_to(ROOT / "bin/maintain-neovim")
+        completions = repo / "bin/update-shell-completions"
+        completions.write_text("#!/bin/sh\nexit 0\n")
+        completions.chmod(0o755)
+        script = (ROOT / "install").read_text().rsplit("\nrun_installation", 1)[0]
+        script += "\nconfigure_profile() { DOTFILES_PROFILE=server }\n"
+        for function in ("require_zsh_login_shell", "configure_stow_apply", "setup_private_submodule",
+                         "prepare_stow_targets", "migrate_retired_managed_links", "stow_base_dotfiles",
+                         "configure_git_conflict_style"):
+            script += function + "() { return 0 }\n"
+        (repo / "install").write_text(script + '\nrun_installation "$@"\n')
+        result = subprocess.run(["zsh", str(repo / "install")],
+                                env={**self.env, "TEST_BUILD_FAILURE": "1"}, cwd=self.home,
+                                capture_output=True, text=True, timeout=45)
+        self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("controlled build failure", result.stdout + result.stderr)
+        self.assertFalse((self.home / ".zshrc.d/editor.zsh").exists(),
+                         "installer selected nvim after plugin preparation failed")
+        result = subprocess.run(["zsh", str(repo / "install")], env=self.env, cwd=self.home,
+                                capture_output=True, text=True, timeout=45)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("export EDITOR=nvim", (self.home / ".zshrc.d/editor.zsh").read_text())
+        self.assertTrue((self.home / ".local/share/nvim/lazy/lazy.nvim").is_dir())
+        self.assertTrue((self.home / ".local/share/nvim/lazy/managed/plugin/fixture.lua").is_file())
+        self.assertEqual((self.home / "build.log").read_text().splitlines(), ["built"])
+        probe = self.home / "first-start.lua"
+        probe.write_text("assert(vim.o.mouse == '')\n"
+                         "assert(vim.fn.maparg(' ff', 'n') ~= '')\n"
+                         "vim.cmd('qa!')\n")
+        result = subprocess.run([NVIM, "--headless", "-u", str(config / "init.lua"), "-i", "NONE", "-n", "-l", str(probe)],
+                                env=self.env, cwd=self.home, capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertNotIn("Error", result.stdout + result.stderr)
+
+
     def test_startup_installs_missing_plugins_without_updating_existing(self):
         result = self.run_config()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
