@@ -3,6 +3,7 @@
 set -euo pipefail
 
 completion_dir="${ZSH_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/zinit}/completions"
+
 # Stop project config discovery before the caller's directory, without changing it.
 export MISE_CONFIG_DIR="$HOME/.config/mise"
 export MISE_CEILING_PATHS="${PWD:A}"
