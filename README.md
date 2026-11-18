@@ -55,10 +55,10 @@ requires shared agent commands and skills from the private setup. The `tools`
 section refreshes shell completions after installing tools.
 Both installation profiles prepare missing Neovim plugins when Neovim >= 0.11.3
 is available. Desktop also prepares declared tools through mise; server installs
-its lightweight plugin set without mise or parser compilation. Older hosts keep
+only its lightweight plugin set without mise or parser compilation. Older hosts keep
 the Vim fallback and continue the remaining installation stages.
-`make install-neovim` runs the setup separately with a saved profile, base
-configuration and Neovim >= 0.11.3. Desktop also requires mise.
+`make install-neovim` runs the setup separately with a saved desktop or server
+profile, base configuration and Neovim >= 0.11.3. Desktop also requires mise.
 `update-all` upgrades declared mise tools through its regular mise stage and
 updates Neovim plugins separately. Stow links the global dprint configuration
 from `.config/dprint/dprint.jsonc`; settings and plugin versions are managed in
