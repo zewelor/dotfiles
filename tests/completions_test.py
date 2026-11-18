@@ -9,7 +9,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-TOOLS = ("sourcetap", "gog", "opencode", "dockerfmt")
+TOOLS = ("sourcetap", "gog", "opencode", "dockerfmt", "codex")
 MISE = shutil.which("mise")
 
 
@@ -52,7 +52,7 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
         self.assertFalse(startup_log.exists(), "refresh sourced the user's .zshenv")
         self.assertEqual(self.log.read_text().splitlines(), [
             "sourcetap:completion zsh", "gog:completion zsh",
-            "opencode:--completions zsh", "dockerfmt:completion zsh"])
+            "opencode:--completions zsh", "dockerfmt:completion zsh", "codex:completion zsh"])
         for tool in TOOLS:
             self.assertIn(f"_{tool}()", (self.cache / f"_{tool}").read_text())
         self.assertEqual(sorted(p.name for p in self.cache.iterdir()),
@@ -187,22 +187,23 @@ printf '%s\\n' '#compdef gog' '_gog() { :; }'
         for tool in TOOLS:
             self.tool(tool, f'echo {tool} >> "$CALLS"; exit 99\n')
             (self.cache / f"_{tool}").write_text(f"#compdef {tool}\n_{tool}() {{ :; }}\n")
-        self.env["COMPLETION_LOADER"] = str(ROOT / ".zsh/completions.zsh")
         result = subprocess.run(["/usr/bin/zsh", "-f", "-c", '''
 set -eu
 ZSH_CACHE_DIR="$XDG_CACHE_HOME/zinit"
 fpath=("$ZSH_CACHE_DIR/completions" $fpath)
 queued=()
 zpcompdef() { queued+=("${(j: :)@}"); }
-source "$COMPLETION_LOADER"
+source "$1/.zsh/helpers.zsh"
+source "$1/.zsh/_after_local/ai-clients.zsh"
+source "$1/.zsh/completions.zsh"
 autoload -Uz compinit
-compinit -u -d "$HOME/.zcompdump"
+compinit -u -D
 for definition in "${queued[@]}"; do compdef ${(z)definition}; done
-for tool in sourcetap gog opencode dockerfmt; do
+for tool in sourcetap gog dockerfmt codex opencode; do
   [[ "${_comps[$tool]}" == "_$tool" ]] || exit 1
 done
-[[ "${_comps[oc]}" == _opencode ]]
-'''], env=self.env, text=True, capture_output=True)
+[[ "${_comps[codexgo]}" == _codex && "${_comps[oc]}" == _opencode ]]
+''', "test", str(ROOT)], env=self.env, text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.log.exists())
 

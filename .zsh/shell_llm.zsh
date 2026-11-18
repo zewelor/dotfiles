@@ -1,54 +1,7 @@
-# https://github.com/simonw/llm
-#
-# Setup gemini API https://github.com/simonw/llm/issues/564#issuecomment-2443139073
-#
-#
-
+# Generate commit messages with OpenCode on desktop.
 if ! is_desktop; then
   return
 fi
-
-# Lazy load Codex completions to improve shell startup time
-function _codex() {
-  # Remove the function to prevent recursion on subsequent calls
-  unfunction $0
-
-  eval "$(codex completion zsh)"
-
-  # Re-run the completion function now that real completion is loaded
-  $0 "$@"
-}
-
-zpcompdef _codex codex
-zpcompdef _codex codexgo
-
-# Run LLM tool in temp dir and cleanup on exit
-_llm_tmp() {
-  local tool="$1" dir_flag="$2"
-  shift 2
-  local tmpdir="$(mktemp -d)" || return 1
-  trap 'rm -rf "$tmpdir"' EXIT
-
-  if [[ -n "$dir_flag" ]]; then
-    "$tool" "$dir_flag" "$tmpdir" "$@"
-  else
-    "$tool" "$tmpdir" "$@"
-  fi
-}
-
-cdxtmp() {
-  # Keep the shell and session files in the workspace after Codex exits.
-  local tmpdir="$(mktemp -d)" || return 1
-  builtin cd -- "$tmpdir" || return 1
-  codex "$@"
-}
-
-octmp() {
-  _llm_tmp opencode "" "$@"
-}
-
-# Alias for running opencode with server port (for nvim integration)
-alias ocp='opencode --port'
 
 gsum() {
   # Function to generate commit message using the gemini model
