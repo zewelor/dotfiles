@@ -74,6 +74,19 @@ printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
         self.assertIn("Updated dockerfmt", result.stdout)
         self.assertEqual(self.log.read_text().splitlines(), ["dockerfmt:completion zsh"])
 
+    def test_no_generators_preserves_cached_completion(self):
+        (self.bin / "mkdir").symlink_to("/usr/bin/mkdir")
+        self.env["PATH"] = str(self.bin)
+        self.cache.mkdir(parents=True)
+        previous = self.cache / "_gog"
+        previous.write_text("# existing cached completion\n")
+
+        result = self.refresh()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(sorted(p.name for p in self.cache.iterdir()), ["_gog"])
+        self.assertEqual(previous.read_text(), "# existing cached completion\n")
+
     def test_failure_preserves_previous_completion(self):
         for body in ["echo partial; exit 7\n", "exit 0\n", "echo 'broken() {'\n"]:
             with self.subTest(body=body):
