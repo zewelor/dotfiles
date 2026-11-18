@@ -124,7 +124,9 @@ exit "${TEST_DPRINT_EXIT:-0}"
                 if mode == "check":
                     self.assertFalse(self.log.exists())
                 else:
-                    self.assertEqual(self.log.read_text().splitlines()[2], "server")
+                    lines = self.log.read_text().splitlines()
+                    self.assertEqual(lines[2], "server")
+                    self.assertTrue(lines[7].endswith(f"maintain.lua plugins {mode}"), lines[7])
                 for tool in ("mise", "make", "cc", "tree-sitter", "dprint", "node", "npm", "python3", "go"):
                     self.assertFalse((self.home / (tool + ".log")).exists(), tool)
 
