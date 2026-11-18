@@ -96,7 +96,24 @@ $(zinit_script): | packages
 
 packages:
 	sudo apt-get install -y --no-install-recommends $(APT_PACKAGES_CORE)
-	-sudo apt-get install -y --no-install-recommends $(APT_PACKAGES_OPTIONAL)
+	@set -eu; \
+	set -- $(APT_PACKAGES_OPTIONAL); \
+	if [ "$$#" -eq 0 ]; then exit 0; fi; \
+	policy=$$(LC_ALL=C apt-cache policy "$$@"); \
+	available=$$(printf '%s\n' "$$policy" | awk '\
+		/^[^[:space:]]+:$$/ { package = $$1; sub(/:$$/, "", package) } \
+		$$1 == "Candidate:" && NF > 1 && $$2 != "(none)" { printf " %s", package }'); \
+	set --; \
+	for package in $(APT_PACKAGES_OPTIONAL); do \
+		case "$$available " in \
+			*" $$package "*) set -- "$$@" "$$package" ;; \
+			*) printf 'Skipping optional APT package %s (no candidate)\n' "$$package" ;; \
+		esac; \
+	done; \
+	if [ "$$#" -gt 0 ]; then \
+		printf 'Installing optional APT packages: %s\n' "$$*"; \
+		sudo apt-get install -y --no-install-recommends "$$@"; \
+	fi
 	@echo "Checking available Neovim version..."
 	@CANDIDATE=$$(LC_ALL=C apt-cache policy neovim | grep Candidate | awk '{print $$2}'); \
 	if [ -z "$$CANDIDATE" ] || [ "$$CANDIDATE" = "(none)" ]; then \
