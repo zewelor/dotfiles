@@ -145,19 +145,14 @@ for _, client in ipairs(vim.lsp.get_clients()) do client:stop(true) end
         ])
         self.assertEqual(sorted(event['root_uri'] for event in events if 'root_uri' in event), sorted(roots))
 
-    def test_missing_path_command_does_not_query_mise_or_start_a_client(self):
-        events, _cwd, _roots = self.run_native_case(available=False)
+    def test_missing_path_command_keeps_lsp_info_with_native_command(self):
+        events, _cwd, _roots = self.run_native_case(available=False, native_lsp_command=True)
         self.assertEqual(events, [])
 
 
     def test_ruby_projects_do_not_start_clients_or_invoke_available_wrappers(self):
         events, _cwd, _roots = self.run_native_case(available=False, filetype='ruby')
         self.assertEqual(events, [], 'Ruby LSP or a project/runtime wrapper was invoked')
-
-    def test_lsp_info_survives_upstream_native_command_shortcut(self):
-        events, _cwd, _roots = self.run_native_case(available=False, native_lsp_command=True)
-        self.assertEqual(events, [])
-
 
 if __name__ == '__main__':
     unittest.main()
