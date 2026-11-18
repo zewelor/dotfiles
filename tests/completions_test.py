@@ -1,13 +1,18 @@
 #!/usr/bin/python3
 """Offline checks for static shell completion generation and registration."""
+import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ("sourcetap", "gog", "opencode", "workmux", "dockerfmt")
+
+
+MISE = shutil.which("mise")
 
 
 class CompletionTests(unittest.TestCase):
@@ -34,9 +39,9 @@ class CompletionTests(unittest.TestCase):
 printf '%s\\n' '#compdef {name}' '_{name}() {{ :; }}'
 ''')
 
-    def refresh(self):
+    def refresh(self, cwd=None):
         return subprocess.run([str(ROOT / "bin/update-shell-completions")],
-                              env=self.env, text=True, capture_output=True)
+                              cwd=cwd or self.home, env=self.env, text=True, capture_output=True)
 
     def test_refresh_skips_user_zshenv(self):
         startup_log = self.home / "startup-log"
@@ -103,21 +108,74 @@ printf '%s\\n' '#compdef gog' '_gog() { :; }'
         self.assertTrue((self.home / "custom-cache/completions/_opencode").exists())
         self.assertFalse(self.cache.exists())
 
-    def test_installer_completions_use_target_mise_config(self):
-        self.tool("opencode", '''printf '%s\\n' "$MISE_CONFIG_DIR" >> "$CALLS"
-printf '%s\\n' '#compdef opencode' '_opencode() { :; }'
-''')
-        self.env["MISE_CONFIG_DIR"] = str(self.home / "caller-config")
-        # Exercise installer initialization without applying any installation steps.
-        initialization = (ROOT / "install").read_text().split("# Source shared helper")[0]
-        result = subprocess.run(
-            ["/usr/bin/zsh", "-f", "-c", initialization + '\n"$1"',
-             "test", str(ROOT / "bin/update-shell-completions")],
-            cwd=self.home, env=self.env, text=True, capture_output=True,
-        )
+    def test_relative_cache_directory_stays_relative_to_caller(self):
+        project = self.home / "project"
+        project.mkdir()
+        self.env["ZSH_CACHE_DIR"] = "custom-cache"
+        self.good_tool("gog")
+        result = self.refresh(cwd=project)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.log.read_text().splitlines(), [str(self.home / ".config/mise")])
-        self.assertTrue((self.cache / "_opencode").exists())
+        self.assertTrue((project / "custom-cache/completions/_gog").exists())
+        self.assertFalse((self.home / "custom-cache").exists())
+
+    @unittest.skipUnless(MISE, "real mise executable is required")
+    def test_refresh_ignores_project_mise_configs_and_preserves_caller_policy(self):
+        project = self.home / "dotfiles"
+        project_config = project / ".config/mise/config.toml"
+        global_config = self.home / ".config/mise/config.toml"
+        local_config = global_config.with_name("config.local.toml")
+        system_config = self.home / "system.toml"
+        for config, content in (
+            (project_config, '[tools]\n"github:zewelor/sourcetap" = "latest"\n'),
+            (global_config, '[tools]\njq = "1.8.1"\n'),
+            (local_config, '[tools]\nyq = "4.45.4"\n'),
+            (system_config, '[tools]\nruby = "3.4.0"\n'),
+            (self.home / "mise.toml", '[tools]\nnode = "22.0.0"\n'),
+            (self.home / ".tool-versions", "python 3.12.0\n"),
+        ):
+            config.parent.mkdir(parents=True, exist_ok=True)
+            config.write_text(content)
+        config_log = self.home / "mise-configs.json"
+        self.tool("gog", '''"$TEST_MISE" config ls --json > "$MISE_CONFIG_LOG" || exit
+printf '%s\\n' '#compdef gog' '_gog() { :; }'
+''')
+        self.env = {
+            "HOME": str(self.home), "ZDOTDIR": str(self.home),
+            "PATH": f"{self.bin}:/usr/bin:/bin", "TEST_MISE": MISE,
+            "MISE_CONFIG_LOG": str(config_log), "MISE_OFFLINE": "1",
+            "MISE_CONFIG_DIR": str(self.home / "caller-config"),
+            "MISE_DATA_DIR": str(self.home / "mise-data"),
+            "MISE_STATE_DIR": str(self.home / "mise-state"),
+            "MISE_CACHE_DIR": str(self.home / "mise-cache"),
+            "XDG_CONFIG_HOME": str(self.home / ".config"),
+            "XDG_DATA_HOME": str(self.home / ".local/share"),
+            "XDG_STATE_HOME": str(self.home / ".local/state"),
+            "XDG_CACHE_HOME": str(self.home / "cache"),
+        }
+        policies = (
+            ("desktop", None, str(system_config),
+             {str(global_config), str(local_config), str(system_config)}),
+            ("server", str(global_config), "/dev/null/mise.toml", {str(global_config)}),
+            ("server", "../.config/mise/config.toml", "../system.toml",
+             {str(global_config), str(system_config)}),
+            ("desktop", "~/.config/mise/config.toml", "~/system.toml",
+             {str(global_config), str(system_config)}),
+        )
+        for profile, global_override, system_override, expected in policies:
+            with self.subTest(profile=profile, global_override=global_override,
+                              system_override=system_override):
+                self.env["DOTFILES_PROFILE"] = profile
+                self.env.pop("MISE_GLOBAL_CONFIG_FILE", None)
+                if global_override is not None:
+                    self.env["MISE_GLOBAL_CONFIG_FILE"] = global_override
+                self.env["MISE_SYSTEM_CONFIG_FILE"] = system_override
+                result = self.refresh(cwd=project)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                loaded = {(project / config["path"]).resolve()
+                          for config in json.loads(config_log.read_text())}
+                expected = {Path(path).resolve() for path in expected}
+                self.assertEqual(loaded, expected)
+                self.assertTrue((self.cache / "_gog").exists())
 
     def test_loading_cached_completions_never_executes_tools(self):
         self.cache.mkdir(parents=True)

@@ -126,6 +126,12 @@ gog, OpenCode, and workmux CLIs. Shell startup only registers cached files;
 it never launches these generators. Failed or invalid output leaves the previous
 completion file intact and returns an error.
 
+Refresh stops mise project discovery before the caller's directory, so invoking
+it from the dotfiles checkout does not load the checkout's desktop tool
+declarations. It uses `~/.config/mise`, including
+`config.local.toml`, while preserving explicit global/system config overrides
+passed by the caller.
+
 After a manual tool install or upgrade (including direct `mise install` or
 `mise upgrade`), run `make -C ~/dotfiles completions`, then open a new shell.
 Missing tools are skipped; missing cache is not generated during shell startup.
