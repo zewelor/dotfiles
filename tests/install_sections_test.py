@@ -92,6 +92,31 @@ class InstallSectionsTest(unittest.TestCase):
         self.assertIn("interactive", result.stderr.lower())
         self.assertEqual(sorted(p.name for p in (self.home / ".zshrc.d").iterdir()), ["profile.zsh"])
 
+    def test_interactive_install_requires_private_rclone_template(self):
+        self.profile("desktop")
+        repo = self.make_fixture('''
+is_interactive() { return 0 }
+configure_profile() { DOTFILES_PROFILE=desktop }
+require_zsh_login_shell() { return 0 }
+configure_stow_apply() { return 0 }
+setup_private_submodule() { return 0 }
+prepare_stow_targets() { touch "$HOME_DIR/stow-prepare-ran" }
+migrate_retired_managed_links() { return 0 }
+stow_base_dotfiles() { return 0 }
+add_secret_envs_from_vault() { touch "$HOME_DIR/secret-envs-ran" }
+setup_storagebox_media_mount() { touch "$HOME_DIR/storagebox-ran" }
+print_flatpak_manual_instructions() { return 42 }
+''')
+        for args in (("--section", "vault"), ()):
+            with self.subTest(args=args):
+                result = subprocess.run(["zsh", str(repo / "install"), *args],
+                                        env=self.env, cwd=repo, stdin=subprocess.DEVNULL,
+                                        text=True, capture_output=True, timeout=10)
+                self.assertNotEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("rclone.conf.template", result.stderr)
+                for marker in ("stow-prepare-ran", "secret-envs-ran", "storagebox-ran"):
+                    self.assertFalse((self.home / marker).exists())
+
     def test_cancelled_full_install_preserves_saved_profile(self):
         self.profile("server")
         self.env.update(DOTFILES_PROFILE="desktop", DOTFILES_ALLOW_NON_ZSH_SHELL="1",
@@ -390,7 +415,7 @@ setup_storagebox_media_mount() { touch "$HOME_DIR/storagebox-ran" }
 vault_http_get() { print -r -- '{"data":{"data":{"omen_pass":"fixture"}}}' }
 VAULT_TOKEN=fixture
 ''')
-        template = repo / ".config/rclone/rclone.conf.template"
+        template = repo / "prv/.config/rclone/rclone.conf.template"
         template.parent.mkdir(parents=True)
         template.write_text("pass = {{nas_pass}}\n")
         mise_config = repo / ".config/mise/config.toml"
@@ -557,10 +582,13 @@ add_secret_envs_from_vault() { return 0 }
 setup_rclone() { return 42 }
 setup_storagebox_media_mount() { touch "$HOME_DIR/storagebox-ran" }
 ''')
+        template = repo / "prv/.config/rclone/rclone.conf.template"
+        template.parent.mkdir(parents=True)
+        template.write_text("pass = {{nas_pass}}\n")
         result = subprocess.run(["zsh", str(repo / "install"), "--section", "vault"],
                                 env=self.env, cwd=repo, stdin=subprocess.DEVNULL,
                                 text=True, capture_output=True, timeout=10)
-        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.returncode, 42, result.stdout + result.stderr)
         self.assertFalse((self.home / "storagebox-ran").exists())
 
     def test_desktop_section_rejects_linked_config_before_kde_write(self):

@@ -46,8 +46,8 @@ DOTFILES_PROFILE=server DOTFILES_STOW_CONFIRM_APPLY=1 ./install
 ```
 
 Run `./install --help` or `make install-help` to list individual sections.
-For example, `make install-vault` runs the interactive Vault
-prompts without running the other installation sections. Individual sections
+For example, `make install-vault` runs the interactive Vault prompts and
+requires the rclone template from the private submodule. Individual sections
 read the saved profile from `~/.zshrc.d/profile.zsh`; set it first with
 `./install --section profile`. Desktop-only sections refuse the server profile.
 Stow sections retain their dry-run and apply confirmation, and the `ai` section
@@ -276,7 +276,7 @@ Also ensure `user_allow_other` is enabled in `/etc/fuse.conf` for the `--allow-o
 
 | File | Description |
 |------|-------------|
-| `.config/rclone/rclone.conf.template` | Template in git (without password) |
+| `prv/.config/rclone/rclone.conf.template` | Template in git (without password) |
 | `prv/.config/systemd/user/rclone-nas.service` | Desktop systemd service (stow symlinks it) |
 | `~/.config/rclone/rclone.conf` | Generated config (with password, not in git) |
 

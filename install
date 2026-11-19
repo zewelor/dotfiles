@@ -22,6 +22,7 @@ FONT_INSTALLER="$BASE_DIR/install-font"
 
 # Common paths and URLs.
 VAULT_URL="https://vault.8567153.xyz/v1/shell_envs/data"
+RCLONE_TEMPLATE="$BASE_DIR/prv/.config/rclone/rclone.conf.template"
 # Never let a caller-exported Vault token cross child-process boundaries.
 typeset -g +x VAULT_TOKEN
 
@@ -390,6 +391,9 @@ prepare_stow_targets() {
       return 1
     fi
   done
+  if is_desktop; then
+    require_real_directory_path "$CONFIG_DIR/rclone" || return 1
+  fi
   mkdir -p \
     "$CONFIG_DIR/Code/User" \
     "$CONFIG_DIR/herdr" \
@@ -621,16 +625,18 @@ setup_mise_desktop_tools() {
 }
 
 
+require_rclone_template() {
+  if [[ ! -f "$RCLONE_TEMPLATE" ]]; then
+    echo "Error: missing rclone template at $RCLONE_TEMPLATE. Check that the private submodule is initialized at the revision recorded by this checkout." >&2
+    return 1
+  fi
+}
+
 # Function to setup rclone configuration from Vault.
 setup_rclone() {
 
   if ! is_interactive; then
     echo "Skipping rclone setup in non-interactive mode."
-    return
-  fi
-
-  local template="$BASE_DIR/.config/rclone/rclone.conf.template"
-  if [[ ! -f "$template" ]]; then
     return
   fi
 
@@ -710,7 +716,7 @@ setup_rclone() {
     # ERR_EXIT is disabled in this conditional; propagate each failure explicitly.
     target_tmp=$(mktemp "$rclone_dir/.rclone.conf.XXXXXX") || exit 1
     chmod 600 "$target_tmp" || exit 1
-    render_rclone_config "$template" "$target_tmp" "$nas_pass" || exit 1
+    render_rclone_config "$RCLONE_TEMPLATE" "$target_tmp" "$nas_pass" || exit 1
     mv -fT -- "$target_tmp" "$target" || exit 1
   ); then
     unfunction render_rclone_config
@@ -1262,9 +1268,12 @@ run_selected_section() {
     echo "Error: section '$section' requires the desktop profile; current profile is '$DOTFILES_PROFILE'." >&2
     return 1
   fi
-  if [[ "$section" == vault ]] && ! is_interactive; then
-    echo "Error: section 'vault' requires an interactive terminal." >&2
-    return 1
+  if [[ "$section" == vault ]]; then
+    if ! is_interactive; then
+      echo "Error: section 'vault' requires an interactive terminal." >&2
+      return 1
+    fi
+    require_rclone_template || return 1
   fi
   if [[ "$section" == ai ]] && [[ ! -d "$HOME_DIR/.agents/commands" || ! -d "$HOME_DIR/.agents/skills" ]]; then
     echo 'Error: shared agent commands or skills are missing; set up the private section first.' >&2
@@ -1369,6 +1378,9 @@ run_installation() {
   configure_stow_apply
   save_profile
   setup_private_submodule
+  if is_desktop && is_interactive; then
+    require_rclone_template || return 1
+  fi
   prepare_stow_targets
   migrate_retired_managed_links
 

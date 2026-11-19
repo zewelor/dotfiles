@@ -16,7 +16,8 @@ Makefile
 .opencode  # stowed separately into ~/.opencode (OpenCode keeps runtime data there)
 .gemini  # stowed separately into ~/.gemini (Gemini/Antigravity keep runtime data there)
 .summarize  # config.json is a seed; Summarize owns and rewrites the runtime copy
-.config/rclone  # generated from template by install script
+# Keep local rclone files left behind by the move to prv/ out of Stow.
+^/\.config/rclone(?:/|$)
 .config/mise  # linked explicitly for the desktop profile
 ^/\.config/nvim(?:/|$)  # linked as one static directory by the base installer
 ^/\.config/btop/btop\.conf  # linked or copied explicitly for the btop version

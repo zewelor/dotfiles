@@ -22,9 +22,9 @@ class InstallConfigSafetyTest(unittest.TestCase):
         self.outside.mkdir()
         (self.repo / ".zsh").mkdir(parents=True)
         shutil.copy(ROOT / ".zsh/helpers.zsh", self.repo / ".zsh/helpers.zsh")
-        for name, content in (("rclone/rclone.conf.template", "pass = {{nas_pass}}\n"),
-                              ("mise/config.toml", "[tools]\n")):
-            file = self.repo / ".config" / name
+        for name, content in (("prv/.config/rclone/rclone.conf.template", "pass = {{nas_pass}}\n"),
+                              (".config/mise/config.toml", "[tools]\n")):
+            file = self.repo / name
             file.parent.mkdir(parents=True, exist_ok=True)
             file.write_text(content)
         self.marker = root / "mise-called"
@@ -103,7 +103,7 @@ VAULT_TOKEN=fixture
         self.assertEqual(list(self.outside.iterdir()), [])
 
     def test_rclone_writes_to_real_directory(self):
-        template = self.repo / ".config/rclone/rclone.conf.template"
+        template = self.repo / "prv/.config/rclone/rclone.conf.template"
         template.write_text("[remote]\npass = {{nas_pass}}\ntype = sftp\n")
         result = self.run_step("setup_rclone")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -114,7 +114,7 @@ VAULT_TOKEN=fixture
     def test_rclone_invalid_templates_preserve_existing_config(self):
         target = self.home / ".config/rclone/rclone.conf"
         target.parent.mkdir(parents=True)
-        template = self.repo / ".config/rclone/rclone.conf.template"
+        template = self.repo / "prv/.config/rclone/rclone.conf.template"
         for content in ("no placeholder\n", "pass = {{nas_pass}}\n" * 2):
             with self.subTest(template=content):
                 target.write_text("previous config\n")
@@ -152,7 +152,7 @@ VAULT_TOKEN=fixture
         target = self.home / ".config/rclone/rclone.conf"
         target.parent.mkdir(parents=True)
         target.write_text("previous config\n")
-        template = self.repo / ".config/rclone/rclone.conf.template"
+        template = self.repo / "prv/.config/rclone/rclone.conf.template"
         template.write_text("[remote]\npass = {{nas_pass}}\ntype = sftp\n")
         commands = '''
 print() {
