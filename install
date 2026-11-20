@@ -370,7 +370,7 @@ prepare_private_flatpak_targets() {
 prepare_private_stow_targets() {
   local dir
   prepare_private_flatpak_targets
-  for dir in "$CONFIG_DIR/atuin/themes" "$CONFIG_DIR/foot" "$CONFIG_DIR/systemd/user"; do
+  for dir in "$CONFIG_DIR/atuin/themes" "$CONFIG_DIR/foot" "$CONFIG_DIR/mise" "$CONFIG_DIR/systemd/user"; do
     require_real_directory_path "$dir" || return 1
     mkdir -p "$dir"
     require_real_directory_path "$dir" || return 1

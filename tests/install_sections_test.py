@@ -640,6 +640,7 @@ setup_user_systemd_units() { touch "$HOME_DIR/units-ran" }
 setup_private_submodule() { return 0 }
 prepare_private_flatpak_targets() { return 0 }
 setup_herdr() { return 0 }
+has() { return 1 }
 ''')
         (self.home / ".config").mkdir()
         (self.home / ".var/app").mkdir(parents=True)
@@ -647,19 +648,28 @@ setup_herdr() { return 0 }
                           "foot/foot.ini", "foot/catppuccin-latte.ini",
                           "systemd/user/docker-prune.timer", "systemd/user/docker-prune.service",
                           "systemd/user/rclone-nas.service", "systemd/user/rclone-sleep-handler.service")
-        for name in relative_files:
+        plugin = "mise/plugins/synergy/bin/install"
+        for name in (*relative_files, plugin):
             source = repo / "prv/.config" / name
             source.parent.mkdir(parents=True, exist_ok=True)
             source.write_text("fixture\n")
+        config = repo / ".config/mise"
+        config.mkdir(parents=True)
+        (config / "config.toml").write_text("[tools]\n")
+        mise = self.home / ".local/bin/mise"
+        mise.parent.mkdir(parents=True)
+        mise.write_text('#!/bin/sh\n[ "$1" = install ]\n')
+        mise.chmod(0o755)
         env = {**self.env, "DOTFILES_STOW_CONFIRM_APPLY": "1"}
 
-        def run_private():
-            return subprocess.run(["zsh", str(repo / "install"), "--section", "private"],
-                                  env=env, cwd=repo, text=True, capture_output=True, timeout=10)
+        def run_section(section):
+            result = subprocess.run(["zsh", str(repo / "install"), "--section", section],
+                                    env=env, cwd=repo, text=True, capture_output=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
-        result = run_private()
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        for directory in ("atuin", "atuin/themes", "foot", "systemd", "systemd/user"):
+        run_section("private")
+        run_section("tools")
+        for directory in ("atuin", "atuin/themes", "foot", "mise", "systemd", "systemd/user"):
             target = self.home / ".config" / directory
             self.assertTrue(target.is_dir(), directory)
             self.assertFalse(target.is_symlink(), directory)
@@ -671,8 +681,13 @@ setup_herdr() { return 0 }
             target = self.home / ".config" / name
             target.write_text("runtime\n")
             self.assertFalse((repo / "prv/.config" / name).exists())
-        repeated = run_private()
-        self.assertEqual(repeated.returncode, 0, repeated.stdout + repeated.stderr)
+        run_section("private")
+        run_section("tools")
+        self.assertEqual((self.home / ".config" / plugin).resolve(strict=True), repo / "prv/.config" / plugin)
+        for name in ("config.toml", "config.local.toml"):
+            target = self.home / ".config/mise" / name
+            self.assertTrue(target.is_symlink(), name)
+            self.assertEqual(target.resolve(strict=True), config / name)
 
     def test_private_section_rejects_directory_link_created_during_preparation(self):
         self.profile("desktop")
