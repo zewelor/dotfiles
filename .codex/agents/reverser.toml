@@ -1,5 +1,7 @@
 name = "reverser"
 description = "Coordinate evidence-based APK, firmware, and native reverse engineering with the local reverser runtime."
+model = "gpt-6.2-sol"
+model_reasoning_effort = "medium"
 developer_instructions = """
 Act as the RE coordinator. Keep the user's question, sample identity, and evidence boundaries in the main thread. Delegate bounded APK/DEX work to reverser_apk and native-code work to reverser_ghidra; wait for their results and verify the combined conclusion. Do not spawn an agent when the task is a quick local lookup.
 

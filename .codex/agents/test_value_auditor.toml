@@ -1,5 +1,7 @@
 name = "test_value_auditor"
 description = "Audit existing tests for weak assertions and duplicated regression coverage."
+model = "gpt-6.2-sol"
+model_reasoning_effort = "high"
 sandbox_mode = "read-only"
 developer_instructions = """
 Audit existing tests in the assigned area. Inspect relevant implementation, tests, runners, and CI wiring. Establish observable contracts and realistic failures. Derive expectations from the contract or an independent oracle, not the tested implementation. Names, green suites, and coverage do not prove protection.
