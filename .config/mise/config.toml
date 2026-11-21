@@ -29,6 +29,10 @@ yq = "latest"
 "aqua:reteps/dockerfmt" = "latest" # Dockerfile and embedded RUN shell formatting
 "aqua:dprint/dprint" = "latest" # Project formatting and global Oxc defaults (>=0.64.3)
 
+[env]
+# Prevent agy's self-updater from overwriting mise-managed installs.
+AGY_CLI_DISABLE_AUTO_UPDATE = "true"
+
 [settings]
 minimum_release_age_excludes = [
   "github:zewelor/sourcetap",
