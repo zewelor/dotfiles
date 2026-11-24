@@ -96,6 +96,41 @@ octmp
             self.assertEqual((workspace / "artifact.txt").read_text(), "session output\n")
 
 
+class CommitMessageTests(unittest.TestCase):
+    def test_gsum_commits_message_from_markdown_or_plain_text(self):
+        message = "chore: update Docker package rules\n\n- Add `traefik` to the automerge rule"
+        for response in (
+            f"```text\n{message}\n```",
+            f"Here is the commit message:\n\n```\n{message}\n```",
+            message,
+        ):
+            with self.subTest(response=response), tempfile.TemporaryDirectory() as tmp:
+                env = dict(os.environ, PATH=f"{tmp}:{os.defpath}",
+                           GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
+                           GIT_AUTHOR_NAME="Test", GIT_AUTHOR_EMAIL="test@example.com",
+                           GIT_COMMITTER_NAME="Test", GIT_COMMITTER_EMAIL="test@example.com",
+                           TEST_MODEL_RESPONSE=response)
+                fake_opencode = Path(tmp) / "opencode"
+                fake_opencode.write_text('#!/bin/sh\ncat >/dev/null\nprintf "%s\\n" "$TEST_MODEL_RESPONSE"\n')
+                fake_opencode.chmod(0o755)
+                subprocess.run(["git", "init", "-q", "--template="], cwd=tmp, env=env, check=True)
+                (Path(tmp) / "rules.txt").write_text("traefik\n")
+                subprocess.run(["git", "add", "rules.txt"], cwd=tmp, env=env, check=True)
+                result = subprocess.run(
+                    ["/usr/bin/zsh", "-f", "-c", '''
+source "$1/.zsh/helpers.zsh"
+is_desktop() { return 0; }
+source "$1/.zsh/shell_llm.zsh"
+gsum -y
+''', "test", str(ROOT)], cwd=tmp, env=env, text=True, capture_output=True,
+                )
+                self.assertEqual(result.returncode, 0, result.stderr)
+                actual = subprocess.check_output(
+                    ["git", "--no-pager", "log", "-1", "--format=%B"], cwd=tmp, env=env, text=True,
+                )
+                self.assertEqual(actual.rstrip("\n"), message)
+
+
 class ShellAiAvailabilityTests(unittest.TestCase):
     def test_local_aliases_and_functions_take_precedence_over_defaults(self):
         result = subprocess.run(

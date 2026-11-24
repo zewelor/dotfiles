@@ -90,7 +90,8 @@ Rules:
     # --wait preserves the OpenCode exit status.
     # Use 'command cat' to bypass any user aliases (like cat -> bat) for maximum speed and raw output.
     local error_file="${tmpfile}.stderr"
-    command cat "$tmpfile" | HERDR_ENV=0 setsid --wait opencode run --standalone -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file"
+    local response
+    response=$(command cat "$tmpfile" | HERDR_ENV=0 setsid --wait opencode run --standalone -m google/gemini-flash-lite-latest "$prompt" 2>"$error_file")
     local result=$?
 
     if [ "$result" -ne 0 ] && [ -s "$error_file" ]; then
@@ -98,7 +99,19 @@ Rules:
     fi
 
     rm -f "$tmpfile" "$error_file"
-    return $result
+    if [ "$result" -ne 0 ]; then
+      printf '%s' "$response"
+      return $result
+    fi
+
+    # Extract the first complete Markdown code block when the model wraps its message.
+    printf '%s\n' "$response" | awk '
+      { original = original $0 "\n" }
+      in_block && /^[[:blank:]]*```[[:blank:]]*$/ { closed = 1; exit }
+      in_block { message = message $0 "\n"; next }
+      /^[[:blank:]]*```[^`]*$/ { in_block = 1 }
+      END { printf "%s", closed ? message : original }
+    '
   }
 
   # Function to read user input compatibly with both Bash and Zsh
