@@ -80,6 +80,12 @@ required evidence and report conflicts. Delegation never expands authorization.
 - From the start of implementation, choose the simplest readable, explicit
   solution that meets the requirements. Apply YAGNI: add abstractions and
   configuration only when current requirements justify them.
+- Stop and propose the simplest idiomatic option and its trade-off before adding
+  custom CI scripts or state guards, restructuring repository directories or
+  adding parallel Compose/manifest files, splitting base OS/libc between
+  `dev`/`test` and `production`, or hand-copying internal toolchain files.
+  Check official upstream or established open-source patterns before inventing
+  local workarounds.
 - Before adding custom logic or validation, inspect existing helpers and the
   documented behavior of standard commands. Reuse behavior that already enforces
   the requirement; add checks only for missing guarantees. Preserve required
@@ -102,3 +108,7 @@ required evidence and report conflicts. Delegation never expands authorization.
 - If the project or area is unclear, or its label is missing or ambiguous, ask the user which label to use or whether to create one. Do not guess or automatically create labels.
 - Add an existing type label such as `Bug`, `Improvement`, or `Feature` when it clearly fits. Leave it unset when none applies; ask if the choice is ambiguous.
 - A Linear project is a separate field and does not replace the project label. Assign a Linear project when the user requests it or an existing project clearly covers the work; do not create one merely to categorize an issue.
+
+## Skills authoring
+
+- Treat `~/personal/agents-skills` as the single authoring source for skills it maintains. When user asks to edit skill search it there. ~/.agents/ is synced with those skills later
