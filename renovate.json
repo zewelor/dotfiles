@@ -17,7 +17,7 @@
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["github-release-attachments"],
       "matchPackageNames": ["jdx/mise"],
-      "schedule": ["* 0-3 1 * *"]
+      "schedule": ["* 0-3 1-2 * *"]
     }
   ]
 }
